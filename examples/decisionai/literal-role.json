@@ -1,0 +1,21 @@
+{
+  "state": {
+    "code": ".class public Ldemo/Counter;\n.super Ljava/lang/Object;\n.method public static getLimit()I\n    .locals 1\n    const/16 v0, 0x64\n    return v0\n.end method",
+    "line": 5
+  },
+  "questions": {
+    "role": {
+      "type": "choice",
+      "task": "literal_role",
+      "abstain_key": "unknown",
+      "instructions": "What role does the selected Smali literal play?",
+      "criteria": {
+        "limit": "Upper bound or limit",
+        "boolean": "Boolean value",
+        "delay": "Delay or timer duration",
+        "resource_id": "Android resource identifier",
+        "unknown": "Insufficient evidence"
+      }
+    }
+  }
+}

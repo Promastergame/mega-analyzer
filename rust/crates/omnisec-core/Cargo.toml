@@ -1,0 +1,16 @@
+[package]
+name = "omnisec-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec core types — formats, architectures, errors, magic detection."
+
+[dependencies]
+omnisec-json = { path = "../omnisec-json" }
+
+[dev-dependencies]
+
+[lints]
+workspace = true

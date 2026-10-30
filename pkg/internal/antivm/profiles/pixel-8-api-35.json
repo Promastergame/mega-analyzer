@@ -1,0 +1,42 @@
+{
+  "name": "Pixel 8-api-35",
+  "model": "Pixel 8",
+  "brand": "google",
+  "manufacturer": "Google",
+  "device": "shiba",
+  "product": "shiba",
+  "android_version": "15",
+  "api_level": 35,
+  "abi": "arm64-v8a",
+  "build_id": "AP3A.260401.227",
+  "fingerprint": "google/shiba/shiba:15/AP3A.260401.227/402273:user/release-keys",
+  "security_patch": "2025-12-01",
+  "locale": "en-US",
+  "timezone": "UTC",
+  "resolution": "1080x2400",
+  "density": 420,
+  "network": {
+    "mac_address": "38:01:46:2B:5B:82",
+    "wifi_ssid": "HOME_986A_5G",
+    "imei": "352609108016637",
+    "serial": "2965D11349"
+  },
+  "battery": {
+    "level": 71,
+    "status": "discharging",
+    "temperature": 343,
+    "health": "good",
+    "plugged": "none"
+  },
+  "sensor": {
+    "enabled": true,
+    "accelerometer": true,
+    "gyroscope": true
+  },
+  "operator": {
+    "name": "AT\u0026T",
+    "numeric": "310410",
+    "mcc": "310",
+    "mnc": "410"
+  }
+}

@@ -1,0 +1,99 @@
+[
+  {
+    "id": "AD_SHOW",
+    "category": "ads",
+    "description": "Controls whether ads should be displayed",
+    "method_names": [
+      "shouldshowad",
+      "shouldshowads",
+      "showad",
+      "showads",
+      "displayad",
+      "loadad",
+      "showinterstitial",
+      "showbannerad",
+      "showrewardedad",
+      "canshowad"
+    ],
+    "class_patterns": [
+      "admanager",
+      "adcontroller",
+      "adhelper",
+      "admob",
+      "adloader",
+      "adview"
+    ],
+    "required_calls": [
+      "loadad",
+      "show(",
+      "requestad",
+      "showinterstitial",
+      "loadinterstitial"
+    ],
+    "string_patterns": null,
+    "return_type": "V",
+    "patch_type": "return_void",
+    "weight": 0.7,
+    "min_match_score": 12
+  },
+  {
+    "id": "AD_FREE_CHECK",
+    "category": "ads",
+    "description": "Checks if user purchased ad removal",
+    "method_names": [
+      "isadfree",
+      "isadremoved",
+      "hasremovedads",
+      "isnoads",
+      "shouldhideads",
+      "isadsfree",
+      "haspurchasedadremoval",
+      "isadblocked"
+    ],
+    "class_patterns": [
+      "admanager",
+      "adcontroller",
+      "settings",
+      "premium"
+    ],
+    "required_calls": null,
+    "string_patterns": [
+      "remove_ads",
+      "ad_free",
+      "no_ads",
+      "ads_removed",
+      "ad_removal"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.8,
+    "min_match_score": 10
+  },
+  {
+    "id": "pj10",
+    "category": "ads",
+    "description": "Ad gating flag (shouldShowAds) — force no ads",
+    "method_names": [
+      "shouldshowads",
+      "canshowads",
+      "isadenabled",
+      "showads",
+      "isadsremoved"
+    ],
+    "class_patterns": [
+      "ads",
+      "advert",
+      "monetization"
+    ],
+    "required_calls": [],
+    "string_patterns": [
+      "show_ads",
+      "ads_enabled",
+      "remove_ads"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1.0,
+    "min_match_score": 10
+  }
+]

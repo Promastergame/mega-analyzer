@@ -1,0 +1,1187 @@
+{
+  "version": 5,
+  "cases": [
+    {
+      "id": "tls-empty-trust-manager",
+      "files": {
+        "smali/eval/app/TrustAll.smali": ".class public Leval/app/TrustAll;\n.super Ljava/lang/Object;\n.method public checkServerTrusted([Ljava/security/cert/X509Certificate;Ljava/lang/String;)V\n  .locals 0\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "insecure_tls"
+      ]
+    },
+    {
+      "id": "tls-validating-trust-manager",
+      "files": {
+        "smali/eval/app/TrustPinned.smali": ".class public Leval/app/TrustPinned;\n.super Ljava/lang/Object;\n.method public checkServerTrusted([Ljava/security/cert/X509Certificate;Ljava/lang/String;)V\n  .locals 0\n  invoke-static {p1}, Leval/app/Pinning;->validate([Ljava/security/cert/X509Certificate;)V\n  return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "insecure_tls"
+      ]
+    },
+    {
+      "id": "intent-command-injection",
+      "files": {
+        "smali/eval/app/Command.smali": ".class public Leval/app/Command;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;Ljava/lang/String;)V\n  .locals 2\n  invoke-virtual {p0, p1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n  move-result-object v0\n  invoke-virtual {v1, v0}, Ljava/lang/Runtime;->exec(Ljava/lang/String;)Ljava/lang/Process;\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "command_injection"
+      ]
+    },
+    {
+      "id": "intent-sql-injection",
+      "files": {
+        "smali/eval/app/UnsafeQuery.smali": ".class public Leval/app/UnsafeQuery;\n.super Ljava/lang/Object;\n.method public static query(Landroid/content/Intent;Ljava/lang/String;)V\n  .locals 2\n  invoke-virtual {p0, p1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n  move-result-object v0\n  invoke-virtual {v1, v0, p0}, Landroid/database/sqlite/SQLiteDatabase;->rawQuery(Ljava/lang/String;[Ljava/lang/String;)Landroid/database/Cursor;\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "sql_injection"
+      ]
+    },
+    {
+      "id": "sql-escaped-input",
+      "files": {
+        "smali/eval/app/Query.smali": ".class public Leval/app/Query;\n.super Ljava/lang/Object;\n.method public static query(Landroid/content/Intent;Ljava/lang/String;)V\n  .locals 3\n  invoke-virtual {p0, p1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n  move-result-object v0\n  invoke-static {v0}, Landroid/database/DatabaseUtils;->sqlEscapeString(Ljava/lang/String;)Ljava/lang/String;\n  move-result-object v1\n  invoke-virtual {v2, v1, v0}, Landroid/database/sqlite/SQLiteDatabase;->rawQuery(Ljava/lang/String;[Ljava/lang/String;)Landroid/database/Cursor;\n  return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "sql_injection"
+      ]
+    },
+    {
+      "id": "cleartext-api-endpoint",
+      "files": {
+        "smali/eval/app/Api.smali": ".class public Leval/app/Api;\n.super Ljava/lang/Object;\n.field private static final URL:Ljava/lang/String; = \"http://api.example.com/login\"\n"
+      },
+      "expected": [
+        "cleartext_traffic"
+      ]
+    },
+    {
+      "id": "android-xml-namespace-not-endpoint",
+      "files": {
+        "res/layout/main.xml": "<LinearLayout xmlns:android=\"http://schemas.android.com/apk/res/android\" />"
+      },
+      "expected": [],
+      "forbidden": [
+        "cleartext_traffic"
+      ]
+    },
+    {
+      "id": "weak-ecb-cipher",
+      "files": {
+        "smali/eval/app/Crypto.smali": ".class public Leval/app/Crypto;\n.super Ljava/lang/Object;\n.field private static final MODE:Ljava/lang/String; = \"AES/ECB/PKCS5Padding\"\n"
+      },
+      "expected": [
+        "weak_crypto"
+      ]
+    },
+    {
+      "id": "wv-js-bridge-local",
+      "files": {
+        "smali/eval/app/WvBridge.smali": ".class public Leval/app/WvBridge;\n.super Landroid/app/Activity;\n\n.method public setup(Landroid/webkit/WebView;)V\n  .locals 3\n  invoke-virtual {p1}, Landroid/webkit/WebView;->getSettings()Landroid/webkit/WebSettings;\n  move-result-object v0\n  const/4 v1, 0x1\n  invoke-virtual {v0, v1}, Landroid/webkit/WebSettings;->setJavaScriptEnabled(Z)V\n  invoke-virtual {p1, v2, v2}, Landroid/webkit/WebView;->addJavascriptInterface(Ljava/lang/Object;Ljava/lang/String;)V\n  const-string v0, \"file:///android_asset/index.html\"\n  invoke-virtual {p1, v0}, Landroid/webkit/WebView;->loadUrl(Ljava/lang/String;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "webview_js_bridge"
+      ],
+      "forbidden": [
+        "WEBVIEW_REMOTE_JS",
+        "webview_file_access",
+        "webview_injection"
+      ],
+      "locations": [
+        {
+          "category": "webview_js_bridge",
+          "file": "smali/eval/app/WvBridge.smali",
+          "line_min": 9,
+          "line_max": 11
+        }
+      ]
+    },
+    {
+      "id": "wv-remote-js-rce",
+      "files": {
+        "smali/eval/app/WvRemote.smali": ".class public Leval/app/WvRemote;\n.super Landroid/app/Activity;\n\n.method public setup(Landroid/webkit/WebView;)V\n  .locals 3\n  invoke-virtual {p1}, Landroid/webkit/WebView;->getSettings()Landroid/webkit/WebSettings;\n  move-result-object v0\n  const/4 v1, 0x1\n  invoke-virtual {v0, v1}, Landroid/webkit/WebSettings;->setJavaScriptEnabled(Z)V\n  invoke-virtual {p1, v2, v2}, Landroid/webkit/WebView;->addJavascriptInterface(Ljava/lang/Object;Ljava/lang/String;)V\n  const-string v0, \"https://cdn.example.org/app/index.html\"\n  invoke-virtual {p1, v0}, Landroid/webkit/WebView;->loadUrl(Ljava/lang/String;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "webview_js_bridge",
+        "WEBVIEW_REMOTE_JS"
+      ],
+      "forbidden": [
+        "webview_file_access",
+        "webview_injection"
+      ]
+    },
+    {
+      "id": "wv-js-disabled-trap",
+      "files": {
+        "smali/eval/app/WvLocked.smali": ".class public Leval/app/WvLocked;\n.super Landroid/app/Activity;\n\n.method public setup(Landroid/webkit/WebView;)V\n  .locals 2\n  invoke-virtual {p1}, Landroid/webkit/WebView;->getSettings()Landroid/webkit/WebSettings;\n  move-result-object v0\n  const/4 v1, 0x0\n  invoke-virtual {v0, v1}, Landroid/webkit/WebSettings;->setJavaScriptEnabled(Z)V\n  invoke-virtual {p1, v0, v0}, Landroid/webkit/WebView;->addJavascriptInterface(Ljava/lang/Object;Ljava/lang/String;)V\n  return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "webview_js_bridge",
+        "WEBVIEW_REMOTE_JS"
+      ]
+    },
+    {
+      "id": "wv-universal-file-access",
+      "files": {
+        "smali/eval/app/WvFileLeak.smali": ".class public Leval/app/WvFileLeak;\n.super Landroid/app/Activity;\n\n.method public setup(Landroid/webkit/WebView;)V\n  .locals 2\n  invoke-virtual {p1}, Landroid/webkit/WebView;->getSettings()Landroid/webkit/WebSettings;\n  move-result-object v0\n  const/4 v1, 0x1\n  invoke-virtual {v0, v1}, Landroid/webkit/WebSettings;->setAllowUniversalAccessFromFileURLs(Z)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "webview_file_access"
+      ],
+      "forbidden": [
+        "webview_js_bridge"
+      ]
+    },
+    {
+      "id": "wv-file-access-disabled-trap",
+      "files": {
+        "smali/eval/app/WvFileLocked.smali": ".class public Leval/app/WvFileLocked;\n.super Landroid/app/Activity;\n\n.method public setup(Landroid/webkit/WebView;)V\n  .locals 2\n  invoke-virtual {p1}, Landroid/webkit/WebView;->getSettings()Landroid/webkit/WebSettings;\n  move-result-object v0\n  const/4 v1, 0x0\n  invoke-virtual {v0, v1}, Landroid/webkit/WebSettings;->setAllowUniversalAccessFromFileURLs(Z)V\n  return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "webview_file_access"
+      ]
+    },
+    {
+      "id": "wv-js-unresolved-param",
+      "files": {
+        "smali/eval/app/WvConfig.smali": ".class public Leval/app/WvConfig;\n.super Landroid/app/Activity;\n\n.method public setup(Landroid/webkit/WebView;Z)V\n  .locals 1\n  invoke-virtual {p1}, Landroid/webkit/WebView;->getSettings()Landroid/webkit/WebSettings;\n  move-result-object v0\n  invoke-virtual {v0, p2}, Landroid/webkit/WebSettings;->setJavaScriptEnabled(Z)V\n  invoke-virtual {p1, v0, v0}, Landroid/webkit/WebView;->addJavascriptInterface(Ljava/lang/Object;Ljava/lang/String;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "webview_js_bridge"
+      ],
+      "forbidden": [
+        "WEBVIEW_REMOTE_JS"
+      ]
+    },
+    {
+      "id": "pi-missing-immutable",
+      "files": {
+        "smali/eval/app/Alarm.smali": ".class public Leval/app/Alarm;\n.super Ljava/lang/Object;\n\n.method public schedule(Landroid/content/Context;Landroid/content/Intent;)V\n  .locals 2\n  const/4 v0, 0x0\n  const/4 v1, 0x0\n  invoke-static {p1, v0, p2, v1}, Landroid/app/PendingIntent;->getActivity(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "pending_intent_vuln"
+      ],
+      "locations": [
+        {
+          "category": "pending_intent_vuln",
+          "file": "smali/eval/app/Alarm.smali",
+          "line_min": 7,
+          "line_max": 9
+        }
+      ]
+    },
+    {
+      "id": "pi-flag-mutable",
+      "files": {
+        "smali/eval/app/MutableAlarm.smali": ".class public Leval/app/MutableAlarm;\n.super Ljava/lang/Object;\n\n.method public schedule(Landroid/content/Context;Landroid/content/Intent;)V\n  .locals 2\n  const/4 v0, 0x0\n  const v1, 0x2000000\n  invoke-static {p1, v0, p2, v1}, Landroid/app/PendingIntent;->getActivity(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "pending_intent_vuln"
+      ]
+    },
+    {
+      "id": "pi-immutable-trap",
+      "files": {
+        "smali/eval/app/SafeAlarm.smali": ".class public Leval/app/SafeAlarm;\n.super Ljava/lang/Object;\n\n.method public schedule(Landroid/content/Context;Landroid/content/Intent;)V\n  .locals 2\n  const/4 v0, 0x0\n  const v1, 0x4000000\n  invoke-static {p1, v0, p2, v1}, Landroid/app/PendingIntent;->getActivity(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;\n  return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "pending_intent_vuln"
+      ]
+    },
+    {
+      "id": "pi-mixed-safe-and-unsafe",
+      "files": {
+        "smali/eval/app/Notifier.smali": ".class public Leval/app/Notifier;\n.super Ljava/lang/Object;\n\n.method public safe(Landroid/content/Context;Landroid/content/Intent;)Landroid/app/PendingIntent;\n  .locals 2\n  const/4 v0, 0x0\n  const v1, 0x4000000\n  invoke-static {p1, v0, p2, v1}, Landroid/app/PendingIntent;->getActivity(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;\n  move-result-object v0\n  return-object v0\n.end method\n\n.method public unsafe(Landroid/content/Context;Landroid/content/Intent;)Landroid/app/PendingIntent;\n  .locals 2\n  const/4 v0, 0x0\n  const/4 v1, 0x0\n  invoke-static {p1, v0, p2, v1}, Landroid/app/PendingIntent;->getActivity(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;\n  move-result-object v0\n  return-object v0\n.end method\n"
+      },
+      "expected": [
+        "pending_intent_vuln"
+      ]
+    },
+    {
+      "id": "pi-unresolved-flags",
+      "files": {
+        "smali/eval/app/PiFactory.smali": ".class public Leval/app/PiFactory;\n.super Ljava/lang/Object;\n\n.method public build(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;\n  .locals 0\n  invoke-static {p1, p2, p3, p4}, Landroid/app/PendingIntent;->getActivity(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;\n  move-result-object p0\n  return-object p0\n.end method\n"
+      },
+      "expected": [
+        "pending_intent_vuln"
+      ]
+    },
+    {
+      "id": "st-world-readable-prefs",
+      "files": {
+        "smali/eval/app/Prefs.smali": ".class public Leval/app/Prefs;\n.super Ljava/lang/Object;\n\n.method public open(Landroid/content/Context;)V\n  .locals 2\n  const-string v0, \"session\"\n  const/4 v1, 0x1\n  invoke-virtual {p1, v0, v1}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "insecure_storage"
+      ],
+      "locations": [
+        {
+          "category": "insecure_storage",
+          "file": "smali/eval/app/Prefs.smali",
+          "line_min": 7,
+          "line_max": 9
+        }
+      ]
+    },
+    {
+      "id": "st-world-writeable-file",
+      "files": {
+        "smali/eval/app/CacheDump.smali": ".class public Leval/app/CacheDump;\n.super Ljava/lang/Object;\n\n.method public dump(Landroid/content/Context;)V\n  .locals 2\n  const-string v0, \"cache.bin\"\n  const/4 v1, 0x2\n  invoke-virtual {p1, v0, v1}, Landroid/content/Context;->openFileOutput(Ljava/lang/String;I)Ljava/io/FileOutputStream;\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "insecure_storage"
+      ],
+      "forbidden": [
+        "path_traversal"
+      ]
+    },
+    {
+      "id": "st-mode-private-trap",
+      "files": {
+        "smali/eval/app/PrivatePrefs.smali": ".class public Leval/app/PrivatePrefs;\n.super Ljava/lang/Object;\n\n.method public open(Landroid/content/Context;)V\n  .locals 2\n  const-string v0, \"session\"\n  const/4 v1, 0x0\n  invoke-virtual {p1, v0, v1}, Landroid/content/Context;->getSharedPreferences(Ljava/lang/String;I)Landroid/content/SharedPreferences;\n  return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "insecure_storage"
+      ]
+    },
+    {
+      "id": "st-external-storage-write",
+      "files": {
+        "smali/eval/app/ExportDump.smali": ".class public Leval/app/ExportDump;\n.super Ljava/lang/Object;\n\n.method public dump()V\n  .locals 4\n  invoke-static {}, Landroid/os/Environment;->getExternalStorageDirectory()Ljava/io/File;\n  move-result-object v0\n  const-string v1, \"dump.json\"\n  new-instance v2, Ljava/io/File;\n  invoke-direct {v2, v0, v1}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V\n  new-instance v3, Ljava/io/FileOutputStream;\n  invoke-direct {v3, v2}, Ljava/io/FileOutputStream;-><init>(Ljava/io/File;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "insecure_storage"
+      ],
+      "forbidden": [
+        "path_traversal"
+      ]
+    },
+    {
+      "id": "st-sdcard-literal-path",
+      "files": {
+        "smali/eval/app/ReportWriter.smali": ".class public Leval/app/ReportWriter;\n.super Ljava/lang/Object;\n\n.method public dump()V\n  .locals 2\n  const-string v0, \"/sdcard/Download/report.csv\"\n  new-instance v1, Ljava/io/FileOutputStream;\n  invoke-direct {v1, v0}, Ljava/io/FileOutputStream;-><init>(Ljava/lang/String;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "insecure_storage"
+      ],
+      "forbidden": [
+        "path_traversal"
+      ]
+    },
+    {
+      "id": "st-private-path-trap",
+      "files": {
+        "smali/eval/app/NoteWriter.smali": ".class public Leval/app/NoteWriter;\n.super Ljava/lang/Object;\n\n.method public dump()V\n  .locals 2\n  const-string v0, \"/data/data/eval.app/files/notes.txt\"\n  new-instance v1, Ljava/io/FileOutputStream;\n  invoke-direct {v1, v0}, Ljava/io/FileOutputStream;-><init>(Ljava/lang/String;)V\n  return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "insecure_storage",
+        "path_traversal"
+      ]
+    },
+    {
+      "id": "m-deeplink-scheme-no-host",
+      "files": {
+        "AndroidManifest.xml": "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n<manifest package=\"eval.app\">\n  <application android:label=\"Eval\">\n    <activity android:name=\".PayLinkActivity\" android:exported=\"true\">\n      <intent-filter>\n        <action android:name=\"android.intent.action.VIEW\" />\n        <category android:name=\"android.intent.category.DEFAULT\" />\n        <data android:scheme=\"evalpay\" />\n      </intent-filter>\n    </activity>\n  </application>\n</manifest>\n"
+      },
+      "expected": [
+        "deep_link_vuln",
+        "exported_component"
+      ],
+      "forbidden": [
+        "strand_hogg",
+        "insecure_backup"
+      ],
+      "locations": [
+        {
+          "category": "deep_link_vuln",
+          "file": "AndroidManifest.xml",
+          "line_min": 7,
+          "line_max": 9
+        },
+        {
+          "category": "exported_component",
+          "file": "AndroidManifest.xml",
+          "line_min": 3,
+          "line_max": 5
+        }
+      ]
+    },
+    {
+      "id": "m-deeplink-with-host-trap",
+      "files": {
+        "AndroidManifest.xml": "<manifest package=\"eval.app\">\n  <application>\n    <activity android:name=\".LinkActivity\" android:exported=\"false\">\n      <intent-filter>\n        <action android:name=\"android.intent.action.VIEW\" />\n        <data android:scheme=\"evalpay\" android:host=\"callback\" />\n      </intent-filter>\n    </activity>\n  </application>\n</manifest>\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "deep_link_vuln",
+        "exported_component"
+      ]
+    },
+    {
+      "id": "m-deeplink-https-exempt",
+      "files": {
+        "AndroidManifest.xml": "<manifest package=\"eval.app\">\n  <application>\n    <activity android:name=\".WebActivity\" android:exported=\"false\">\n      <intent-filter>\n        <action android:name=\"android.intent.action.VIEW\" />\n        <data android:scheme=\"https\" />\n      </intent-filter>\n    </activity>\n  </application>\n</manifest>\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "deep_link_vuln"
+      ]
+    },
+    {
+      "id": "m-exported-activity-no-permission",
+      "files": {
+        "AndroidManifest.xml": "<manifest package=\"eval.app\">\n  <application>\n    <activity android:name=\".AdminPanelActivity\" android:exported=\"true\" />\n  </application>\n</manifest>\n"
+      },
+      "expected": [
+        "exported_component"
+      ],
+      "forbidden": [
+        "deep_link_vuln"
+      ]
+    },
+    {
+      "id": "m-permission-protected-trap",
+      "files": {
+        "AndroidManifest.xml": "<manifest package=\"eval.app\">\n  <application>\n    <activity android:name=\".AdminPanelActivity\" android:exported=\"true\" android:permission=\"eval.permission.ADMIN\" />\n  </application>\n</manifest>\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "exported_component"
+      ]
+    },
+    {
+      "id": "m-implicit-export-old-sdk",
+      "files": {
+        "AndroidManifest.xml": "<manifest package=\"eval.app\">\n  <uses-sdk android:minSdkVersion=\"21\" android:targetSdkVersion=\"30\" />\n  <application>\n    <activity android:name=\".ShareActivity\">\n      <intent-filter>\n        <action android:name=\"eval.app.action.SHARE\" />\n      </intent-filter>\n    </activity>\n  </application>\n</manifest>\n"
+      },
+      "expected": [
+        "exported_component"
+      ]
+    },
+    {
+      "id": "m-launcher-exempt-trap",
+      "files": {
+        "AndroidManifest.xml": "<manifest package=\"eval.app\">\n  <uses-sdk android:targetSdkVersion=\"30\" />\n  <application>\n    <activity android:name=\".MainActivity\">\n      <intent-filter>\n        <action android:name=\"android.intent.action.MAIN\" />\n        <category android:name=\"android.intent.category.LAUNCHER\" />\n      </intent-filter>\n    </activity>\n  </application>\n</manifest>\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "exported_component"
+      ]
+    },
+    {
+      "id": "m-allow-backup",
+      "files": {
+        "AndroidManifest.xml": "<manifest package=\"eval.app\">\n  <application android:allowBackup=\"true\" />\n</manifest>\n"
+      },
+      "expected": [
+        "insecure_backup"
+      ]
+    },
+    {
+      "id": "m-strandhogg",
+      "files": {
+        "AndroidManifest.xml": "<manifest package=\"eval.app\">\n  <application>\n    <activity android:name=\".HijackableActivity\" android:taskAffinity=\"\" android:allowTaskReparenting=\"true\" />\n  </application>\n</manifest>\n"
+      },
+      "expected": [
+        "strand_hogg"
+      ],
+      "forbidden": [
+        "exported_component"
+      ]
+    },
+    {
+      "id": "m-cleartext-flag",
+      "files": {
+        "AndroidManifest.xml": "<manifest package=\"eval.app\">\n  <application android:usesCleartextTraffic=\"true\" />\n</manifest>\n"
+      },
+      "expected": [
+        "cleartext_traffic"
+      ]
+    },
+    {
+      "id": "c-hardcoded-key",
+      "files": {
+        "smali/eval/app/CipherKeys.smali": ".class public Leval/app/CipherKeys;\n.super Ljava/lang/Object;\n\n.method public encrypt([B)[B\n  .locals 3\n  const-string v0, \"0123456789abcdef\"\n  invoke-virtual {v0}, Ljava/lang/String;->getBytes()[B\n  move-result-object v1\n  new-instance v2, Ljavax/crypto/spec/SecretKeySpec;\n  invoke-direct {v2, v1, v0}, Ljavax/crypto/spec/SecretKeySpec;-><init>([BLjava/lang/String;)V\n  return-object p1\n.end method\n"
+      },
+      "expected": [
+        "weak_crypto"
+      ],
+      "locations": [
+        {
+          "category": "weak_crypto",
+          "file": "smali/eval/app/CipherKeys.smali",
+          "line_min": 9,
+          "line_max": 11
+        }
+      ]
+    },
+    {
+      "id": "c-static-iv-string",
+      "files": {
+        "smali/eval/app/CbcIv.smali": ".class public Leval/app/CbcIv;\n.super Ljava/lang/Object;\n\n.method public iv()[B\n  .locals 3\n  const-string v0, \"fedcba9876543210\"\n  invoke-virtual {v0}, Ljava/lang/String;->getBytes()[B\n  move-result-object v1\n  new-instance v2, Ljavax/crypto/spec/IvParameterSpec;\n  invoke-direct {v2, v1}, Ljavax/crypto/spec/IvParameterSpec;-><init>([B)V\n  return-object v1\n.end method\n"
+      },
+      "expected": [
+        "weak_crypto"
+      ]
+    },
+    {
+      "id": "c-zero-iv-array",
+      "files": {
+        "smali/eval/app/ZeroIv.smali": ".class public Leval/app/ZeroIv;\n.super Ljava/lang/Object;\n\n.method public init()V\n  .locals 3\n  const/16 v0, 0x10\n  new-array v1, v0, [B\n  fill-array-data v1, :array_iv\n  new-instance v2, Ljavax/crypto/spec/IvParameterSpec;\n  invoke-direct {v2, v1}, Ljavax/crypto/spec/IvParameterSpec;-><init>([B)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "weak_crypto"
+      ]
+    },
+    {
+      "id": "c-random-iv-trap",
+      "files": {
+        "smali/eval/app/RandomIv.smali": ".class public Leval/app/RandomIv;\n.super Ljava/lang/Object;\n\n.method public init(Ljava/security/SecureRandom;)V\n  .locals 3\n  const/16 v0, 0x10\n  new-array v1, v0, [B\n  invoke-virtual {p1, v1}, Ljava/security/SecureRandom;->nextBytes([B)V\n  new-instance v2, Ljavax/crypto/spec/IvParameterSpec;\n  invoke-direct {v2, v1}, Ljavax/crypto/spec/IvParameterSpec;-><init>([B)V\n  return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "weak_crypto"
+      ]
+    },
+    {
+      "id": "c-md5",
+      "files": {
+        "smali/eval/app/Digest.smali": ".class public Leval/app/Digest;\n.super Ljava/lang/Object;\n\n.method public hash([B)[B\n  .locals 2\n  const-string v0, \"MD5\"\n  invoke-static {v0}, Ljava/security/MessageDigest;->getInstance(Ljava/lang/String;)Ljava/security/MessageDigest;\n  move-result-object v1\n  invoke-virtual {v1, p1}, Ljava/security/MessageDigest;->digest([B)[B\n  move-result-object v0\n  return-object v0\n.end method\n"
+      },
+      "expected": [
+        "weak_crypto"
+      ]
+    },
+    {
+      "id": "c-sha256-trap",
+      "files": {
+        "smali/eval/app/SafeDigest.smali": ".class public Leval/app/SafeDigest;\n.super Ljava/lang/Object;\n\n.method public hash([B)[B\n  .locals 2\n  const-string v0, \"SHA-256\"\n  invoke-static {v0}, Ljava/security/MessageDigest;->getInstance(Ljava/lang/String;)Ljava/security/MessageDigest;\n  move-result-object v1\n  invoke-virtual {v1, p1}, Ljava/security/MessageDigest;->digest([B)[B\n  move-result-object v0\n  return-object v0\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "weak_crypto"
+      ]
+    },
+    {
+      "id": "c-des-cipher",
+      "files": {
+        "smali/eval/app/LegacyCipher.smali": ".class public Leval/app/LegacyCipher;\n.super Ljava/lang/Object;\n\n.method public cipher()V\n  .locals 2\n  const-string v0, \"DES/CBC/PKCS5Padding\"\n  invoke-static {v0}, Ljavax/crypto/Cipher;->getInstance(Ljava/lang/String;)Ljavax/crypto/Cipher;\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "weak_crypto"
+      ]
+    },
+    {
+      "id": "c-aes-gcm-trap",
+      "files": {
+        "smali/eval/app/ModernCipher.smali": ".class public Leval/app/ModernCipher;\n.super Ljava/lang/Object;\n\n.method public cipher()V\n  .locals 2\n  const-string v0, \"AES/GCM/NoPadding\"\n  invoke-static {v0}, Ljavax/crypto/Cipher;->getInstance(Ljava/lang/String;)Ljavax/crypto/Cipher;\n  return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "weak_crypto"
+      ]
+    },
+    {
+      "id": "s-google-api-key",
+      "files": {
+        "smali/eval/app/ApiKeys.smali": ".class public Leval/app/ApiKeys;\n.super Ljava/lang/Object;\n\n.field private static final MAPS_KEY:Ljava/lang/String; = \"AIzaSyBfakeFakeFakeFakeFakeFakeFakeFa12\"\n"
+      },
+      "expected": [
+        "hardcoded_secret"
+      ]
+    },
+    {
+      "id": "s-private-key-pem",
+      "files": {
+        "smali/eval/app/EmbeddedKey.smali": ".class public Leval/app/EmbeddedKey;\n.super Ljava/lang/Object;\n\n.field public static final CLIENT_PEM:Ljava/lang/String; = \"-----BEGIN RSA PRIVATE KEY----- MIIEpAIBAAKCAQEA7fake -----END RSA PRIVATE KEY-----\"\n"
+      },
+      "expected": [
+        "hardcoded_secret"
+      ]
+    },
+    {
+      "id": "s-benign-token-trap",
+      "files": {
+        "smali/eval/app/TokenHolder.smali": ".class public Leval/app/TokenHolder;\n.super Ljava/lang/Object;\n\n.field private static final SESSION:Ljava/lang/String; = \"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.session\"\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "hardcoded_secret"
+      ]
+    },
+    {
+      "id": "d-external-dex",
+      "files": {
+        "smali/eval/app/HotPatch.smali": ".class public Leval/app/HotPatch;\n.super Ljava/lang/Object;\n\n.method public load()V\n  .locals 2\n  const-string v0, \"/sdcard/Download/update.dex\"\n  new-instance v1, Ldalvik/system/DexClassLoader;\n  invoke-direct {v1, v0, v0, v0, v0}, Ldalvik/system/DexClassLoader;-><init>(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "DYNAMIC_LOAD"
+      ],
+      "forbidden": [
+        "dynamic_code_loading"
+      ],
+      "locations": [
+        {
+          "category": "DYNAMIC_LOAD",
+          "file": "smali/eval/app/HotPatch.smali",
+          "line_min": 7,
+          "line_max": 9
+        }
+      ]
+    },
+    {
+      "id": "d-inmemory-dex",
+      "files": {
+        "smali/eval/app/MemLoader.smali": ".class public Leval/app/MemLoader;\n.super Ljava/lang/Object;\n\n.method public load(Ljava/nio/ByteBuffer;Ljava/lang/ClassLoader;)V\n  .locals 1\n  new-instance v0, Ldalvik/system/InMemoryDexClassLoader;\n  invoke-direct {v0, p1, p2}, Ldalvik/system/InMemoryDexClassLoader;-><init>(Ljava/nio/ByteBuffer;Ljava/lang/ClassLoader;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "DYNAMIC_LOAD"
+      ],
+      "forbidden": [
+        "dynamic_code_loading"
+      ]
+    },
+    {
+      "id": "d-private-path-trap",
+      "files": {
+        "smali/eval/app/PatchLoader.smali": ".class public Leval/app/PatchLoader;\n.super Ljava/lang/Object;\n\n.method public load()V\n  .locals 2\n  const-string v0, \"/data/data/eval.app/code_cache/patch.dex\"\n  new-instance v1, Ldalvik/system/DexClassLoader;\n  invoke-direct {v1, v0, v0, v0, v0}, Ldalvik/system/DexClassLoader;-><init>(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V\n  return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "DYNAMIC_LOAD",
+        "dynamic_code_loading"
+      ]
+    },
+    {
+      "id": "d-intent-driven-dex",
+      "files": {
+        "smali/eval/app/RemoteLoader.smali": ".class public Leval/app/RemoteLoader;\n.super Ljava/lang/Object;\n\n.method public load(Landroid/content/Intent;Ljava/lang/String;)V\n  .locals 3\n  invoke-virtual {p1, p2}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n  move-result-object v0\n  new-instance v1, Ldalvik/system/DexClassLoader;\n  invoke-direct {v1, v0, v0, v0, v0}, Ldalvik/system/DexClassLoader;-><init>(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/ClassLoader;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "DYNAMIC_LOAD",
+        "dynamic_code_loading"
+      ]
+    },
+    {
+      "id": "df-intent-redirection",
+      "files": {
+        "smali/eval/app/Redirect.smali": ".class public Leval/app/Redirect;\n.super Landroid/app/Activity;\n\n.method public forward(Landroid/content/Intent;)V\n  .locals 1\n  const-string v0, \"next\"\n  invoke-virtual {p1, v0}, Landroid/content/Intent;->getParcelableExtra(Ljava/lang/String;)Landroid/os/Parcelable;\n  move-result-object v0\n  check-cast v0, Landroid/content/Intent;\n  invoke-virtual {p0, v0}, Landroid/content/Context;->startActivity(Landroid/content/Intent;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "intent_redirection"
+      ],
+      "locations": [
+        {
+          "category": "intent_redirection",
+          "file": "smali/eval/app/Redirect.smali",
+          "line_min": 9,
+          "line_max": 11
+        }
+      ]
+    },
+    {
+      "id": "df-path-traversal",
+      "files": {
+        "smali/eval/app/FileOpener.smali": ".class public Leval/app/FileOpener;\n.super Ljava/lang/Object;\n\n.method public open(Landroid/content/Intent;)V\n  .locals 2\n  const-string v0, \"name\"\n  invoke-virtual {p1, v0}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n  move-result-object v0\n  new-instance v1, Ljava/io/File;\n  invoke-direct {v1, v0}, Ljava/io/File;-><init>(Ljava/lang/String;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "path_traversal"
+      ],
+      "forbidden": [
+        "insecure_storage"
+      ]
+    },
+    {
+      "id": "df-path-uri-encoding-not-containment",
+      "files": {
+        "smali/eval/app/SafeFileOpener.smali": ".class public Leval/app/SafeFileOpener;\n.super Ljava/lang/Object;\n\n.method public open(Landroid/content/Intent;)V\n  .locals 3\n  const-string v0, \"name\"\n  invoke-virtual {p1, v0}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n  move-result-object v0\n  invoke-static {v0}, Landroid/net/Uri;->encode(Ljava/lang/String;)Ljava/lang/String;\n  move-result-object v1\n  new-instance v2, Ljava/io/File;\n  invoke-direct {v2, v1}, Ljava/io/File;-><init>(Ljava/lang/String;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "path_traversal"
+      ]
+    },
+    {
+      "id": "df-reflection-injection",
+      "files": {
+        "smali/eval/app/DynCall.smali": ".class public Leval/app/DynCall;\n.super Ljava/lang/Object;\n\n.method public call(Landroid/content/Intent;)V\n  .locals 1\n  const-string v0, \"klass\"\n  invoke-virtual {p1, v0}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n  move-result-object v0\n  invoke-static {v0}, Ljava/lang/Class;->forName(Ljava/lang/String;)Ljava/lang/Class;\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "dynamic_class_loading"
+      ]
+    },
+    {
+      "id": "df-sql-execsql",
+      "files": {
+        "smali/eval/app/AdminQuery.smali": ".class public Leval/app/AdminQuery;\n.super Ljava/lang/Object;\n\n.method public wipe(Landroid/content/Intent;Landroid/database/sqlite/SQLiteDatabase;)V\n  .locals 1\n  const-string v0, \"filter\"\n  invoke-virtual {p1, v0}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n  move-result-object v0\n  invoke-virtual {p2, v0}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "sql_injection"
+      ]
+    },
+    {
+      "id": "df-sql-numeric-sanitized",
+      "files": {
+        "smali/eval/app/ByIdQuery.smali": ".class public Leval/app/ByIdQuery;\n.super Ljava/lang/Object;\n\n.method public byId(Landroid/content/Intent;Landroid/database/sqlite/SQLiteDatabase;)V\n  .locals 3\n  const-string v0, \"id\"\n  invoke-virtual {p1, v0}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n  move-result-object v0\n  invoke-static {v0}, Ljava/lang/Integer;->parseInt(Ljava/lang/String;)I\n  move-result v1\n  invoke-static {v1}, Ljava/lang/String;->valueOf(I)Ljava/lang/String;\n  move-result-object v2\n  invoke-virtual {p2, v2}, Landroid/database/sqlite/SQLiteDatabase;->execSQL(Ljava/lang/String;)V\n  return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "sql_injection"
+      ]
+    },
+    {
+      "id": "df-command-processbuilder",
+      "files": {
+        "smali/eval/app/ToolRunner.smali": ".class public Leval/app/ToolRunner;\n.super Ljava/lang/Object;\n\n.method public run(Landroid/content/Intent;)V\n  .locals 2\n  const-string v0, \"cmd\"\n  invoke-virtual {p1, v0}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n  move-result-object v0\n  new-instance v1, Ljava/lang/ProcessBuilder;\n  invoke-direct {v1, v0}, Ljava/lang/ProcessBuilder;-><init>(Ljava/lang/String;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "command_injection"
+      ]
+    },
+    {
+      "id": "df-command-literal-trap",
+      "files": {
+        "smali/eval/app/FixedCmd.smali": ".class public Leval/app/FixedCmd;\n.super Ljava/lang/Object;\n\n.method public run()V\n  .locals 2\n  const-string v0, \"ls\"\n  invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n  move-result-object v1\n  invoke-virtual {v1, v0}, Ljava/lang/Runtime;->exec(Ljava/lang/String;)Ljava/lang/Process;\n  return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "command_injection"
+      ]
+    },
+    {
+      "id": "df-log-ordinary-input",
+      "files": {
+        "smali/eval/app/DebugLog.smali": ".class public Leval/app/DebugLog;\n.super Ljava/lang/Object;\n\n.method public dump(Landroid/widget/EditText;)V\n  .locals 2\n  const-string v0, \"DebugTag\"\n  invoke-virtual {p1}, Landroid/widget/EditText;->getText()Landroid/text/Editable;\n  move-result-object v1\n  invoke-static {v0, v1}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I\n  return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "log_data_exposure"
+      ]
+    },
+    {
+      "id": "df-log-clipboard",
+      "files": {
+        "smali/eval/app/ClipLog.smali": ".class public Leval/app/ClipLog;\n.super Ljava/lang/Object;\n\n.method public dump(Landroid/content/ClipboardManager;)V\n  .locals 2\n  const-string v0, \"DebugTag\"\n  invoke-virtual {p1}, Landroid/content/ClipboardManager;->getPrimaryClip()Landroid/content/ClipData;\n  move-result-object v1\n  invoke-static {v0, v1}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "log_data_exposure"
+      ]
+    },
+    {
+      "id": "df-log-benign-trap",
+      "files": {
+        "smali/eval/app/QuietLog.smali": ".class public Leval/app/QuietLog;\n.super Ljava/lang/Object;\n\n.method public info()V\n  .locals 2\n  const-string v0, \"DebugTag\"\n  const-string v1, \"cache refreshed\"\n  invoke-static {v0, v1}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I\n  return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "log_data_exposure"
+      ]
+    },
+    {
+      "id": "df-webview-injection",
+      "files": {
+        "smali/eval/app/DeeplinkViewer.smali": ".class public Leval/app/DeeplinkViewer;\n.super Ljava/lang/Object;\n\n.method public show(Landroid/content/Intent;Landroid/webkit/WebView;)V\n  .locals 1\n  const-string v0, \"url\"\n  invoke-virtual {p1, v0}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n  move-result-object v0\n  invoke-virtual {p2, v0}, Landroid/webkit/WebView;->loadUrl(Ljava/lang/String;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "webview_injection"
+      ],
+      "forbidden": [
+        "webview_js_bridge",
+        "WEBVIEW_REMOTE_JS"
+      ]
+    },
+    {
+      "id": "z-zipslip-positive",
+      "files": {
+        "smali/eval/app/Unzip.smali": ".class public Leval/app/Unzip;\n.super Ljava/lang/Object;\n\n.method public extract(Ljava/util/zip/ZipInputStream;)V\n  .locals 5\n  const-string v0, \"/data/data/eval.app/files/out\"\n  new-instance v1, Ljava/io/File;\n  invoke-direct {v1, v0}, Ljava/io/File;-><init>(Ljava/lang/String;)V\n  invoke-virtual {p1}, Ljava/util/zip/ZipInputStream;->getNextEntry()Ljava/util/zip/ZipEntry;\n  move-result-object v2\n  invoke-virtual {v2}, Ljava/util/zip/ZipEntry;->getName()Ljava/lang/String;\n  move-result-object v3\n  new-instance v4, Ljava/io/File;\n  invoke-direct {v4, v1, v3}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V\n  new-instance v0, Ljava/io/FileOutputStream;\n  invoke-direct {v0, v4}, Ljava/io/FileOutputStream;-><init>(Ljava/io/File;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "zip_slip"
+      ],
+      "forbidden": [
+        "path_traversal"
+      ],
+      "locations": [
+        {
+          "category": "zip_slip",
+          "file": "smali/eval/app/Unzip.smali",
+          "line_min": 10,
+          "line_max": 12
+        }
+      ]
+    },
+    {
+      "id": "z-canonicalization-without-check",
+      "files": {
+        "smali/eval/app/SafeUnzip.smali": ".class public Leval/app/SafeUnzip;\n.super Ljava/lang/Object;\n\n.method public extract(Ljava/util/zip/ZipInputStream;)V\n  .locals 5\n  const-string v0, \"/data/data/eval.app/files/out\"\n  new-instance v1, Ljava/io/File;\n  invoke-direct {v1, v0}, Ljava/io/File;-><init>(Ljava/lang/String;)V\n  invoke-virtual {p1}, Ljava/util/zip/ZipInputStream;->getNextEntry()Ljava/util/zip/ZipEntry;\n  move-result-object v2\n  invoke-virtual {v2}, Ljava/util/zip/ZipEntry;->getName()Ljava/lang/String;\n  move-result-object v3\n  new-instance v4, Ljava/io/File;\n  invoke-direct {v4, v1, v3}, Ljava/io/File;-><init>(Ljava/io/File;Ljava/lang/String;)V\n  invoke-virtual {v4}, Ljava/io/File;->getCanonicalPath()Ljava/lang/String;\n  new-instance v0, Ljava/io/FileOutputStream;\n  invoke-direct {v0, v4}, Ljava/io/FileOutputStream;-><init>(Ljava/io/File;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "zip_slip"
+      ],
+      "forbidden": [
+        "path_traversal"
+      ]
+    },
+    {
+      "id": "o-dlopen-obfuscated",
+      "files": {
+        "smali/eval/app/NativeLoader.smali": ".class public Leval/app/NativeLoader;\n.super Ljava/lang/Object;\n\n.method public load()V\n  .locals 2\n  new-instance v0, Ljava/lang/StringBuilder;\n  invoke-direct {v0}, Ljava/lang/StringBuilder;-><init>()V\n  const-string v1, \"libpay\"\n  invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;\n  const-string v1, \"load\"\n  invoke-virtual {v0, v1}, Ljava/lang/StringBuilder;->append(Ljava/lang/String;)Ljava/lang/StringBuilder;\n  invoke-virtual {v0}, Ljava/lang/StringBuilder;->toString()Ljava/lang/String;\n  move-result-object v1\n  invoke-static {v1}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V\n  return-void\n.end method\n"
+      },
+      "expected": [
+        "dlopen_obfuscation",
+        "DYNAMIC_LOAD"
+      ]
+    },
+    {
+      "id": "o-normal-jni-trap",
+      "files": {
+        "smali/eval/app/JniLoader.smali": ".class public Leval/app/JniLoader;\n.super Ljava/lang/Object;\n\n.method public load()V\n  .locals 1\n  const-string v0, \"sqliteX\"\n  invoke-static {v0}, Ljava/lang/System;->loadLibrary(Ljava/lang/String;)V\n  return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "dlopen_obfuscation",
+        "DYNAMIC_LOAD"
+      ]
+    },
+    {
+      "id": "n-localhost-trap",
+      "files": {
+        "smali/eval/app/DevEndpoint.smali": ".class public Leval/app/DevEndpoint;\n.super Ljava/lang/Object;\n\n.field private static final DEV_API:Ljava/lang/String; = \"http://localhost:8080/api\"\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "cleartext_traffic"
+      ]
+    },
+    {
+      "id": "m-applink-autoverify-verified",
+      "files": {
+        "AndroidManifest.xml": "<manifest package=\"eval.app\">\n  <application>\n    <activity android:name=\".AppLinkActivity\" android:exported=\"true\">\n      <intent-filter android:autoVerify=\"true\">\n        <action android:name=\"android.intent.action.VIEW\" />\n        <category android:name=\"android.intent.category.DEFAULT\" />\n        <category android:name=\"android.intent.category.BROWSABLE\" />\n        <data android:scheme=\"https\" android:host=\"link.example.com\" />\n      </intent-filter>\n    </activity>\n  </application>\n</manifest>\n"
+      },
+      "expected": [
+        "exported_component"
+      ],
+      "forbidden": [
+        "deep_link_vuln"
+      ]
+    },
+    {
+      "id": "m-applink-https-unverified",
+      "files": {
+        "AndroidManifest.xml": "<manifest package=\"eval.app\">\n  <application>\n    <activity android:name=\".LinkActivity\" android:exported=\"true\">\n      <intent-filter>\n        <action android:name=\"android.intent.action.VIEW\" />\n        <category android:name=\"android.intent.category.DEFAULT\" />\n        <category android:name=\"android.intent.category.BROWSABLE\" />\n        <data android:scheme=\"https\" android:host=\"link.example.com\" />\n      </intent-filter>\n    </activity>\n  </application>\n</manifest>\n"
+      },
+      "expected": [
+        "deep_link_vuln",
+        "exported_component"
+      ],
+      "locations": [
+        {
+          "category": "deep_link_vuln",
+          "file": "AndroidManifest.xml",
+          "line_min": 3,
+          "line_max": 4
+        }
+      ]
+    },
+    {
+      "id": "m-deeplink-multi-host",
+      "files": {
+        "AndroidManifest.xml": "<manifest package=\"eval.app\">\n  <application>\n    <activity android:name=\".MultiLinkActivity\" android:exported=\"true\">\n      <intent-filter>\n        <action android:name=\"android.intent.action.VIEW\" />\n        <category android:name=\"android.intent.category.DEFAULT\" />\n        <category android:name=\"android.intent.category.BROWSABLE\" />\n        <data android:scheme=\"https\" android:host=\"pay.example.com\" />\n        <data android:scheme=\"https\" android:host=\"pay.example.net\" />\n        <data android:scheme=\"https\" android:host=\"*.pay.example.org\" />\n      </intent-filter>\n    </activity>\n  </application>\n</manifest>\n"
+      },
+      "expected": [
+        "deep_link_vuln",
+        "exported_component"
+      ],
+      "locations": [
+        {
+          "category": "deep_link_vuln",
+          "file": "AndroidManifest.xml",
+          "line_min": 3,
+          "line_max": 4
+        }
+      ]
+    },
+    {
+      "id": "m-provider-default-export-legacy",
+      "files": {
+        "AndroidManifest.xml": "<manifest package=\"eval.app\">\n  <uses-sdk android:targetSdkVersion=\"16\" />\n  <application>\n    <provider android:name=\".LegacyProvider\" android:authorities=\"eval.app.data\" />\n  </application>\n</manifest>\n"
+      },
+      "expected": [
+        "exported_component"
+      ],
+      "forbidden": [
+        "deep_link_vuln",
+        "strand_hogg"
+      ]
+    },
+    {
+      "id": "m-cleartext-nsc-override-trap",
+      "files": {
+        "AndroidManifest.xml": "<manifest package=\"eval.app\">\n  <uses-sdk android:targetSdkVersion=\"30\" />\n  <application android:usesCleartextTraffic=\"true\" android:networkSecurityConfig=\"@xml/network_security_config\" />\n</manifest>\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "cleartext_traffic"
+      ]
+    },
+    {
+      "id": "d-network-inmemory-dex",
+      "files": {
+        "smali/eval/app/NetworkLoader.smali": ".class public Leval/app/NetworkLoader;\n.super Ljava/lang/Object;\n.method public load(Lokhttp3/ResponseBody;Ljava/lang/ClassLoader;)V\n .locals 3\n invoke-virtual {p1}, Lokhttp3/ResponseBody;->bytes()[B\n move-result-object v0\n invoke-static {v0}, Ljava/nio/ByteBuffer;->wrap([B)Ljava/nio/ByteBuffer;\n move-result-object v1\n new-instance v2, Ldalvik/system/InMemoryDexClassLoader;\n invoke-direct {v2, v1, p2}, Ldalvik/system/InMemoryDexClassLoader;-><init>(Ljava/nio/ByteBuffer;Ljava/lang/ClassLoader;)V\n return-void\n.end method\n"
+      },
+      "expected": [
+        "DYNAMIC_LOAD",
+        "dynamic_code_loading"
+      ]
+    },
+    {
+      "id": "df-log-clipboard-pii",
+      "files": {
+        "smali/eval/app/ClipLog.smali": ".class public Leval/app/ClipLog;\n.super Ljava/lang/Object;\n.method public dump(Landroid/content/ClipboardManager;)V\n .locals 2\n const-string v0, \"DebugTag\"\n invoke-virtual {p1}, Landroid/content/ClipboardManager;->getPrimaryClip()Landroid/content/ClipData;\n move-result-object v1\n invoke-virtual {v1}, Ljava/lang/Object;->toString()Ljava/lang/String;\n move-result-object v1\n invoke-static {v0, v1}, Landroid/util/Log;->d(Ljava/lang/String;Ljava/lang/String;)I\n return-void\n.end method\n"
+      },
+      "expected": [
+        "log_data_exposure"
+      ]
+    },
+    {
+      "id": "arrays-filled-command",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n filled-new-array {v1, v2, v0}, [Ljava/lang/String;\n move-result-object v3\n invoke-virtual {v8, v3}, Ljava/lang/Runtime;->exec([Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n"
+      },
+      "expected": [
+        "command_injection"
+      ],
+      "forbidden": [],
+      "locations": [
+        {
+          "category": "command_injection",
+          "file": "smali/eval/app/ArrayFlow.smali",
+          "line_min": 21,
+          "line_max": 21
+        }
+      ]
+    },
+    {
+      "id": "arrays-filled-range-command",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n move-object v5, v1\n move-object v6, v2\n move-object v7, v0\n filled-new-array/range {v5 .. v7}, [Ljava/lang/String;\n move-result-object v3\n new-instance v9, Ljava/lang/ProcessBuilder;\n invoke-direct {v9, v3}, Ljava/lang/ProcessBuilder;-><init>([Ljava/lang/String;)V\n return-void\n.end method\n"
+      },
+      "expected": [
+        "command_injection"
+      ],
+      "forbidden": [],
+      "locations": [
+        {
+          "category": "command_injection",
+          "file": "smali/eval/app/ArrayFlow.smali",
+          "line_min": 25,
+          "line_max": 25
+        }
+      ]
+    },
+    {
+      "id": "arrays-constant-command-trap",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n filled-new-array {v1, v2, v1}, [Ljava/lang/String;\n move-result-object v3\n invoke-virtual {v8, v3}, Ljava/lang/Runtime;->exec([Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "command_injection"
+      ]
+    },
+    {
+      "id": "arrays-aput-command",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n aput-object v0, v3, v4\n invoke-virtual {v8, v3}, Ljava/lang/Runtime;->exec([Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n"
+      },
+      "expected": [
+        "command_injection"
+      ],
+      "forbidden": [],
+      "locations": [
+        {
+          "category": "command_injection",
+          "file": "smali/eval/app/ArrayFlow.smali",
+          "line_min": 20,
+          "line_max": 20
+        }
+      ]
+    },
+    {
+      "id": "arrays-overwritten-command-trap",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n aput-object v0, v3, v4\n aput-object v1, v3, v4\n invoke-virtual {v8, v3}, Ljava/lang/Runtime;->exec([Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "command_injection"
+      ]
+    },
+    {
+      "id": "arrays-branch-command",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n if-eqz p1, :safe\n aput-object v0, v3, v4\n goto :join\n :safe\n aput-object v1, v3, v4\n :join\n aget-object v6, v3, v4\n invoke-virtual {v8, v6}, Ljava/lang/Runtime;->exec(Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n"
+      },
+      "expected": [
+        "command_injection"
+      ],
+      "forbidden": [],
+      "locations": [
+        {
+          "category": "command_injection",
+          "file": "smali/eval/app/ArrayFlow.smali",
+          "line_min": 26,
+          "line_max": 26
+        }
+      ]
+    },
+    {
+      "id": "arrays-unreachable-write-trap",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n goto :join\n aput-object v0, v3, v4\n :join\n aget-object v6, v3, v4\n invoke-virtual {v8, v6}, Ljava/lang/Runtime;->exec(Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "command_injection"
+      ]
+    },
+    {
+      "id": "arrays-safe-index-trap",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n aput-object v0, v3, v4\n aget-object v6, v3, v5\n invoke-virtual {v8, v6}, Ljava/lang/Runtime;->exec(Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "command_injection"
+      ]
+    },
+    {
+      "id": "arrays-read-alias",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n move-object v7, v3\n aput-object v0, v3, v4\n aget-object v6, v7, v4\n invoke-virtual {v8, v6}, Ljava/lang/Runtime;->exec(Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n"
+      },
+      "expected": [
+        "command_injection"
+      ],
+      "forbidden": [],
+      "locations": [
+        {
+          "category": "command_injection",
+          "file": "smali/eval/app/ArrayFlow.smali",
+          "line_min": 22,
+          "line_max": 22
+        }
+      ]
+    },
+    {
+      "id": "arrays-write-alias",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n move-object v7, v3\n aput-object v0, v7, v4\n aget-object v6, v3, v4\n invoke-virtual {v8, v6}, Ljava/lang/Runtime;->exec(Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n"
+      },
+      "expected": [
+        "command_injection"
+      ],
+      "forbidden": [],
+      "locations": [
+        {
+          "category": "command_injection",
+          "file": "smali/eval/app/ArrayFlow.smali",
+          "line_min": 22,
+          "line_max": 22
+        }
+      ]
+    },
+    {
+      "id": "arrays-alias-overwrite-trap",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n move-object v7, v3\n aput-object v0, v3, v4\n aput-object v1, v7, v4\n aget-object v6, v3, v4\n invoke-virtual {v8, v6}, Ljava/lang/Runtime;->exec(Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "command_injection"
+      ]
+    },
+    {
+      "id": "arrays-reallocation-trap",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n aput-object v0, v3, v4\n filled-new-array {v1, v2, v1}, [Ljava/lang/String;\n move-result-object v3\n aget-object v6, v3, v4\n invoke-virtual {v8, v6}, Ljava/lang/Runtime;->exec(Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "command_injection"
+      ]
+    },
+    {
+      "id": "arrays-branch-index",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n aput-object v0, v3, v4\n if-eqz p1, :one\n const/4 v7, 0x2\n goto :join\n :one\n const/4 v7, 0x1\n :join\n aget-object v6, v3, v7\n invoke-virtual {v8, v6}, Ljava/lang/Runtime;->exec(Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n"
+      },
+      "expected": [
+        "command_injection"
+      ],
+      "forbidden": [],
+      "locations": [
+        {
+          "category": "command_injection",
+          "file": "smali/eval/app/ArrayFlow.smali",
+          "line_min": 27,
+          "line_max": 27
+        }
+      ]
+    },
+    {
+      "id": "arrays-equivalent-index-trap",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n aput-object v0, v3, v4\n const/16 v7, 2\n aput-object v1, v3, v7\n aget-object v6, v3, v4\n invoke-virtual {v8, v6}, Ljava/lang/Runtime;->exec(Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "command_injection"
+      ]
+    },
+    {
+      "id": "arrays-intent-source",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringArrayExtra(Ljava/lang/String;)[Ljava/lang/String;\n move-result-object v3\n invoke-virtual {v8, v3}, Ljava/lang/Runtime;->exec([Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n"
+      },
+      "expected": [
+        "command_injection"
+      ],
+      "forbidden": [],
+      "locations": [
+        {
+          "category": "command_injection",
+          "file": "smali/eval/app/ArrayFlow.smali",
+          "line_min": 21,
+          "line_max": 21
+        }
+      ]
+    },
+    {
+      "id": "arrays-bundle-source",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n invoke-virtual {p3, v1}, Landroid/os/Bundle;->getStringArray(Ljava/lang/String;)[Ljava/lang/String;\n move-result-object v3\n aget-object v6, v3, v4\n invoke-virtual {v8, v6}, Ljava/lang/Runtime;->exec(Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n"
+      },
+      "expected": [
+        "command_injection"
+      ],
+      "forbidden": [],
+      "locations": [
+        {
+          "category": "command_injection",
+          "file": "smali/eval/app/ArrayFlow.smali",
+          "line_min": 22,
+          "line_max": 22
+        }
+      ]
+    },
+    {
+      "id": "arrays-helper-return",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n invoke-static {v0}, Leval/app/ArrayFlow;->pack(Ljava/lang/String;)[Ljava/lang/String;\n move-result-object v3\n invoke-virtual {v8, v3}, Ljava/lang/Runtime;->exec([Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n.method public static pack(Ljava/lang/String;)[Ljava/lang/String;\n .locals 3\n const-string v0, \"sh\"\n const-string v1, \"-c\"\n filled-new-array {v0, v1, p0}, [Ljava/lang/String;\n move-result-object v2\n return-object v2\n.end method\n"
+      },
+      "expected": [
+        "command_injection"
+      ],
+      "forbidden": [],
+      "locations": [
+        {
+          "category": "command_injection",
+          "file": "smali/eval/app/ArrayFlow.smali",
+          "line_min": 21,
+          "line_max": 21
+        }
+      ]
+    },
+    {
+      "id": "arrays-helper-safe-element-trap",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n invoke-static {v0}, Leval/app/ArrayFlow;->pack(Ljava/lang/String;)[Ljava/lang/String;\n move-result-object v3\n aget-object v6, v3, v5\n invoke-virtual {v8, v6}, Ljava/lang/Runtime;->exec(Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n.method public static pack(Ljava/lang/String;)[Ljava/lang/String;\n .locals 3\n const-string v0, \"sh\"\n const-string v1, \"-c\"\n filled-new-array {v0, v1, p0}, [Ljava/lang/String;\n move-result-object v2\n return-object v2\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "command_injection"
+      ]
+    },
+    {
+      "id": "arrays-helper-sink",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n filled-new-array {v1, v2, v0}, [Ljava/lang/String;\n move-result-object v3\n invoke-static {v8, v3}, Leval/app/ArrayFlow;->execute(Ljava/lang/Runtime;[Ljava/lang/String;)V\n return-void\n.end method\n.method public static execute(Ljava/lang/Runtime;[Ljava/lang/String;)V\n .locals 0\n invoke-virtual {p0, p1}, Ljava/lang/Runtime;->exec([Ljava/lang/String;)Ljava/lang/Process;\n return-void\n.end method\n"
+      },
+      "expected": [
+        "command_injection"
+      ],
+      "forbidden": [],
+      "locations": [
+        {
+          "category": "command_injection",
+          "file": "smali/eval/app/ArrayFlow.smali",
+          "line_min": 26,
+          "line_max": 26
+        }
+      ]
+    },
+    {
+      "id": "arrays-bound-sql-trap",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n filled-new-array {v0}, [Ljava/lang/String;\n move-result-object v3\n const-string v6, \"SELECT id FROM items WHERE name = ?\"\n invoke-virtual {p2, v6, v3}, Landroid/database/sqlite/SQLiteDatabase;->rawQuery(Ljava/lang/String;[Ljava/lang/String;)Landroid/database/Cursor;\n return-void\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "sql_injection"
+      ]
+    },
+    {
+      "id": "arrays-sql-helper-raw",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n invoke-static {v0, p1}, Leval/app/ArrayFlow;->quote(Ljava/lang/String;Z)Ljava/lang/String;\n move-result-object v0\n const-string v6, \"SELECT id FROM items WHERE name = \"\n invoke-virtual {v6, v0}, Ljava/lang/String;->concat(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v6\n const/4 v3, 0x0\n invoke-virtual {p2, v6, v3}, Landroid/database/sqlite/SQLiteDatabase;->rawQuery(Ljava/lang/String;[Ljava/lang/String;)Landroid/database/Cursor;\n return-void\n.end method\n.method public static quote(Ljava/lang/String;Z)Ljava/lang/String;\n .locals 1\n return-object p0\n.end method\n"
+      },
+      "expected": [
+        "sql_injection"
+      ],
+      "forbidden": [],
+      "locations": [
+        {
+          "category": "sql_injection",
+          "file": "smali/eval/app/ArrayFlow.smali",
+          "line_min": 25,
+          "line_max": 25
+        }
+      ]
+    },
+    {
+      "id": "arrays-sql-helper-escaped",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n invoke-static {v0, p1}, Leval/app/ArrayFlow;->quote(Ljava/lang/String;Z)Ljava/lang/String;\n move-result-object v0\n const-string v6, \"SELECT id FROM items WHERE name = \"\n invoke-virtual {v6, v0}, Ljava/lang/String;->concat(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v6\n const/4 v3, 0x0\n invoke-virtual {p2, v6, v3}, Landroid/database/sqlite/SQLiteDatabase;->rawQuery(Ljava/lang/String;[Ljava/lang/String;)Landroid/database/Cursor;\n return-void\n.end method\n.method public static quote(Ljava/lang/String;Z)Ljava/lang/String;\n .locals 1\n invoke-static {p0}, Landroid/database/DatabaseUtils;->sqlEscapeString(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n return-object v0\n.end method\n"
+      },
+      "expected": [],
+      "forbidden": [
+        "sql_injection"
+      ]
+    },
+    {
+      "id": "arrays-sql-helper-partly-escaped",
+      "files": {
+        "smali/eval/app/ArrayFlow.smali": ".class public Leval/app/ArrayFlow;\n.super Ljava/lang/Object;\n.method public static run(Landroid/content/Intent;ZLandroid/database/sqlite/SQLiteDatabase;Landroid/os/Bundle;)V\n .locals 10\n const-string v1, \"sh\"\n const-string v2, \"-c\"\n invoke-virtual {p0, v1}, Landroid/content/Intent;->getStringExtra(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n const/4 v4, 0x2\n const/4 v5, 0x1\n const/4 v6, 0x3\n new-array v3, v6, [Ljava/lang/String;\n const/4 v7, 0x0\n aput-object v1, v3, v7\n aput-object v2, v3, v5\n aput-object v1, v3, v4\n invoke-static {}, Ljava/lang/Runtime;->getRuntime()Ljava/lang/Runtime;\n move-result-object v8\n invoke-static {v0, p1}, Leval/app/ArrayFlow;->quote(Ljava/lang/String;Z)Ljava/lang/String;\n move-result-object v0\n const-string v6, \"SELECT id FROM items WHERE name = \"\n invoke-virtual {v6, v0}, Ljava/lang/String;->concat(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v6\n const/4 v3, 0x0\n invoke-virtual {p2, v6, v3}, Landroid/database/sqlite/SQLiteDatabase;->rawQuery(Ljava/lang/String;[Ljava/lang/String;)Landroid/database/Cursor;\n return-void\n.end method\n.method public static quote(Ljava/lang/String;Z)Ljava/lang/String;\n .locals 1\n if-eqz p1, :raw\n invoke-static {p0}, Landroid/database/DatabaseUtils;->sqlEscapeString(Ljava/lang/String;)Ljava/lang/String;\n move-result-object v0\n return-object v0\n :raw\n return-object p0\n.end method\n"
+      },
+      "expected": [
+        "sql_injection"
+      ],
+      "forbidden": [],
+      "locations": [
+        {
+          "category": "sql_injection",
+          "file": "smali/eval/app/ArrayFlow.smali",
+          "line_min": 25,
+          "line_max": 25
+        }
+      ]
+    }
+  ]
+}

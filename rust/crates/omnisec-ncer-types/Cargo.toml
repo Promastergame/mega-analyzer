@@ -1,0 +1,16 @@
+[package]
+name = "omnisec-ncer-types"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec NCER — shared typed-event schema for the Network Claim-Evidence Reconciliation layer."
+
+[dependencies]
+omnisec-json = { path = "../omnisec-json" }
+
+[dev-dependencies]
+
+[lints]
+workspace = true

@@ -1,0 +1,21 @@
+[package]
+name = "omnisec-mitm"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description.workspace = true
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+omnisec-crypto = { path = "../omnisec-crypto" }
+omnisec-json = { path = "../omnisec-json" }
+omnisec-log = { path = "../omnisec-log" }
+omnisec-net-obfs = { path = "../omnisec-net-obfs" }
+omnisec-capture = { path = "../omnisec-capture" }
+
+[lints]
+workspace = true

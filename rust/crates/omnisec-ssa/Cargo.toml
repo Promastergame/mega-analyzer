@@ -1,0 +1,15 @@
+[package]
+name = "omnisec-ssa"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec SSA construction over CFG and OmniIR."
+
+[dependencies]
+omnisec-cfg.workspace = true
+omnisec-ir.workspace = true
+
+[lints]
+workspace = true

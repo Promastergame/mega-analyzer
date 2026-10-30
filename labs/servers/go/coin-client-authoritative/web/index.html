@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#12130f">
+  <title>Packet Arcade · Coin Lab</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+
+  <main id="auth-shell" class="auth-shell">
+    <section class="auth-story" aria-labelledby="auth-title">
+      <div class="wordmark">
+        <span class="wordmark-glyph" aria-hidden="true">PA</span>
+        <span>PACKET ARCADE</span>
+      </div>
+      <div class="story-copy">
+        <p class="eyebrow">LAB / 01 · COIN INJECTION</p>
+        <h1 id="auth-title">Магазин, который доверился не тому пакету.</h1>
+        <p>Зарабатывайте монеты, покупайте предметы и найдите единственную слабую точку между клиентом и сервером.</p>
+      </div>
+      <div class="signal-board" aria-label="Схема соединения">
+        <span>CLIENT</span><i></i><b>?</b><i></i><span>SERVER</span>
+      </div>
+      <p class="local-warning">Локальная учебная среда · реальные данные не используйте</p>
+    </section>
+
+    <section class="auth-panel" aria-label="Вход в аккаунт">
+      <div class="auth-panel-head">
+        <p class="eyebrow">PLAYER ID</p>
+        <h2>Войти в аркаду</h2>
+      </div>
+      <div class="auth-tabs" role="tablist" aria-label="Режим авторизации">
+        <button id="login-tab" class="auth-tab active" type="button" role="tab" aria-selected="true" data-auth-view="login">Вход</button>
+        <button id="register-tab" class="auth-tab" type="button" role="tab" aria-selected="false" data-auth-view="register">Новый игрок</button>
+      </div>
+
+      <form id="login-form" class="auth-form" autocomplete="on">
+        <label>
+          <span>Имя игрока</span>
+          <input name="username" autocomplete="username" minlength="3" maxlength="24" required placeholder="packet_runner">
+        </label>
+        <label>
+          <span>Пароль</span>
+          <input name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required placeholder="Минимум 8 символов">
+        </label>
+        <button class="primary-action" type="submit"><span>Войти</span><b aria-hidden="true">↗</b></button>
+      </form>
+
+      <form id="register-form" class="auth-form" autocomplete="on" hidden>
+        <label>
+          <span>Имя игрока</span>
+          <input name="username" autocomplete="username" minlength="3" maxlength="24" required placeholder="Придумайте имя">
+        </label>
+        <label>
+          <span>Пароль</span>
+          <input name="password" type="password" autocomplete="new-password" minlength="8" maxlength="128" required placeholder="Минимум 8 символов">
+        </label>
+        <p class="form-note">Начислим 35 стартовых монет. Этого хватит на первую настоящую покупку.</p>
+        <button class="primary-action" type="submit"><span>Создать аккаунт</span><b aria-hidden="true">+</b></button>
+      </form>
+      <p id="auth-error" class="form-error" role="alert" hidden></p>
+    </section>
+  </main>
+
+  <div id="app-shell" class="app-shell" hidden>
+    <header class="topbar">
+      <div class="wordmark compact">
+        <span class="wordmark-glyph" aria-hidden="true">PA</span>
+        <span>PACKET ARCADE</span>
+      </div>
+      <div class="topbar-actions">
+        <div class="balance-chip" aria-label="Баланс">
+          <span class="coin-dot" aria-hidden="true"></span>
+          <strong id="balance-value">0</strong>
+          <small>COINS</small>
+        </div>
+        <button id="settings-open" class="icon-button" type="button" aria-label="Открыть настройки" title="Настройки">⚙</button>
+      </div>
+    </header>
+
+    <div class="app-layout">
+      <aside class="sidebar">
+        <div class="profile-block">
+          <div id="avatar" class="avatar">P</div>
+          <div>
+            <small>PLAYER</small>
+            <strong id="profile-name">player</strong>
+          </div>
+        </div>
+        <nav class="side-nav" aria-label="Разделы">
+          <button class="nav-item active" type="button" data-screen="shop"><span>01</span> Магазин</button>
+          <button class="nav-item" type="button" data-screen="earn"><span>02</span> Заработок</button>
+          <button class="nav-item" type="button" data-screen="inventory"><span>03</span> Инвентарь</button>
+        </nav>
+        <div class="lab-status">
+          <span class="status-light"></span>
+          <div><small>LAB STATUS</small><strong>LOCAL / ONLINE</strong></div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <section id="screen-shop" class="screen active-screen">
+          <header class="screen-header shop-header">
+            <div>
+              <p class="eyebrow">MARKET NODE · 4 ITEMS</p>
+              <h1>Сетевой склад</h1>
+              <p>Цены и списание считаются на сервере. Выберите снаряжение для следующего захода.</p>
+            </div>
+            <div class="shop-stamp" aria-hidden="true"><span>OPEN</span><b>24/7</b></div>
+          </header>
+          <div id="product-grid" class="product-grid" aria-live="polite"></div>
+        </section>
+
+        <section id="screen-earn" class="screen" hidden>
+          <header class="screen-header">
+            <div>
+              <p class="eyebrow">WORK NODE · VERIFIED REWARD</p>
+              <h1>Узел добычи</h1>
+              <p>Выполните короткий цикл обработки трафика. Награду определяет сервер.</p>
+            </div>
+          </header>
+          <div class="earn-console">
+            <div class="radar" aria-hidden="true"><i></i><b></b><span></span></div>
+            <div class="earn-copy">
+              <span class="console-label">PACKET SORTER / READY</span>
+              <h2>Обработать пакетный батч</h2>
+              <p>За цикл начисляется <strong id="earn-reward">15 монет</strong>. Между задачами узлу нужна короткая перезарядка.</p>
+              <button id="earn-button" class="earn-button" type="button"><span>Запустить цикл</span><b>+15</b></button>
+              <div class="cooldown-track"><i id="cooldown-progress"></i></div>
+              <small id="cooldown-label">Узел готов</small>
+            </div>
+          </div>
+        </section>
+
+        <section id="screen-inventory" class="screen" hidden>
+          <header class="screen-header">
+            <div>
+              <p class="eyebrow">PLAYER STORAGE</p>
+              <h1>Инвентарь</h1>
+              <p>Все купленные предметы хранятся в базе и остаются после нового входа.</p>
+            </div>
+          </header>
+          <div id="inventory-grid" class="inventory-grid"></div>
+          <div id="inventory-empty" class="empty-state">
+            <span aria-hidden="true">□</span>
+            <h2>Здесь пока пусто</h2>
+            <p>Купите первый предмет в сетевом складе.</p>
+            <button class="text-action" type="button" data-go-shop>Перейти в магазин →</button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <dialog id="buy-dialog" class="modal">
+    <form method="dialog" class="modal-card">
+      <button class="modal-close" value="cancel" aria-label="Закрыть">×</button>
+      <p class="eyebrow">PURCHASE REQUEST</p>
+      <div id="buy-art" class="product-art modal-art" data-art="chip" aria-hidden="true"><i></i><b></b><span></span></div>
+      <h2 id="buy-name">Товар</h2>
+      <p id="buy-description"></p>
+      <div class="purchase-line"><span>Серверная цена</span><strong><i class="coin-dot"></i><b id="buy-price">0</b></strong></div>
+      <div class="modal-actions">
+        <button class="secondary-action" value="cancel">Отмена</button>
+        <button id="buy-confirm" class="primary-action compact-action" type="button"><span>Подтвердить</span><b>↗</b></button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="settings-dialog" class="modal settings-modal">
+    <div class="modal-card">
+      <button id="settings-close" class="modal-close" type="button" aria-label="Закрыть">×</button>
+      <p class="eyebrow">ACCOUNT SETTINGS</p>
+      <h2>Настройки игрока</h2>
+      <div class="settings-identity">
+        <div id="settings-avatar" class="avatar large">P</div>
+        <div><small>ИМЯ АККАУНТА</small><strong id="settings-name">player</strong></div>
+      </div>
+      <div class="settings-row">
+        <div><strong>Выйти из аккаунта</strong><p>Локальные данные сессии будут очищены.</p></div>
+        <button id="logout-button" class="secondary-action" type="button">Выйти</button>
+      </div>
+      <div class="danger-zone">
+        <div><strong>Удалить аккаунт</strong><p>Баланс, покупки и все сессии удалятся из базы без восстановления.</p></div>
+        <button id="delete-reveal" class="danger-action" type="button">Удалить</button>
+        <form id="delete-form" hidden>
+          <label><span>Подтвердите паролем</span><input name="password" type="password" autocomplete="current-password" required minlength="8"></label>
+          <div class="delete-actions">
+            <button id="delete-cancel" class="secondary-action" type="button">Отмена</button>
+            <button class="danger-action solid" type="submit">Удалить навсегда</button>
+          </div>
+        </form>
+      </div>
+      <p id="settings-error" class="form-error" role="alert" hidden></p>
+    </div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+</body>
+</html>

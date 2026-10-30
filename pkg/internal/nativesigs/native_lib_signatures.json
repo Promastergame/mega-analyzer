@@ -1,0 +1,420 @@
+{
+  "schema_version": 1,
+  "name": "native-lib-signatures",
+  "updated": "2026-08-25",
+  "notes": "Vendor-agnostic ELF/.so fingerprinting for Android and Linux native libraries. Signatures are additive hints, never hard conclusions: a hit contributes confidence, the caller aggregates. Extraction uses backslash-free after/until slicing so the file stays regex-free and safe to hand-edit.",
+  "match_fields": {
+    "any_soname": "matches DT_SONAME or the on-disk file name, case-insensitive substring",
+    "any_needed": "matches any DT_NEEDED entry, case-insensitive substring",
+    "any_symbols": "matches any dynamic symbol name, case-insensitive substring",
+    "any_strings": "matches any extracted ASCII string, case-insensitive substring",
+    "min_hits": "how many distinct any_* items must match before the signature fires (default 1)",
+    "extract": "list of {field, after, until} slices pulled from the first matching string",
+    "confidence": "0.0-1.0 weight contributed on a hit",
+    "severity": "info | low | medium | high"
+  },
+  "categories": [
+    "engine", "ui_framework", "runtime", "audio", "crypto", "storage",
+    "hook_framework", "packer", "protector", "analytics", "crash_reporting",
+    "attribution", "mod_loader", "private_server", "toolchain", "anti_analysis"
+  ],
+  "signatures": [
+    {
+      "id": "ENGINE_FLUTTER",
+      "category": "ui_framework",
+      "label": "Flutter / Dart AOT",
+      "severity": "info",
+      "confidence": 0.95,
+      "any_soname": ["libflutter.so", "libapp.so"],
+      "any_strings": ["Dart VM version", "package:flutter/", "dart:core", "kDartVmSnapshotData", "flutter/textinput"],
+      "extract": [{ "field": "dart_version", "after": "Dart VM version: ", "until": " (" }],
+      "notes": "libapp.so is the AOT snapshot of app Dart code; package: strings reveal the dependency list even when stripped."
+    },
+    {
+      "id": "ENGINE_UNITY_IL2CPP",
+      "category": "engine",
+      "label": "Unity (IL2CPP)",
+      "severity": "info",
+      "confidence": 0.95,
+      "any_soname": ["libil2cpp.so", "libunity.so"],
+      "any_strings": ["il2cpp", "Il2CppClass", "global-metadata.dat", "UnityEngine"]
+    },
+    {
+      "id": "ENGINE_UNITY_MONO",
+      "category": "engine",
+      "label": "Unity (Mono)",
+      "severity": "info",
+      "confidence": 0.9,
+      "any_soname": ["libmono", "libmonobdwgc"],
+      "any_strings": ["mono_jit_init", "MonoBehaviour", "mono_runtime_invoke"]
+    },
+    {
+      "id": "ENGINE_UNREAL",
+      "category": "engine",
+      "label": "Unreal Engine",
+      "severity": "info",
+      "confidence": 0.9,
+      "any_soname": ["libue4.so", "libunreal.so"],
+      "any_strings": ["UnrealEngine", "FEngineLoop", "UObject", "EpicGames"]
+    },
+    {
+      "id": "ENGINE_GODOT",
+      "category": "engine",
+      "label": "Godot Engine",
+      "severity": "info",
+      "confidence": 0.9,
+      "any_soname": ["libgodot"],
+      "any_strings": ["GodotEngine", "godot_android", "servers/rendering"]
+    },
+    {
+      "id": "ENGINE_COCOS2D",
+      "category": "engine",
+      "label": "Cocos2d-x",
+      "severity": "info",
+      "confidence": 0.85,
+      "any_soname": ["libcocos2d", "libcocos"],
+      "any_strings": ["cocos2d", "CCDirector", "cocos/base"]
+    },
+    {
+      "id": "ENGINE_SUPERCELL_TITAN",
+      "category": "engine",
+      "label": "Supercell Titan engine",
+      "severity": "info",
+      "confidence": 0.9,
+      "any_symbols": ["Java_com_supercell_titan", "SupercellId", "SupercellSocial"],
+      "any_strings": ["com.supercell.titan", "supercell.com", "id.supercell.com"],
+      "notes": "Shared across all Supercell titles; the concrete game is identified by endpoint hosts, not by this signature."
+    },
+    {
+      "id": "FRAMEWORK_REACT_NATIVE",
+      "category": "ui_framework",
+      "label": "React Native / Hermes",
+      "severity": "info",
+      "confidence": 0.9,
+      "any_soname": ["libreactnativejni.so", "libhermes.so", "libjsc.so"],
+      "any_strings": ["facebook::react", "HermesRuntime", "ReactAndroid"]
+    },
+    {
+      "id": "RUNTIME_LIBCXX_SHARED",
+      "category": "runtime",
+      "label": "NDK libc++ shared runtime",
+      "severity": "info",
+      "confidence": 0.99,
+      "any_soname": ["libc++_shared.so"],
+      "any_symbols": ["_ZNSt6__ndk1"]
+    },
+    {
+      "id": "AUDIO_FMOD",
+      "category": "audio",
+      "label": "FMOD audio engine",
+      "severity": "info",
+      "confidence": 0.98,
+      "any_soname": ["libfmod"],
+      "any_symbols": ["FMOD_System_Create", "FMOD_ChannelGroup_", "FMOD_Studio_"],
+      "any_strings": ["Firelight Technologies", "FMOD"]
+    },
+    {
+      "id": "AUDIO_WWISE",
+      "category": "audio",
+      "label": "Audiokinetic Wwise",
+      "severity": "info",
+      "confidence": 0.9,
+      "any_soname": ["libaksoundengine"],
+      "any_strings": ["AK::SoundEngine", "Audiokinetic"]
+    },
+    {
+      "id": "CRYPTO_BORINGSSL",
+      "category": "crypto",
+      "label": "BoringSSL / OpenSSL",
+      "severity": "info",
+      "confidence": 0.85,
+      "any_symbols": ["SSL_CTX_new", "EVP_EncryptInit", "OPENSSL_"],
+      "any_strings": ["BoringSSL", "OpenSSL", "ssl_client_handshake"]
+    },
+    {
+      "id": "STORAGE_SQLITE",
+      "category": "storage",
+      "label": "SQLite",
+      "severity": "info",
+      "confidence": 0.85,
+      "any_symbols": ["sqlite3_open", "sqlite3_exec"],
+      "any_strings": ["SQLite version", "sqlite3"]
+    },
+    {
+      "id": "HOOK_FRIDA_CORE",
+      "category": "hook_framework",
+      "label": "Frida core / frida-gum embedded",
+      "severity": "high",
+      "confidence": 0.95,
+      "min_hits": 1,
+      "any_strings": ["frida-core", "frida-gum", "gum-js-loop", "re.frida.server", "frida-agent", "GumScript", "subprojects/frida-core", "ProcessInvader", "join_portal", "acquire_child_gating"],
+      "notes": "Frida shipped INSIDE a production app is a strong repack/mod indicator, not an anti-cheat signal. Distinguish from an app merely detecting Frida (see the detection-string signature)."
+    },
+    {
+      "id": "HOOK_FRIDA_GADGET",
+      "category": "hook_framework",
+      "label": "Frida Gadget",
+      "severity": "high",
+      "confidence": 0.9,
+      "any_soname": ["libgadget", "libfrida"],
+      "any_strings": ["frida-gadget", "27042", "27043"]
+    },
+    {
+      "id": "ANTI_INSTRUMENTATION_STRINGS",
+      "category": "anti_analysis",
+      "label": "Anti-instrumentation detection strings",
+      "severity": "medium",
+      "confidence": 0.7,
+      "min_hits": 2,
+      "any_strings": ["gum-js-loop", "gmain", "re.frida.server", "linjector", "xposed", "magisk", "/proc/self/maps"],
+      "notes": "App is looking FOR instrumentation. Candidate bypass point rather than evidence of tampering."
+    },
+    {
+      "id": "HOOK_XPOSED_FAMILY",
+      "category": "hook_framework",
+      "label": "Xposed / LSPosed / LSPlant",
+      "severity": "high",
+      "confidence": 0.9,
+      "any_soname": ["libxposed", "liblspd"],
+      "any_strings": ["de.robv.android.xposed", "XposedBridge", "LSPosed", "lsplant", "EdXposed"]
+    },
+    {
+      "id": "HOOK_INLINE_ENGINES",
+      "category": "hook_framework",
+      "label": "Inline hooking engine",
+      "severity": "medium",
+      "confidence": 0.8,
+      "any_strings": ["Dobby", "shadowhook", "bytehook", "And64InlineHook", "MSHookFunction", "SubstrateHook", "whale_inline", "plt_hook"],
+      "notes": "Also fires on legitimate APM/crash SDKs. Weigh together with mod_loader and private_server hits."
+    },
+    {
+      "id": "HOOK_ZYGISK_MAGISK",
+      "category": "hook_framework",
+      "label": "Zygisk / Riru module surface",
+      "severity": "high",
+      "confidence": 0.85,
+      "any_strings": ["zygisk", "riru", "magiskd", "zygisk_module_entry"]
+    },
+    {
+      "id": "PACKER_UPX",
+      "category": "packer",
+      "label": "UPX packed ELF",
+      "severity": "medium",
+      "confidence": 0.95,
+      "any_strings": ["UPX!", "This file is packed with the UPX"]
+    },
+    {
+      "id": "PACKER_CN_FAMILY",
+      "category": "packer",
+      "label": "Chinese commercial packer family",
+      "severity": "medium",
+      "confidence": 0.9,
+      "any_soname": ["libsecexe", "libsecmain", "libjiagu", "libshella", "libtup", "libmobisec", "libbaiduprotect", "libnesec", "libDexHelper"],
+      "any_strings": ["bangcle", "SecShell", "qihoo", "legu", "aliyun", "baiduprotect", "DexHelper"],
+      "notes": "Covers Bangcle/SecNeo, Qihoo Jiagu, Tencent Legu, Alibaba, Baidu and NetEase packers in one rule."
+    },
+    {
+      "id": "PROTECTOR_COMMERCIAL",
+      "category": "protector",
+      "label": "Commercial RASP / hardening SDK",
+      "severity": "medium",
+      "confidence": 0.85,
+      "any_soname": ["libdexprotector", "libcovault", "libshield", "libvirbox", "libarxan"],
+      "any_strings": ["dexprotector", "appsealing", "promon", "virbox", "arxan", "digital.ai", "guardsquare", "dexguard"]
+    },
+    {
+      "id": "CRASH_SENTRY",
+      "category": "crash_reporting",
+      "label": "Sentry Native",
+      "severity": "info",
+      "confidence": 0.95,
+      "any_soname": ["libsentry"],
+      "any_strings": ["sentry-native", "sentry_options_new", ".sentry-native"],
+      "extract": [{ "field": "build_path", "after": "/work/sentry-native/", "until": "/external" }]
+    },
+    {
+      "id": "CRASH_BREAKPAD_CRASHPAD",
+      "category": "crash_reporting",
+      "label": "Breakpad / Crashpad",
+      "severity": "info",
+      "confidence": 0.9,
+      "any_strings": ["google_breakpad", "crashpad", "minidump_writer"]
+    },
+    {
+      "id": "CRASH_VENDOR_SDK",
+      "category": "crash_reporting",
+      "label": "Crashlytics / Bugsnag / ACRA",
+      "severity": "info",
+      "confidence": 0.85,
+      "any_soname": ["libcrashlytics", "libbugsnag"],
+      "any_strings": ["crashlytics", "bugsnag", "firebase-crashlytics"]
+    },
+    {
+      "id": "ATTRIBUTION_SDK",
+      "category": "attribution",
+      "label": "Attribution / analytics SDK",
+      "severity": "low",
+      "confidence": 0.8,
+      "any_strings": ["com.adjust.sdk", "appsflyer", "AppsFlyerLib", "tenjin", "singular.net", "kochava"]
+    },
+    {
+      "id": "CONSENT_CMP_SDK",
+      "category": "analytics",
+      "label": "Consent management platform",
+      "severity": "info",
+      "confidence": 0.85,
+      "any_symbols": ["UsercentricsSDK", "gotConsent"],
+      "any_strings": ["usercentrics", "iabtcf", "consent_string", "gdpr"]
+    },
+    {
+      "id": "MOD_SIGNED_SCRIPT_LOADER",
+      "category": "mod_loader",
+      "label": "Signed-script / user-mod loader",
+      "severity": "high",
+      "confidence": 0.9,
+      "any_symbols": ["_get_signed_script", "_usermods_get_file_path", "_js_request", "_js_get_data_path"],
+      "any_strings": ["ModificationLoader", "mods/loader", "usermods", "mod_loader", "signed_script"],
+      "notes": "A library that fetches and executes signed scripts plus user mods at runtime. Generic across modding frameworks."
+    },
+    {
+      "id": "MOD_REBRANDED_JNI_NAMESPACE",
+      "category": "mod_loader",
+      "label": "Rebranded JNI namespace on a vendor library",
+      "severity": "high",
+      "confidence": 0.85,
+      "any_symbols": ["Java_"],
+      "notes": "Structural rule: fires when exported Java_<pkg> prefixes disagree with the vendor package implied by internal C++ symbols or sibling libraries. Implemented as a cross-check, see ELF_JNI_PACKAGE_MISMATCH."
+    },
+    {
+      "id": "PRIVATE_SERVER_REDIRECT",
+      "category": "private_server",
+      "label": "Third-party server endpoint alongside vendor endpoints",
+      "severity": "high",
+      "confidence": 0.8,
+      "notes": "Structural rule: collect registrable domains from URL strings, cluster them, and flag non-vendor hosts that sit next to first-party hosts. Keeps working for any private-server family, no allowlist of specific domains required."
+    },
+    {
+      "id": "TOOLCHAIN_ANDROID_CLANG",
+      "category": "toolchain",
+      "label": "Android NDK clang build stamp",
+      "severity": "info",
+      "confidence": 0.99,
+      "any_strings": ["clang version", "android.googlesource.com/toolchain/llvm-project"],
+      "extract": [{ "field": "clang_version", "after": "clang version ", "until": " " }]
+    },
+    {
+      "id": "TOOLCHAIN_OTHER_LANG",
+      "category": "toolchain",
+      "label": "Rust / Go / Zig produced object",
+      "severity": "info",
+      "confidence": 0.9,
+      "any_strings": ["rustc-", "cargo/registry", "Go build ID", "go.buildid", "zig-cache"]
+    }
+  ],
+  "structural_heuristics": [
+    {
+      "id": "ELF_SECTION_TABLE_GUTTED",
+      "label": "Section header table stripped or truncated",
+      "category": "anti_analysis",
+      "severity": "high",
+      "confidence": 0.85,
+      "rule": "section_count <= 5 while PT_DYNAMIC is present and readable",
+      "notes": "Segments still load, but nm/objdump lose .dynsym so symbol-level tooling goes blind. Typical of relinked or post-processed binaries."
+    },
+    {
+      "id": "ELF_NO_DYNSYM_BUT_JNI_LOADED",
+      "label": "No readable dynamic symbols on a JNI library",
+      "category": "anti_analysis",
+      "severity": "medium",
+      "confidence": 0.7,
+      "rule": "dynamic_symbol_count == 0 and library is referenced by System.loadLibrary or another DT_NEEDED"
+    },
+    {
+      "id": "ELF_JNI_PACKAGE_MISMATCH",
+      "label": "Exported JNI package differs from internal vendor identity",
+      "category": "mod_loader",
+      "severity": "high",
+      "confidence": 0.85,
+      "rule": "set(java_packages_from_exports) is disjoint from set(vendor_packages_from_internal_symbols_or_urls)",
+      "notes": "Catches vendor SDKs re-namespaced by a repacker while the original C++ classes stay intact."
+    },
+    {
+      "id": "ELF_SONAME_FILENAME_MISMATCH",
+      "label": "DT_SONAME does not match the on-disk file name",
+      "category": "anti_analysis",
+      "severity": "low",
+      "confidence": 0.6,
+      "rule": "basename(path) != DT_SONAME",
+      "notes": "Often carries a real version/build stamp that the renamed file hides."
+    },
+    {
+      "id": "ELF_CUSTOM_SYMBOL_VERSIONS",
+      "label": "Custom symbol version namespace",
+      "category": "toolchain",
+      "severity": "info",
+      "confidence": 0.7,
+      "rule": "verdef contains a namespace that is not GLIBC / LIBC / GCC / CXXABI",
+      "notes": "Gives a free version string for in-house libraries."
+    },
+    {
+      "id": "ELF_MULTI_TOOLCHAIN_STAMPS",
+      "label": "Multiple distinct compiler version stamps in one object",
+      "category": "anti_analysis",
+      "severity": "medium",
+      "confidence": 0.65,
+      "rule": "distinct(clang_version_strings) > 1",
+      "notes": "Normal for large vendored builds, but combined with mod_loader hits it suggests object files from different eras were relinked together."
+    },
+    {
+      "id": "ELF_RWX_LOAD_SEGMENT",
+      "label": "Writable and executable PT_LOAD segment",
+      "category": "anti_analysis",
+      "severity": "high",
+      "confidence": 0.8,
+      "rule": "any PT_LOAD has flags W and X"
+    },
+    {
+      "id": "ELF_HIGH_ENTROPY_SEGMENT",
+      "label": "High-entropy payload segment",
+      "category": "packer",
+      "severity": "medium",
+      "confidence": 0.7,
+      "rule": "shannon_entropy(largest PT_LOAD) >= 7.2"
+    },
+    {
+      "id": "ELF_TEXTREL",
+      "label": "DT_TEXTREL present",
+      "category": "anti_analysis",
+      "severity": "low",
+      "confidence": 0.6,
+      "rule": "DT_TEXTREL in dynamic section"
+    },
+    {
+      "id": "ELF_MISSING_BUILD_ID",
+      "label": "No NT_GNU_BUILD_ID note",
+      "category": "anti_analysis",
+      "severity": "low",
+      "confidence": 0.5,
+      "rule": "no NT_GNU_BUILD_ID note present",
+      "notes": "Blocks symbol-server correlation and build-to-build diffing."
+    },
+    {
+      "id": "ELF_DEBUG_INFO_SHIPPED",
+      "label": "Debug info shipped in a release library",
+      "category": "anti_analysis",
+      "severity": "low",
+      "confidence": 0.7,
+      "rule": ".debug_info or .debug_line present",
+      "notes": "Inverse finding: makes reversing far easier and inflates the artifact."
+    },
+    {
+      "id": "ELF_PLAINTEXT_ENDPOINTS_DELTA",
+      "label": "Endpoint strings in plaintext where the reference build hides them",
+      "category": "anti_analysis",
+      "severity": "medium",
+      "confidence": 0.75,
+      "rule": "url_string_count(sample) greatly exceeds url_string_count(reference build of same soname)",
+      "notes": "Requires a reference build. Indicates the string-obfuscation layer was removed or resolved during repacking."
+    }
+  ]
+}

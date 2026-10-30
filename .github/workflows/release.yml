@@ -1,0 +1,173 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    uses: ./.github/workflows/core.yml
+
+  secrets:
+    name: Secrets (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      # Tag pushes do not trigger ci.yml, so the release scans the exact tag
+      # tree itself. Intentional fixtures are allowlisted in .gitleaks.toml.
+      - id: gitleaks
+        uses: gacts/gitleaks@4fd785dcdaf557fda64e05b0ae033b8f7d82fb81 # v1
+        with:
+          version: 8.30.1
+          run: 'false'
+      - run: '"${{ steps.gitleaks.outputs.gitleaks-bin }}" git --redact --no-banner --log-opts=--all .'
+      - run: python3 scripts/test_gitleaks_policy.py --gitleaks "${{ steps.gitleaks.outputs.gitleaks-bin }}"
+
+  build:
+    needs: [checks, secrets]
+    name: Build ${{ matrix.goos }}/${{ matrix.goarch }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+            binary: analyzer
+          - goos: linux
+            goarch: arm64
+            binary: analyzer
+          - goos: windows
+            goarch: amd64
+            binary: analyzer.exe
+          - goos: windows
+            goarch: arm64
+            binary: analyzer.exe
+          - goos: darwin
+            goarch: amd64
+            binary: analyzer
+          - goos: darwin
+            goarch: arm64
+            binary: analyzer
+    env:
+      GOOS: ${{ matrix.goos }}
+      GOARCH: ${{ matrix.goarch }}
+      BINARY: ${{ matrix.binary }}
+      CGO_ENABLED: "0"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.13'
+      - name: Build and package core
+        run: python scripts/release.py build --output dist --goos "${{ matrix.goos }}" --goarch "${{ matrix.goarch }}" --tag "${{ github.ref_name }}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: release-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: |
+            dist/mega-analyzer-*.tar.gz
+            dist/mega-analyzer-*.zip
+          if-no-files-found: error
+
+  packaged-smoke:
+    name: Verify release archive on ${{ matrix.runner }}
+    needs: build
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # Run published artifacts on native hosts only for release tags.
+        # ARM64 archives are cross-compiled, not runtime-tested here.
+        include:
+          - runner: ubuntu-latest
+            goos: linux
+            goarch: amd64
+          - runner: windows-latest
+            goos: windows
+            goarch: amd64
+          - runner: macos-15-intel
+            goos: darwin
+            goarch: amd64
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.13'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/smoke
+      - name: Verify the downloaded archive without rebuilding
+        run: python scripts/release.py verify --output dist/smoke
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: release-smoke-evidence-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: |
+            dist/smoke/*.log
+            dist/smoke/verification.json
+
+  release:
+    name: Publish release
+    permissions:
+      contents: write
+    env:
+      MINISIGN_SECRET_KEY: ${{ secrets.MINISIGN_SECRET_KEY }}
+    needs: [build, packaged-smoke]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          path: release
+          pattern: release-*
+      - name: Flatten artifacts
+        run: |
+          find release -mindepth 2 -type f -exec mv {} release/ \;
+          find release -mindepth 1 -type d -empty -delete
+      - name: Generate checksums
+        run: |
+          cd release
+          find . -maxdepth 1 -type f \
+            \( -name '*.tar.gz' -o -name '*.zip' \) \
+            -print0 | sort -z | xargs -0 sha256sum > SHA256SUMS.txt
+      - name: Sign checksums
+        run: |
+          if [ -z "$MINISIGN_SECRET_KEY" ]; then
+            echo "::error::Configure MINISIGN_SECRET_KEY matching minisign.pub before publishing."
+            exit 1
+          fi
+          sudo apt-get update
+          sudo apt-get install -y minisign
+          umask 077
+          key_path="${RUNNER_TEMP}/mega-analyzer-minisign.key"
+          trap 'rm -f "$key_path"' EXIT
+          printf '%s\n' "${MINISIGN_SECRET_KEY}" > "$key_path"
+          minisign -Sm release/SHA256SUMS.txt -s "$key_path"
+          minisign -Vm release/SHA256SUMS.txt -p minisign.pub
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Upload files only: release/ may still contain (now empty)
+          # artifact directories, which gh refuses to upload. Signing and
+          # signature verification must have succeeded before this step.
+          shopt -s nullglob
+          files=(release/*.tar.gz release/*.zip release/SHA256SUMS.txt release/SHA256SUMS.txt.minisig)
+          release_args=()
+          if [[ "${GITHUB_REF_NAME}" == *-* ]]; then release_args+=(--prerelease --latest=false); fi
+          gh release create "${GITHUB_REF_NAME}" \
+            "${files[@]}" \
+            --title "${GITHUB_REF_NAME}" \
+            --verify-tag --notes-file docs/RELEASE_NOTES.md "${release_args[@]}"

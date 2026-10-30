@@ -1,0 +1,19 @@
+{
+  "state": {
+    "build": { "status": "pass" },
+    "runtime": { "status": "not_run" },
+    "notes": "The patched APK was built, but its behavior has not been tested."
+  },
+  "questions": {
+    "effect": {
+      "type": "noul",
+      "task": "patch_effect",
+      "polarity": "positive",
+      "instructions": "Has the intended patch effect been confirmed on this build?",
+      "criteria": {
+        "true": "The intended effect was observed on the matching build",
+        "false": "The effect was not observed or runtime testing is missing"
+      }
+    }
+  }
+}

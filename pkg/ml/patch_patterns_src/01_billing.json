@@ -1,0 +1,115 @@
+[
+  {
+    "id": "PURCHASE_VERIFY",
+    "category": "billing",
+    "description": "Purchase signature/receipt verification",
+    "method_names": [
+      "verifypurchase",
+      "validatepurchase",
+      "checkpurchase",
+      "ispurchased",
+      "ispurchasevalid",
+      "verifyreceipt",
+      "validatereceipt",
+      "verifysignature"
+    ],
+    "class_patterns": [
+      "billing",
+      "purchase",
+      "iab",
+      "inapp",
+      "billingclient",
+      "billingservice"
+    ],
+    "required_calls": [
+      "verifysignature",
+      "querypurchases",
+      "getpurchases",
+      "consumepurchase",
+      "acknowledgepurchase"
+    ],
+    "string_patterns": [
+      "com.android.vending.billing",
+      "inappbillingservice",
+      "purchasetoken"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1,
+    "min_match_score": 15
+  },
+  {
+    "id": "BILLING_SUPPORTED",
+    "category": "billing",
+    "description": "Checks if billing/IAP is available",
+    "method_names": [
+      "isbillingsupported",
+      "isiapavailable",
+      "ispurchaseavailable",
+      "canbuy",
+      "isplayservicesavailable"
+    ],
+    "class_patterns": [
+      "billing",
+      "iab",
+      "inapp",
+      "playstore"
+    ],
+    "required_calls": [
+      "isbillingsupported",
+      "queryskudetails",
+      "getskudetails"
+    ],
+    "string_patterns": null,
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.8,
+    "min_match_score": 12
+  },
+  {
+    "id": "IAP_PURCHASE_STATE",
+    "category": "billing",
+    "description": "Play Billing purchase-state / ownership gate (queryPurchasesAsync, acknowledge) - force owned",
+    "method_names": [
+      "ispurchased",
+      "getpurchasestate",
+      "isacknowledged",
+      "hasacknowledged",
+      "hasconsumed",
+      "hasrefunded",
+      "ispending",
+      "isperiodgrace",
+      "checksubscriptions",
+      "haspurchase",
+      "ownsproduct",
+      "isproductowned",
+      "ispurchaseacknowledged",
+      "hasactivepurchase"
+    ],
+    "class_patterns": [
+      "billing",
+      "purchase",
+      "billingclient",
+      "iap",
+      "inapp",
+      "store"
+    ],
+    "required_calls": [
+      "querypurchasesasync",
+      "querypurchases",
+      "acknowledgepurchase",
+      "consumeasync",
+      "purchase;->getpurchasestate"
+    ],
+    "string_patterns": [
+      "inapp_purchase_data",
+      "com.android.vending.billing",
+      "purchasestate",
+      "enablependingpurchases"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.0,
+    "min_match_score": 12
+  }
+]

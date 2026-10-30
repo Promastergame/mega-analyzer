@@ -1,0 +1,329 @@
+# Overlay compose file for the intentionally-vulnerable local lab.
+#
+# ⚠️ LOCAL USE ONLY. Every port below is bound to 127.0.0.1 only, and every
+# service in this file is deliberately insecure by design — see
+# labs/servers/README.md before running any of this.
+#
+# Usage (from the repo root):
+#   docker compose -f docker-compose.yml -f labs/servers/docker-compose.lab.yml up -d
+#
+# This overlay reuses the existing `mega-analyzer-net` network defined in the
+# root docker-compose.yml so the lab can optionally be observed by the
+# `mitm-proxy` service already defined there.
+
+version: '3.9'
+
+services:
+  # ── Databases ────────────────────────────────────────────────
+  postgres-lab:
+    image: postgres:16-alpine
+    container_name: mega-analyzer-lab-postgres
+    environment:
+      - POSTGRES_USER=labs
+      - POSTGRES_PASSWORD=labs_lab_pw
+      - POSTGRES_DB=labs
+    volumes:
+      - ./db/postgres/init:/docker-entrypoint-initdb.d:ro
+      - lab-postgres-data:/var/lib/postgresql/data:rw
+    ports:
+      - "127.0.0.1:55432:5432"
+    networks:
+      - mega-analyzer-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U labs"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  mysql-lab:
+    image: mysql:8
+    container_name: mega-analyzer-lab-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=labs_lab_root_pw
+      - MYSQL_USER=labs
+      - MYSQL_PASSWORD=labs_lab_pw
+      - MYSQL_DATABASE=labs
+    volumes:
+      - ./db/mysql/init:/docker-entrypoint-initdb.d:ro
+      - lab-mysql-data:/var/lib/mysql:rw
+    ports:
+      - "127.0.0.1:33306:3306"
+    networks:
+      - mega-analyzer-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-ulabs", "-plabs_lab_pw"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  # ── Tracker sink (where beacons "phone home" to) ────────────────
+  trackercollector:
+    build:
+      context: ./trackercollector
+      dockerfile: Dockerfile
+    container_name: mega-analyzer-lab-trackercollector
+    environment:
+      - LISTEN_ADDR=0.0.0.0:18099
+    ports:
+      - "127.0.0.1:18099:18099"
+    networks:
+      mega-analyzer-net:
+        aliases:
+          # So django/tracker-beacon's TRACKER_URL host (tracker.lab.local)
+          # resolves to this sink inside the compose network.
+          - tracker.lab.local
+    restart: unless-stopped
+
+  # ── Go lab servers (Postgres-backed) ─────────────────────────
+  admin-backdoor-header:
+    build:
+      context: ./go/admin-backdoor-header
+      dockerfile: Dockerfile
+    container_name: mega-analyzer-lab-admin-backdoor-header
+    environment:
+      - LISTEN_ADDR=0.0.0.0:18001
+      - DATABASE_URL=postgres://labs:labs_lab_pw@postgres-lab:5432/labs_admin_backdoor_header?sslmode=disable
+      - TRACKER_URL=http://trackercollector:18099/beacon/admin-backdoor-header
+    ports:
+      - "127.0.0.1:18001:18001"
+    depends_on:
+      postgres-lab:
+        condition: service_healthy
+      trackercollector:
+        condition: service_started
+    networks:
+      - mega-analyzer-net
+    restart: unless-stopped
+
+  admin-jwt-none:
+    build:
+      context: ./go/admin-jwt-none
+      dockerfile: Dockerfile
+    container_name: mega-analyzer-lab-admin-jwt-none
+    environment:
+      - LISTEN_ADDR=0.0.0.0:18002
+      - DATABASE_URL=postgres://labs:labs_lab_pw@postgres-lab:5432/labs_admin_jwt_none?sslmode=disable
+      - TRACKER_URL=http://trackercollector:18099/beacon/admin-jwt-none
+    ports:
+      - "127.0.0.1:18002:18002"
+    depends_on:
+      postgres-lab:
+        condition: service_healthy
+      trackercollector:
+        condition: service_started
+    networks:
+      - mega-analyzer-net
+    restart: unless-stopped
+
+  admin-idor-role:
+    build:
+      context: ./go/admin-idor-role
+      dockerfile: Dockerfile
+    container_name: mega-analyzer-lab-admin-idor-role
+    environment:
+      - LISTEN_ADDR=0.0.0.0:18003
+      - DATABASE_URL=postgres://labs:labs_lab_pw@postgres-lab:5432/labs_admin_idor_role?sslmode=disable
+      - TRACKER_URL=http://trackercollector:18099/beacon/admin-idor-role
+    ports:
+      - "127.0.0.1:18003:18003"
+    depends_on:
+      postgres-lab:
+        condition: service_healthy
+      trackercollector:
+        condition: service_started
+    networks:
+      - mega-analyzer-net
+    restart: unless-stopped
+
+  sqli-login:
+    build:
+      context: ./go/sqli-login
+      dockerfile: Dockerfile
+    container_name: mega-analyzer-lab-sqli-login
+    environment:
+      - LISTEN_ADDR=0.0.0.0:18004
+      - DATABASE_URL=postgres://labs:labs_lab_pw@postgres-lab:5432/labs_sqli_login?sslmode=disable
+      - TRACKER_URL=http://trackercollector:18099/beacon/sqli-login
+    ports:
+      - "127.0.0.1:18004:18004"
+    depends_on:
+      postgres-lab:
+        condition: service_healthy
+      trackercollector:
+        condition: service_started
+    networks:
+      - mega-analyzer-net
+    restart: unless-stopped
+
+  path-traversal-download:
+    build:
+      context: ./go/path-traversal-download
+      dockerfile: Dockerfile
+    container_name: mega-analyzer-lab-path-traversal-download
+    environment:
+      - LISTEN_ADDR=0.0.0.0:18005
+      - DATABASE_URL=postgres://labs:labs_lab_pw@postgres-lab:5432/labs_path_traversal?sslmode=disable
+      - TRACKER_URL=http://trackercollector:18099/beacon/path-traversal-download
+    ports:
+      - "127.0.0.1:18005:18005"
+    depends_on:
+      postgres-lab:
+        condition: service_healthy
+      trackercollector:
+        condition: service_started
+    networks:
+      - mega-analyzer-net
+    restart: unless-stopped
+
+  # ── Django lab servers (MySQL-backed) ────────────────────────
+  admin-hidden-debug:
+    build:
+      context: ./django/admin-hidden-debug
+      dockerfile: Dockerfile
+    container_name: mega-analyzer-lab-admin-hidden-debug
+    environment:
+      - DB_HOST=mysql-lab
+      - DB_PORT=3306
+      - DB_NAME=labs_admin_hidden_debug
+      - DB_USER=labs
+      - DB_PASSWORD=labs_lab_pw
+      - TRACKER_URL=http://trackercollector:18099/beacon/admin-hidden-debug
+    ports:
+      - "127.0.0.1:18006:18006"
+    depends_on:
+      mysql-lab:
+        condition: service_healthy
+      trackercollector:
+        condition: service_started
+    networks:
+      - mega-analyzer-net
+    restart: unless-stopped
+
+  sqli-raw:
+    build:
+      context: ./django/sqli-raw
+      dockerfile: Dockerfile
+    container_name: mega-analyzer-lab-sqli-raw
+    environment:
+      - DB_HOST=mysql-lab
+      - DB_PORT=3306
+      - DB_NAME=labs_sqli_raw
+      - DB_USER=labs
+      - DB_PASSWORD=labs_lab_pw
+      - TRACKER_URL=http://trackercollector:18099/beacon/sqli-raw
+    ports:
+      - "127.0.0.1:18007:18007"
+    depends_on:
+      mysql-lab:
+        condition: service_healthy
+      trackercollector:
+        condition: service_started
+    networks:
+      - mega-analyzer-net
+    restart: unless-stopped
+
+  insecure-deserialize:
+    build:
+      context: ./django/insecure-deserialize
+      dockerfile: Dockerfile
+    container_name: mega-analyzer-lab-insecure-deserialize
+    environment:
+      - DB_HOST=mysql-lab
+      - DB_PORT=3306
+      - DB_NAME=labs_insecure_deserialize
+      - DB_USER=labs
+      - DB_PASSWORD=labs_lab_pw
+      - TRACKER_URL=http://trackercollector:18099/beacon/insecure-deserialize
+    ports:
+      - "127.0.0.1:18008:18008"
+    depends_on:
+      mysql-lab:
+        condition: service_healthy
+      trackercollector:
+        condition: service_started
+    networks:
+      - mega-analyzer-net
+    restart: unless-stopped
+
+  csrf-cors-misconfig:
+    build:
+      context: ./django/csrf-cors-misconfig
+      dockerfile: Dockerfile
+    container_name: mega-analyzer-lab-csrf-cors-misconfig
+    environment:
+      - DB_HOST=mysql-lab
+      - DB_PORT=3306
+      - DB_NAME=labs_csrf_cors
+      - DB_USER=labs
+      - DB_PASSWORD=labs_lab_pw
+      - TRACKER_URL=http://trackercollector:18099/beacon/csrf-cors-misconfig
+    ports:
+      - "127.0.0.1:18009:18009"
+    depends_on:
+      mysql-lab:
+        condition: service_healthy
+      trackercollector:
+        condition: service_started
+    networks:
+      - mega-analyzer-net
+    restart: unless-stopped
+
+  tracker-beacon:
+    build:
+      context: ./django/tracker-beacon
+      dockerfile: Dockerfile
+    container_name: mega-analyzer-lab-tracker-beacon
+    environment:
+      - DB_HOST=mysql-lab
+      - DB_PORT=3306
+      - DB_NAME=labs_tracker_beacon
+      - DB_USER=labs
+      - DB_PASSWORD=labs_lab_pw
+      # Hostname-based on purpose: exercises DNS-level sinkholing via
+      # pkg/internal/labdns in the pkg/ncer/labtest integration tests.
+      - TRACKER_URL=http://tracker.lab.local:18099/beacon/tracker-beacon
+    ports:
+      - "127.0.0.1:18010:18010"
+    depends_on:
+      mysql-lab:
+        condition: service_healthy
+      trackercollector:
+        condition: service_started
+    networks:
+      - mega-analyzer-net
+    restart: unless-stopped
+
+  # ── Coin injection game (embedded transactional DB) ──────────
+  coin-client-authoritative:
+    build:
+      context: ./go/coin-client-authoritative
+      dockerfile: Dockerfile
+    container_name: mega-analyzer-lab-coin-shop
+    environment:
+      - LISTEN_ADDR=0.0.0.0:18011
+      - HTTP_LISTEN_ADDR=0.0.0.0:18111
+      - DB_PATH=/data/coin-lab.db
+    volumes:
+      - lab-coin-data:/data:rw
+    ports:
+      - "127.0.0.1:18011:18011"
+      - "127.0.0.1:18111:18111"
+    networks:
+      - mega-analyzer-net
+    restart: unless-stopped
+
+# No top-level `networks:` block here on purpose: this file is only ever
+# used together with the root docker-compose.yml (`-f docker-compose.yml -f
+# labs/servers/docker-compose.lab.yml`), which already declares the
+# `mega-analyzer-net` bridge network. Redeclaring it here with different
+# attributes would conflict during compose's file-merge.
+
+volumes:
+  lab-postgres-data:
+    driver: local
+  lab-mysql-data:
+    driver: local
+  lab-coin-data:
+    driver: local

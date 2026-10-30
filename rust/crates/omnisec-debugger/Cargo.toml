@@ -1,0 +1,26 @@
+[package]
+name = "omnisec-debugger"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec GDB-like interactive debugger for machine code emulation (x86/x64, ARM64)."
+
+[dependencies]
+omnisec-json = { path = "../omnisec-json" }
+omnisec-core.workspace = true
+omnisec-ir.workspace = true
+omnisec-disasm.workspace = true
+omnisec-emu-x86.workspace = true
+omnisec-loader.workspace = true
+omnisec-loader-elf.workspace = true
+omnisec-loader-pe.workspace = true
+omnisec-loader-macho.workspace = true
+
+iced-x86.workspace = true
+
+[dev-dependencies]
+
+[lints]
+workspace = true

@@ -1,0 +1,4755 @@
+[
+  {
+    "id": "323",
+    "name": "360Dialog",
+    "patterns": [
+      "com.threesixtydialog.sdk."
+    ],
+    "website": "https://www.360dialog.com"
+  },
+  {
+    "id": "324",
+    "name": "ABTasty",
+    "patterns": [
+      "com.abtasty"
+    ],
+    "domains": [
+      "abtasty\\.com"
+    ],
+    "website": "https://www.abtasty.com"
+  },
+  {
+    "id": "444",
+    "name": "ACRA",
+    "patterns": [
+      "ch.acra.",
+      "org.acra."
+    ],
+    "website": "https://www.acra.ch/"
+  },
+  {
+    "id": "325",
+    "name": "ACRCloud",
+    "patterns": [
+      "com.acrcloud"
+    ],
+    "domains": [
+      "acrcloud.com",
+      "hb-minify-juc1ugur1qwqqqo4.stackpathdns.com"
+    ],
+    "website": "https://acrcloud.com/"
+  },
+  {
+    "id": "424",
+    "name": "AD(X)",
+    "patterns": [
+      "com.adxcorp.ads",
+      "com.adxcorp.nativead"
+    ],
+    "website": "https://adxcorp.kr/"
+  },
+  {
+    "id": "177",
+    "name": "ADLIB",
+    "patterns": [
+      "com.mocoplex.adlib."
+    ],
+    "domains": [
+      "adlibr\\.com"
+    ],
+    "website": "https://adlibr.com"
+  },
+  {
+    "id": "271",
+    "name": "AMoAd",
+    "patterns": [
+      "com.amoad."
+    ],
+    "website": "https://www.amoad.com"
+  },
+  {
+    "id": "31",
+    "name": "ATInternet",
+    "patterns": [
+      "com.atinternet."
+    ],
+    "domains": [
+      "ati-host\\.net"
+    ],
+    "website": "https://www.atinternet.com/en/"
+  },
+  {
+    "id": "326",
+    "name": "Aarki",
+    "patterns": [
+      "com.aarki"
+    ],
+    "website": "https://www.aarki.com"
+  },
+  {
+    "id": "91",
+    "name": "AccountKit",
+    "patterns": [
+      "com.facebook.accountkit"
+    ],
+    "domains": [
+      "graph\\.accountkit\\.com"
+    ],
+    "website": "https://www.accountkit.com/"
+  },
+  {
+    "id": "327",
+    "name": "Actv8me",
+    "patterns": [
+      "me.actv8"
+    ],
+    "domains": [
+      "actv8technologies\\.com"
+    ],
+    "website": "https://www.actv8me.com/"
+  },
+  {
+    "id": "386",
+    "name": "Acuant",
+    "patterns": [
+      "com.acuant.acuantcamera"
+    ],
+    "domains": [
+      "frm\\.acuant\\.net",
+      "medicscan\\.acuant\\.net",
+      "services\\.assureid\\.net"
+    ],
+    "website": "https://www.acuantcorp.com"
+  },
+  {
+    "id": "365",
+    "name": "Ad Generation",
+    "patterns": [
+      "com.socdm.d.adgeneration."
+    ],
+    "website": "https://supership.jp/business/adgeneration/"
+  },
+  {
+    "id": "4",
+    "name": "Ad4Screen",
+    "patterns": [
+      "com.ad4screen.sdk"
+    ],
+    "domains": [
+      "a4\\.tl",
+      "accengage\\.com",
+      "ad4push\\.com",
+      "ad4screen\\.com"
+    ],
+    "website": "http://www.ad4screen.com"
+  },
+  {
+    "id": "272",
+    "name": "AdAdapted",
+    "patterns": [
+      "com.adadapted.android.sdk."
+    ],
+    "domains": [
+      "ads\\.adadapted\\.com"
+    ],
+    "website": "https://www.adadapted.com"
+  },
+  {
+    "id": "216",
+    "name": "AdBuddiz",
+    "patterns": [
+      "com.purplebrain.adbuddiz.sdk."
+    ],
+    "domains": [
+      "sdk\\.adbuddiz\\.com"
+    ],
+    "website": "http://www.adbuddiz.com/abuse?hl=fr"
+  },
+  {
+    "id": "90",
+    "name": "AdColony",
+    "patterns": [
+      "com.adcolony.",
+      "com.jirbo.adcolony."
+    ],
+    "domains": [
+      "adc3-launch\\.adcolony\\.com",
+      "adcolony\\.com",
+      "ads30\\.adcolony\\.com",
+      "androidads20\\.adcolony\\.com",
+      "androidads21\\.adcolony\\.com",
+      "androidads23\\.adcolony\\.com",
+      "events3alt\\.adcolony\\.com",
+      "wd\\.adcolony\\.com"
+    ],
+    "website": "http://adcolony.com/"
+  },
+  {
+    "id": "295",
+    "name": "AdFalcon",
+    "patterns": [
+      "com.noqoush.adfalcon.android.sdk"
+    ],
+    "website": "http://adfalcon.com"
+  },
+  {
+    "id": "156",
+    "name": "AdFit (Daum)",
+    "patterns": [
+      "com.kakao.adfit."
+    ],
+    "domains": [
+      "analytics\\.ad\\.daum\\.net",
+      "statistics\\.videofarm\\.daum\\.net"
+    ],
+    "website": "https://www.daum.net"
+  },
+  {
+    "id": "425",
+    "name": "AdGateMedia",
+    "patterns": [
+      "com.adgatemedia."
+    ],
+    "website": "https://adgatemedia.com/"
+  },
+  {
+    "id": "437",
+    "name": "AdGem",
+    "patterns": [
+      "com.adgem.android."
+    ],
+    "website": "https://adgem.com/"
+  },
+  {
+    "id": "358",
+    "name": "AdLocus",
+    "patterns": [
+      "com.adlocus."
+    ],
+    "website": "https://adlocus.com"
+  },
+  {
+    "id": "426",
+    "name": "AdMarvel",
+    "patterns": [
+      "com.admarvel."
+    ],
+    "website": "https://www.crunchbase.com/organization/admarvel"
+  },
+  {
+    "id": "273",
+    "name": "AdMuing",
+    "patterns": [
+      "com.admuing.danmaku."
+    ],
+    "website": "https://github.com/admuing"
+  },
+  {
+    "id": "427",
+    "name": "AdTiming",
+    "patterns": [
+      "com.adtiming.",
+      "com.aiming.mdt."
+    ],
+    "website": "https://www.adtiming.com/"
+  },
+  {
+    "id": "438",
+    "name": "AdTrial",
+    "patterns": [
+      "com.adtrial.sdk."
+    ],
+    "website": "https://adtrial.com/"
+  },
+  {
+    "id": "256",
+    "name": "Adbrix",
+    "patterns": [
+      "com.igaworks.adbrix"
+    ],
+    "domains": [
+      "ad-brix\\.com"
+    ],
+    "website": "http://ad-brix.com/"
+  },
+  {
+    "id": "274",
+    "name": "Adcash",
+    "patterns": [
+      "com.adcash.mobileads."
+    ],
+    "website": "https://adcash.com"
+  },
+  {
+    "id": "359",
+    "name": "Adcenix",
+    "patterns": [
+      "com.adcenix."
+    ],
+    "website": "http://adcenix.com"
+  },
+  {
+    "id": "36",
+    "name": "Add Apt Tr",
+    "patterns": [
+      "com.intentsoftware.addapptr."
+    ],
+    "domains": [
+      "aatkit\\.com"
+    ],
+    "website": "https://www.addapptr.com"
+  },
+  {
+    "id": "157",
+    "name": "Adform",
+    "patterns": [
+      "com.adform.sdk."
+    ],
+    "domains": [
+      "adform\\.com",
+      "adformdsp\\.net",
+      "adx\\.adform\\.net",
+      "files\\.adform\\.net",
+      "track\\.adform\\.net"
+    ],
+    "website": "https://site.adform.com"
+  },
+  {
+    "id": "158",
+    "name": "Adfurikun",
+    "patterns": [
+      "com.glossomads.sdk.",
+      "jp.tjkapp.adfurikunsdk."
+    ],
+    "domains": [
+      "adfurikun\\.jp",
+      "ginf\\.adfurikun\\.jp"
+    ],
+    "website": "https://adfurikun.jp/adfurikun/"
+  },
+  {
+    "id": "165",
+    "name": "Adincube",
+    "patterns": [
+      "com.adincube.sdk."
+    ],
+    "domains": [
+      "sdk\\.adincube\\.com"
+    ],
+    "website": "https://www.adincube.com/"
+  },
+  {
+    "id": "366",
+    "name": "Adjoe",
+    "patterns": [
+      "io.adjoe.protection.",
+      "io.adjoe.sdk."
+    ],
+    "website": "https://adjoe.io/"
+  },
+  {
+    "id": "52",
+    "name": "Adjust",
+    "patterns": [
+      "com.adjust.android.sdk.",
+      "com.adjust.sdk."
+    ],
+    "domains": [
+      "adj\\.st",
+      "adjust\\.com",
+      "go\\.link"
+    ],
+    "website": "https://www.adjust.com/"
+  },
+  {
+    "id": "428",
+    "name": "Adjust Unbotify",
+    "patterns": [
+      "com.unbotify.mobile.sdk."
+    ],
+    "website": "https://www.adjust.com/product/unbotify/"
+  },
+  {
+    "id": "360",
+    "name": "Admitad",
+    "patterns": [
+      "ru.tachos.admitadstatisticsdk"
+    ],
+    "domains": [
+      ".*\\.admitad.com"
+    ],
+    "website": "https://www.admitad.com"
+  },
+  {
+    "id": "275",
+    "name": "Admixer",
+    "patterns": [
+      "com.admixer",
+      "net.admixer.sdk"
+    ],
+    "domains": [
+      "admixer\\.co\\.kr",
+      "admixer\\.net"
+    ],
+    "website": "http://admixer.co.kr/"
+  },
+  {
+    "id": "276",
+    "name": "Admost",
+    "patterns": [
+      "admost.adserver.",
+      "admost.sdk."
+    ],
+    "domains": [
+      "cdn\\-api\\.admost\\.com",
+      "go\\.admost\\.com",
+      "med\\-api\\.admost\\.com"
+    ],
+    "website": "https://admost.com/"
+  },
+  {
+    "id": "229",
+    "name": "Adobe Experience Cloud",
+    "patterns": [
+      "com.adobe.marketing.mobile"
+    ],
+    "website": "https://www.adobe.com/experience-cloud.html"
+  },
+  {
+    "id": "161",
+    "name": "Adot",
+    "patterns": [
+      "com.adotmob"
+    ],
+    "domains": [
+      "sdk\\.adotmob\\.com",
+      "sync\\.adotmob\\.com",
+      "tracker\\.adotmob\\.com"
+    ],
+    "website": "https://we-are-adot.com/"
+  },
+  {
+    "id": "41",
+    "name": "AdsWizz",
+    "patterns": [
+      ".adswizz."
+    ],
+    "domains": [
+      "adswizz\\.com",
+      "cdn\\.adswizz.com\\.edgesuite\\.net"
+    ],
+    "website": "http://www.adswizz.com/"
+  },
+  {
+    "id": "196",
+    "name": "AerServ",
+    "patterns": [
+      "com.aerserv.sdk."
+    ],
+    "domains": [
+      "ads\\.aerserv\\.com",
+      "debug\\.aerserv\\.com"
+    ],
+    "website": "https://www.aerserv.com/"
+  },
+  {
+    "id": "337",
+    "name": "Airpush",
+    "patterns": [
+      "com.airpush."
+    ],
+    "domains": [
+      "api\\.airpush\\.com",
+      "apidm\\.airpush\\.com",
+      "apistaging\\.airpush\\.com",
+      "apportal\\.airpush\\.com",
+      "appwall\\.api\\.airpush\\.com",
+      "beta\\.airpush\\.com",
+      "cdnap\\.airpush\\.com",
+      "m\\.airpush\\.com"
+    ],
+    "website": "https://airpush.com/"
+  },
+  {
+    "id": "334",
+    "name": "Akamai MAP",
+    "patterns": [
+      "com.akamai.android.sdk.AkaMap"
+    ],
+    "website": "https://www.akamai.com/"
+  },
+  {
+    "id": "338",
+    "name": "Alimama (formerly AdsMogo)",
+    "patterns": [
+      "com.adsmogo.",
+      "com.alimama."
+    ],
+    "domains": [
+      "\\.adsmogo\\.",
+      "\\.alimama\\."
+    ],
+    "website": "https://www.alimama.com/"
+  },
+  {
+    "id": "277",
+    "name": "Alohalytics",
+    "patterns": [
+      "org.alohalytics."
+    ],
+    "website": "https://github.com/biodranik/Alohalytics"
+  },
+  {
+    "id": "400",
+    "name": "Alooma",
+    "patterns": [
+      "com.github.aloomaio.androidsdk"
+    ],
+    "domains": [
+      "inputs\\.alooma\\.com"
+    ],
+    "website": "https://www.alooma.com"
+  },
+  {
+    "id": "82",
+    "name": "Alphonso",
+    "patterns": [
+      "tv.alphonso.service"
+    ],
+    "domains": [
+      "api\\.alphonso\\.tv",
+      "prov\\.alphonso\\.tv"
+    ],
+    "website": "http://alphonso.tv"
+  },
+  {
+    "id": "219",
+    "name": "AltBeacon",
+    "patterns": [
+      "com.altbeacon.beacon.",
+      "org.altbeacon.beacon.",
+      "org.altbeacon.bluetooth."
+    ],
+    "domains": [
+      "data.\\altbeacon\\.org"
+    ],
+    "website": "https://altbeacon.org"
+  },
+  {
+    "id": "269",
+    "name": "Altamob",
+    "patterns": [
+      "com.altamob.sdk"
+    ],
+    "domains": [
+      "api\\.altamob\\.com"
+    ],
+    "website": "https://www.altamob.com/en/index.html"
+  },
+  {
+    "id": "92",
+    "name": "Amazon Advertisement",
+    "patterns": [
+      "com.amazon.device.ads"
+    ],
+    "website": "https://developer.amazon.com/public/apis/earn/mobile-ads/docs/quick-start"
+  },
+  {
+    "id": "95",
+    "name": "Amazon Analytics (Amazon insights)",
+    "patterns": [
+      "com.amazon.insights",
+      "com.amazonaws.mobileconnectors.amazonmobileanalytics",
+      "com.amazonaws.mobileconnectors.pinpoint.analytics."
+    ],
+    "domains": [
+      "mobileanalytics\\.us-east-1\\.amazonaws\\.com"
+    ],
+    "website": "https://developer.amazon.com/docs/apps-and-games/sdk-downloads.html"
+  },
+  {
+    "id": "423",
+    "name": "Amazon Mobile Analytics (Amplify)",
+    "patterns": [
+      "com.amplifyframework.analytics."
+    ],
+    "website": "https://aws.amazon.com/amplify/"
+  },
+  {
+    "id": "93",
+    "name": "Amazon Mobile Associates",
+    "patterns": [
+      "com.amazon.device.associates"
+    ],
+    "website": "https://developer.amazon.com/mobile-associates"
+  },
+  {
+    "id": "278",
+    "name": "Amobee",
+    "patterns": [
+      "com.amobee."
+    ],
+    "domains": [
+      "amobee\\.com"
+    ],
+    "website": "https://amobee.com"
+  },
+  {
+    "id": "125",
+    "name": "Amplitude",
+    "patterns": [
+      "com.amplitude."
+    ],
+    "domains": [
+      "amplitude\\.com",
+      "api\\.amplitude\\.com"
+    ],
+    "website": "http://www.amplitude.com"
+  },
+  {
+    "id": "279",
+    "name": "Anagog",
+    "patterns": [
+      "com.anagog.jedai"
+    ],
+    "website": "https://anagog.com"
+  },
+  {
+    "id": "401",
+    "name": "Analytics by NPAW (Youbora Suite)",
+    "patterns": [
+      "com.npaw.youbora."
+    ],
+    "website": "https://nicepeopleatwork.com/"
+  },
+  {
+    "id": "387",
+    "name": "Anvato (A Google Company)",
+    "patterns": [
+      "com.anvato.androidsdk."
+    ],
+    "domains": [
+      ".*\\.anvato\\.net"
+    ],
+    "website": "https://cloud.google.com/solutions/media-entertainment/?a=2"
+  },
+  {
+    "id": "339",
+    "name": "AnySDK",
+    "patterns": [
+      "com.anysdk.framework.AdsWrapper",
+      "com.anysdk.framework.AnalyticsWrapper"
+    ],
+    "website": "http://www.anysdk.com/"
+  },
+  {
+    "id": "131",
+    "name": "AppAnalytics",
+    "patterns": [
+      "io.appanalytics.sdk"
+    ],
+    "website": "http://appanalytics.io/"
+  },
+  {
+    "id": "136",
+    "name": "AppBrain",
+    "patterns": [
+      "com.appbrain."
+    ],
+    "domains": [
+      "sdk\\.appbrain\\.com"
+    ],
+    "website": "https://www.appbrain.com/info/help/sdk/index.html"
+  },
+  {
+    "id": "72",
+    "name": "AppLovin (MAX and SparkLabs)",
+    "patterns": [
+      "com.applovin"
+    ],
+    "domains": [
+      "applovin\\.com",
+      "applvn\\.com"
+    ],
+    "website": "https://www.applovin.com/"
+  },
+  {
+    "id": "140",
+    "name": "AppMetrica",
+    "patterns": [
+      "com.yandex.metrica."
+    ],
+    "domains": [
+      "analytics\\.mobile\\.yandex\\.net",
+      "appmetrica\\.yandex\\.com",
+      "banners-slb\\.mobile\\.yandex\\.net",
+      "banners\\.mobile\\.yandex\\.net",
+      "mc\\.yandex\\.ru",
+      "report\\.appmetrica\\.yandex\\.net",
+      "startup\\.mobile\\.yandex\\.net"
+    ],
+    "website": "https://tech.yandex.com/metrica-mobile-sdk/"
+  },
+  {
+    "id": "163",
+    "name": "AppMonet",
+    "patterns": [
+      "com.monet."
+    ],
+    "website": "http://appmonet.com"
+  },
+  {
+    "id": "15",
+    "name": "AppNexus",
+    "patterns": [
+      "com.appnexus.opensdk."
+    ],
+    "domains": [
+      "247realmedia\\.com",
+      "adnxs\\.com",
+      "appnexus\\.com",
+      "appnexus\\.net"
+    ],
+    "website": "https://www.appnexus.com/"
+  },
+  {
+    "id": "126",
+    "name": "AppSee",
+    "patterns": [
+      "com.appsee."
+    ],
+    "domains": [
+      "api\\.appsee\\.com"
+    ],
+    "website": "https://www.appsee.com/"
+  },
+  {
+    "id": "367",
+    "name": "AppVador",
+    "patterns": [
+      "com.appvador.ads."
+    ],
+    "website": "http://www.appvador.com/"
+  },
+  {
+    "id": "255",
+    "name": "Appcelerator Analytics",
+    "patterns": [
+      "com.appcelerator.aps.",
+      "org.appcelerator.titanium.analytics"
+    ],
+    "domains": [
+      "appcelerator\\.com",
+      "appcelerator\\.net"
+    ],
+    "website": "https://www.appcelerator.com"
+  },
+  {
+    "id": "194",
+    "name": "Appdynamics",
+    "patterns": [
+      "com.appdynamics."
+    ],
+    "domains": [
+      "appdynamics\\.com",
+      "eum-appdynamics\\.com"
+    ],
+    "website": "https://www.appdynamics.com/"
+  },
+  {
+    "id": "132",
+    "name": "Applause",
+    "patterns": [
+      "com.applause.android."
+    ],
+    "website": "http://www.applause.com"
+  },
+  {
+    "id": "184",
+    "name": "Appnext",
+    "patterns": [
+      "com.appnext.sdk"
+    ],
+    "domains": [
+      "appnext.com"
+    ],
+    "website": "https://www.appnext.com/"
+  },
+  {
+    "id": "162",
+    "name": "Appodeal",
+    "patterns": [
+      "com.appodeal.ads.",
+      "com.appodealx."
+    ],
+    "domains": [
+      "appodeal\\.com",
+      "appodealx\\.com"
+    ],
+    "website": "https://www.appodeal.com"
+  },
+  {
+    "id": "368",
+    "name": "Appodeal Stack",
+    "patterns": [
+      "com.explorestack."
+    ],
+    "website": "https://appodealstack.com/about/"
+  },
+  {
+    "id": "12",
+    "name": "AppsFlyer",
+    "patterns": [
+      "com.appsflyer."
+    ],
+    "domains": [
+      "appsflyer\\.com"
+    ],
+    "website": "http://AppsFlyer.com"
+  },
+  {
+    "id": "369",
+    "name": "AppsGeyser",
+    "patterns": [
+      "com.appsgeyser.multiTabApp.VideoPlayerActivity",
+      "com.appsgeyser.sdk"
+    ],
+    "website": "https://appsgeyser.com/"
+  },
+  {
+    "id": "115",
+    "name": "Apptentive",
+    "patterns": [
+      "com.apptentive."
+    ],
+    "domains": [
+      "api\\.apptentive\\.com"
+    ],
+    "website": "https://www.apptentive.com/"
+  },
+  {
+    "id": "135",
+    "name": "Apptimize",
+    "patterns": [
+      "com.apptimize."
+    ],
+    "domains": [
+      "brahe\\.apptimize\\.com",
+      "md-a-c\\.apptimize\\.com",
+      "md-a-s\\.apptimize\\.com"
+    ],
+    "website": "http://www.apptimize.com"
+  },
+  {
+    "id": "260",
+    "name": "Apsalar",
+    "patterns": [
+      "com.apsalar.sdk."
+    ],
+    "domains": [
+      "e-ssl\\.apsalar\\.com",
+      "e\\.apsalar\\.com"
+    ],
+    "website": "https://singular.net"
+  },
+  {
+    "id": "155",
+    "name": "Apteligent by VMWare (formerly Crittercism)",
+    "patterns": [
+      "com.crittercism.app.Crittercism"
+    ],
+    "domains": [
+      "api\\.crittercism\\.com",
+      "appload\\.ingest\\.crittercism\\.com",
+      "txn\\.ingest\\.crittercism\\.com"
+    ],
+    "website": "http://www.apteligent.com"
+  },
+  {
+    "id": "55",
+    "name": "Areametrics",
+    "patterns": [
+      "com.areametrics.areametricssdk",
+      "com.areametrics.nosdkandroid"
+    ],
+    "domains": [
+      "areametrics\\.com"
+    ],
+    "website": "https://areametrics.com/"
+  },
+  {
+    "id": "3",
+    "name": "Audience Studio (Krux)",
+    "patterns": [
+      "com.krux.androidsdk"
+    ],
+    "domains": [
+      "krxd\\.net"
+    ],
+    "website": "https://www.salesforce.com/products/marketing-cloud/data-management/?mc=DMP"
+  },
+  {
+    "id": "203",
+    "name": "Auditude",
+    "patterns": [
+      "com.auditude.ads"
+    ],
+    "domains": [
+      "auditude\\.com"
+    ],
+    "website": "https://www.adobe.com/privacy/policies/auditude.html"
+  },
+  {
+    "id": "361",
+    "name": "AutoNavi / Amap",
+    "patterns": [
+      "com.amap.api"
+    ],
+    "domains": [
+      "abroad\\.apilocate\\.amap\\.com",
+      "apiinit\\.amap\\.com",
+      "apilocate\\.amap\\.com",
+      "cgicol\\.amap\\.com",
+      "grid\\.amap\\.com",
+      "lbs\\.amap\\.com",
+      "logs\\.amap\\.com",
+      "m5\\.amap\\.com",
+      "mst[0-9]*\\.is\\.autonavi\\.com",
+      "mt[0-9]*\\.google\\.cn",
+      "restapi\\.amap\\.com",
+      "restapi\\.amap\\.com",
+      "tm\\.amap\\.com",
+      "wap\\.amap\\.com",
+      "wb\\.amap\\.com",
+      "wb\\.amap\\.com",
+      "wb\\.amap\\.com",
+      "wb\\.amap\\.com",
+      "yuntuapi\\.amap\\.com"
+    ],
+    "website": "https://mobile.amap.com/"
+  },
+  {
+    "id": "226",
+    "name": "Axonix",
+    "patterns": [
+      "com.axonix.android.sdk",
+      "com.mobclix.android.sdk"
+    ],
+    "domains": [
+      "ads\\.mobclix\\.com",
+      "axonix\\.com",
+      "data\\.mobclix\\.com",
+      "mobclix\\.com",
+      "s\\.mobclix\\.com"
+    ],
+    "website": "http://axonix.com/"
+  },
+  {
+    "id": "54",
+    "name": "Backelite",
+    "patterns": [
+      "com.backelite.android.",
+      "com.backelite.bkdroid."
+    ],
+    "domains": [
+      "backelite\\.com"
+    ],
+    "website": "https://www.backelite.com/"
+  },
+  {
+    "id": "445",
+    "name": "Backtrace",
+    "patterns": [
+      "backtraceio.library.",
+      "com.github.backtrace-labs."
+    ],
+    "domains": [
+      "backtrace\\.io"
+    ],
+    "website": "https://backtrace.io"
+  },
+  {
+    "id": "96",
+    "name": "Baidu APPX",
+    "patterns": [
+      "com.baidu.appx"
+    ],
+    "website": "https://app.baidu.com/"
+  },
+  {
+    "id": "97",
+    "name": "Baidu Location",
+    "patterns": [
+      "com.baidu.location"
+    ],
+    "website": "https://developer.baidu.com/"
+  },
+  {
+    "id": "99",
+    "name": "Baidu Map",
+    "patterns": [
+      "com.baidu.mapapi"
+    ],
+    "website": "http://lbsyun.baidu.com/"
+  },
+  {
+    "id": "75",
+    "name": "Baidu Maps",
+    "patterns": [
+      "com.baidu.BaiduMap"
+    ],
+    "domains": [
+      "map\\.baidu\\.com"
+    ],
+    "website": "https://map.baidu.com"
+  },
+  {
+    "id": "100",
+    "name": "Baidu Mobile Ads",
+    "patterns": [
+      "com.baidu.mobads"
+    ],
+    "website": "https://developer.baidu.com/"
+  },
+  {
+    "id": "101",
+    "name": "Baidu Mobile Stat",
+    "patterns": [
+      "com.baidu.mobstat"
+    ],
+    "website": "https://developer.baidu.com/"
+  },
+  {
+    "id": "103",
+    "name": "Baidu Navigation",
+    "patterns": [
+      "com.baidu.navi"
+    ],
+    "website": "http://lbsyun.baidu.com/index.php?title=android-navsdk"
+  },
+  {
+    "id": "23",
+    "name": "Batch",
+    "patterns": [
+      "com.batch.android."
+    ],
+    "domains": [
+      "batch\\.com"
+    ],
+    "website": "https://batch.com"
+  },
+  {
+    "id": "280",
+    "name": "Bazaarvoice",
+    "patterns": [
+      "com.bazaarvoice.bvandroidsdk"
+    ],
+    "website": "https://www.bazaarvoice.com/"
+  },
+  {
+    "id": "281",
+    "name": "BeaconsInSpace (Fysical)",
+    "patterns": [
+      "com.beaconsinspace.android.beacon.detector."
+    ],
+    "website": "https://beaconsinspace.com"
+  },
+  {
+    "id": "402",
+    "name": "Beintoo",
+    "patterns": [
+      "com.beintoo.nucleon"
+    ],
+    "website": "https://beintoo.com/"
+  },
+  {
+    "id": "370",
+    "name": "BidMachine",
+    "patterns": [
+      "io.bidmachine."
+    ],
+    "website": "https://bidmachine.io/"
+  },
+  {
+    "id": "296",
+    "name": "Bitly",
+    "patterns": [
+      "com.bitly.Bitly"
+    ],
+    "website": "https://bitly.com/"
+  },
+  {
+    "id": "388",
+    "name": "Blesh",
+    "patterns": [
+      "com.blesh.sdk."
+    ],
+    "website": "https://www.blesh.com/"
+  },
+  {
+    "id": "154",
+    "name": "BlueConic",
+    "patterns": [
+      "com.blueconic"
+    ],
+    "website": "https://www.blueconic.com"
+  },
+  {
+    "id": "153",
+    "name": "BlueKai (acquired by Oracle)",
+    "patterns": [
+      "com.bluekai.sdk."
+    ],
+    "domains": [
+      "stags\\.bluekai\\.com",
+      "tags\\.bluekai\\.com"
+    ],
+    "website": "http://bluekai.com/registry/"
+  },
+  {
+    "id": "389",
+    "name": "Bluecats",
+    "patterns": [
+      "com.bluecats.sdk"
+    ],
+    "website": "https://www.bluecats.com/"
+  },
+  {
+    "id": "403",
+    "name": "Bolts",
+    "patterns": [
+      "com.parse.bolts"
+    ],
+    "website": "https://github.com/BoltsFramework/Bolts-Android"
+  },
+  {
+    "id": "167",
+    "name": "Branch",
+    "patterns": [
+      "io.branch."
+    ],
+    "domains": [
+      "api\\.branch\\.io"
+    ],
+    "website": "https://branch.io/"
+  },
+  {
+    "id": "17",
+    "name": "Braze (formerly Appboy)",
+    "patterns": [
+      "com.appboy"
+    ],
+    "domains": [
+      "appboy\\.com"
+    ],
+    "website": "https://www.braze.com"
+  },
+  {
+    "id": "178",
+    "name": "Brightcove",
+    "patterns": [
+      "com.brightcove"
+    ],
+    "domains": [
+      "metrics\\.brightcove\\.com"
+    ],
+    "website": "https://www.brightcove.com"
+  },
+  {
+    "id": "371",
+    "name": "BugSense",
+    "patterns": [
+      "com.bugsense.trace."
+    ],
+    "website": "http://www.bugsense.com/"
+  },
+  {
+    "id": "233",
+    "name": "Bugfender",
+    "patterns": [
+      "com.bugfender.sdk."
+    ],
+    "website": "https://bugfender.com/"
+  },
+  {
+    "id": "190",
+    "name": "Bugly",
+    "patterns": [
+      "com.tencent.bugly."
+    ],
+    "domains": [
+      "bugly\\.qq\\.com"
+    ],
+    "website": "https://bugly.qq.com/v2/"
+  },
+  {
+    "id": "241",
+    "name": "Bugsee",
+    "patterns": [
+      "com.bugsee.library.Bugsee"
+    ],
+    "website": "https://www.bugsee.com/"
+  },
+  {
+    "id": "207",
+    "name": "Bugsnag",
+    "patterns": [
+      "com.bugsnag."
+    ],
+    "website": "https://www.bugsnag.com/"
+  },
+  {
+    "id": "340",
+    "name": "Button",
+    "patterns": [
+      "com.usebutton.sdk."
+    ],
+    "domains": [
+      "\\.usebutton.com"
+    ],
+    "website": "https://www.usebutton.com"
+  },
+  {
+    "id": "372",
+    "name": "BuzzAd Benefit",
+    "patterns": [
+      "com.buzzvil."
+    ],
+    "website": "https://buzzvil.atlassian.net/wiki/spaces/BDG/pages/486834313/BuzzAd-Benefit+Android+SDK"
+  },
+  {
+    "id": "252",
+    "name": "CallDorado",
+    "patterns": [
+      "com.calldorado.android"
+    ],
+    "website": "http://calldorado.com"
+  },
+  {
+    "id": "111",
+    "name": "Carnival",
+    "patterns": [
+      "com.carnival.sdk",
+      "com.carnivalmobile"
+    ],
+    "domains": [
+      "devices\\.carnivalmobile\\.com"
+    ],
+    "website": "http://carnival.io/"
+  },
+  {
+    "id": "341",
+    "name": "Carto (formerly Nutiteq)",
+    "patterns": [
+      "com.carto",
+      "com.nutiteq"
+    ],
+    "website": "https://carto.com"
+  },
+  {
+    "id": "257",
+    "name": "Cauly",
+    "patterns": [
+      "com.cauly.android.ad.",
+      "com.fsn.cauly",
+      "com.trid.tridad"
+    ],
+    "domains": [
+      "ad\\.cauly\\.co\\.kr"
+    ],
+    "website": "https://www.cauly.net"
+  },
+  {
+    "id": "404",
+    "name": "Cedexis Radar",
+    "patterns": [
+      "com.cedexis"
+    ],
+    "domains": [
+      "cedexis\\-radar\\.net",
+      "cedexis\\.com",
+      "radar\\.cedexis\\.com"
+    ],
+    "website": "https://www.cedexis.com/"
+  },
+  {
+    "id": "53",
+    "name": "ChartBoost",
+    "patterns": [
+      "com.chartboost.sdk."
+    ],
+    "domains": [
+      "\\.chartboost\\.com"
+    ],
+    "website": "https://answers.chartboost.com/en-us/"
+  },
+  {
+    "id": "267",
+    "name": "Chartbeat",
+    "patterns": [
+      "com.chartbeat.androidsdk"
+    ],
+    "domains": [
+      ".chartbeat\\.com",
+      ".chartbeat\\.net"
+    ],
+    "website": "https://chartbeat.com/"
+  },
+  {
+    "id": "168",
+    "name": "Cheetah Ads",
+    "patterns": [
+      "com.cmcm."
+    ],
+    "domains": [
+      "cmcm\\.com"
+    ],
+    "website": "https://www.cmcm.com/"
+  },
+  {
+    "id": "405",
+    "name": "Cifrasoft",
+    "patterns": [
+      "com.cifrasoft."
+    ],
+    "domains": [
+      "\\.tele\\.fm"
+    ],
+    "website": "http://cifrasoft.com"
+  },
+  {
+    "id": "174",
+    "name": "CleverTap",
+    "patterns": [
+      "com.clevertap."
+    ],
+    "domains": [
+      "wzrkt\\.com"
+    ],
+    "website": "https://clevertap.com/"
+  },
+  {
+    "id": "176",
+    "name": "Cloudmobi",
+    "patterns": [
+      "com.cloudtech."
+    ],
+    "domains": [
+      "api\\.cloudmobi\\.net",
+      "cloudmobi\\.net",
+      "logger\\.cloudmobi\\.net",
+      "vast\\.cloudmobi\\.net"
+    ],
+    "website": "http://www.cloudmobi.net/"
+  },
+  {
+    "id": "64",
+    "name": "Colocator",
+    "patterns": [
+      "net.crowdconnected.androidcolocator"
+    ],
+    "domains": [
+      "colocator\\.net"
+    ],
+    "website": "https://developers.colocator.net"
+  },
+  {
+    "id": "56",
+    "name": "ComScore",
+    "patterns": [
+      "com.comscore."
+    ],
+    "domains": [
+      "comscore\\.com"
+    ],
+    "website": "https://comscore.com/"
+  },
+  {
+    "id": "282",
+    "name": "Conversant",
+    "patterns": [
+      "com.conversantmedia",
+      "com.greystripe.android."
+    ],
+    "domains": [
+      "conversantmedia\\.com"
+    ],
+    "website": "https://www.conversantmedia.com"
+  },
+  {
+    "id": "202",
+    "name": "Conviva",
+    "patterns": [
+      "com.conviva."
+    ],
+    "domains": [
+      "cws\\.conviva\\.com"
+    ],
+    "website": "https://www.conviva.com/"
+  },
+  {
+    "id": "390",
+    "name": "CoolaData",
+    "patterns": [
+      "com.cooladata.android."
+    ],
+    "website": "https://www.cooladata.com/"
+  },
+  {
+    "id": "443",
+    "name": "Coulus Coelib",
+    "patterns": [
+      "coelib.c.couluslibrary"
+    ],
+    "website": "https://measurementsys.com/index.php#appdev"
+  },
+  {
+    "id": "122",
+    "name": "Countly",
+    "patterns": [
+      "ly.count.android."
+    ],
+    "website": "https://count.ly/"
+  },
+  {
+    "id": "170",
+    "name": "Criteo",
+    "patterns": [
+      "com.criteo."
+    ],
+    "domains": [
+      "criteo\\.com"
+    ],
+    "website": "https://www.criteo.com/"
+  },
+  {
+    "id": "46",
+    "name": "CrowdTangle",
+    "patterns": null,
+    "domains": [
+      "api\\.crowdtangle\\.com"
+    ],
+    "website": "https://www.crowdtangle.com/"
+  },
+  {
+    "id": "57",
+    "name": "Cuebiq",
+    "patterns": [
+      "com.cuebiq.cuebiqsdk.model.Collector",
+      "com.cuebiq.cuebiqsdk.receiver.CoverageReceiver"
+    ],
+    "domains": [
+      "cuebiq\\.com"
+    ],
+    "website": "http://www.cuebiq.com/"
+  },
+  {
+    "id": "179",
+    "name": "DOV-E",
+    "patterns": [
+      "com.dv.DVSDK"
+    ],
+    "domains": [
+      "\\.dov-e\\.com"
+    ],
+    "website": "https://www.dov-e.com/"
+  },
+  {
+    "id": "40",
+    "name": "Demdex",
+    "patterns": [
+      "com.adobe.mobile.Analytics",
+      "com.adobe.mobile.Config."
+    ],
+    "domains": [
+      "demdex\\.net"
+    ],
+    "website": "https://www.adobe.com/data-analytics-cloud/audience-manager.html"
+  },
+  {
+    "id": "342",
+    "name": "Didomi",
+    "patterns": [
+      "io.didomi.sdk."
+    ],
+    "website": "https://www.didomi.io/"
+  },
+  {
+    "id": "188",
+    "name": "Display",
+    "patterns": [
+      "io.display."
+    ],
+    "domains": [
+      "display.io"
+    ],
+    "website": "https://www.display.io/en/"
+  },
+  {
+    "id": "191",
+    "name": "Duapps",
+    "patterns": [
+      "com.duapps."
+    ],
+    "domains": [
+      "duapps\\.com"
+    ],
+    "website": "http://ad.duapps.com/"
+  },
+  {
+    "id": "152",
+    "name": "Dynamic Yield",
+    "patterns": [
+      "com.dynamicyield."
+    ],
+    "domains": [
+      "adm\\.dynamicyield\\.com",
+      "api\\.dynamicyield\\.com",
+      "cdn\\.dynamicyield\\.com",
+      "px\\.dynamicyield\\.com",
+      "st\\.dynamicyield\\.com"
+    ],
+    "website": "https://www.dynamicyield.com"
+  },
+  {
+    "id": "137",
+    "name": "Dynatrace",
+    "patterns": [
+      "com.dynatrace.agent",
+      "com.dynatrace.android.app",
+      "com.dynatrace.tools"
+    ],
+    "domains": [
+      "\\.dynatrace\\.com"
+    ],
+    "website": "https://www.dynatrace.com"
+  },
+  {
+    "id": "264",
+    "name": "Emarsys Predict",
+    "patterns": [
+      "com.emarsys.predict"
+    ],
+    "domains": [
+      "recommender\\.scarabresearch\\.com"
+    ],
+    "website": "https://help.emarsys.com/hc/categories/115000670425-Predict"
+  },
+  {
+    "id": "297",
+    "name": "Enhance",
+    "patterns": [
+      "co.enhance.Enhance"
+    ],
+    "domains": [
+      "app-config\\.enhance\\.co",
+      "data-location\\.enhance\\.co"
+    ],
+    "website": "https://enhance.co"
+  },
+  {
+    "id": "151",
+    "name": "Ensighten",
+    "patterns": [
+      "com.ensighten."
+    ],
+    "domains": [
+      "nexus\\.ensighten\\.com"
+    ],
+    "website": "https://www.ensighten.com"
+  },
+  {
+    "id": "298",
+    "name": "Esri ArcGIS",
+    "patterns": [
+      "com.esri.arcgisruntime."
+    ],
+    "website": "https://www.arcgis.com/"
+  },
+  {
+    "id": "102",
+    "name": "Estimote",
+    "patterns": [
+      "com.estimote."
+    ],
+    "domains": [
+      ".*\\.estimote\\.com"
+    ],
+    "website": "https://estimote.com/"
+  },
+  {
+    "id": "51",
+    "name": "Eulerian",
+    "patterns": [
+      "com.eulerian.android.sdk"
+    ],
+    "domains": [
+      "eulerian\\.com"
+    ],
+    "website": "https://www.eulerian.com/en/"
+  },
+  {
+    "id": "42",
+    "name": "ExactTarget",
+    "patterns": [
+      "com.exacttarget."
+    ],
+    "domains": [
+      "\\.exacttarget\\."
+    ],
+    "website": "http://help.exacttarget.com/en/technical_library/API_Overview/"
+  },
+  {
+    "id": "350",
+    "name": "Exponea",
+    "patterns": [
+      "com.exponea.sdk",
+      "com.infinario.android.infinariosdk.",
+      "com.sygic.aura."
+    ],
+    "domains": [
+      "api.infinario.com",
+      "sygic-api.infinario.com"
+    ],
+    "website": "https://exponea.com"
+  },
+  {
+    "id": "391",
+    "name": "FLUZO",
+    "patterns": [
+      "com.fluzo.sdk."
+    ],
+    "website": "https://www.fluzo.com/"
+  },
+  {
+    "id": "65",
+    "name": "Facebook Ads",
+    "patterns": [
+      "com.facebook.ads"
+    ],
+    "domains": [
+      "\\.facebook\\.com"
+    ],
+    "website": "https://developers.facebook.com/docs/android"
+  },
+  {
+    "id": "66",
+    "name": "Facebook Analytics",
+    "patterns": [
+      "com.facebook.CampaignTrackingReceiver",
+      "com.facebook.appevents",
+      "com.facebook.marketing."
+    ],
+    "domains": [
+      "\\.facebook\\.com"
+    ],
+    "website": "https://developers.facebook.com/docs/android"
+  },
+  {
+    "id": "47",
+    "name": "Facebook Audience",
+    "patterns": [
+      "com.facebook.audiencenetwork"
+    ],
+    "domains": [
+      "\\.facebook\\.com"
+    ],
+    "website": "https://developers.facebook.com/docs/android/"
+  },
+  {
+    "id": "392",
+    "name": "Facebook Flipper",
+    "patterns": [
+      "com.facebook.flipper"
+    ],
+    "website": "https://fbflipper.com"
+  },
+  {
+    "id": "67",
+    "name": "Facebook Login",
+    "patterns": [
+      "com.facebook.login"
+    ],
+    "domains": [
+      "\\.facebook\\.com"
+    ],
+    "website": "https://developers.facebook.com/docs/android"
+  },
+  {
+    "id": "68",
+    "name": "Facebook Notifications",
+    "patterns": [
+      "com.facebook.notifications"
+    ],
+    "domains": [
+      "\\.facebook\\.com"
+    ],
+    "website": "https://developers.facebook.com/docs/android"
+  },
+  {
+    "id": "69",
+    "name": "Facebook Places",
+    "patterns": [
+      "com.facebook.places"
+    ],
+    "domains": [
+      "\\.facebook\\.com"
+    ],
+    "website": "https://developers.facebook.com/docs/android"
+  },
+  {
+    "id": "70",
+    "name": "Facebook Share",
+    "patterns": [
+      "com.facebook.share"
+    ],
+    "domains": [
+      "\\.facebook\\.com"
+    ],
+    "website": "https://developers.facebook.com/docs/android"
+  },
+  {
+    "id": "314",
+    "name": "Factual",
+    "patterns": [
+      "com.factual.Factual",
+      "com.factual.engine"
+    ],
+    "domains": [
+      "api.factual.com"
+    ],
+    "website": "https://www.factual.com"
+  },
+  {
+    "id": "2",
+    "name": "FidZup",
+    "patterns": [
+      "com.fidzup."
+    ],
+    "domains": [
+      "fidzup"
+    ],
+    "website": "https://www.fidzup.com"
+  },
+  {
+    "id": "150",
+    "name": "Fiksu",
+    "patterns": [
+      "com.fiksu.asotracking"
+    ],
+    "domains": [
+      "a\\.fiksu\\.com",
+      "sdk\\.fiksu\\.com"
+    ],
+    "website": "https://fiksu.com"
+  },
+  {
+    "id": "406",
+    "name": "Flowsense",
+    "patterns": [
+      "com.flowsense.flowsensesdk."
+    ],
+    "website": "https://flowsense.com.br/"
+  },
+  {
+    "id": "25",
+    "name": "Flurry",
+    "patterns": [
+      "com.flurry."
+    ],
+    "domains": [
+      "flurry\\.com"
+    ],
+    "website": "http://www.flurry.com"
+  },
+  {
+    "id": "266",
+    "name": "FollowAnalytics",
+    "patterns": [
+      "com.followanalytics."
+    ],
+    "domains": [
+      "sdk\\.follow-apps\\.com"
+    ],
+    "website": "https://www.followanalytics.com"
+  },
+  {
+    "id": "315",
+    "name": "Footmarks",
+    "patterns": [
+      "com.footmarks.footmarkssdkm2"
+    ],
+    "website": "https://www.footmarks.com"
+  },
+  {
+    "id": "149",
+    "name": "Foresee",
+    "patterns": [
+      "com.foresee.sdk.ForeSee"
+    ],
+    "domains": [
+      "4seeresults\\.com",
+      "analytics\\.foresee\\.com",
+      "foresee\\.com",
+      "foreseeresults\\.com",
+      "i\\.4see\\.mobi",
+      "rec\\.replay\\.answerscloud\\.com"
+    ],
+    "website": "https://www.foresee.com"
+  },
+  {
+    "id": "224",
+    "name": "FreeWheel",
+    "patterns": [
+      "tv.freewheel.ad."
+    ],
+    "domains": [
+      "fwmrm\\.net"
+    ],
+    "website": "http://freewheel.tv/"
+  },
+  {
+    "id": "104",
+    "name": "Fyber",
+    "patterns": [
+      "com.fyber."
+    ],
+    "domains": [
+      "adproxy\\.fyber\\.com",
+      "appengage-video\\.fyber\\.com",
+      "banner\\.fyber\\.com",
+      "engine\\.fyber\\.com",
+      "interstitial\\.fyber\\.com",
+      "mbe-cdn\\.fyber\\.com",
+      "offer\\.fyber\\.com",
+      "service\\.fyber\\.com",
+      "tracker\\.fyber\\.com",
+      "video-interstitial-assets-cdn\\.fyber\\.com",
+      "video\\.fyber\\.com"
+    ],
+    "website": "https://www.fyber.com/"
+  },
+  {
+    "id": "109",
+    "name": "Fyber SponsorPay",
+    "patterns": [
+      "com.sponsorpay"
+    ],
+    "domains": [
+      "appengage-video\\.sponsorpay\\.com",
+      "cdn1\\.sponsorpay\\.com",
+      "cdn2\\.sponsorpay\\.com",
+      "cdn3\\.sponsorpay\\.com",
+      "cdn4\\.sponsorpay\\.com",
+      "engine\\.sponsorpay\\.com"
+    ],
+    "website": "http://www.sponsorpay.com"
+  },
+  {
+    "id": "299",
+    "name": "GIPHY Analytics",
+    "patterns": [
+      "com.giphy.sdk.analytics",
+      "com.giphy.sdk.tracking"
+    ],
+    "domains": [
+      "api\\.giphy\\.com",
+      "pingback\\.giphy\\.com"
+    ],
+    "website": "https://giphy.com/"
+  },
+  {
+    "id": "373",
+    "name": "GOM Factory AdPie",
+    "patterns": [
+      "com.gomfactory.adpie."
+    ],
+    "website": "http://www.gomfactory.com"
+  },
+  {
+    "id": "393",
+    "name": "GPShopper",
+    "patterns": [
+      "com.gpshopper"
+    ],
+    "domains": [
+      "sdk\\.gpshopper\\.com",
+      "sypi\\.gpshopper\\.com"
+    ],
+    "website": "https://www.crunchbase.com/organization/gpshopper"
+  },
+  {
+    "id": "205",
+    "name": "GameAnalytics",
+    "patterns": [
+      "com.gameanalytics.sdk"
+    ],
+    "website": "https://gameanalytics.com/features"
+  },
+  {
+    "id": "227",
+    "name": "Gemius HeatMap",
+    "patterns": [
+      "com.gemius.sdk"
+    ],
+    "domains": [
+      "gemius\\.pl"
+    ],
+    "website": "https://heatmap.gemius.com"
+  },
+  {
+    "id": "407",
+    "name": "Geniee",
+    "patterns": [
+      "jp.co.geniee.gnadsdk."
+    ],
+    "website": "https://geniee.co.jp/"
+  },
+  {
+    "id": "201",
+    "name": "Gimbal",
+    "patterns": [
+      "com.gimbal.android"
+    ],
+    "domains": [
+      "analytics-server\\.gimbal\\.com",
+      "api\\.gimbal\\.com",
+      "registration\\.gimbal\\.com",
+      "sdk-info\\.gimbal\\.com"
+    ],
+    "website": "https://gimbal.com/"
+  },
+  {
+    "id": "73",
+    "name": "Glispa Connect (Formerly Avocarrot)",
+    "patterns": [
+      "com.avocarrot.sdk"
+    ],
+    "domains": [
+      "\\.avocarrot\\.com",
+      "ads\\.glispa\\.com",
+      "exp\\.glispa\\.com",
+      "rtb\\.platform\\.glispa\\.com",
+      "templates\\.glispaconnect\\.com",
+      "trk\\.glispa\\.com"
+    ],
+    "website": "https://www.glispa.com"
+  },
+  {
+    "id": "283",
+    "name": "Glympse",
+    "patterns": [
+      "com.glympse.android."
+    ],
+    "domains": [
+      "\\.glympse\\.com"
+    ],
+    "website": "https://glympse.com"
+  },
+  {
+    "id": "312",
+    "name": "Google AdMob",
+    "patterns": [
+      "com.google.ads.",
+      "com.google.android.ads.",
+      "com.google.android.gms.admob",
+      "com.google.android.gms.ads.AdActivity",
+      "com.google.android.gms.ads.AdRequest",
+      "com.google.android.gms.ads.AdView",
+      "com.google.android.gms.ads.doubleclick",
+      "com.google.android.gms.ads.mediation",
+      "com.google.firebase.firebase_ads.",
+      "com.google.unity.ads."
+    ],
+    "domains": [
+      "2mdn\\.net",
+      "ads\\.google\\.com",
+      "adservice\\.g\\.cn",
+      "adservice\\.google\\..*",
+      "dmtry\\.com",
+      "doubleclick\\.com",
+      "doubleclick\\.net",
+      "googleads\\.g\\.doubleclick\\.net",
+      "googleadservices\\.com",
+      "googlesyndication\\.com",
+      "mng-ads\\.com",
+      "mobileads\\.google\\.com"
+    ],
+    "website": "https://admob.google.com"
+  },
+  {
+    "id": "71",
+    "name": "Google Ads",
+    "patterns": null,
+    "domains": [
+      "\\.google\\.com"
+    ],
+    "website": "https://developers.google.com/admob/android"
+  },
+  {
+    "id": "48",
+    "name": "Google Analytics",
+    "patterns": [
+      "com.google.analytics.",
+      "com.google.android.apps.analytics.",
+      "com.google.android.gms.analytics."
+    ],
+    "domains": [
+      "google-analytics\\.com"
+    ],
+    "website": "http://www.google.com/analytics/"
+  },
+  {
+    "id": "240",
+    "name": "Google Analytics Plugin (Cordova)",
+    "patterns": [
+      "com.danielcwilson.plugins.analytics"
+    ],
+    "website": "https://analytics.withgoogle.com/"
+  },
+  {
+    "id": "27",
+    "name": "Google CrashLytics",
+    "patterns": [
+      "com.crashlytics.",
+      "com.google.firebase.crash.",
+      "com.google.firebase.crashlytics",
+      "io.fabric.",
+      "io.invertase.firebase.crashlytics."
+    ],
+    "domains": [
+      "crashlytics\\.com"
+    ],
+    "website": "http://crashlytics.com"
+  },
+  {
+    "id": "5",
+    "name": "Google DoubleClick",
+    "patterns": null,
+    "domains": [
+      "2mdn\\.net",
+      "dmtry\\.com",
+      "doubleclick\\.com",
+      "doubleclick\\.net",
+      "mng-ads\\.com"
+    ],
+    "website": "https://www.doubleclickbygoogle.com/"
+  },
+  {
+    "id": "49",
+    "name": "Google Firebase Analytics",
+    "patterns": [
+      "com.google.android.gms.measurement.",
+      "com.google.firebase.analytics.FirebaseAnalytics",
+      "com.google.firebase.firebase_analytics"
+    ],
+    "domains": [
+      "firebase\\.com",
+      "firebaselogging-pa\\.googleapis\\.com"
+    ],
+    "website": "https://firebase.google.com/"
+  },
+  {
+    "id": "105",
+    "name": "Google Tag Manager",
+    "patterns": [
+      "com.google.android.gms.tagmanager",
+      "com.google.tagmanager"
+    ],
+    "domains": [
+      "www-googletagmanager\\.l\\.google\\.com",
+      "www\\.googletagmanager\\.com",
+      "www\\.googletagservices\\.com"
+    ],
+    "website": "https://www.google.com/analytics/tag-manager/"
+  },
+  {
+    "id": "300",
+    "name": "Heap",
+    "patterns": [
+      "com.heapanalytics"
+    ],
+    "domains": [
+      "heapanalytics.com"
+    ],
+    "website": "https://heap.io/"
+  },
+  {
+    "id": "58",
+    "name": "HelpShift",
+    "patterns": [
+      "com.helpshift"
+    ],
+    "domains": [
+      "helpshift\\.com"
+    ],
+    "website": "https://www.helpshift.com"
+  },
+  {
+    "id": "284",
+    "name": "Herow",
+    "patterns": [
+      "com.connecthings.herow"
+    ],
+    "website": "https://herow.io/"
+  },
+  {
+    "id": "147",
+    "name": "Heyzap (bought by Fyber)",
+    "patterns": [
+      "com.heyzap.mediation.",
+      "com.heyzap.sdk.ads."
+    ],
+    "domains": [
+      "ads\\.heyzap\\.com",
+      "fyc\\.heyzap\\.com",
+      "img-cloudflare-2\\.haizap\\.com",
+      "img-cloudflare\\.haizap\\.com",
+      "med\\.heyzap\\.com",
+      "x\\.heyzap\\.com"
+    ],
+    "website": "https://www.heyzap.com"
+  },
+  {
+    "id": "26",
+    "name": "HockeyApp",
+    "patterns": [
+      "net.hockeyapp."
+    ],
+    "domains": [
+      "hockeyapp\\.net"
+    ],
+    "website": "http://hockeyapp.net"
+  },
+  {
+    "id": "209",
+    "name": "Houndify",
+    "patterns": [
+      "com.hound"
+    ],
+    "domains": [
+      "houndify\\.com"
+    ],
+    "website": "https://www.houndify.com/"
+  },
+  {
+    "id": "333",
+    "name": "Huawei Mobile Services (HMS) Core",
+    "patterns": [
+      "com.huawei.agconnect.",
+      "com.huawei.hms.analytics",
+      "com.huawei.hms.flutter.analytics.",
+      "com.huawei.hms.location",
+      "com.huawei.hms.plugin.ads",
+      "com.huawei.hms.plugin.analytics",
+      "com.huawei.hms.support.api.push.",
+      "com.huawei.updatesdk."
+    ],
+    "domains": [
+      "dbankcloud\\.cn",
+      "dbankcloud\\.com",
+      "dbankcloud\\.ru",
+      "hicloud\\.com"
+    ],
+    "website": "https://developer.huawei.com/consumer/en/hms"
+  },
+  {
+    "id": "408",
+    "name": "Huq Sourcekit",
+    "patterns": [
+      "io.huq.sourcekit."
+    ],
+    "website": "https://huq.io/"
+  },
+  {
+    "id": "77",
+    "name": "HyperTrack",
+    "patterns": [
+      "com.hypertrack",
+      "com.hypertracklive.",
+      "io.hypertrack"
+    ],
+    "domains": [
+      "api\\.hypertrack\\.com",
+      "hypertrack\\.amazonaws\\.com",
+      "trck\\.at"
+    ],
+    "website": "http://hypertrack.com"
+  },
+  {
+    "id": "189",
+    "name": "HyprMX",
+    "patterns": [
+      "com.hyprmx.android.sdk."
+    ],
+    "domains": [
+      "hyprmx\\.com"
+    ],
+    "website": "https://www.hyprmx.com"
+  },
+  {
+    "id": "328",
+    "name": "IAB Open Measurement",
+    "patterns": [
+      "com.iab.omid.library",
+      "com.prime31.IAB.",
+      "com.prime31.util.IabHelperImpl"
+    ],
+    "website": "https://iabtechlab.com/"
+  },
+  {
+    "id": "362",
+    "name": "IBM Digital Analytics",
+    "patterns": [
+      "com.digitalanalytics."
+    ],
+    "domains": [
+      "data\\.de\\.coremetrics\\.com"
+    ],
+    "website": "https://www.ibm.com/customer-engagement/coremetrics-software"
+  },
+  {
+    "id": "420",
+    "name": "IBM Mobile Marketing (Acoustic)",
+    "patterns": [
+      "co.acoustic.mobile.push.sdk.",
+      "com.ibm.mce.sdk.",
+      "com.xtify.android.sdk.",
+      "com.xtify.mce.sdk."
+    ],
+    "domains": [
+      "sdk6\\.ibm\\.xtify\\.com"
+    ],
+    "website": "https://acoustic.co/"
+  },
+  {
+    "id": "197",
+    "name": "INFOnline",
+    "patterns": [
+      "de.infonline."
+    ],
+    "domains": [
+      "de\\.ioam\\.de"
+    ],
+    "website": "https://www.infonline.de"
+  },
+  {
+    "id": "351",
+    "name": "IPQualityScore",
+    "patterns": [
+      "com.ipqualityscore."
+    ],
+    "domains": [
+      "ipqualityscore\\.com"
+    ],
+    "website": "https://www.ipqualityscore.com"
+  },
+  {
+    "id": "232",
+    "name": "IQzone",
+    "patterns": [
+      "com.iqzone"
+    ],
+    "website": "https://iqzone.com"
+  },
+  {
+    "id": "231",
+    "name": "In Loco",
+    "patterns": [
+      "com.inlocomedia.android"
+    ],
+    "domains": [
+      "inlocomedia\\.com"
+    ],
+    "website": "https://inloco.com.br"
+  },
+  {
+    "id": "180",
+    "name": "InMarket",
+    "patterns": [
+      "com.inmarket"
+    ],
+    "domains": [
+      "m2m-api\\.inmarket\\.com"
+    ],
+    "website": "https://inmarket.com/"
+  },
+  {
+    "id": "394",
+    "name": "IndoorAtlas",
+    "patterns": [
+      "com.indooratlas.android.sdk"
+    ],
+    "domains": [
+      "ipsws\\.indooratlas\\.com"
+    ],
+    "website": "http://www.indooratlas.com/"
+  },
+  {
+    "id": "106",
+    "name": "Inmobi",
+    "patterns": [
+      "com.inmobi",
+      "in.inmobi."
+    ],
+    "domains": [
+      "c\\.w\\.inmobi\\.com",
+      "china\\.inmobi\\.com",
+      "config-ltvp\\.inmobi\\.com",
+      "config\\.inmobi\\.com",
+      "et\\.w\\.inmobi\\.com",
+      "i\\.l\\.inmobicdn\\.net",
+      "i\\.w\\.inmobi\\.com",
+      "inmobi\\.cn",
+      "inmobi\\.com",
+      "inmobi\\.info",
+      "inmobi\\.net",
+      "inmobi\\.us",
+      "inmobicdn\\.com",
+      "inmobicdn\\.net",
+      "inmobisdk\\-a\\.akamaihd\\.net",
+      "japan\\.inmobi\\.com",
+      "r\\.w\\.inmobi\\.com",
+      "sdkm\\.w\\.inmobi\\.com",
+      "sdktm\\.w\\.inmobi\\.com",
+      "w\\.inmobi\\.com"
+    ],
+    "website": "http://inmobi.com"
+  },
+  {
+    "id": "301",
+    "name": "Inneractive",
+    "patterns": [
+      "com.inneractive.api.ads"
+    ],
+    "website": "https://www.crunchbase.com/organization/inneractive"
+  },
+  {
+    "id": "85",
+    "name": "Inrix",
+    "patterns": [
+      "com.inrix.sdk"
+    ],
+    "domains": [
+      "inrix\\.com",
+      "inrix\\.io"
+    ],
+    "website": "http://inrix.com/"
+  },
+  {
+    "id": "409",
+    "name": "Insider",
+    "patterns": [
+      "com.useinsider.insider"
+    ],
+    "website": "https://useinsider.com/"
+  },
+  {
+    "id": "206",
+    "name": "Instabug",
+    "patterns": [
+      "com.instabug."
+    ],
+    "website": "https://instabug.com/crash-reporting"
+  },
+  {
+    "id": "204",
+    "name": "Instreamatic (Adman)",
+    "patterns": [
+      "com.instreamatic"
+    ],
+    "domains": [
+      "instreamatic\\.com"
+    ],
+    "website": "http://instreamatic.com/"
+  },
+  {
+    "id": "218",
+    "name": "Integral Ad Science",
+    "patterns": [
+      "com.integralads.avid.library"
+    ],
+    "domains": [
+      "adsafeprotected\\.com",
+      "iasds01\\.com",
+      "integralads\\.com"
+    ],
+    "website": "https://integralads.com"
+  },
+  {
+    "id": "8",
+    "name": "JW Player",
+    "patterns": [
+      "com.longtailvideo.jwplayer."
+    ],
+    "domains": [
+      "g\\.jwpsrv\\.com",
+      "jwpltx\\.com",
+      "p\\.jwpcdn\\.com"
+    ],
+    "website": "https://jwplayer.com"
+  },
+  {
+    "id": "395",
+    "name": "Janrain",
+    "patterns": [
+      "com.janrain.android",
+      "com.janrain.android.capture",
+      "com.janrain.android.engage"
+    ],
+    "website": "https://en.wikipedia.org/wiki/Janrain"
+  },
+  {
+    "id": "343",
+    "name": "JiGuang Aurora Mobile JPush",
+    "patterns": [
+      "cn.jpush.android"
+    ],
+    "domains": [
+      ".*\\.jiguang\\.cn"
+    ],
+    "website": "https://ir.jiguang.cn/corporate-profile"
+  },
+  {
+    "id": "344",
+    "name": "Jumio",
+    "patterns": [
+      "com.jumio.MobileSDK"
+    ],
+    "domains": [
+      "mobile-sdk-resources.jumio.com",
+      "nv-sdk.jumio.com"
+    ],
+    "website": "https://www.jumio.com/"
+  },
+  {
+    "id": "374",
+    "name": "JumpTap",
+    "patterns": [
+      "com.jumptap.adtag."
+    ],
+    "website": "http://www.millennialmedia.com"
+  },
+  {
+    "id": "235",
+    "name": "KIDOZ",
+    "patterns": [
+      "com.kidoz.sdk"
+    ],
+    "website": "https://kidoz.net/kidoz-sdk/"
+  },
+  {
+    "id": "262",
+    "name": "Keen",
+    "patterns": [
+      "io.keen.client."
+    ],
+    "domains": [
+      "api\\.keen\\.io"
+    ],
+    "website": "https://keen.io"
+  },
+  {
+    "id": "214",
+    "name": "Kiip",
+    "patterns": [
+      "me.kiip.sdk"
+    ],
+    "domains": [
+      "kiip\\.me"
+    ],
+    "website": "https://www.ninthdecimal.com/"
+  },
+  {
+    "id": "237",
+    "name": "Kissmetrics",
+    "patterns": [
+      "com.kissmetrics"
+    ],
+    "website": "https://www.kissmetricshq.com/"
+  },
+  {
+    "id": "127",
+    "name": "Kochava",
+    "patterns": [
+      ".kochavaccpa.",
+      "com.kochava.android.tracker.",
+      "com.kochava.base."
+    ],
+    "domains": [
+      "control\\.kochava\\.com",
+      "kvinit\\-prod\\.api\\.kochava\\.com"
+    ],
+    "website": "https://www.kochava.com/"
+  },
+  {
+    "id": "59",
+    "name": "Kontakt",
+    "patterns": [
+      "com.kontakt.sdk.android."
+    ],
+    "domains": [
+      "kontakt\\.io"
+    ],
+    "website": "https://kontakt.io/"
+  },
+  {
+    "id": "28",
+    "name": "LeanPlum",
+    "patterns": [
+      "com.leanplum."
+    ],
+    "domains": [
+      "leanplum\\.com"
+    ],
+    "website": "https://www.leanplum.com/"
+  },
+  {
+    "id": "345",
+    "name": "Lenddo",
+    "patterns": [
+      "com.lenddo.mobile"
+    ],
+    "domains": [
+      "\\.partner-service\\.link"
+    ],
+    "website": "https://www.lenddo.com/"
+  },
+  {
+    "id": "13",
+    "name": "Ligatus",
+    "patterns": [
+      ".LigatusManager",
+      ".LigatusViewClient",
+      "com.ligatus.android.adframework"
+    ],
+    "domains": [
+      "ligatus\\.com"
+    ],
+    "website": "http://ligatus.com"
+  },
+  {
+    "id": "79",
+    "name": "Lisnr",
+    "patterns": [
+      "com.lisnr."
+    ],
+    "domains": [
+      "lisnr\\.com"
+    ],
+    "website": "http://lisnr.com"
+  },
+  {
+    "id": "16",
+    "name": "Localytics",
+    "patterns": [
+      "com.localytics.android.",
+      "com.localytics.androidx",
+      "com.localytics.react."
+    ],
+    "domains": [
+      "analytics\\.localytics\\.com",
+      "manifest\\.localytics\\.com",
+      "profile\\.localytics\\.com",
+      "sdk-assets\\.localytics\\.com"
+    ],
+    "website": "http://localytics.com"
+  },
+  {
+    "id": "60",
+    "name": "Locuslabs",
+    "patterns": [
+      "com.locuslabs.sdk"
+    ],
+    "domains": [
+      "locuslabs\\.com"
+    ],
+    "website": "http://locuslabs.com"
+  },
+  {
+    "id": "9",
+    "name": "Loggly",
+    "patterns": [
+      "com.github.tony19.loggly",
+      "com.github.tony19.timber.loggly",
+      "com.visiware.sync2ad.logger.loggly."
+    ],
+    "domains": [
+      "loggly\\.com"
+    ],
+    "website": "http://loggly.com/"
+  },
+  {
+    "id": "375",
+    "name": "LoopMe",
+    "patterns": [
+      "com.loopme."
+    ],
+    "website": "https://loopme.com/"
+  },
+  {
+    "id": "429",
+    "name": "LotaData",
+    "patterns": [
+      "com.lotadata.moments."
+    ],
+    "website": "http://lotadata.com"
+  },
+  {
+    "id": "265",
+    "name": "Lotame",
+    "patterns": [
+      "com.lotame.android"
+    ],
+    "domains": [
+      "ad\\.crwdcntrl\\.net"
+    ],
+    "website": "https://www.lotame.com/"
+  },
+  {
+    "id": "89",
+    "name": "MAdvertise",
+    "patterns": [
+      "com.mngads.",
+      "com.mngads.sdk",
+      "com.mngads.views"
+    ],
+    "domains": [
+      "dispatcher\\.mng\\-ads\\.com",
+      "mobile\\.mng\\-ads\\.com"
+    ],
+    "website": "http://madvertise.com"
+  },
+  {
+    "id": "302",
+    "name": "MDOTM",
+    "patterns": [
+      "com.mdotm.android"
+    ],
+    "domains": [
+      "ads\\.mdotm\\.com"
+    ],
+    "website": "http://mdotm.com/"
+  },
+  {
+    "id": "396",
+    "name": "MOCA",
+    "patterns": [
+      "com.innoquant.moca"
+    ],
+    "domains": [
+      "api-device\\.mocaplatform\\.com"
+    ],
+    "website": "https://www.mocaplatform.com/"
+  },
+  {
+    "id": "336",
+    "name": "Mail.ru",
+    "patterns": [
+      "ru.mail.mrgservice.advertising",
+      "ru.mail.mrgservice.analytics"
+    ],
+    "website": "http://mail.ru"
+  },
+  {
+    "id": "171",
+    "name": "Mapbox",
+    "patterns": [
+      "com.mapbox.android.telemetry.",
+      "com.mapbox.mapboxsdk.maps.TelemetryDefinition",
+      "com.mapbox.mapboxsdk.module.telemetry"
+    ],
+    "domains": [
+      "a\\.tiles\\.mapbox\\.com",
+      "api\\.tiles\\.mapbox\\.com"
+    ],
+    "website": "https://www.mapbox.com/"
+  },
+  {
+    "id": "430",
+    "name": "Marketo (an Adobe Company)",
+    "patterns": [
+      "com.marketo."
+    ],
+    "domains": [
+      "\\.mktorest\\.com",
+      "marketo\\.com",
+      "marketo\\.net",
+      "mktoedge\\.com",
+      "mktossl\\.com"
+    ],
+    "website": "https://marketo.com"
+  },
+  {
+    "id": "138",
+    "name": "Matomo (Piwik)",
+    "patterns": [
+      "org.matomo",
+      "org.piwik",
+      "org.piwik.mobile"
+    ],
+    "domains": [
+      "matomo\\.org"
+    ],
+    "website": "https://matomo.org/mobile"
+  },
+  {
+    "id": "303",
+    "name": "Metaps",
+    "patterns": [
+      "com.metaps"
+    ],
+    "website": "http://www.metaps.com"
+  },
+  {
+    "id": "246",
+    "name": "Metrics",
+    "patterns": [
+      "com.codahale.metrics"
+    ],
+    "website": "https://metrics.dropwizard.io"
+  },
+  {
+    "id": "243",
+    "name": "Microsoft Visual Studio App Center Analytics",
+    "patterns": [
+      "com.microsoft.appcenter.analytics",
+      "com.microsoft.azure.mobile.analytics"
+    ],
+    "website": "https://appcenter.ms/"
+  },
+  {
+    "id": "238",
+    "name": "Microsoft Visual Studio App Center Crashes",
+    "patterns": [
+      "com.microsoft.appcenter.crashes"
+    ],
+    "website": "https://appcenter.ms/"
+  },
+  {
+    "id": "107",
+    "name": "Millennial Media",
+    "patterns": [
+      "com.millennialmedia."
+    ],
+    "domains": [
+      "adtech\\.de",
+      "contextual\\.media\\.net",
+      "media\\.net",
+      "millennialmedia\\.com"
+    ],
+    "website": "https://www.millennialmedia.com/"
+  },
+  {
+    "id": "200",
+    "name": "Mintegral",
+    "patterns": [
+      "com.mbridge.msdk.",
+      "com.mintegral."
+    ],
+    "domains": [
+      "analytics\\.rayjump\\.com",
+      "cdn-adn\\.rayjump\\.com",
+      "de01\\.rayjump\\.com",
+      "de\\.rayjump\\.com",
+      "detect\\.rayjump\\.com",
+      "fk-mtrack\\.rayjump\\.com",
+      "hybird\\.rayjump\\.com",
+      "jssdk\\.rayjump\\.com",
+      "net\\.rayjump\\.com",
+      "online\\.rayjump\\.com",
+      "rayjump\\.com",
+      "setting\\.rayjump\\.com",
+      "sg-mtrack\\.rayjump\\.com",
+      "sg01\\.rayjump\\.com",
+      "sg\\.rayjump\\.com",
+      "tknet\\.rayjump\\.com",
+      "us01\\.rayjump\\.com"
+    ],
+    "website": "https://www.mintegral.com/en/"
+  },
+  {
+    "id": "118",
+    "name": "MixPanel",
+    "patterns": [
+      "com.mixpanel."
+    ],
+    "domains": [
+      "api\\.mixpanel\\.com",
+      "decide\\.mixpanel\\.com",
+      "mixpanel\\.com",
+      "switchboard\\.mixpanel\\.com"
+    ],
+    "website": "https://mixpanel.com/"
+  },
+  {
+    "id": "268",
+    "name": "MoEngage",
+    "patterns": [
+      "com.moengage."
+    ],
+    "domains": [
+      "apiv2\\.moengage\\.com"
+    ],
+    "website": "https://www.moengage.com/"
+  },
+  {
+    "id": "61",
+    "name": "Moat",
+    "patterns": [
+      "com.moat.analytics.mobile."
+    ],
+    "domains": [
+      "apx\\.moatads\\.com",
+      "geo\\.moatads\\.com",
+      "js\\.moatads\\.com",
+      "mb\\.moatads\\.com",
+      "moat\\.com",
+      "pixel\\.moatads\\.com",
+      "px\\.moatads\\.com",
+      "sejs\\.moatads\\.com",
+      "yt\\.moatads\\.com",
+      "yts\\.moatads\\.com",
+      "z\\.moatads\\.com"
+    ],
+    "website": "https://moat.com/analytics"
+  },
+  {
+    "id": "185",
+    "name": "MobFox",
+    "patterns": [
+      "com.adsdk.sdk.",
+      "com.mobfox."
+    ],
+    "website": "https://www.mobfox.com/"
+  },
+  {
+    "id": "215",
+    "name": "MobPower",
+    "patterns": [
+      "com.mobpower."
+    ],
+    "domains": [
+      "api\\.mobpowertech\\.com",
+      "log\\.mobpowertech\\.com",
+      "mobpowertech\\.com",
+      "scheme\\.mobpowertech\\.com"
+    ],
+    "website": "https://home.mobpowertech.com/"
+  },
+  {
+    "id": "63",
+    "name": "Mobile Engagement",
+    "patterns": [
+      "com.microsoft.azure.engagement.",
+      "com.ubikod.capptain."
+    ],
+    "domains": [
+      "login\\.microsoftonline\\.com",
+      "management\\.azure\\.com"
+    ],
+    "website": "https://docs.microsoft.com/en-us/azure/mobile-engagement/mobile-engagement-android-sdk-overview"
+  },
+  {
+    "id": "159",
+    "name": "Mobvista",
+    "patterns": [
+      "com.mobvista."
+    ],
+    "domains": [
+      "mobvista\\.com"
+    ],
+    "website": "https://www.mobvista.com/"
+  },
+  {
+    "id": "208",
+    "name": "Moodmedia",
+    "patterns": [
+      "com.moodmedia"
+    ],
+    "domains": [
+      "moodpresence\\.com"
+    ],
+    "website": "https://us.moodmedia.com/"
+  },
+  {
+    "id": "410",
+    "name": "Mopinion",
+    "patterns": [
+      "com.mopinion.mopinionsdk"
+    ],
+    "website": "https://mopinion.com"
+  },
+  {
+    "id": "221",
+    "name": "Mozilla Telemetry",
+    "patterns": [
+      "mozilla.telemetry.glean.",
+      "org.mozilla.fenix.GleanMetrics",
+      "org.mozilla.fenix.components.metrics",
+      "org.mozilla.gecko.telemetry",
+      "org.mozilla.telemetry"
+    ],
+    "website": "https://wiki.mozilla.org/Telemetry"
+  },
+  {
+    "id": "74",
+    "name": "NativeX",
+    "patterns": [
+      "com.nativex"
+    ],
+    "domains": [
+      "nativex\\.com"
+    ],
+    "website": "http://www.nativex.com/"
+  },
+  {
+    "id": "130",
+    "name": "New Relic",
+    "patterns": [
+      "com.newrelic.agent.",
+      "com.newrelic.mobile."
+    ],
+    "domains": [
+      "js-agent\\.newrelic\\.com",
+      "mobile-collector\\.newrelic\\.com",
+      "newrelic\\.com",
+      "nr-data\\.net"
+    ],
+    "website": "http://www.newrelic.com"
+  },
+  {
+    "id": "33",
+    "name": "Nexage",
+    "patterns": [
+      "com.nexage.android.",
+      "org.nexage."
+    ],
+    "domains": [
+      "nexage\\.com"
+    ],
+    "website": "http://nexage.com/"
+  },
+  {
+    "id": "244",
+    "name": "Nielsen",
+    "patterns": [
+      "com.nielsen.app"
+    ],
+    "website": "https://www.nielsen.com"
+  },
+  {
+    "id": "411",
+    "name": "OfferToro",
+    "patterns": [
+      "com.offertoro.sdk."
+    ],
+    "website": "http://www.offertoro.com/"
+  },
+  {
+    "id": "34",
+    "name": "Ogury Presage",
+    "patterns": [
+      "io.presage."
+    ],
+    "domains": [
+      "presage\\.io"
+    ],
+    "website": "http://www.presage.io/"
+  },
+  {
+    "id": "43",
+    "name": "Omniture",
+    "patterns": [
+      "com.adobe.adms.measurement.",
+      "com.omniture."
+    ],
+    "domains": [
+      "omniture\\.com",
+      "omtrdc\\.net"
+    ],
+    "website": "https://www.adobe.com/analytics/adobe-analytics-features.html"
+  },
+  {
+    "id": "355",
+    "name": "OneAudience",
+    "patterns": [
+      "com.oneaudience.sdk."
+    ],
+    "website": "http://www.oneaudience.com/"
+  },
+  {
+    "id": "193",
+    "name": "OneSignal",
+    "patterns": [
+      "com.onesignal."
+    ],
+    "domains": [
+      "onesignal\\.com"
+    ],
+    "website": "https://onesignal.com/"
+  },
+  {
+    "id": "213",
+    "name": "Ooyala",
+    "patterns": [
+      "com.ooyala"
+    ],
+    "domains": [
+      "ooyala\\.com"
+    ],
+    "website": "https://www.ooyala.com/"
+  },
+  {
+    "id": "356",
+    "name": "OpenBack",
+    "patterns": [
+      "com.openback"
+    ],
+    "website": "https://www.openback.com"
+  },
+  {
+    "id": "44",
+    "name": "OpenLocate",
+    "patterns": [
+      "com.openlocate",
+      "com.safegraph."
+    ],
+    "domains": [
+      "api\\.safegraph\\.com"
+    ],
+    "website": "https://www.safegraph.com/"
+  },
+  {
+    "id": "412",
+    "name": "OpenTelemetry (OpenCensus, OpenTracing)",
+    "patterns": [
+      "io.opencensus",
+      "io.opentelemetry"
+    ],
+    "website": "https://opentelemetry.io/"
+  },
+  {
+    "id": "210",
+    "name": "OpenX",
+    "patterns": [
+      "com.openx.android_sdk_openx",
+      "com.openx.view.plugplay"
+    ],
+    "domains": [
+      "openx\\.com",
+      "openx\\.net",
+      "openx\\.org",
+      "us-ads\\.openx\\.net"
+    ],
+    "website": "https://www.openx.com/"
+  },
+  {
+    "id": "352",
+    "name": "Opensignal",
+    "patterns": [
+      "com.opensignal.datacollection."
+    ],
+    "website": "https://www.opensignal.com"
+  },
+  {
+    "id": "172",
+    "name": "Optimizely",
+    "patterns": [
+      "com.optimizely."
+    ],
+    "domains": [
+      "optimizely\\.com",
+      "optimizelyapis\\.com"
+    ],
+    "website": "https://www.optimizely.com/"
+  },
+  {
+    "id": "182",
+    "name": "OtherLevels",
+    "patterns": [
+      "com.otherlevels."
+    ],
+    "domains": [
+      "api\\.otherlevels\\.com",
+      "geodata\\.otherlevels\\.com",
+      "mdn\\.otherlevels\\.com",
+      "rich\\.otherlevels\\.com",
+      "tags\\.otherlevels\\.com",
+      "ws\\.otherlevels\\.com"
+    ],
+    "website": "https://www.otherlevels.com/"
+  },
+  {
+    "id": "11",
+    "name": "OutBrain",
+    "patterns": [
+      "com.outbrain."
+    ],
+    "domains": [
+      "outbrain\\.com"
+    ],
+    "website": "http://www.outbrain.com/"
+  },
+  {
+    "id": "316",
+    "name": "OzTAM",
+    "patterns": [
+      "au.com.oztam."
+    ],
+    "domains": [
+      "deliver.oztam.com.au"
+    ],
+    "website": "https://oztam.com.au/"
+  },
+  {
+    "id": "346",
+    "name": "POKKT",
+    "patterns": [
+      "com.pokkt.sdk."
+    ],
+    "website": "https://www.pokkt.com"
+  },
+  {
+    "id": "363",
+    "name": "Pangle",
+    "patterns": [
+      "com.bytedance",
+      "com.pangle.global",
+      "com.pgl"
+    ],
+    "website": "https://www.pangleglobal.com"
+  },
+  {
+    "id": "304",
+    "name": "Parse.ly",
+    "patterns": [
+      "com.parsely.parselyandroid"
+    ],
+    "website": "https://www.parse.ly/"
+  },
+  {
+    "id": "416",
+    "name": "Pendo",
+    "patterns": [
+      "sdk.insert.io.",
+      "sdk.pendo.io."
+    ],
+    "website": "https://www.pendo.io"
+  },
+  {
+    "id": "166",
+    "name": "Persona.ly",
+    "patterns": [
+      "ly.persona.sdk"
+    ],
+    "domains": [
+      "dev-api\\.persona\\.ly",
+      "dev\\.dsp\\.persona\\.ly",
+      "dev\\.persona\\.ly",
+      "dsp\\.persona\\.ly",
+      "persona\\.ly",
+      "rtb\\.persona\\.ly",
+      "sdk\\.persona\\.ly"
+    ],
+    "website": "http://persona.ly/"
+  },
+  {
+    "id": "181",
+    "name": "Pilgrim by Foursquare",
+    "patterns": [
+      "com.foursquare.pilgrim",
+      "com.foursquare.pilgrimsdk.android"
+    ],
+    "domains": [
+      "sdk\\.foursquare\\.com"
+    ],
+    "website": "https://enterprise.foursquare.com/products/pilgrim"
+  },
+  {
+    "id": "439",
+    "name": "Pincrux",
+    "patterns": [
+      "com.pincrux."
+    ],
+    "website": "https://www.pincrux.com/"
+  },
+  {
+    "id": "261",
+    "name": "PingStart",
+    "patterns": [
+      "com.pingstart.adsdk."
+    ],
+    "domains": [
+      "api\\.pingstart\\.com"
+    ],
+    "website": "http://pingstart.com"
+  },
+  {
+    "id": "160",
+    "name": "Placed",
+    "patterns": [
+      "com.placed.client"
+    ],
+    "website": "http://placed.com/"
+  },
+  {
+    "id": "285",
+    "name": "Placer",
+    "patterns": [
+      "com.placer.client.Placer"
+    ],
+    "website": "https://placer.io/"
+  },
+  {
+    "id": "431",
+    "name": "PlaytestCloud Event Tracking",
+    "patterns": [
+      "com.playtestcloud.Analytics"
+    ],
+    "website": "https://www.playtestcloud.com"
+  },
+  {
+    "id": "417",
+    "name": "Plexure",
+    "patterns": [
+      "co.vmob.sdk"
+    ],
+    "website": "https://www.plexure.com/"
+  },
+  {
+    "id": "397",
+    "name": "Point Inside",
+    "patterns": [
+      "com.pointinside"
+    ],
+    "website": "https://www.pointinside.com/"
+  },
+  {
+    "id": "305",
+    "name": "Pollfish",
+    "patterns": [
+      "com.pollfish"
+    ],
+    "website": "https://www.pollfish.com"
+  },
+  {
+    "id": "347",
+    "name": "Prebid Mobile",
+    "patterns": [
+      "org.prebid.mobile"
+    ],
+    "domains": [
+      ".prebid.org"
+    ],
+    "website": "https://prebid.org"
+  },
+  {
+    "id": "357",
+    "name": "PredicIO",
+    "patterns": [
+      "com.telescope.android",
+      "io.predic.tracker"
+    ],
+    "domains": [
+      "sdk\\.predic\\.io"
+    ],
+    "website": "https://www.predic.io/"
+  },
+  {
+    "id": "398",
+    "name": "Proximi.io",
+    "patterns": [
+      "io.proximi.proximiiolibrary"
+    ],
+    "domains": [
+      "api\\.proximi\\.fi"
+    ],
+    "website": "https://proximi.io/"
+  },
+  {
+    "id": "236",
+    "name": "PubMatic",
+    "patterns": [
+      "com.pubmatic.sdk"
+    ],
+    "domains": [
+      "ads\\.pubmatic\\.com",
+      "aktrack\\.pubmatic\\.com",
+      "gads\\.pubmatic\\.com",
+      "image2\\.pubmatic\\.com",
+      "simage2\\.pubmatic\\.com"
+    ],
+    "website": "https://pubmatic.com/"
+  },
+  {
+    "id": "183",
+    "name": "PubNative",
+    "patterns": [
+      "net.pubnative"
+    ],
+    "domains": [
+      "pubnative\\.net"
+    ],
+    "website": "https://pubnative.net/"
+  },
+  {
+    "id": "286",
+    "name": "PushSpring",
+    "patterns": [
+      "com.pushspring.sdk.PushSpring"
+    ],
+    "domains": [
+      "api\\.pushspring\\.com"
+    ],
+    "website": "http://www.pushspring.com/"
+  },
+  {
+    "id": "223",
+    "name": "Pusher",
+    "patterns": [
+      "com.pusher.client."
+    ],
+    "website": "https://pusher.com/"
+  },
+  {
+    "id": "39",
+    "name": "Pushwoosh",
+    "patterns": [
+      "com.pushwoosh"
+    ],
+    "domains": [
+      "pushwoosh\\.com"
+    ],
+    "website": "https://www.pushwoosh.com/"
+  },
+  {
+    "id": "287",
+    "name": "Pyze",
+    "patterns": [
+      "com.pyze."
+    ],
+    "domains": [
+      "pyze\\.com"
+    ],
+    "website": "https://pyze.com/"
+  },
+  {
+    "id": "306",
+    "name": "Qualtrics",
+    "patterns": [
+      "com.qualtrics.digital."
+    ],
+    "domains": [
+      "qualtrics\\.com"
+    ],
+    "website": "http://www.qualtrics.com/"
+  },
+  {
+    "id": "133",
+    "name": "Quantcast",
+    "patterns": [
+      "com.quantcast.measurement.service."
+    ],
+    "domains": [
+      "quantcast\\.com",
+      "quantcast\\.net"
+    ],
+    "website": "http://www.quantcast.com"
+  },
+  {
+    "id": "288",
+    "name": "Radar",
+    "patterns": [
+      "io.radar.sdk.Radar"
+    ],
+    "website": "https://radar.io/"
+  },
+  {
+    "id": "94",
+    "name": "Radius Networks",
+    "patterns": [
+      "com.radiusnetworks"
+    ],
+    "domains": [
+      "proximitykit\\.radiusnetworks\\.com"
+    ],
+    "website": "https://www.radiusnetworks.com/"
+  },
+  {
+    "id": "376",
+    "name": "Raygun",
+    "patterns": [
+      "com.mindscapehq.android.raygun4android"
+    ],
+    "website": "https://raygun.com"
+  },
+  {
+    "id": "317",
+    "name": "Receptiv (formerly Mediabrix)",
+    "patterns": [
+      "com.mediabrix.android"
+    ],
+    "website": "https://www.receptiv.com/"
+  },
+  {
+    "id": "247",
+    "name": "Repro",
+    "patterns": [
+      "io.repro.android."
+    ],
+    "website": "https://repro.io/"
+  },
+  {
+    "id": "88",
+    "name": "Retency",
+    "patterns": [
+      "com.retency.sdk.android"
+    ],
+    "website": "http://retency.com"
+  },
+  {
+    "id": "245",
+    "name": "Reveal Mobile",
+    "patterns": [
+      "com.stepleaderdigital.reveal"
+    ],
+    "website": "https://revealmobile.com/"
+  },
+  {
+    "id": "263",
+    "name": "Revmob",
+    "patterns": [
+      "com.revmob.ads."
+    ],
+    "website": "https://www.crunchbase.com/organization/revmob"
+  },
+  {
+    "id": "377",
+    "name": "RjFun",
+    "patterns": [
+      "com.rjfun.cordova.ad",
+      "com.rjfun.cordova.admob"
+    ],
+    "website": "https://rjfun.github.io/"
+  },
+  {
+    "id": "432",
+    "name": "Rollbar",
+    "patterns": [
+      "com.rollbar.android."
+    ],
+    "website": "https://rollbar.com"
+  },
+  {
+    "id": "289",
+    "name": "Roximity",
+    "patterns": [
+      "com.roximity.sdk."
+    ],
+    "domains": [
+      "app\\.roximity\\.com"
+    ],
+    "website": "http://roximity.com/"
+  },
+  {
+    "id": "145",
+    "name": "Rubicon Project",
+    "patterns": [
+      "com.rfm.sdk"
+    ],
+    "domains": [
+      "ads\\.rubiconproject\\.com",
+      "fastlane\\.rubiconproject\\.com",
+      "optimized-by\\.rubiconproject\\.com",
+      "pixel\\.rubiconproject\\.com",
+      "stats\\.aws\\.rubiconproject\\.com",
+      "tap2-cdn\\.rubiconproject\\.com",
+      "video-ads\\.rubiconproject\\.com"
+    ],
+    "website": "https://rubiconproject.com"
+  },
+  {
+    "id": "20",
+    "name": "S4M",
+    "patterns": [
+      ".S4MAnalytic",
+      "com.sam4mobile."
+    ],
+    "domains": [
+      "s4m\\.io",
+      "sam4m\\.com"
+    ],
+    "website": "http://www.s4m.io/"
+  },
+  {
+    "id": "148",
+    "name": "SAP CDC (Gigya)",
+    "patterns": [
+      "com.gigya."
+    ],
+    "domains": [
+      "cdn1\\.gigya\\.com",
+      "cdn2\\.gigya\\.com",
+      "cdn3\\.gigya\\.com",
+      "cdn\\.gigya\\.com",
+      "cdns\\.us1\\.gigya\\.com",
+      "david\\.gigya-cs\\.com"
+    ],
+    "website": "https://www.sap.com/products/crm/customer-data-management.html"
+  },
+  {
+    "id": "348",
+    "name": "SK planet Tad",
+    "patterns": [
+      "com.skplanet.tad"
+    ],
+    "website": "https://www.skplanet.com/eng"
+  },
+  {
+    "id": "220",
+    "name": "Salesforce Marketing Cloud",
+    "patterns": [
+      "com.salesforce.marketingcloud"
+    ],
+    "website": "https://www.salesforce.com/products/marketing-cloud/"
+  },
+  {
+    "id": "84",
+    "name": "Scandit",
+    "patterns": [
+      "com.scandit."
+    ],
+    "domains": [
+      "scandit\\.com"
+    ],
+    "website": "https://scandit.com"
+  },
+  {
+    "id": "30",
+    "name": "Schibsted",
+    "patterns": [
+      ".schibsted."
+    ],
+    "domains": [
+      "schibsted\\.com",
+      "schibsted\\.io"
+    ],
+    "website": "http://www.schibsted.com/en/ir/"
+  },
+  {
+    "id": "399",
+    "name": "ScoreLoop",
+    "patterns": [
+      "com.scoreloop.client.android"
+    ],
+    "website": "https://www.scoreloop.com"
+  },
+  {
+    "id": "62",
+    "name": "Segment",
+    "patterns": [
+      "com.segment.analytics."
+    ],
+    "domains": [
+      "api\\.segment\\.io",
+      "segment\\.com"
+    ],
+    "website": "https://segment.com/"
+  },
+  {
+    "id": "144",
+    "name": "Sense360",
+    "patterns": [
+      "com.sense360.android."
+    ],
+    "domains": [
+      "android-quinoa-config-prod\\.sense360eng\\.com",
+      "incoming-data-sense360\\.s3\\.amazonaws\\.com",
+      "quinoa-personal-identify-prod\\.sense360eng\\.com"
+    ],
+    "website": "https://sense360.com/"
+  },
+  {
+    "id": "143",
+    "name": "Sensoro",
+    "patterns": [
+      "com.sensoro.beacon.kit.",
+      "com.sensoro.cloud"
+    ],
+    "website": "https://www.sensoro.com/"
+  },
+  {
+    "id": "248",
+    "name": "Sensors Analytics",
+    "patterns": [
+      "com.sensorsdata.analytics.android.sdk"
+    ],
+    "website": "https://www.sensorsdata.cn"
+  },
+  {
+    "id": "290",
+    "name": "Sentiance",
+    "patterns": [
+      "com.sentiance.sdk."
+    ],
+    "domains": [
+      "api\\.sentiance\\.com"
+    ],
+    "website": "https://www.sentiance.com/"
+  },
+  {
+    "id": "447",
+    "name": "Sentry",
+    "patterns": [
+      "com.joshdholtz.sentry",
+      "io.sentry."
+    ],
+    "website": "https://sentry.io/"
+  },
+  {
+    "id": "186",
+    "name": "ShallWeAD",
+    "patterns": [
+      "com.co.shallwead.sdk.",
+      "com.jm.co.shallwead.sdk."
+    ],
+    "website": "http://www.shallwead.com"
+  },
+  {
+    "id": "81",
+    "name": "Shopkick",
+    "patterns": [
+      "com.shopkick.fetchers.",
+      "com.shopkick.sdk.api."
+    ],
+    "domains": [
+      "sdk\\.shopkick\\.com",
+      "shopkick\\.com",
+      "shopkick\\.de"
+    ],
+    "website": "https://shopkick.com"
+  },
+  {
+    "id": "86",
+    "name": "Signal360",
+    "patterns": [
+      "com.rnsignal360",
+      "com.signal360.sdk.core.",
+      "com.sonicnotify.sdk.core."
+    ],
+    "domains": [
+      "signal360\\.com",
+      "sonicnotify\\.com"
+    ],
+    "website": "http://www.signal360.com"
+  },
+  {
+    "id": "353",
+    "name": "SignalFrame",
+    "patterns": [
+      "com.wirelessregistry.observersdk."
+    ],
+    "website": "https://signalframe.com/"
+  },
+  {
+    "id": "80",
+    "name": "SilverPush",
+    "patterns": [
+      "com.silverpush."
+    ],
+    "domains": [
+      "54\\.243\\.73\\.253:8080/SilverPush/",
+      "silverpush\\.co",
+      "silverpush\\.com"
+    ],
+    "website": "http://silverpush.co"
+  },
+  {
+    "id": "142",
+    "name": "Singlespot",
+    "patterns": [
+      "com.sptproximitykit."
+    ],
+    "domains": [
+      "singlespot\\.com"
+    ],
+    "website": "https://www.singlespot.com/"
+  },
+  {
+    "id": "251",
+    "name": "Singular",
+    "patterns": [
+      "com.singular.sdk"
+    ],
+    "website": "https://singular.net/"
+  },
+  {
+    "id": "22",
+    "name": "Sizmek",
+    "patterns": [
+      ".sizmek."
+    ],
+    "domains": [
+      "serving-sys\\.com"
+    ],
+    "website": "https://www.sizmek.com"
+  },
+  {
+    "id": "83",
+    "name": "Smaato",
+    "patterns": [
+      "com.smaato."
+    ],
+    "domains": [
+      "smaato\\.net",
+      "soma\\.smaato\\.net"
+    ],
+    "website": "https://smaato.com"
+  },
+  {
+    "id": "7",
+    "name": "Smart",
+    "patterns": [
+      "com.smartadserver."
+    ],
+    "domains": [
+      "adsrvr\\.org",
+      "akamai\\.smartadserver\\.com",
+      "cdn1\\.smartadserver\\.com",
+      "diff2\\.smartadserver\\.com",
+      "diff3\\.smartadserver\\.com",
+      "diff\\.smartadserver\\.com",
+      "eqx\\.smartadserver\\.com",
+      "gallery\\.smartadserver\\.com",
+      "im2\\.smartadserver\\.com",
+      "insight\\.adsrvr\\.org",
+      "itx5-publicidad\\.smartadserver\\.com",
+      "itx5\\.smartadserver\\.com",
+      "js\\.adsrvr\\.org",
+      "match\\.adsrvr\\.org",
+      "preview\\.smartadserver\\.com",
+      "rtb-csync\\.smartadserver\\.com",
+      "saspreview\\.com",
+      "smartadserver\\.com",
+      "smartadserver\\.ru",
+      "tmk\\.smartadserver\\.com",
+      "usw\\-lax\\.adsrvr\\.org"
+    ],
+    "website": "http://smartadserver.com/"
+  },
+  {
+    "id": "291",
+    "name": "SmartLook",
+    "patterns": [
+      "com.smartlook.sdk.smartlook."
+    ],
+    "domains": [
+      "smartlook\\.com"
+    ],
+    "website": "https://www.smartlook.com/"
+  },
+  {
+    "id": "433",
+    "name": "Snap Ad Kit",
+    "patterns": [
+      "com.snap.adkit",
+      "com.snap.appadskit"
+    ],
+    "website": "https://kit.snapchat.com/docs/ad-kit"
+  },
+  {
+    "id": "413",
+    "name": "Snapchat Login Kit",
+    "patterns": [
+      "com.snapchat.kit.sdk.SnapLogin"
+    ],
+    "website": "https://kit.snapchat.com/docs/login-kit"
+  },
+  {
+    "id": "108",
+    "name": "Snowplow",
+    "patterns": [
+      "com.snowplowanalytics."
+    ],
+    "website": "https://snowplowanalytics.com/"
+  },
+  {
+    "id": "422",
+    "name": "Solar2D (Corona)",
+    "patterns": [
+      "com.ansca.corona"
+    ],
+    "website": "https://solar2d.com/"
+  },
+  {
+    "id": "164",
+    "name": "Soomla",
+    "patterns": [
+      "com.soomla."
+    ],
+    "domains": [
+      "soom\\.la"
+    ],
+    "website": "https://soomla.com/"
+  },
+  {
+    "id": "349",
+    "name": "Split",
+    "patterns": [
+      "io.split.android."
+    ],
+    "domains": [
+      "event.split.io",
+      "sdk.split.io"
+    ],
+    "website": "https://www.split.io/"
+  },
+  {
+    "id": "242",
+    "name": "Splunk MINT",
+    "patterns": [
+      "com.splunk.mint"
+    ],
+    "website": "https://mint.splunk.com/"
+  },
+  {
+    "id": "292",
+    "name": "Square Metrics",
+    "patterns": [
+      "com.beaconinside.proximitysdk.ProximityService"
+    ],
+    "domains": [
+      "api\\.beaconinside\\.com"
+    ],
+    "website": "https://www.squaremetrics.com"
+  },
+  {
+    "id": "195",
+    "name": "Startapp",
+    "patterns": [
+      "com.startapp."
+    ],
+    "domains": [
+      "c2i\\.startappnetwork\\.com",
+      "c2s\\.startappnetwork\\.com",
+      "click\\.startappservice\\.com",
+      "dts\\.startappservice\\.com",
+      "events\\.startappservice\\.com",
+      "images\\.startappservice\\.com",
+      "imp\\.startappservice\\.com",
+      "info\\.static\\.startappservice\\.com",
+      "init\\.startappservice\\.com",
+      "req\\.startappservice\\.com",
+      "soda\\.startappservice\\.com",
+      "startappservice\\.com",
+      "va\\.origin\\.startappservice\\.com"
+    ],
+    "website": "https://www.startapp.com"
+  },
+  {
+    "id": "378",
+    "name": "SuperAwesome",
+    "patterns": [
+      "tv.superawesome.lib.",
+      "tv.superawesome.sdk"
+    ],
+    "website": "https://www.superawesome.com/"
+  },
+  {
+    "id": "110",
+    "name": "Supersonic Ads",
+    "patterns": [
+      "com.supersonic.adapters.supersonicads",
+      "com.supersonicads.sdk"
+    ],
+    "domains": [
+      "click-haproxy\\.supersonicads\\.com",
+      "cx\\.ssacdn\\.com",
+      "init\\.supersonicads\\.com",
+      "logs\\.supersonic\\.com",
+      "outcome\\.supersonicads\\.com",
+      "ow-gateway\\.supersonicads\\.com",
+      "pixel-tracking\\.sonic-us\\.supersonicads\\.com",
+      "rv-gateway\\.supersonicads\\.com",
+      "static\\.ssacdn\\.com",
+      "supersonic\\.com",
+      "supersonicads-a\\.akamaihd\\.net",
+      "tag\\-mediation.supersonic.com",
+      "ua\\.supersonicads\\.com",
+      "v\\.ssacdn\\.com",
+      "www\\.supersonicads\\.com"
+    ],
+    "website": "https://www.supersonic.com/"
+  },
+  {
+    "id": "418",
+    "name": "Swirl",
+    "patterns": [
+      "com.swirl"
+    ],
+    "domains": [
+      "cdn-api\\.swirl\\.com"
+    ],
+    "website": "http://swirl.com/"
+  },
+  {
+    "id": "192",
+    "name": "Swrve",
+    "patterns": [
+      "com.swrve.sdk"
+    ],
+    "domains": [
+      "api\\.swrve\\.com",
+      "content\\.swrve\\.com"
+    ],
+    "website": "https://www.swrve.com/"
+  },
+  {
+    "id": "24",
+    "name": "Sync2Ad",
+    "patterns": [
+      "com.visiware.sync2ad.dmp."
+    ],
+    "domains": [
+      "sync2ad\\.com"
+    ],
+    "website": "https://www.sync2ad.com/"
+  },
+  {
+    "id": "434",
+    "name": "Synerise",
+    "patterns": [
+      "com.synerise.sdk"
+    ],
+    "domains": [
+      "synerise\\.com"
+    ],
+    "website": "https://synerise.com"
+  },
+  {
+    "id": "225",
+    "name": "TNK Factory",
+    "patterns": [
+      "com.tnkfactory.ad"
+    ],
+    "website": "http://www.tnkfactory.com"
+  },
+  {
+    "id": "173",
+    "name": "Taboola",
+    "patterns": [
+      "com.taboola."
+    ],
+    "domains": [
+      "taboola\\.com"
+    ],
+    "website": "https://www.taboola.com/"
+  },
+  {
+    "id": "45",
+    "name": "TagCommander (Commanders Act.)",
+    "patterns": [
+      "com.tagcommander."
+    ],
+    "domains": [
+      "\\.commander1\\.com",
+      "\\.tagcommander.com"
+    ],
+    "website": "https://www.commandersact.com/"
+  },
+  {
+    "id": "293",
+    "name": "TalkingData",
+    "patterns": [
+      "com.apptalkingdata.push.",
+      "com.gametalkingdata.push.",
+      "com.talkingdata.adtracking.",
+      "com.talkingdata.appanalytics.",
+      "com.talkingdata.sdk.",
+      "com.tendcloud.appcpa.",
+      "com.tendcloud.tenddata."
+    ],
+    "domains": [
+      "account\\.talkingdata\\.com",
+      "av1\\.xdrig\\.com",
+      "cloud\\.xdrig\\.com",
+      "m\\.talkingdata\\.com",
+      "push\\.xdrig\\.com"
+    ],
+    "website": "https://www.talkingdata.com/"
+  },
+  {
+    "id": "307",
+    "name": "Tamoco",
+    "patterns": [
+      "com.tamoco.sdk"
+    ],
+    "domains": [
+      "evt\\.tamoco\\.com"
+    ],
+    "website": "https://www.tamoco.com/"
+  },
+  {
+    "id": "379",
+    "name": "TapResearch",
+    "patterns": [
+      "com.tapr.helpers.",
+      "com.tapr.internal.",
+      "com.tapr.sdk."
+    ],
+    "website": "https://www.tapresearch.com/"
+  },
+  {
+    "id": "258",
+    "name": "Tapdaq",
+    "patterns": [
+      "com.tapdaq.adapters.",
+      "com.tapdaq.sdk."
+    ],
+    "domains": [
+      "ads\\.tapdaq\\.com"
+    ],
+    "website": "https://www.tapdaq.com/"
+  },
+  {
+    "id": "199",
+    "name": "Tapjoy",
+    "patterns": [
+      "com.tapjoy."
+    ],
+    "domains": [
+      "tapjoy\\.com",
+      "tapjoyads\\.com",
+      "www\\.5rocks\\.io"
+    ],
+    "website": "https://www.tapjoy.com/"
+  },
+  {
+    "id": "211",
+    "name": "Taplytics",
+    "patterns": [
+      "com.taplytics.sdk"
+    ],
+    "domains": [
+      "api\\.taplytics\\.com",
+      "ping\\.tapylitics\\.com"
+    ],
+    "website": "https://taplytics.com"
+  },
+  {
+    "id": "380",
+    "name": "Tappx",
+    "patterns": [
+      "com.tappx.sdk.android"
+    ],
+    "website": "https://www.tappx.com/"
+  },
+  {
+    "id": "250",
+    "name": "Tapstream",
+    "patterns": [
+      "com.tapstream.sdk"
+    ],
+    "website": "https://www.tapstream.com/"
+  },
+  {
+    "id": "230",
+    "name": "Teads",
+    "patterns": [
+      "teads.tv.",
+      "tv.teads."
+    ],
+    "domains": [
+      "teads\\.tv"
+    ],
+    "website": "https://www.teads.tv"
+  },
+  {
+    "id": "270",
+    "name": "Tealeaf",
+    "patterns": [
+      "com.tl.uic.Tealeaf"
+    ],
+    "website": "https://acoustic.co/products/experience-analytics/"
+  },
+  {
+    "id": "32",
+    "name": "Tealium",
+    "patterns": [
+      ".tealium."
+    ],
+    "domains": [
+      "tealiumiq\\.com",
+      "tiqcdn\\.com"
+    ],
+    "website": "https://tealium.com/"
+  },
+  {
+    "id": "1",
+    "name": "Teemo",
+    "patterns": [
+      "com.databerries.",
+      "com.geolocstation."
+    ],
+    "domains": [
+      "databerries\\.com"
+    ],
+    "website": "https://www.teemo.co"
+  },
+  {
+    "id": "87",
+    "name": "TeleQuid",
+    "patterns": [
+      "com.telequid."
+    ],
+    "domains": [
+      "mars\\.telequid\\.com"
+    ],
+    "website": "http://www.telequid.com/"
+  },
+  {
+    "id": "114",
+    "name": "Tencent MTA",
+    "patterns": [
+      "com.tencent.mta"
+    ],
+    "website": "https://mta.qq.com/"
+  },
+  {
+    "id": "112",
+    "name": "Tencent Map LBS",
+    "patterns": [
+      "com.tencent.lbs"
+    ],
+    "website": "https://lbs.qq.com/"
+  },
+  {
+    "id": "113",
+    "name": "Tencent MobWin",
+    "patterns": [
+      "com.tencent.mobwin"
+    ],
+    "website": "https://www.tencent.com/en-us/"
+  },
+  {
+    "id": "116",
+    "name": "Tencent Stats",
+    "patterns": [
+      "com.tencent.stat",
+      "com.tencent.wxop.stat"
+    ],
+    "website": "http://stat.qq.com/"
+  },
+  {
+    "id": "117",
+    "name": "Tencent Weiyun",
+    "patterns": [
+      "com.tencent.weiyun"
+    ],
+    "website": "https://www.weiyun.com"
+  },
+  {
+    "id": "249",
+    "name": "Tenjin",
+    "patterns": [
+      "com.tenjin.android."
+    ],
+    "website": "https://www.tenjin.com/"
+  },
+  {
+    "id": "381",
+    "name": "ThinkingData Analytics",
+    "patterns": [
+      "cn.thinkingdata."
+    ],
+    "website": "http://www.thinkingdata.cn/"
+  },
+  {
+    "id": "29",
+    "name": "Tinder Analytics",
+    "patterns": [
+      "com.tinder.ads",
+      "com.tinder.analytics"
+    ],
+    "domains": [
+      "etl\\.tindersparks\\.com"
+    ],
+    "website": "http://tinder.com"
+  },
+  {
+    "id": "419",
+    "name": "Treasure Data",
+    "patterns": [
+      "com.treasuredata"
+    ],
+    "website": "https://www.treasuredata.com/product/"
+  },
+  {
+    "id": "38",
+    "name": "Tune",
+    "patterns": [
+      "com.mobileapptracker",
+      "com.tune"
+    ],
+    "domains": [
+      "mobileapptracking\\.com"
+    ],
+    "website": "https://www.tune.com"
+  },
+  {
+    "id": "318",
+    "name": "Tutela",
+    "patterns": [
+      "com.tutelatechnologies.sdk"
+    ],
+    "website": "https://www.tutela.com/"
+  },
+  {
+    "id": "440",
+    "name": "Tutucloud",
+    "patterns": [
+      "org.lasque.tusdk.core",
+      "org.lasque.tusdkpulse.core"
+    ],
+    "domains": [
+      "tusdk\\.com"
+    ],
+    "website": "https://tutucloud.com"
+  },
+  {
+    "id": "319",
+    "name": "Twine Data",
+    "patterns": [
+      "com.twine.sdk"
+    ],
+    "website": "https://www.truedata.co/"
+  },
+  {
+    "id": "35",
+    "name": "Twitter MoPub",
+    "patterns": [
+      "com.mopub."
+    ],
+    "domains": [
+      "mopub\\.com"
+    ],
+    "website": "https://www.mopub.com/"
+  },
+  {
+    "id": "253",
+    "name": "UXCam",
+    "patterns": [
+      "com.uxcam."
+    ],
+    "domains": [
+      "verify.uxcam.com"
+    ],
+    "website": "https://uxcam.com/"
+  },
+  {
+    "id": "78",
+    "name": "Uber Analytics",
+    "patterns": [
+      "com.ubercab.analytics.",
+      "com.ubercab.client.core.analytics.",
+      "com.ubercab.library.metrics.analytics."
+    ],
+    "domains": [
+      "events\\.uber\\.com"
+    ],
+    "website": "https://uber.com"
+  },
+  {
+    "id": "119",
+    "name": "Umeng Analytics",
+    "patterns": [
+      "com.umeng.analytics"
+    ],
+    "domains": [
+      "alog\\.umeng\\.com",
+      "alogs\\.umeng\\.com",
+      "ar\\.umeng\\.com",
+      "oc\\.umeng\\.com",
+      "umeng\\.com",
+      "uop\\.umeng\\.com"
+    ],
+    "website": "https://www.umeng.com/analytics"
+  },
+  {
+    "id": "120",
+    "name": "Umeng Feedback",
+    "patterns": [
+      "com.umeng.fb"
+    ],
+    "domains": [
+      "alog\\.umeng\\.com",
+      "alogs\\.umeng\\.com",
+      "ar\\.umeng\\.com",
+      "oc\\.umeng\\.com",
+      "umeng\\.com",
+      "uop\\.umeng\\.com"
+    ],
+    "website": "http://dev.umeng.com/feedback"
+  },
+  {
+    "id": "313",
+    "name": "Unacast Pure",
+    "patterns": [
+      "com.pure.internal.",
+      "com.pure.sdk."
+    ],
+    "website": "https://www.unacast.com/"
+  },
+  {
+    "id": "121",
+    "name": "Unity3d Ads",
+    "patterns": [
+      "com.unity3d.ads",
+      "com.unity3d.services"
+    ],
+    "domains": [
+      "adserver\\.unityads\\.unity3d\\.com",
+      "analytics\\.social\\.unity\\.com",
+      "api\\.uca\\.cloud\\.unity3d\\.com",
+      "auction\\.unityads\\.unity3d\\.com",
+      "cdn-highwinds\\.unityads\\.unity3d\\.com",
+      "cdn\\.unityads\\.unity3d\\.com",
+      "config\\.uca\\.cloud\\.unity3d\\.com",
+      "config\\.unityads\\.unity3d\\.com",
+      "stats\\.unity3d\\.com",
+      "webview\\.unityads\\.unity3d\\.com"
+    ],
+    "website": "https://unity3d.com/"
+  },
+  {
+    "id": "254",
+    "name": "Upsight",
+    "patterns": [
+      "com.upsight.android"
+    ],
+    "website": "https://www.upsight.com/"
+  },
+  {
+    "id": "123",
+    "name": "Urbanairship",
+    "patterns": [
+      "com.urbanairship"
+    ],
+    "domains": [
+      "device-api\\.asnapieu\\.com",
+      "device-api\\.urbanairship\\.com",
+      "urbanairship\\.com"
+    ],
+    "website": "https://www.urbanairship.com/"
+  },
+  {
+    "id": "435",
+    "name": "UserExperior",
+    "patterns": [
+      "com.userexperior"
+    ],
+    "website": "https://www.userexperior.com/"
+  },
+  {
+    "id": "382",
+    "name": "VKontakte SDK",
+    "patterns": [
+      "com.vk.api.sdk.",
+      "com.vk.sdk."
+    ],
+    "website": "https://vksdk.github.io/vk-sdk-android/"
+  },
+  {
+    "id": "436",
+    "name": "Vdopia",
+    "patterns": [
+      "com.vdopia.ads.",
+      "com.vdopia.client.android."
+    ],
+    "website": "https://chocolateplatform.com/"
+  },
+  {
+    "id": "37",
+    "name": "Vectaury",
+    "patterns": [
+      "io.vectaury."
+    ],
+    "domains": [
+      "vectaury\\.io"
+    ],
+    "website": "http://vectaury.io/"
+  },
+  {
+    "id": "441",
+    "name": "Veloxity",
+    "patterns": [
+      "net.veloxity."
+    ],
+    "website": "http://www.veloxity.net/"
+  },
+  {
+    "id": "320",
+    "name": "Verizon Ads",
+    "patterns": [
+      "com.oath.mobile.",
+      "com.verizon.ads",
+      "com.verizondigitalmedia.mobile."
+    ],
+    "website": "https://www.verizonmedia.com/"
+  },
+  {
+    "id": "259",
+    "name": "Verve",
+    "patterns": [
+      "com.vervewireless.advert."
+    ],
+    "website": "https://www.verve.com"
+  },
+  {
+    "id": "383",
+    "name": "Virgo Mobile",
+    "patterns": [
+      "com.virgo.ads."
+    ],
+    "website": "http://virgomobile.com/"
+  },
+  {
+    "id": "308",
+    "name": "Vpon",
+    "patterns": [
+      "com.vpadn.ads.",
+      "com.vpadn.analytics",
+      "com.vpadn.widget.",
+      "com.vpon.ads"
+    ],
+    "website": "https://www.vpon.com/"
+  },
+  {
+    "id": "169",
+    "name": "Vungle",
+    "patterns": [
+      "com.vungle.publisher.",
+      "com.vungle.warren."
+    ],
+    "domains": [
+      "ads\\.api\\.vungle\\.com",
+      "akamai\\.vungle\\-cdn\\.vungle\\.com",
+      "api\\.vungle\\.akadns\\.net",
+      "api\\.vungle\\.com",
+      "bd\\.vungle\\.com",
+      "billboard\\.vungle\\.com",
+      "cdn\\-lb\\.vungle\\.com",
+      "ci\\.vungle\\.com",
+      "data\\.vungle\\.com",
+      "ingest\\.vungle\\.com",
+      "jaeger\\.vungle\\.com",
+      "ltv\\-data\\-api\\.kube\\-prod\\.vungle\\.com",
+      "monitoring\\.vungle\\.com",
+      "ssl\\.vungle\\.com",
+      "v\\.vungle\\.com"
+    ],
+    "website": "https://vungle.com"
+  },
+  {
+    "id": "76",
+    "name": "WeChat Location",
+    "patterns": [
+      "com.tencent.map.geolocation",
+      "com.tencent.mm.plugin.location.",
+      "com.tencent.mm.plugin.location_google",
+      "com.tencent.mm.plugin.location_soso."
+    ],
+    "domains": [
+      "map\\.qq\\.com"
+    ],
+    "website": "https://wechat.com"
+  },
+  {
+    "id": "6",
+    "name": "Weborama",
+    "patterns": [
+      "com.weborama."
+    ],
+    "domains": [
+      "weborama\\.fr",
+      "weborama\\.net"
+    ],
+    "website": "https://www.weborama.com"
+  },
+  {
+    "id": "239",
+    "name": "Webtrekk",
+    "patterns": [
+      "com.webtrekk.webtrekksdk"
+    ],
+    "website": "https://www.webtrekk.com/"
+  },
+  {
+    "id": "129",
+    "name": "Webtrends",
+    "patterns": [
+      "com.webtrends.mobile.analytics.",
+      "com.webtrends.mobile.android"
+    ],
+    "domains": [
+      "dc\\.webtrends\\.com",
+      "webtrends\\.com"
+    ],
+    "website": "https://www.webtrends.com/"
+  },
+  {
+    "id": "14",
+    "name": "Widespace",
+    "patterns": [
+      "com.widespace."
+    ],
+    "domains": [
+      "widespace\\.com"
+    ],
+    "website": "http://widespace.com"
+  },
+  {
+    "id": "234",
+    "name": "Wootric",
+    "patterns": [
+      "com.wootric.androidsdk."
+    ],
+    "domains": [
+      ".wootric\\.com\\.herokudns\\.com",
+      "wootric\\.com"
+    ],
+    "website": "http://wootric.com"
+  },
+  {
+    "id": "354",
+    "name": "X-Mode",
+    "patterns": [
+      "io.mysdk.",
+      "io.xmode.BcnConfig",
+      "io.xmode.locationsdk"
+    ],
+    "domains": [
+      "api\\.myendpoint\\.io",
+      "api\\.smartechmetrics\\.com",
+      "bin5y4muil\\.execute-api\\.us-east-1\\.amazonaws\\.com"
+    ],
+    "website": "https://xmode.io/"
+  },
+  {
+    "id": "364",
+    "name": "YOC VIS.X",
+    "patterns": [
+      "com.yoc.visx"
+    ],
+    "domains": [
+      "yoc-performance\\.com",
+      "yoc\\.com"
+    ],
+    "website": "https://yoc.com"
+  },
+  {
+    "id": "124",
+    "name": "Yandex Ad",
+    "patterns": [
+      "com.yandex.mobile.ads"
+    ],
+    "domains": [
+      "analytics\\.mobile\\.yandex\\.net",
+      "appmetrica\\.yandex\\.com",
+      "banners-slb\\.mobile\\.yandex\\.net",
+      "banners\\.mobile\\.yandex\\.net",
+      "mc\\.yandex\\.ru",
+      "report\\.appmetrica\\.yandex\\.net",
+      "startup\\.mobile\\.yandex\\.net"
+    ],
+    "website": "https://www.yandex.com/"
+  },
+  {
+    "id": "212",
+    "name": "Yinzcam Sobek",
+    "patterns": [
+      "com.yinzcam.sobek"
+    ],
+    "domains": [
+      "analytics\\.yinzcam\\.com"
+    ],
+    "website": "http://www.yinzcam.com/"
+  },
+  {
+    "id": "442",
+    "name": "Yoadx",
+    "patterns": [
+      "com.yoadx.yoadx."
+    ],
+    "website": "https://yoadx.com/"
+  },
+  {
+    "id": "228",
+    "name": "YouAppi",
+    "patterns": [
+      "com.youappi.sdk."
+    ],
+    "website": "https://www.youappi.com"
+  },
+  {
+    "id": "309",
+    "name": "YuMe",
+    "patterns": [
+      "com.yume.android"
+    ],
+    "website": "https://www.appbrain.com/stats/libraries/details/yume/yume"
+  },
+  {
+    "id": "448",
+    "name": "Yueying Crash SDK",
+    "patterns": [
+      "com.uc.crashsdk",
+      "com.uc2.crashsdk"
+    ],
+    "website": "https://yueying-docs.effirst.com/"
+  },
+  {
+    "id": "310",
+    "name": "Zapr",
+    "patterns": [
+      "com.redbricklane.zapr"
+    ],
+    "domains": [
+      ".zapr\\.in"
+    ],
+    "website": "https://www.zapr.in/"
+  },
+  {
+    "id": "414",
+    "name": "Zendrive",
+    "patterns": [
+      "com.zendrive.sdk."
+    ],
+    "website": "https://www.zendrive.com/"
+  },
+  {
+    "id": "384",
+    "name": "Zoho Analytics",
+    "patterns": [
+      "com.zoho.zanalytics."
+    ],
+    "website": "http://analytics.zoho.com/"
+  },
+  {
+    "id": "321",
+    "name": "adPOPcorn",
+    "patterns": [
+      "com.igaworks.adpopcorn",
+      "com.igaworks.ssp."
+    ],
+    "website": "https://adpopcorn.com/"
+  },
+  {
+    "id": "187",
+    "name": "deltaDNA",
+    "patterns": [
+      "com.deltadna"
+    ],
+    "domains": [
+      "deltadna\\.net"
+    ],
+    "website": "https://deltadna.com/"
+  },
+  {
+    "id": "385",
+    "name": "fineboost",
+    "patterns": [
+      "com.fineboost."
+    ],
+    "website": "http://www.yifants.cn/"
+  },
+  {
+    "id": "294",
+    "name": "flymob",
+    "patterns": [
+      "com.flymob.sdk."
+    ],
+    "website": "https://flymob.com/"
+  },
+  {
+    "id": "415",
+    "name": "fullstory",
+    "patterns": [
+      "com.fullstory.FS",
+      "com.fullstory.FSSessionData",
+      "com.fullstory.instrumentation.",
+      "com.fullstory.jni.",
+      "com.fullstory.rust.",
+      "com.fullstory.util."
+    ],
+    "website": "https://www.fullstory.com/"
+  },
+  {
+    "id": "146",
+    "name": "ironSource",
+    "patterns": [
+      "com.ironsource."
+    ],
+    "website": "https://www.ironsrc.com"
+  },
+  {
+    "id": "18",
+    "name": "mParticle",
+    "patterns": [
+      "com.mparticle"
+    ],
+    "domains": [
+      "mparticle\\.com"
+    ],
+    "website": "http://mparticle.com"
+  },
+  {
+    "id": "322",
+    "name": "maio by i-mobile",
+    "patterns": [
+      "jp.maio.sdk."
+    ],
+    "website": "https://adpf-info.i-mobile.co.jp/en/"
+  },
+  {
+    "id": "311",
+    "name": "mediba",
+    "patterns": [
+      "com.mediba.jp",
+      "mediba.ad.sdk.android.openx"
+    ],
+    "website": "https://www.mediba.jp"
+  },
+  {
+    "id": "198",
+    "name": "myTarget",
+    "patterns": [
+      "com.my.target."
+    ],
+    "domains": [
+      ".target\\.my\\.com"
+    ],
+    "website": "https://target.my.com/"
+  },
+  {
+    "id": "175",
+    "name": "myTracker",
+    "patterns": [
+      "com.my.tracker."
+    ],
+    "domains": [
+      "tracker-api\\.my\\.com"
+    ],
+    "website": "https://tracker.my.com/"
+  },
+  {
+    "id": "222",
+    "name": "nend",
+    "patterns": [
+      "net.nend.android",
+      "net.nend.unity."
+    ],
+    "website": "https://nend.net/en/"
+  }
+]

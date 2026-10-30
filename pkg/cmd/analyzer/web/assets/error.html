@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>{{.Code}} {{.Status}} · Mega-Analyzer</title>
+<script>(function(){try{var t=localStorage.getItem('ma-appearance');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}})();</script>
+<style>
+:root{color-scheme:light;--bg:#f7f8fa;--panel:#fff;--line:#dde1e7;--fg:#20252d;--dim:#596371;--accent:#285bc1;--action:#2f64d7;--inset:#eef0f3;--edge:#808b9b}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#17191d;--panel:#1c1f24;--line:#30353e;--fg:#eceef3;--dim:#a7afbc;--accent:#9ab9ff;--action:#3368dc;--inset:#111317;--edge:#6c7788}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#17191d;--panel:#1c1f24;--line:#30353e;--fg:#eceef3;--dim:#a7afbc;--accent:#9ab9ff;--action:#3368dc;--inset:#111317;--edge:#6c7788}}
+*{box-sizing:border-box}
+body{margin:0;min-width:320px;min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:32px 24px;background:var(--bg);color:var(--fg);font:16px/1.6 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.card{width:100%;max-width:560px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:40px}
+.brand{display:flex;align-items:center;gap:10px;padding-bottom:24px;border-bottom:1px solid var(--line);font-size:14px;font-weight:550;color:var(--dim)}
+.brand svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.6}
+.code{font:500 80px/1.1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;letter-spacing:-.07em;color:var(--accent);margin:32px 0 16px}
+h1{font-size:26px;line-height:1.25;letter-spacing:-.035em;font-weight:600;margin:0 0 12px}
+p{color:var(--dim);margin:0 0 20px;overflow-wrap:anywhere}
+.path{padding:14px 16px;background:var(--inset);border-radius:7px;color:var(--dim);font-size:14px}
+code{display:block;font:400 14px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere;margin-top:4px;color:var(--fg)}
+.row{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
+a{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:10px 16px;text-decoration:none;border-radius:7px;border:1px solid var(--edge);font-size:14px;font-weight:550;color:var(--fg)}
+a:hover{border-color:var(--accent);color:var(--accent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.primary{border-color:var(--action);background:var(--action);color:#fff}
+.primary:hover{border-color:var(--action);color:#fff;filter:brightness(.95)}
+@media(max-width:480px){body{padding:20px}.card{padding:28px 24px}.code{font-size:68px}h1{font-size:24px}.row{flex-direction:column}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<main class="card">
+  <div class="brand"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg>Mega-Analyzer</div>
+  <p class="code">{{.Code}}</p>
+  <h1>{{.Status}}</h1>
+  <p>{{.Detail}}</p>
+  <div class="path">Requested path<code>{{.Path}}</code></div>
+  <div class="row"><a class="primary" href="/">Back to dashboard</a><a href="/" onclick="if(history.length>1){history.back();return false}">Go back</a></div>
+</main>
+</body>
+</html>

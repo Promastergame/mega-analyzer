@@ -1,0 +1,65 @@
+name: Bug report
+description: Something crashed, misbehaved, or produced a wrong result.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug. The more precise you are, the
+        faster it gets fixed. **Do not report security vulnerabilities here** —
+        use a private advisory instead (see `docs/SECURITY.md`).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+      placeholder: "Running `analyzer -t app.apk` panics with ..."
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The exact command(s) you ran and, if possible, the kind of input.
+      placeholder: |
+        1. analyzer -t my_app.apk -report all
+        2. ...
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `analyzer --version`.
+      placeholder: "Mega Analyzer v1.0.0-beta.1"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - Windows
+        - macOS
+        - Docker
+    validations:
+      required: true
+  - type: dropdown
+    id: build
+    attributes:
+      label: Build type
+      description: See docs/BUILD.md
+      options:
+        - Core (pure Go / prebuilt binary / Docker)
+        - Full native (OmniSec / Zig / GNN)
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / output
+      description: Relevant console output or `analyzer.log`. This is rendered as code, no backticks needed.
+      render: shell

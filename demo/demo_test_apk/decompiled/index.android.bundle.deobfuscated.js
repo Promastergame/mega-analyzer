@@ -1,0 +1,34 @@
+/* React Native fixture bundle. Deliberately readable so bundle analysis can
+* locate the JS decision point without a Metro build. */
+!(function () {
+    "use strict";
+    var AGE_ENDPOINT = "http://127.0.0.1:5555/age/verify";
+    var NativeAgeBridge = global.NativeModules && global.NativeModules.AgeBridge;
+    function parseAgeResponse(payload) {
+        return !!payload && payload.adult === true && Number(payload.age || 0) >= 18;
+    }
+    function canOpenMatureSection(profileId, response) {
+        var serverApproved = parseAgeResponse(response);
+        var nativeApproved = !NativeAgeBridge || NativeAgeBridge.isAgeApproved(profileId);
+        return serverApproved && nativeApproved;
+    }
+    function requestAge(profileId, fetchImpl) {
+        return fetchImpl(AGE_ENDPOINT + "?profile=" + encodeURIComponent(profileId))
+        .then(function (response) {
+            return response.json();
+        }
+        )
+        .then(function (payload) {
+            return canOpenMatureSection(profileId, payload);
+        }
+        );
+    }
+    global.__MEGA_DEMO_AGE_GATE__ = {
+        endpoint: AGE_ENDPOINT,
+        parseAgeResponse: parseAgeResponse,
+        canOpenMatureSection: canOpenMatureSection,
+        requestAge: requestAge
+    }
+    ;
+}
+());

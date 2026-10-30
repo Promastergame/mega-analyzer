@@ -1,0 +1,11 @@
+[package]
+name = "omnisec-crypto"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Zero-dependency crypto primitives for OmniSec (replaces sha2, md-5, chacha20poly1305)."
+
+[lints]
+workspace = true

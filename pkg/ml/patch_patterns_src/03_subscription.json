@@ -1,0 +1,107 @@
+[
+  {
+    "id": "SUBSCRIPTION_CHECK",
+    "category": "subscription",
+    "description": "Checks active subscription status",
+    "method_names": [
+      "issubscribed",
+      "hassubscription",
+      "hasactivesubscription",
+      "issubscriptionactive",
+      "issubscriptionvalid",
+      "checksubscription",
+      "getsubscriptionstatus"
+    ],
+    "class_patterns": [
+      "subscription",
+      "subscribe",
+      "membership",
+      "recurringbilling"
+    ],
+    "required_calls": [
+      "querypurchases",
+      "getpurchasehistory",
+      "issubscribed",
+      "acknowledgepurchase"
+    ],
+    "string_patterns": [
+      "subs",
+      "subscription",
+      "monthly",
+      "yearly",
+      "annual",
+      "weekly"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1,
+    "min_match_score": 12
+  },
+  {
+    "id": "REVENUECAT_CHECK",
+    "category": "subscription",
+    "description": "RevenueCat/Purchases SDK entitlement check",
+    "method_names": [
+      "getcustomerinfo",
+      "getentitlements",
+      "isentitlementactive",
+      "getofferings",
+      "purchasepackage",
+      "checkcustomerinfo",
+      "isactive",
+      "getactiveentitlements"
+    ],
+    "class_patterns": [
+      "revenuecat",
+      "purchases",
+      "entitlement",
+      "customerinfo",
+      "offerings"
+    ],
+    "required_calls": [
+      "purchases;->getcustomerinfo",
+      "entitlementinfo;->isactive",
+      "customerinfo;->getentitlements"
+    ],
+    "string_patterns": [
+      "revenuecat",
+      "rc_",
+      "entitlement",
+      "pro_access",
+      "premium_access",
+      "all_access",
+      "offerings",
+      "customer_info"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.2,
+    "min_match_score": 12
+  },
+  {
+    "id": "pj08",
+    "category": "subscription",
+    "description": "Subscription active check — force active",
+    "method_names": [
+      "issubscriptionactive",
+      "hasactivesubscription",
+      "issubscribed",
+      "checksubscription"
+    ],
+    "class_patterns": [
+      "subscription",
+      "billing",
+      "membership"
+    ],
+    "required_calls": [],
+    "string_patterns": [
+      "subscription",
+      "subscribed",
+      "active"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.1,
+    "min_match_score": 11
+  }
+]

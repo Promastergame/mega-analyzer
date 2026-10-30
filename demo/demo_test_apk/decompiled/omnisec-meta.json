@@ -1,0 +1,19 @@
+{
+  "package": "com.megademo.testapp",
+  "versionCode": 1,
+  "versionName": "1.0",
+  "minSdk": 23,
+  "targetSdk": 35,
+  "tool": "Mega-Analyzer",
+  "format": "omnisec-v1",
+  "doNotCompress": [
+    "arsc"
+  ],
+  "unknownFiles": [
+    "META-INF/ANDROIDD.RSA",
+    "META-INF/ANDROIDD.SF",
+    "META-INF/MANIFEST.MF",
+    "index.android.bundle",
+    "pseudo_ad.svg"
+  ]
+}

@@ -1,0 +1,8 @@
+[package]
+name = "omnisec-dataflow"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+omnisec-cfg = { path = "../omnisec-cfg" }
+omnisec-ir = { path = "../omnisec-ir" }

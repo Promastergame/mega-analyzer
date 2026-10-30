@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Intentionally vulnerable manifest for demonstrating Mega-Analyzer.
+  Every flag below is a deliberate misconfiguration the scanner should flag.
+  DO NOT ship anything resembling this in a real app.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.megademo.insecure"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="22" />
+
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+
+    <application
+        android:allowBackup="true"
+        android:debuggable="true"
+        android:usesCleartextTraffic="true"
+        android:sharedUserId="android.uid.system"
+        android:label="InsecureDemo">
+
+        <!-- Exported launcher with a custom taskAffinity: task-hijacking / StrandHogg surface -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask"
+            android:taskAffinity="com.attacker.hijack">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+            <!-- Deep link without an assetlinks.json verification path -->
+            <intent-filter android:autoVerify="false">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="login.megademo.example" />
+            </intent-filter>
+        </activity>
+
+        <!-- Exported content provider granting URI permissions to everyone -->
+        <provider
+            android:name=".LeakyProvider"
+            android:authorities="com.megademo.insecure.provider"
+            android:exported="true"
+            android:grantUriPermissions="true" />
+
+        <!-- Exported receiver with no permission guard -->
+        <receiver android:name=".SmsReceiver" android:exported="true">
+            <intent-filter>
+                <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

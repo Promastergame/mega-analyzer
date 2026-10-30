@@ -1,0 +1,1990 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Mega-Analyzer Unified Dynamic API",
+    "version": "1.0.0-beta.1",
+    "description": "Unified REST API for security researchers to manage bytecode token matchers, Smali ML pattern rules, and web scanner logic on-the-fly."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8090",
+      "description": "Local API Server"
+    }
+  ],
+  "paths": {
+    "/api/v1/status": {
+      "get": {
+        "summary": "System Health & Diagnostics",
+        "description": "Returns runtime telemetry metrics, statistics of active dynamic rules, storage health status, and active connection metrics.",
+        "responses": {
+          "200": {
+            "description": "Successful operation",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "healthy" },
+                    "statistics": {
+                      "type": "object",
+                      "properties": {
+                        "dynamic_web_rules": { "type": "integer", "example": 3 },
+                        "dynamic_binzap_rules": { "type": "integer", "example": 2 },
+                        "dynamic_ml_patterns": { "type": "integer", "example": 1 },
+                        "total_static_ml": { "type": "integer", "example": 140 }
+                      }
+                    },
+                    "telemetry": {
+                      "type": "object",
+                      "properties": {
+                        "uptime_seconds": { "type": "integer", "example": 348 },
+                        "goroutines": { "type": "integer", "example": 9 },
+                        "allocated_heap_mb": { "type": "number", "example": 4.82 },
+                        "total_alloc_mb": { "type": "number", "example": 12.14 },
+                        "gc_cycles": { "type": "integer", "example": 2 },
+                        "active_sse_subscribers": { "type": "integer", "example": 1 }
+                      }
+                    },
+                    "storage_health": {
+                      "type": "object",
+                      "properties": {
+                        "web_rules_writable": { "type": "boolean", "example": true },
+                        "binzap_rules_writable": { "type": "boolean", "example": true },
+                        "ml_patterns_writable": { "type": "boolean", "example": true }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rules/web": {
+      "get": {
+        "summary": "List Dynamic Web Rules",
+        "responses": {
+          "200": {
+            "description": "List of active rules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/WebRule" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Dynamic Web Rule",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/WebRule" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Rule created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WebRule" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "409": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/rules/web/{id}": {
+      "put": {
+        "summary": "Update Dynamic Web Rule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/WebRule" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rule updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/WebRule" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "404": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      },
+      "delete": {
+        "summary": "Delete Dynamic Web Rule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Deleted successfully" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/rules/binzap": {
+      "get": {
+        "summary": "List Binzap Opcode Rules",
+        "responses": {
+          "200": {
+            "description": "List of active rules",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/BinzapRule" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Binzap Opcode Rule",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BinzapRule" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Rule created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BinzapRule" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "409": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/rules/binzap/{id}": {
+      "put": {
+        "summary": "Update Binzap Opcode Rule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BinzapRule" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rule updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BinzapRule" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "404": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      },
+      "delete": {
+        "summary": "Delete Binzap Opcode Rule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Deleted successfully" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/rules/ml": {
+      "get": {
+        "summary": "List Smali ML Patterns",
+        "responses": {
+          "200": {
+            "description": "List of active ML patterns",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/MLPattern" }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create Smali ML Pattern",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MLPattern" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Pattern created successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MLPattern" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "409": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/rules/ml/{id}": {
+      "put": {
+        "summary": "Update Smali ML Pattern",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/MLPattern" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Pattern updated successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/MLPattern" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "404": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      },
+      "delete": {
+        "summary": "Delete Smali ML Pattern",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Deleted successfully" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/scan/web": {
+      "post": {
+        "summary": "Execute Web Security Scan",
+        "description": "Triggers crawler and vulnerability fuzz scanner against a target URL, using configured dynamic rules.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["target"],
+                "properties": {
+                  "target": { "type": "string", "example": "http://127.0.0.1:3000" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scan complete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "target": { "type": "string" },
+                    "findings_count": { "type": "integer" },
+                    "findings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": { "type": "string" },
+                          "name": { "type": "string" },
+                          "description": { "type": "string" },
+                          "severity": { "type": "string" },
+                          "url": { "type": "string" },
+                          "parameter": { "type": "string" },
+                          "evidence": { "type": "string" },
+                          "payload": { "type": "string" },
+                          "mitigation": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/scan/tokens": {
+      "post": {
+        "summary": "Lex and Passive Bytecode Scan",
+        "description": "Lexes input Smali code in real-time, executing active sequence-matching algorithms.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["text"],
+                "properties": {
+                  "text": { "type": "string", "example": ".method public encrypt(Ljava/lang/String;)V\n    const-string v0, \"DES\"\n    return-void\n.end method" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Lexing and scan complete",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "findings_count": { "type": "integer" },
+                    "findings": { "type": "array", "items": { "type": "object" } },
+                    "tokens": { "type": "array", "items": { "type": "object" } }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/rules/test": {
+      "post": {
+        "summary": "Universal Dry-Run Verification Playground",
+        "description": "Allows testing unsaved, raw rules or ML patterns directly against custom payloads, sample text, mock headers, or targets.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["rule_type", "rule_json", "sample"],
+                "properties": {
+                  "rule_type": { "type": "string", "enum": ["web", "binzap", "ml"], "example": "binzap" },
+                  "rule_json": { "type": "string", "description": "Serialized raw JSON of the rule struct" },
+                  "sample": { "type": "string", "description": "Web URL, bytecode snippet, headers map or simulated ML class context" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dry-run evaluation result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "matched": { "type": "boolean" },
+                    "findings_count": { "type": "integer" },
+                    "findings": { "type": "array", "items": { "type": "object" } },
+                    "evidence": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/scan/apk": {
+      "post": {
+        "summary": "Submit APK Scan (Legacy Synchronous Alias)",
+        "description": "Alias of the async scan-job submission endpoint. On this legacy path the scan defaults to synchronous mode (waits for completion and returns the analysis.json report) unless \"wait\": false is set. Exactly one of target or artifact_id must be provided.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "target": { "type": "string", "description": "Local path below MEGA_ANALYZER_SCAN_ROOT (mutually exclusive with artifact_id)", "example": "" },
+                  "artifact_id": { "type": "string", "description": "ID returned by POST /api/v1/artifacts (mutually exclusive with target)", "example": "3f2b9c1a7e4d5f60" },
+                  "enable_media": { "type": "boolean", "example": false },
+                  "extract_ps1": { "type": "boolean", "example": false },
+                  "wait": { "type": "boolean", "description": "Force synchronous (true) or asynchronous (false) behavior", "example": true }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scan completed synchronously — returns the analysis.json report",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "description": "Full analyzer report (analysis.json)" }
+              }
+            }
+          },
+          "202": {
+            "description": "Scan job accepted and queued (when wait=false)",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ScanJobResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "404": { "$ref": "#/components/responses/ErrorResponse" },
+          "408": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" },
+          "503": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/artifacts": {
+      "post": {
+        "summary": "Upload Scan Artifact",
+        "description": "Uploads an APK/AAB/XAPK/JAR/ZIP/DEX file for later scanning via artifact_id. Accepts multipart/form-data (one file part) or a raw request body with an X-Filename header or ?filename= query param.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": { "type": "string", "format": "binary", "description": "The APK/AAB/XAPK/JAR/ZIP/DEX file to upload" }
+                }
+              }
+            },
+            "application/octet-stream": {
+              "schema": { "type": "string", "format": "binary", "description": "Raw file bytes; provide filename via X-Filename header or ?filename= query param" }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Artifact stored successfully",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/Artifact" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "413": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/scans": {
+      "post": {
+        "summary": "Submit Asynchronous APK Scan Job",
+        "description": "Kicks off an analyzer run as a background job and returns immediately with a job ID and status URL (unless \"wait\": true is set). Exactly one of target or artifact_id must be provided.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "target": { "type": "string", "description": "Local path below MEGA_ANALYZER_SCAN_ROOT (mutually exclusive with artifact_id)", "example": "" },
+                  "artifact_id": { "type": "string", "description": "ID returned by POST /api/v1/artifacts (mutually exclusive with target)", "example": "3f2b9c1a7e4d5f60" },
+                  "enable_media": { "type": "boolean", "example": false },
+                  "extract_ps1": { "type": "boolean", "example": false },
+                  "wait": { "type": "boolean", "description": "Force synchronous (true) or asynchronous (false, default here) behavior", "example": false }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Scan job accepted and queued",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ScanJobResponse" }
+              }
+            }
+          },
+          "200": {
+            "description": "Scan completed synchronously (when wait=true) — returns the analysis.json report",
+            "content": {
+              "application/json": {
+                "schema": { "type": "object", "description": "Full analyzer report (analysis.json)" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "404": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" },
+          "503": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/scans/{id}": {
+      "get": {
+        "summary": "Get Scan Job Status",
+        "description": "Polls the state of an asynchronous scan job (queued, running, succeeded, failed, canceled).",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Current job snapshot",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ScanJobResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      },
+      "delete": {
+        "summary": "Cancel Scan Job",
+        "description": "Cancels a queued or running scan job.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "202": {
+            "description": "Cancellation accepted; job snapshot reflects canceled state",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ScanJobResponse" }
+              }
+            }
+          },
+          "404": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/scans/{id}/report/{name}": {
+      "get": {
+        "summary": "Fetch Scan Job Report File",
+        "description": "Streams one of the report artifacts (e.g. analysis.json, REPORT.html) produced by a completed scan job.",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "name", "in": "path", "required": true, "schema": { "type": "string" }, "example": "analysis.json" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Report content (Content-Type varies by report extension: JSON, HTML, plain text, or CSV)",
+            "content": {
+              "application/octet-stream": { "schema": { "type": "string", "format": "binary" } }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "404": { "$ref": "#/components/responses/ErrorResponse" },
+          "409": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/scans/{id}/evidence": {
+      "get": {
+        "summary": "Read or query a completed scan evidence graph",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "node", "in": "query", "schema": { "type": "string" } },
+          { "name": "file", "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Evidence graph or bounded evidence chain" },
+          "404": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/report/html": {
+      "get": {
+        "summary": "Fetch Legacy HTML Report",
+        "description": "Renders the HTML report (REPORT.html) for a completed scan job, addressed by job_id.",
+        "parameters": [
+          { "name": "job_id", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Rendered HTML report",
+            "content": { "text/html": { "schema": { "type": "string" } } }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "403": { "$ref": "#/components/responses/ErrorResponse" },
+          "404": { "$ref": "#/components/responses/ErrorResponse" },
+          "409": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/scan/events": {
+      "get": {
+        "summary": "Real-Time Diagnostic Event Stream (SSE)",
+        "description": "Server-Sent Events stream broadcasting scan lifecycle events (info, crawling, fuzzing, success, vuln_found, error) as they occur. Sends a heartbeat every 15 seconds.",
+        "responses": {
+          "200": {
+            "description": "text/event-stream of ScanEvent JSON payloads, each framed as \"data: {...}\\n\\n\"",
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "timestamp": { "type": "string", "format": "date-time" },
+                    "type": { "type": "string", "enum": ["info", "crawling", "fuzzing", "success", "vuln_found", "error"] },
+                    "message": { "type": "string" },
+                    "data": { "type": "object" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rules/export": {
+      "get": {
+        "summary": "Export All Dynamic Rules",
+        "description": "Downloads all currently active dynamic web rules, binzap rules, and ML patterns as a single JSON bundle (Content-Disposition: attachment).",
+        "responses": {
+          "200": {
+            "description": "Rule bundle",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "exported_at": { "type": "string", "format": "date-time" },
+                    "web_rules": { "type": "array", "items": { "$ref": "#/components/schemas/WebRule" } },
+                    "binzap_rules": { "type": "array", "items": { "$ref": "#/components/schemas/BinzapRule" } },
+                    "ml_patterns": { "type": "array", "items": { "$ref": "#/components/schemas/MLPattern" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/rules/import": {
+      "post": {
+        "summary": "Import Dynamic Rules Bundle",
+        "description": "Imports a rules bundle previously produced by GET /api/v1/rules/export. Entries with a blank ID are skipped; entries that fail validation are silently skipped and not counted.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "web_rules": { "type": "array", "items": { "$ref": "#/components/schemas/WebRule" } },
+                  "binzap_rules": { "type": "array", "items": { "$ref": "#/components/schemas/BinzapRule" } },
+                  "ml_patterns": { "type": "array", "items": { "$ref": "#/components/schemas/MLPattern" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Import completed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": { "type": "string", "example": "Import completed" },
+                    "imported": {
+                      "type": "object",
+                      "properties": {
+                        "web_rules": { "type": "integer", "example": 2 },
+                        "binzap_rules": { "type": "integer", "example": 1 },
+                        "ml_patterns": { "type": "integer", "example": 0 }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/recon/portscan": {
+      "post": {
+        "summary": "TCP Port Scanner",
+        "description": "Concurrently probes TCP ports on a public host and optionally grabs service banners. Private/loopback targets are blocked (SSRF protection).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["host"],
+                "properties": {
+                  "host": { "type": "string", "example": "scanme.nmap.org" },
+                  "ports": { "type": "array", "items": { "type": "integer" }, "description": "Specific ports to scan; defaults to a large common-port list", "example": [22, 80, 443] },
+                  "top_ports": { "type": "boolean", "example": false },
+                  "concurrency": { "type": "integer", "example": 200 },
+                  "timeout_ms": { "type": "integer", "example": 800 },
+                  "grab_banner": { "type": "boolean", "example": false }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Scan results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "host": { "type": "string" },
+                    "scanned": { "type": "integer" },
+                    "open_count": { "type": "integer" },
+                    "scan_time": { "type": "string" },
+                    "open_ports": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "port": { "type": "integer" },
+                          "state": { "type": "string", "example": "open" },
+                          "service": { "type": "string" },
+                          "banner": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/recon/dns": {
+      "post": {
+        "summary": "DNS Enumeration",
+        "description": "Resolves A/AAAA/MX/NS/TXT/CNAME/PTR records for a domain, with optional concurrent subdomain brute-forcing.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["domain"],
+                "properties": {
+                  "domain": { "type": "string", "example": "example.com" },
+                  "subdomain_brute": { "type": "boolean", "example": false },
+                  "concurrency": { "type": "integer", "example": 50 },
+                  "wordlist": { "type": "array", "items": { "type": "string" }, "description": "Custom subdomain wordlist (max 10000 entries)", "example": ["www", "api"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "DNS records and (optionally) discovered subdomains",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "domain": { "type": "string" },
+                    "records": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "type": { "type": "string", "example": "A" },
+                          "value": { "type": "string" },
+                          "ttl": { "type": "integer" }
+                        }
+                      }
+                    },
+                    "subdomains": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "subdomain": { "type": "string" },
+                          "ips": { "type": "array", "items": { "type": "string" } }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/recon/ssl": {
+      "post": {
+        "summary": "TLS/SSL Configuration Audit",
+        "description": "Probes TLS 1.0-1.3 support, negotiated cipher suites, and certificate details, then assigns a letter grade.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["host"],
+                "properties": {
+                  "host": { "type": "string", "example": "example.com" },
+                  "port": { "type": "integer", "example": 443 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "TLS audit results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "host": { "type": "string" },
+                    "port": { "type": "integer" },
+                    "grade": { "type": "string", "example": "A+" },
+                    "tls_probes": { "type": "array", "items": { "type": "object", "properties": { "version": { "type": "string" }, "accepted": { "type": "boolean" }, "cipher": { "type": "string" } } } },
+                    "certificate": { "type": "object", "description": "Subject, issuer, validity window, SAN list, etc." },
+                    "issues": { "type": "array", "items": { "type": "string" } },
+                    "weak_ciphers": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/recon/hostinfo": {
+      "post": {
+        "summary": "Host Fingerprint / OSINT Probe",
+        "description": "Resolves DNS, reverse DNS, probes HTTP/HTTPS banners and headers, and quick-scans common ports for a target host.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["target"],
+                "properties": {
+                  "target": { "type": "string", "example": "example.com" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Host fingerprint",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "target": { "type": "string" },
+                    "ip_addresses": { "type": "array", "items": { "type": "string" } },
+                    "reverse_dns": { "type": "array", "items": { "type": "string" } },
+                    "http": { "type": "object" },
+                    "https": { "type": "object" },
+                    "quick_open_ports": { "type": "array", "items": { "type": "integer" } },
+                    "scanned_at": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/recon/wayback": {
+      "post": {
+        "summary": "Wayback Machine / Internet Archive Lookup",
+        "description": "Queries the Internet Archive CDX API for the first and latest snapshot of a URL and an approximate total snapshot count.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": { "type": "string", "example": "example.com" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Wayback snapshot summary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "first_snapshot": { "type": "object", "properties": { "timestamp": { "type": "string" }, "datetime": { "type": "string" }, "url": { "type": "string" }, "status_code": { "type": "string" } } },
+                    "last_snapshot": { "type": "object", "properties": { "timestamp": { "type": "string" }, "datetime": { "type": "string" }, "url": { "type": "string" }, "status_code": { "type": "string" } } },
+                    "approx_total_snapshots": { "type": "integer" },
+                    "wayback_url": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/recon/siteprofile": {
+      "post": {
+        "summary": "Site Security Profile",
+        "description": "Fetches the target page and checks security headers, tech-stack fingerprints, robots.txt, security.txt, ads.txt, and sitemap.xml presence.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": { "type": "string", "example": "https://example.com" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Site profile results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "host": { "type": "string" },
+                    "title": { "type": "string", "description": "Page <title> text" },
+                    "stack_summary": { "type": "string", "description": "One-line stack summary from the fingerprint engine" },
+                    "technologies": { "type": "array", "items": { "type": "string" }, "description": "Detected tech names with versions, e.g. WordPress 6.4" },
+                    "tech_stack": {
+                      "type": "array",
+                      "description": "Detailed detections from the WhatWeb-style fingerprint engine",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": { "type": "string" },
+                          "category": { "type": "string" },
+                          "version": { "type": "string" },
+                          "confidence": { "type": "string", "enum": ["certain", "probable"] },
+                          "evidence": { "type": "string" }
+                        }
+                      }
+                    },
+                    "security_headers": { "type": "object", "properties": { "score": { "type": "string", "example": "3/8" }, "checks": { "type": "array", "items": { "type": "object" } } } },
+                    "status_code": { "type": "integer" },
+                    "final_url": { "type": "string" },
+                    "server": { "type": "string" },
+                    "powered_by": { "type": "string" },
+                    "robots_txt": { "type": "object" },
+                    "security_txt": { "type": "object" },
+                    "ads_txt": { "type": "object" },
+                    "sitemap_xml": { "type": "object" },
+                    "scanned_at": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/recon/rdap": {
+      "post": {
+        "summary": "RDAP Domain Registration Lookup",
+        "description": "Queries rdap.org for domain registration data (registrar, key dates, status flags, name servers).",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["domain"],
+                "properties": {
+                  "domain": { "type": "string", "example": "example.com" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "RDAP registration data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "domain": { "type": "string" },
+                    "dates": { "type": "object", "properties": { "registered": { "type": "string" }, "expires": { "type": "string" }, "last_updated": { "type": "string" } } },
+                    "registrar": { "type": "string" },
+                    "status": { "type": "array", "items": { "type": "string" } },
+                    "nameservers": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "404": { "$ref": "#/components/responses/ErrorResponse" },
+          "502": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/recon/htmlaudit": {
+      "post": {
+        "summary": "HTML/JS Secret & Tracker Audit",
+        "description": "Fetches a page, applies light static JS deobfuscation (hex/unicode escapes, atob, fromCharCode, string-array folding, etc.), scans HTML and linked JS bundles (plus any source maps) for leaked secrets, and detects trackers, CAPTCHA/Cloudflare usage, and forms missing CSRF protection.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": { "type": "string", "example": "https://example.com" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Audit results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "final_url": { "type": "string" },
+                    "status_code": { "type": "integer" },
+                    "content_type": { "type": "string" },
+                    "html_size_bytes": { "type": "integer" },
+                    "html_deobf_passes": { "type": "array", "items": { "type": "string" } },
+                    "js_bundles_scanned": { "type": "array", "items": { "type": "object" } },
+                    "secrets_found": { "type": "array", "items": { "type": "object" } },
+                    "trackers": { "type": "array", "items": { "type": "object" } },
+                    "captcha": { "type": "object" },
+                    "cloudflare": { "type": "object" },
+                    "forms_missing_csrf": { "type": "integer" },
+                    "scanned_at": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "502": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/recon/filescan": {
+      "post": {
+        "summary": "Exposed Sensitive File Probe",
+        "description": "Concurrently probes a curated list of sensitive paths (.git/config, .env, backups, CMS configs, actuator endpoints, etc.) and reports which return 200/403.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": { "type": "string", "example": "https://example.com" },
+                  "concurrency": { "type": "integer", "example": 20 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Probe results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "probed": { "type": "integer" },
+                    "exposed_count": { "type": "integer" },
+                    "exposed": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "status_code": { "type": "integer" },
+                          "size_bytes": { "type": "integer" },
+                          "severity": { "type": "string" },
+                          "preview": { "type": "string" },
+                          "note": { "type": "string" }
+                        }
+                      }
+                    },
+                    "scanned_at": { "type": "string", "format": "date-time" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/web/cors": {
+      "post": {
+        "summary": "CORS Misconfiguration Checker",
+        "description": "Replays the request with several attacker-controlled Origin headers to detect wildcard+credentials, origin reflection, and other CORS misconfigurations.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": { "type": "string", "example": "https://example.com/api/data" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "CORS test results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "vulnerable": { "type": "boolean" },
+                    "findings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "test": { "type": "string" },
+                          "origin_sent": { "type": "string" },
+                          "access_control_allow_origin": { "type": "string" },
+                          "access_control_allow_credentials": { "type": "string" },
+                          "vulnerable": { "type": "boolean" },
+                          "severity": { "type": "string" },
+                          "description": { "type": "string" }
+                        }
+                      }
+                    },
+                    "summary": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "403": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/web/jwt": {
+      "post": {
+        "summary": "JWT Analyzer & Weak-Secret Cracker",
+        "description": "Decodes a JWT's header/payload, flags alg=none and algorithm-confusion risks, checks expiration, scans claims for sensitive data, and brute-forces the HMAC secret against a built-in weak-secret wordlist plus any caller-supplied keys.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["token"],
+                "properties": {
+                  "token": { "type": "string", "example": "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjMifQ.abc123" },
+                  "weak_keys": { "type": "array", "items": { "type": "string" }, "description": "Additional candidate secrets to try, on top of the built-in weak-secret list", "example": ["mysecret"] },
+                  "check_alg_none": { "type": "boolean", "description": "Also return a forged alg=none token for testing", "example": false }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "JWT analysis results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "header": { "type": "object" },
+                    "payload": { "type": "object" },
+                    "algorithm": { "type": "string" },
+                    "issues": { "type": "array", "items": { "type": "object", "properties": { "severity": { "type": "string" }, "title": { "type": "string" }, "description": { "type": "string" } } } },
+                    "cracked_secret": { "type": "string" },
+                    "none_bypass_token": { "type": "string" },
+                    "raw_parts": { "type": "object", "properties": { "header": { "type": "string" }, "payload": { "type": "string" }, "signature": { "type": "string" } } }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/web/redirect": {
+      "post": {
+        "summary": "Open Redirect Scanner",
+        "description": "Appends common redirect-parameter names (url, redirect, next, goto, ...) with attacker-controlled payloads and checks whether the server issues a 3xx redirect to the attacker domain.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": { "type": "string", "example": "https://example.com/login" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Open redirect test results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "vulnerable": { "type": "boolean" },
+                    "findings": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "param": { "type": "string" },
+                          "payload": { "type": "string" },
+                          "status_code": { "type": "integer" },
+                          "location": { "type": "string" },
+                          "vulnerable": { "type": "boolean" }
+                        }
+                      }
+                    },
+                    "params_tested": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "403": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/web/dirscan": {
+      "post": {
+        "summary": "Directory / Path Bruteforcer",
+        "description": "Concurrently requests a wordlist of common paths (optionally combined with extensions) against the target and flags sensitive/notable hits.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": { "type": "string", "example": "https://example.com" },
+                  "wordlist": { "type": "array", "items": { "type": "string" }, "description": "Custom path wordlist; defaults to a built-in list", "example": ["admin", "backup"] },
+                  "concurrency": { "type": "integer", "example": 20 },
+                  "extensions": { "type": "array", "items": { "type": "string" }, "description": "Extensions appended to extensionless words; defaults to [\"\", \".php\", \".html\", \".bak\", \".old\", \".txt\"]", "example": ["", ".php"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Directory scan results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "paths_tested": { "type": "integer" },
+                    "found": { "type": "integer" },
+                    "results": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "path": { "type": "string" },
+                          "status_code": { "type": "integer" },
+                          "content_length": { "type": "integer" },
+                          "redirect": { "type": "string" },
+                          "notable": { "type": "boolean" },
+                          "note": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "403": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/web/techdetect": {
+      "post": {
+        "summary": "Technology Stack Detector (WhatWeb-style)",
+        "description": "Fingerprints the technology stack from four evidence sources: response headers, cookie names, <meta name=generator> and HTML body patterns. Detects web servers, languages, frameworks, CMS (WordPress, Drupal, Joomla, 1C-Bitrix, DLE), e-commerce, website builders (Tilda, Wix, Webflow), analytics (GA, Yandex Metrika), CDN/WAF, payments and more — with version extraction and confidence levels.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": { "type": "string", "example": "https://example.com" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Detected technologies",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "status": { "type": "integer" },
+                    "title": { "type": "string", "description": "Page <title> text" },
+                    "summary": { "type": "string", "description": "One-line stack summary, e.g. WordPress 6.4 · PHP 8.1 · nginx 1.24" },
+                    "final_url": { "type": "string", "description": "Final URL after following redirects (present only when the target redirected)" },
+                    "redirects": { "type": "array", "description": "Redirect chain that led to the final page",
+                      "items": { "type": "object", "properties": { "status": { "type": "integer" }, "url": { "type": "string" } } } },
+                    "detected": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": { "type": "string" },
+                          "category": { "type": "string" },
+                          "version": { "type": "string", "description": "Detected version, if disclosed" },
+                          "confidence": { "type": "string", "enum": ["certain", "probable"] },
+                          "evidence": { "type": "string" }
+                        }
+                      }
+                    },
+                    "count": { "type": "integer" },
+                    "headers": { "type": "object", "additionalProperties": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "403": { "$ref": "#/components/responses/ErrorResponse" },
+          "502": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/web/cookies": {
+      "post": {
+        "summary": "Cookie Security Auditor",
+        "description": "Fetches the target and inspects Set-Cookie flags (Secure, HttpOnly, SameSite), flagging weaknesses more severely for likely session/auth cookies.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": { "type": "string", "example": "https://example.com/login" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cookie audit results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": { "type": "string" },
+                    "cookies": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "name": { "type": "string" },
+                          "value": { "type": "string", "description": "Masked value" },
+                          "secure": { "type": "boolean" },
+                          "httponly": { "type": "boolean" },
+                          "samesite": { "type": "string" },
+                          "path": { "type": "string" },
+                          "domain": { "type": "string" }
+                        }
+                      }
+                    },
+                    "issues": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "cookie": { "type": "string" },
+                          "issue": { "type": "string" },
+                          "severity": { "type": "string" },
+                          "description": { "type": "string" }
+                        }
+                      }
+                    },
+                    "count": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "403": { "$ref": "#/components/responses/ErrorResponse" },
+          "502": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/web/subdomains": {
+      "post": {
+        "summary": "Subdomain Enumerator",
+        "description": "Concurrently resolves a wordlist of subdomain labels against the target domain and reports the ones that resolve.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["domain"],
+                "properties": {
+                  "domain": { "type": "string", "example": "example.com" },
+                  "wordlist": { "type": "array", "items": { "type": "string" }, "description": "Custom subdomain wordlist (max 10000 entries); defaults to a built-in list", "example": ["www", "api"] },
+                  "concurrency": { "type": "integer", "example": 100 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Subdomain enumeration results",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "domain": { "type": "string" },
+                    "tested": { "type": "integer" },
+                    "found": { "type": "integer" },
+                    "subdomains": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "subdomain": { "type": "string" },
+                          "ips": { "type": "array", "items": { "type": "string" } }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "403": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/mitm/start": {
+      "post": {
+        "summary": "Start MITM Proxy",
+        "description": "Starts the local HTTP(S) intercepting proxy on the given port (default 8888, binds to 127.0.0.1 unless MEGA_ANALYZER_MITM_BIND is set) and returns the ephemeral CA certificate PEM to import for HTTPS interception.",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "port": { "type": "integer", "example": 8888 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Proxy started",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "started" },
+                    "listen_addr": { "type": "string", "example": "127.0.0.1:8888" },
+                    "port": { "type": "integer", "example": 8888 },
+                    "ca_cert_pem": { "type": "string", "description": "PEM-encoded MITM CA certificate to import into the client trust store" },
+                    "note": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" },
+          "409": { "$ref": "#/components/responses/ErrorResponse" },
+          "500": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/mitm/stop": {
+      "post": {
+        "summary": "Stop MITM Proxy",
+        "description": "Stops the running MITM proxy listener.",
+        "responses": {
+          "200": {
+            "description": "Proxy stopped",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "stopped" },
+                    "sessions_saved": { "type": "integer" },
+                    "uptime_seconds": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "409": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/mitm/status": {
+      "get": {
+        "summary": "MITM Proxy Status",
+        "description": "Returns whether the proxy is running along with request/session counters and CA readiness.",
+        "responses": {
+          "200": {
+            "description": "Current MITM proxy status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "running": { "type": "boolean" },
+                    "listen_addr": { "type": "string" },
+                    "uptime_seconds": { "type": "integer" },
+                    "sessions_captured": { "type": "integer" },
+                    "total_requests": { "type": "integer" },
+                    "https_intercepted": { "type": "integer" },
+                    "ca_ready": { "type": "boolean" },
+                    "inject_headers_count": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mitm/packets": {
+      "get": {
+        "summary": "List Captured MITM Sessions",
+        "description": "Returns a paged, newest-first list of intercepted request/response sessions.",
+        "parameters": [
+          { "name": "offset", "in": "query", "required": false, "schema": { "type": "integer", "default": 0 } },
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "default": 50 }, "description": "Capped at 500" }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paged session list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "total": { "type": "integer" },
+                    "offset": { "type": "integer" },
+                    "limit": { "type": "integer" },
+                    "sessions": { "type": "array", "items": { "$ref": "#/components/schemas/MITMSession" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mitm/clear": {
+      "post": {
+        "summary": "Clear Captured MITM Sessions",
+        "description": "Wipes the in-memory session store.",
+        "responses": {
+          "200": {
+            "description": "Sessions cleared",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "cleared": { "type": "integer", "description": "Number of sessions removed" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/mitm/inject": {
+      "post": {
+        "summary": "Configure Header Injection",
+        "description": "Sets (or clears, then sets) headers that will be injected into every proxied request going forward.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "headers": { "type": "object", "additionalProperties": { "type": "string" }, "example": { "X-Debug": "1" } },
+                  "clear": { "type": "boolean", "description": "If true, replaces the current injected-header set instead of merging into it", "example": false }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated injection configuration",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "inject_headers_count": { "type": "integer" },
+                    "headers": { "type": "object", "additionalProperties": { "type": "string" } }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    },
+    "/api/v1/mitm/ca.pem": {
+      "get": {
+        "summary": "Download MITM CA Certificate",
+        "description": "Downloads the ephemeral MITM interception CA certificate as a PEM file, for import into a browser/OS/device trust store.",
+        "responses": {
+          "200": {
+            "description": "PEM-encoded CA certificate",
+            "content": {
+              "application/x-pem-file": {
+                "schema": { "type": "string", "format": "binary" }
+              }
+            }
+          },
+          "503": { "$ref": "#/components/responses/ErrorResponse" }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "ErrorResponse": {
+        "description": "Standardized RFC 7807 Error Response",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ProblemDetails" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": { "type": "string", "example": "https://mega-analyzer.net/errors/validation" },
+          "title": { "type": "string", "example": "Invalid Request Parameters" },
+          "status": { "type": "integer", "example": 400 },
+          "detail": { "type": "string", "example": "The rules parameters failed syntactic JSON layout validation." },
+          "instance": { "type": "string", "example": "/api/v1/rules/web" },
+          "error_code": { "type": "string", "example": "ERR_INVALID_PAYLOAD" },
+          "remediation": { "type": "string", "example": "Review payload fields against the OpenAPI schema." }
+        }
+      },
+      "WebRule": {
+        "type": "object",
+        "required": ["id", "name", "type"],
+        "properties": {
+          "id": { "type": "string", "example": "WS-DYN-XSS" },
+          "name": { "type": "string", "example": "Reflected XSS Matcher" },
+          "description": { "type": "string", "example": "Fuzzes fields for custom scripts." },
+          "severity": { "type": "string", "enum": ["INFO", "LOW", "MEDIUM", "HIGH", "CRITICAL"], "example": "CRITICAL" },
+          "mitigation": { "type": "string", "example": "Use HTMLEscape sanitization." },
+          "type": { "type": "string", "enum": ["fuzz", "regex_passive", "header_check"], "example": "fuzz" },
+          "payloads": { "type": "array", "items": { "type": "string" }, "example": ["<script>alert(1)</script>"] },
+          "match_type": { "type": "string", "enum": ["contains", "regex", "sql_error", "lfi_success", "status_code"], "example": "contains" },
+          "match_value": { "type": "string", "example": "" },
+          "regex_pattern": { "type": "string", "example": "" },
+          "header_name": { "type": "string", "example": "" },
+          "header_check": { "type": "string", "enum": ["missing", "contains", "equals"], "example": "" },
+          "header_value": { "type": "string", "example": "" }
+        }
+      },
+      "BinzapRule": {
+        "type": "object",
+        "required": ["id", "name", "pattern_steps"],
+        "properties": {
+          "id": { "type": "string", "example": "BZ-DYN-CRYPT" },
+          "name": { "type": "string", "example": "DES Algorithm Scanner" },
+          "severity": { "type": "string", "enum": ["INFO", "LOW", "MEDIUM", "HIGH", "CRITICAL"], "example": "HIGH" },
+          "pattern_steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": { "type": "string", "enum": ["opcode", "any_register", "string_contains", "string_equals"], "example": "opcode" },
+                "value": { "type": "string", "example": "const-string" }
+              }
+            }
+          }
+        }
+      },
+      "MLPattern": {
+        "type": "object",
+        "required": ["id", "category"],
+        "properties": {
+          "id": { "type": "string", "example": "BILLING_BYPASS" },
+          "category": { "type": "string", "example": "billing" },
+          "description": { "type": "string", "example": "Detects offline billing locks." },
+          "method_names": { "type": "array", "items": { "type": "string" }, "example": ["isLicensed"] },
+          "class_patterns": { "type": "array", "items": { "type": "string" }, "example": ["purchase"] },
+          "required_calls": { "type": "array", "items": { "type": "string" }, "example": ["sharedpreferences"] },
+          "string_patterns": { "type": "array", "items": { "type": "string" }, "example": ["premium"] },
+          "return_type": { "type": "string", "example": "Z" },
+          "patch_type": { "type": "string", "example": "return_true" },
+          "weight": { "type": "number", "example": 1.5 },
+          "min_match_score": { "type": "number", "example": 12.0 }
+        }
+      },
+      "Artifact": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "example": "3f2b9c1a7e4d5f60" },
+          "filename": { "type": "string", "example": "sample.apk" },
+          "size": { "type": "integer", "example": 10485760 },
+          "sha256": { "type": "string", "example": "3f2b9c1a7e4d5f60..." }
+        }
+      },
+      "ScanJobSnapshot": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "state": { "type": "string", "enum": ["queued", "running", "succeeded", "failed", "canceled"] },
+          "artifact_id": { "type": "string" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "started_at": { "type": "string", "format": "date-time" },
+          "finished_at": { "type": "string", "format": "date-time" },
+          "error": { "type": "string" },
+          "output": { "type": "string" },
+          "output_truncated": { "type": "boolean" },
+          "reports": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "ScanJobResponse": {
+        "type": "object",
+        "properties": {
+          "job": { "$ref": "#/components/schemas/ScanJobSnapshot" },
+          "status_url": { "type": "string", "example": "/api/v1/scans/abc123" },
+          "reports_url": { "type": "string", "example": "/api/v1/scans/abc123/report/{name}" }
+        }
+      },
+      "MITMSession": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "timestamp": { "type": "string", "format": "date-time" },
+          "client_addr": { "type": "string" },
+          "method": { "type": "string" },
+          "url": { "type": "string" },
+          "host": { "type": "string" },
+          "proto": { "type": "string" },
+          "req_headers": { "type": "object", "additionalProperties": { "type": "string" } },
+          "req_body": { "type": "string" },
+          "status_code": { "type": "integer" },
+          "resp_headers": { "type": "object", "additionalProperties": { "type": "string" } },
+          "resp_body": { "type": "string" },
+          "duration_ms": { "type": "integer" },
+          "is_https": { "type": "boolean" },
+          "tls_version": { "type": "string" },
+          "injected": { "type": "boolean" },
+          "alerts": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

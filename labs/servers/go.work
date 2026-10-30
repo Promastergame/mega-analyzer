@@ -1,0 +1,32 @@
+// go.work for local development/testing of the labs/servers/ lab.
+//
+// This links every standalone Go lab server module (each keeps its own
+// go.mod so it still builds/dockerizes independently — see
+// labs/servers/README.md) together with the shared trackercollector sink,
+// so `go build ./go/admin-backdoor-header/...` (and the other explicit
+// module paths) run from labs/servers/ resolve against these modules in one
+// shot. It only affects `go` commands run with a working directory inside
+// labs/servers/ or below.
+//
+// Note: `go build ./...` from this directory does NOT recurse into the
+// use'd module subdirectories (that's a Go workspace quirk, not a config
+// error); build them by explicit path, or `cd` into an individual server
+// module and run `go build ./...` there — each go.mod is self-contained.
+//
+// Deliberately does NOT include the root mega-analyzer module: the root
+// module's pkg/ncer/labtest package talks to these lab servers purely over
+// HTTP (see pkg/ncer/labtest/helpers.go), never by importing them, so there
+// is no compile-time dependency to wire up here — and keeping the root
+// module out avoids `go work sync`/`go build` from this directory ever
+// touching the root module's go.mod/go.sum.
+go 1.26
+
+use (
+	./go/admin-backdoor-header
+	./go/admin-idor-role
+	./go/admin-jwt-none
+	./go/path-traversal-download
+	./go/sqli-login
+	./labkit
+	./trackercollector
+)

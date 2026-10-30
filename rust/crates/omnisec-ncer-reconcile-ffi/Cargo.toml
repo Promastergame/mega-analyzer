@@ -1,0 +1,24 @@
+[package]
+name = "omnisec-ncer-reconcile-ffi"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "C FFI bridge for NCER causal reconciliation — exposes omnisec-ncer-parse-net + omnisec-ncer-reconcile to Go via CGO."
+
+[lib]
+name = "omnisec_ncer_reconcile_ffi"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+omnisec-json = { path = "../omnisec-json" }
+omnisec-mitm          = { path = "../omnisec-mitm" }
+omnisec-ncer-parse-net = { path = "../omnisec-ncer-parse-net" }
+omnisec-ncer-reconcile = { path = "../omnisec-ncer-reconcile" }
+omnisec-ncer-types     = { path = "../omnisec-ncer-types" }
+
+[lints.rust]
+# FFI crates necessarily use raw pointers, extern "C", and #[no_mangle].
+# Allow unsafe_code here instead of inheriting the workspace deny.
+unsafe_code = "allow"

@@ -1,0 +1,15 @@
+[package]
+name = "omnisec-loader-macho"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Mach-O / FAT binary parser for OmniSec"
+
+[dependencies]
+omnisec-loader = { workspace = true }
+omnisec-core = { workspace = true }
+
+[lints]
+workspace = true

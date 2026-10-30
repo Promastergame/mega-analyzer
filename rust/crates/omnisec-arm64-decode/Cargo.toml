@@ -1,0 +1,11 @@
+[package]
+name = "omnisec-arm64-decode"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Zero-dependency ARM64 (A64) instruction decoder for OmniSec lifting and emulation."
+
+[lints]
+workspace = true

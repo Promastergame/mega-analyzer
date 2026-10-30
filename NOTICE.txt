@@ -1,0 +1,136 @@
+Mega-Analyzer Universal Binary Analysis Platform
+Copyright 2026 Promaster Development.
+
+=========================================================================
+                                 NOTICE
+=========================================================================
+
+Mega-Analyzer and its in-house components are dual-licensed under
+BSD-3-Clause OR GPL-2.0-only, at your option. See LICENSE for the BSD terms
+and COPYING for the GPLv2 terms. Redistribution and modification are permitted
+under the terms of the license you choose.
+
+Third-party components retain their own licenses; the choice above does not
+relicense them. Their notices and license texts must be preserved.
+
+-------------------------------------------------------------------------
+                     Third-Party Software Notices
+-------------------------------------------------------------------------
+
+This product integrates and links against various third-party software
+components. The third-party Rust crate listed below is MIT-licensed. Embedded
+compatibility tools retain the licenses listed in BUNDLED_TOOLS.json (binary
+archives) or pkg/internal/apkloader/embedtools/PROVENANCE.json (sources);
+their complete license texts are supplied in licenses/ or third-party/licenses/.
+
+Dependency manifests are `cargo tree --workspace` / `cargo metadata
+--format-version 1` for Rust and `go.mod` for Go. The Android editor now lives
+in the separate apk-editor repository. Regenerate these notices
+when bundled components change.
+
+1.  Rust workspace — third-party crates (complete list, alphabetical)
+
+    Sources: cargo metadata for the crates in `rust/crates/*`, regenerated
+    2026-09-17 after the seventh dependency-elimination pass. In-house crates
+    (omnisec-*, server/native/nifshim) are NOT listed here: they are part of
+    this product under BSD-3-Clause OR GPL-2.0-only.
+
+    Since the elimination pass the platform no longer uses third-party
+    error/logging/serialization/graph/collections/crypto/CLI/rayon crates.
+    The following are provided by in-house, dependency-free crates instead:
+      - omnisec-json (+ omnisec-json-derive, own proc-macros on the built-in
+        `proc_macro` crate only)      — replaces serde / serde_json
+      - omnisec-log                  — replaces tracing
+      - omnisec-collections          — replaces indexmap / rustc-hash / smallvec
+      - omnisec-graph                — replaces petgraph
+      - omnisec-crypto               — replaces sha2 / md-5 / chacha20poly1305 /
+        rand / ring (own SHA-256, MD-5, SHA-512, Ed25519 per RFC 8032,
+        ChaCha20-Poly1305 AEAD, OS cryptographic randomness for keys/nonces,
+        xorshift64* PRNG for non-security uses)
+      - omnisec-mitm::cert           — replaces rcgen (own minimal X.509 /
+        DER / PEM self-signed CA generator on top of the in-house Ed25519)
+      - omnisec-loader-elf::elfparse  — replaces goblin ELF parsing
+        (headers, program/section tables, symtab, dynsym via `.dynsym` with
+        a `PT_DYNAMIC` + SysV/GNU-hash fallback, DT_NEEDED/SONAME/RPATH)
+      - omnisec-loader-pe::peparse    — replaces goblin PE parsing
+        (COFF/optional headers, sections, imports by name and ordinal,
+        exports with forwarders, CLR presence bit)
+      - omnisec-debugger::dwarf       — replaces gimli (DWARF): API-preserving
+        zero-dep stub (`DwarfSymbolicator::new` / `resolve` keep their
+        signatures, `resolve` returns `None`); the debugger keeps resolving
+        symbols through the loader symtabs, callers already handle `None`
+      - omnisec-ebpf                      — retires aya (eBPF): `Backend::Aya`
+        kept for serialized-API compat but never selected; Linux falls back
+        to real `/proc` telemetry, `linux_aya` module deleted
+      - omnisec-mitm                      — retires tokio: all five proxy
+        servers (DHCP, DNS-spoof, obfuscated TCP, SSL-strip, CONNECT tunnel)
+        reimplemented on blocking std sockets + threads (thread-per-listener
+        and thread-per-connection, `set_read_timeout` for the old timer
+        bounds, half-close relay mirroring `copy_bidirectional`); no async
+        runtime remains anywhere in the workspace
+      - omnisec-core::error          — replaces thiserror (manual Display/Error)
+      - omnisec-mitm::MitmResult       — replaces anyhow
+        (`Box<dyn std::error::Error + Send + Sync>` alias + `std::io::Error`
+        carriers, so `?` on std-io keeps working with zero deps)
+      - omnisec-ml-gnn::ffi            — replaces libc malloc/free
+        (`alloc_f32_array` / `free_f32_array` on `std::alloc` with a u64
+        length prefix, malloc/free semantics without the caller passing sizes)
+      - omnisec-z3-worker::dynload     — replaces libloading (minimal
+        `open` + `symbol lookup` + `close-on-drop` over kernel32/dlopen,
+        std-only)
+      - server/native NIFs             — replace serde / serde_json with
+        omnisec-json (`to_json_string` / `from_json_str` / `json!`), rustc-hash
+        with `std::collections::HashMap`; boreal (YARA) removed — `scan_yara`
+        keeps its NIF entry point and returns a structured `unavailable`
+        status instead of matches
+      - third-party/iced-x86            — vendored zero-dep fork of iced-x86
+        1.21.0: 21 `lazy_static!` table statics rewritten to
+        `std::sync::LazyLock` (mechanical, use sites untouched via Deref;
+        one `#![allow]` dropped as unstable in closure position); wired via
+        `[patch.crates-io]` in all three Cargo workspaces
+      - hand-rolled CLI parser in omnisec-cli — replaces clap
+      - std::thread::scope           — replaces rayon
+    Deliberately accepted third-party code: iced-x86 1.21.0 (x86
+    disassembly), vendored into `third-party/iced-x86` with its only
+    dependency (`lazy_static`) eliminated — the vendored copy has zero
+    dependencies of its own. Everything else in the Rust workspace is in-house
+    or std-only.
+
+    The single remaining third-party Rust crate is MIT-licensed.
+
+    1. iced-x86 1.21.0 — License: MIT — https://github.com/icedland/iced (vendored, see above; full text: third-party/iced-x86/LICENSE.txt)
+
+2.  Go module (root `go.mod`) — ZERO third-party dependencies
+   - The Go side of the product is dependency-free: `go.mod` contains no
+     `require` directives; the standard library only.
+
+3.  Elixir/OTP application layer — ZERO third-party dependencies
+   - No hex packages in any of `server/mix.lock`,
+     `elixir_privserver/mock_server/mix.lock`,
+     `elixir_privserver/demo_game/mix.lock` (all intentionally empty).
+   - HTTP runs on OTP `:inets httpd` plus a minimal `:gen_tcp` HTTP/1.1
+     server (mock backend); WebSockets run on `:gen_tcp` with an
+     in-house RFC 6455 implementation. Previously used Phoenix, Plug,
+     Cowboy/Ranch, Telemetry, MIME, WebSock/WebSockAdapter, Jason and
+     Credo (dev-only) were fully removed — no code, no lockfile entries.
+   - JSON parsing/encoding — in-house codecs vendored per application
+     (`OmnisecServer.JSON`, `MockServer.JSON`, `BitArena.JSON`), zero
+    dependencies. Jason is NOT used anywhere, not even in tests.
+
+4.  APK Editor is maintained in the separate apk-editor repository.
+    Its own notices are documented there.
+
+-------------------------------------------------------------------------
+End of Third-Party Software Notices
+-------------------------------------------------------------------------
+
+-------------------------------------------------------------------------
+        APK compatibility tools
+-------------------------------------------------------------------------
+
+Native APK decode and build use in-house implementations and require no Java
+or Android SDK. Optional external compatibility backends require explicit
+--allow-external-tools permission and run tools as separate processes.
+The default build embeds compatibility tool assets; see the provenance manifest
+and the supplied license texts. Builds with the noembed tag omit those assets
+and resolve external tools from the environment when explicitly requested.

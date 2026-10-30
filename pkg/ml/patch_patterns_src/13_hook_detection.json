@@ -1,0 +1,161 @@
+[
+  {
+    "id": "FRIDA_DETECT",
+    "category": "hook_detection",
+    "description": "Detects Frida hooking framework",
+    "method_names": [
+      "isfridadetected",
+      "checkfrida",
+      "detectfrida",
+      "isfridainstalled",
+      "isfridaserverrunning",
+      "checkforhooks",
+      "ishooked"
+    ],
+    "class_patterns": [
+      "frida",
+      "hookdetect",
+      "antihook",
+      "fridacheck",
+      "antifrida"
+    ],
+    "required_calls": [
+      "runtime;->exec",
+      "file;->exists",
+      "serversocket",
+      "localsocket"
+    ],
+    "string_patterns": [
+      "frida",
+      "frida-server",
+      "gmain",
+      "linjector",
+      "27042",
+      "/data/local/tmp/frida",
+      "re.frida.server"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 12
+  },
+  {
+    "id": "XPOSED_DETECT",
+    "category": "hook_detection",
+    "description": "Detects Xposed framework",
+    "method_names": [
+      "isxposedinstalled",
+      "checkxposed",
+      "detectxposed",
+      "isxposedactive",
+      "hasxposed"
+    ],
+    "class_patterns": [
+      "xposed",
+      "xposedcheck",
+      "antixposed",
+      "hookcheck"
+    ],
+    "required_calls": [
+      "classloader;->loadclass",
+      "class;->forname",
+      "stacktraceelement"
+    ],
+    "string_patterns": [
+      "de.robv.android.xposed",
+      "xposedbridge",
+      "xposed_bridge",
+      "xposedhelpers",
+      "lspatch",
+      "lsposed"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 12
+  },
+  {
+    "id": "LSPOSED_RIRU_DETECT",
+    "category": "hook_detection",
+    "description": "LSPosed / Riru / EdXposed module framework detection",
+    "method_names": [
+      "islsposedinstalled",
+      "isriruinstalled",
+      "checkriru",
+      "checklsposed",
+      "detectlsposed",
+      "isedxposedactive",
+      "checktaichi",
+      "islsposedactive"
+    ],
+    "class_patterns": [
+      "lsposed",
+      "riru",
+      "edxposed",
+      "taichi",
+      "virtualxposed",
+      "lspatch"
+    ],
+    "required_calls": [
+      "class;->forname",
+      "stacktraceelement",
+      "classloader;->loadclass"
+    ],
+    "string_patterns": [
+      "lsposed",
+      "lspatch",
+      "riru",
+      "rirud",
+      "edxposed",
+      "taichi",
+      "org.lsposed.lspatch",
+      "org.lsposed.manager",
+      "io.github.lsposed",
+      "de.robv.android.xposed"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1.0,
+    "min_match_score": 12
+  },
+  {
+    "id": "VIRTUAL_SPACE_DETECT",
+    "category": "hook_detection",
+    "description": "VirtualApp / VirtualXposed / Island virtual space detection",
+    "method_names": [
+      "isvirtualapp",
+      "isvirtualenvironment",
+      "detectvirtualspace",
+      "isvirtualxposed",
+      "isrunningvirtual",
+      "checkisland",
+      "isinsandbox",
+      "virtualspacecheck"
+    ],
+    "class_patterns": [
+      "virtualapp",
+      "virtualxposed",
+      "islandcheck",
+      "virtualspace",
+      "sandboxcheck",
+      "virtualdetect"
+    ],
+    "required_calls": [
+      "class;->forname",
+      "file;->exists",
+      "packagemanager;->getpackageinfo"
+    ],
+    "string_patterns": [
+      "io.va.exposed",
+      "com.lody.virtual",
+      "virtualapp",
+      "virtualxposed",
+      "com.oasisfeng.island",
+      "com.flyingzl.virtual"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 12
+  }
+]

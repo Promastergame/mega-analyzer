@@ -1,0 +1,25 @@
+{
+  "patches": [
+    {
+      "method_name": "Mini.checkTrue",
+      "file_path": "smali/com/example/Mini.smali",
+      "original_code": "const/4 v0, 0x0\nif-eqz v0, :cond_0\nconst/4 v0, 0x1\nreturn v0\n:cond_0\nconst/4 v0, 0x0\nreturn v0",
+      "patched_code": "const/4 v0, 0x0\nif-eqz v0, :cond_0\nconst/4 v0, 0x1\nreturn v0\n:cond_0\nconst/4 v0, 0x0\nreturn v0",
+      "patch_type": "return_true"
+    },
+    {
+      "method_name": "Mini.checkFalse",
+      "file_path": "smali/com/example/Mini.smali",
+      "original_code": "const/4 v0, 0x1\nif-eqz v0, :cond_0\nconst/4 v0, 0x0\nreturn v0\n:cond_0\nconst/4 v0, 0x1\nreturn v0",
+      "patched_code": "const/4 v0, 0x1\nif-eqz v0, :cond_0\nconst/4 v0, 0x0\nreturn v0\n:cond_0\nconst/4 v0, 0x1\nreturn v0",
+      "patch_type": "return_false"
+    },
+    {
+      "method_name": "Mini.checkMax",
+      "file_path": "smali/com/example/Mini.smali",
+      "original_code": "const/4 v0, 0x0\nif-eqz v0, :cond_0\nconst/16 v0, 0x7fff\nreturn v0\n:cond_0\nconst/4 v0, 0x0\nreturn v0",
+      "patched_code": "const/4 v0, 0x0\nif-eqz v0, :cond_0\nconst/16 v0, 0x7fff\nreturn v0\n:cond_0\nconst/4 v0, 0x0\nreturn v0",
+      "patch_type": "return_max_int"
+    }
+  ]
+}

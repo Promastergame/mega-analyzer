@@ -1,0 +1,29 @@
+[package]
+name = "omnisec-ml-gnn"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec GNN — graph neural network inference + training for DEX license/piracy detection."
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+# Enables the "__dummy__" path in `gnn_model_load` (local dev / integration tests only).
+dummy-model = []
+
+[dependencies]
+omnisec-json = { path = "../omnisec-json" }
+omnisec-core.workspace = true
+
+[dev-dependencies]
+
+[lints]
+workspace = true
+
+[[bin]]
+name = "gnn-train"
+path = "src/bin/gnn_train.rs"

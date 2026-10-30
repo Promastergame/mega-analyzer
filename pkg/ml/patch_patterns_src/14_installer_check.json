@@ -1,0 +1,36 @@
+[
+  {
+    "id": "INSTALLER_CHECK",
+    "category": "installer_check",
+    "description": "Checks if installed from official store",
+    "method_names": [
+      "isfromplaystore",
+      "islegitinstall",
+      "checkinstaller",
+      "verifyinstaller",
+      "isvalidinstaller",
+      "getinstallerpackage"
+    ],
+    "class_patterns": [
+      "installer",
+      "storecheck",
+      "playstore",
+      "installverify"
+    ],
+    "required_calls": [
+      "getinstallerpackagename",
+      "getinstallsourceinfo",
+      "packagemanager"
+    ],
+    "string_patterns": [
+      "com.android.vending",
+      "com.google.android.feedback",
+      "com.amazon.venezia",
+      "com.sec.android.app.samsungapps"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.7,
+    "min_match_score": 12
+  }
+]

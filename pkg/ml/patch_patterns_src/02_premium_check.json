@@ -1,0 +1,193 @@
+[
+  {
+    "id": "PREMIUM_CHECK",
+    "category": "premium_check",
+    "description": "Checks premium/pro user status",
+    "method_names": [
+      "ispremium",
+      "ispro",
+      "isproversion",
+      "isfullversion",
+      "ispaid",
+      "isvip",
+      "isgold",
+      "isplatinum",
+      "haspremium",
+      "haspro",
+      "getpremiumstatus"
+    ],
+    "class_patterns": [
+      "premium",
+      "proversion",
+      "fullversion",
+      "vip",
+      "membership",
+      "userstatus"
+    ],
+    "required_calls": [
+      "getpremiumstatus",
+      "ispurchased",
+      "getsharedpreferences"
+    ],
+    "string_patterns": [
+      "premium",
+      "pro_version",
+      "is_premium",
+      "premium_status",
+      "full_version"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1,
+    "min_match_score": 12
+  },
+  {
+    "id": "CURRENCY_GETTER",
+    "category": "premium_check",
+    "description": "Gets in-game currency/coins amount",
+    "method_names": [
+      "getcoins",
+      "getgems",
+      "getdiamonds",
+      "getcurrency",
+      "getgold",
+      "getbalance",
+      "getcredits",
+      "getstars",
+      "getenergy",
+      "getlives",
+      "getpoints"
+    ],
+    "class_patterns": [
+      "currency",
+      "wallet",
+      "inventory",
+      "economy",
+      "bank",
+      "coins"
+    ],
+    "required_calls": [
+      "getint",
+      "getlong",
+      "getsharedpreferences"
+    ],
+    "string_patterns": null,
+    "return_type": "I",
+    "patch_type": "return_max_int",
+    "weight": 0.7,
+    "min_match_score": 10
+  },
+  {
+    "id": "OBFUSCATED_BOOL_GATE",
+    "category": "premium_check",
+    "description": "Obfuscated boolean gate (short Z-returning method with if-check)",
+    "method_names": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g"
+    ],
+    "class_patterns": [],
+    "required_calls": [
+      "sharedpreferences;->getboolean",
+      "sharedpreferences;->getstring",
+      "sharedpreferences;->getint"
+    ],
+    "string_patterns": [
+      "premium",
+      "pro",
+      "vip",
+      "paid",
+      "purchased",
+      "subscribed",
+      "licensed",
+      "unlocked",
+      "is_premium",
+      "is_pro",
+      "has_purchased"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.7,
+    "min_match_score": 15
+  },
+  {
+    "id": "pj07",
+    "category": "premium_check",
+    "description": "VIP/premium active flag — force active",
+    "method_names": [
+      "isvipactive",
+      "ispremiumactive",
+      "isvip",
+      "haspremium",
+      "ispro"
+    ],
+    "class_patterns": [
+      "vip",
+      "premium",
+      "pro",
+      "account"
+    ],
+    "required_calls": [],
+    "string_patterns": [
+      "vip",
+      "premium",
+      "is_pro"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.1,
+    "min_match_score": 11
+  },
+  {
+    "id": "FREEMIUM_GATE",
+    "category": "premium_check",
+    "description": "Freemium unlock / full-version gate (e.g. smellymoo.sand Freemium) - force unlocked",
+    "method_names": [
+      "isunlocked",
+      "isfullversion",
+      "isfull",
+      "ispremium",
+      "ispro",
+      "ispaid",
+      "haspurchased",
+      "hasfullversion",
+      "iseverythingunlocked",
+      "allunlocked",
+      "isfreemium",
+      "checkunlocked",
+      "isupgraded"
+    ],
+    "class_patterns": [
+      "freemium",
+      "premium",
+      "fullversion",
+      "upgrade",
+      "store",
+      "unlock"
+    ],
+    "required_calls": [
+      "getboolean",
+      "getsharedpreferences",
+      "querypurchases",
+      "getpurchases"
+    ],
+    "string_patterns": [
+      "freemium",
+      "full_version",
+      "is_premium",
+      "unlock_all",
+      "never_unlock",
+      "unlocked",
+      "premium",
+      "upgraded"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.15,
+    "min_match_score": 10
+  }
+]

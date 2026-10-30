@@ -1,0 +1,3533 @@
+[
+  {
+    "id": "LICENSE_BOOL_CHECK",
+    "category": "license_check",
+    "description": "Boolean license validation method",
+    "method_names": [
+      "islicensed",
+      "checklicense",
+      "validatelicense",
+      "licensecheck",
+      "isregistered",
+      "checkregistration",
+      "isactivated",
+      "verifyregistration",
+      "haslicense"
+    ],
+    "class_patterns": [
+      "license",
+      "licensing",
+      "licensecheck",
+      "licensevalidat",
+      "registration"
+    ],
+    "required_calls": [
+      "checklicense",
+      "getpackageinfo",
+      "validatelicense"
+    ],
+    "string_patterns": null,
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1,
+    "min_match_score": 15
+  },
+  {
+    "id": "LVL_ALLOW",
+    "category": "license_check",
+    "description": "Google LVL license callback (allow/dontAllow)",
+    "method_names": [
+      "allow",
+      "dontallow",
+      "applicationerror",
+      "verify",
+      "handleresponse"
+    ],
+    "class_patterns": [
+      "licensechecker",
+      "licensevalidator",
+      "licensecheckcallback",
+      "servermanaged",
+      "apsforcheckcallback"
+    ],
+    "required_calls": [
+      "checklicense",
+      "licensecheckcallback",
+      "iinlicensingservice"
+    ],
+    "string_patterns": [
+      "com.android.vending.licensing",
+      "licensing.iinlicensingservice"
+    ],
+    "return_type": "V",
+    "patch_type": "return_void",
+    "weight": 1.2,
+    "min_match_score": 12
+  },
+  {
+    "id": "OBFUSC_LICENSE_KEY",
+    "category": "license_check",
+    "description": "Obfuscated / encrypted license key validation",
+    "method_names": [
+      "verifylicensekey",
+      "checklicensekey",
+      "validatelicensekey",
+      "decryptlicense",
+      "checkserialnumber",
+      "verifyserial",
+      "checkactivationcode",
+      "validateactivation"
+    ],
+    "class_patterns": [
+      "licensekey",
+      "serialcheck",
+      "activationcheck",
+      "licensevalidat",
+      "keyvalidat",
+      "obfusclicense"
+    ],
+    "required_calls": [
+      "cipher;->dofinal",
+      "messagedigest;->digest",
+      "base64;->decode",
+      "secretkeyspec"
+    ],
+    "string_patterns": [
+      "license_key",
+      "serial_number",
+      "activation_code",
+      "license_hash",
+      "key_salt",
+      "product_key"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.2,
+    "min_match_score": 15
+  },
+  {
+    "id": "PURCHASE_VERIFY",
+    "category": "billing",
+    "description": "Purchase signature/receipt verification",
+    "method_names": [
+      "verifypurchase",
+      "validatepurchase",
+      "checkpurchase",
+      "ispurchased",
+      "ispurchasevalid",
+      "verifyreceipt",
+      "validatereceipt",
+      "verifysignature"
+    ],
+    "class_patterns": [
+      "billing",
+      "purchase",
+      "iab",
+      "inapp",
+      "billingclient",
+      "billingservice"
+    ],
+    "required_calls": [
+      "verifysignature",
+      "querypurchases",
+      "getpurchases",
+      "consumepurchase",
+      "acknowledgepurchase"
+    ],
+    "string_patterns": [
+      "com.android.vending.billing",
+      "inappbillingservice",
+      "purchasetoken"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1,
+    "min_match_score": 15
+  },
+  {
+    "id": "BILLING_SUPPORTED",
+    "category": "billing",
+    "description": "Checks if billing/IAP is available",
+    "method_names": [
+      "isbillingsupported",
+      "isiapavailable",
+      "ispurchaseavailable",
+      "canbuy",
+      "isplayservicesavailable"
+    ],
+    "class_patterns": [
+      "billing",
+      "iab",
+      "inapp",
+      "playstore"
+    ],
+    "required_calls": [
+      "isbillingsupported",
+      "queryskudetails",
+      "getskudetails"
+    ],
+    "string_patterns": null,
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.8,
+    "min_match_score": 12
+  },
+  {
+    "id": "IAP_PURCHASE_STATE",
+    "category": "billing",
+    "description": "Play Billing purchase-state / ownership gate (queryPurchasesAsync, acknowledge) - force owned",
+    "method_names": [
+      "ispurchased",
+      "getpurchasestate",
+      "isacknowledged",
+      "hasacknowledged",
+      "hasconsumed",
+      "hasrefunded",
+      "ispending",
+      "isperiodgrace",
+      "checksubscriptions",
+      "haspurchase",
+      "ownsproduct",
+      "isproductowned",
+      "ispurchaseacknowledged",
+      "hasactivepurchase"
+    ],
+    "class_patterns": [
+      "billing",
+      "purchase",
+      "billingclient",
+      "iap",
+      "inapp",
+      "store"
+    ],
+    "required_calls": [
+      "querypurchasesasync",
+      "querypurchases",
+      "acknowledgepurchase",
+      "consumeasync",
+      "purchase;->getpurchasestate"
+    ],
+    "string_patterns": [
+      "inapp_purchase_data",
+      "com.android.vending.billing",
+      "purchasestate",
+      "enablependingpurchases"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.0,
+    "min_match_score": 12
+  },
+  {
+    "id": "PREMIUM_CHECK",
+    "category": "premium_check",
+    "description": "Checks premium/pro user status",
+    "method_names": [
+      "ispremium",
+      "ispro",
+      "isproversion",
+      "isfullversion",
+      "ispaid",
+      "isvip",
+      "isgold",
+      "isplatinum",
+      "haspremium",
+      "haspro",
+      "getpremiumstatus"
+    ],
+    "class_patterns": [
+      "premium",
+      "proversion",
+      "fullversion",
+      "vip",
+      "membership",
+      "userstatus"
+    ],
+    "required_calls": [
+      "getpremiumstatus",
+      "ispurchased",
+      "getsharedpreferences"
+    ],
+    "string_patterns": [
+      "premium",
+      "pro_version",
+      "is_premium",
+      "premium_status",
+      "full_version"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1,
+    "min_match_score": 12
+  },
+  {
+    "id": "CURRENCY_GETTER",
+    "category": "premium_check",
+    "description": "Gets in-game currency/coins amount",
+    "method_names": [
+      "getcoins",
+      "getgems",
+      "getdiamonds",
+      "getcurrency",
+      "getgold",
+      "getbalance",
+      "getcredits",
+      "getstars",
+      "getenergy",
+      "getlives",
+      "getpoints"
+    ],
+    "class_patterns": [
+      "currency",
+      "wallet",
+      "inventory",
+      "economy",
+      "bank",
+      "coins"
+    ],
+    "required_calls": [
+      "getint",
+      "getlong",
+      "getsharedpreferences"
+    ],
+    "string_patterns": null,
+    "return_type": "I",
+    "patch_type": "return_max_int",
+    "weight": 0.7,
+    "min_match_score": 10
+  },
+  {
+    "id": "OBFUSCATED_BOOL_GATE",
+    "category": "premium_check",
+    "description": "Obfuscated boolean gate (short Z-returning method with if-check)",
+    "method_names": [
+      "a",
+      "b",
+      "c",
+      "d",
+      "e",
+      "f",
+      "g"
+    ],
+    "class_patterns": [],
+    "required_calls": [
+      "sharedpreferences;->getboolean",
+      "sharedpreferences;->getstring",
+      "sharedpreferences;->getint"
+    ],
+    "string_patterns": [
+      "premium",
+      "pro",
+      "vip",
+      "paid",
+      "purchased",
+      "subscribed",
+      "licensed",
+      "unlocked",
+      "is_premium",
+      "is_pro",
+      "has_purchased"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.7,
+    "min_match_score": 15
+  },
+  {
+    "id": "pj07",
+    "category": "premium_check",
+    "description": "VIP/premium active flag — force active",
+    "method_names": [
+      "isvipactive",
+      "ispremiumactive",
+      "isvip",
+      "haspremium",
+      "ispro"
+    ],
+    "class_patterns": [
+      "vip",
+      "premium",
+      "pro",
+      "account"
+    ],
+    "required_calls": [],
+    "string_patterns": [
+      "vip",
+      "premium",
+      "is_pro"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.1,
+    "min_match_score": 11
+  },
+  {
+    "id": "FREEMIUM_GATE",
+    "category": "premium_check",
+    "description": "Freemium unlock / full-version gate (e.g. smellymoo.sand Freemium) - force unlocked",
+    "method_names": [
+      "isunlocked",
+      "isfullversion",
+      "isfull",
+      "ispremium",
+      "ispro",
+      "ispaid",
+      "haspurchased",
+      "hasfullversion",
+      "iseverythingunlocked",
+      "allunlocked",
+      "isfreemium",
+      "checkunlocked",
+      "isupgraded"
+    ],
+    "class_patterns": [
+      "freemium",
+      "premium",
+      "fullversion",
+      "upgrade",
+      "store",
+      "unlock"
+    ],
+    "required_calls": [
+      "getboolean",
+      "getsharedpreferences",
+      "querypurchases",
+      "getpurchases"
+    ],
+    "string_patterns": [
+      "freemium",
+      "full_version",
+      "is_premium",
+      "unlock_all",
+      "never_unlock",
+      "unlocked",
+      "premium",
+      "upgraded"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.15,
+    "min_match_score": 10
+  },
+  {
+    "id": "SUBSCRIPTION_CHECK",
+    "category": "subscription",
+    "description": "Checks active subscription status",
+    "method_names": [
+      "issubscribed",
+      "hassubscription",
+      "hasactivesubscription",
+      "issubscriptionactive",
+      "issubscriptionvalid",
+      "checksubscription",
+      "getsubscriptionstatus"
+    ],
+    "class_patterns": [
+      "subscription",
+      "subscribe",
+      "membership",
+      "recurringbilling"
+    ],
+    "required_calls": [
+      "querypurchases",
+      "getpurchasehistory",
+      "issubscribed",
+      "acknowledgepurchase"
+    ],
+    "string_patterns": [
+      "subs",
+      "subscription",
+      "monthly",
+      "yearly",
+      "annual",
+      "weekly"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1,
+    "min_match_score": 12
+  },
+  {
+    "id": "REVENUECAT_CHECK",
+    "category": "subscription",
+    "description": "RevenueCat/Purchases SDK entitlement check",
+    "method_names": [
+      "getcustomerinfo",
+      "getentitlements",
+      "isentitlementactive",
+      "getofferings",
+      "purchasepackage",
+      "checkcustomerinfo",
+      "isactive",
+      "getactiveentitlements"
+    ],
+    "class_patterns": [
+      "revenuecat",
+      "purchases",
+      "entitlement",
+      "customerinfo",
+      "offerings"
+    ],
+    "required_calls": [
+      "purchases;->getcustomerinfo",
+      "entitlementinfo;->isactive",
+      "customerinfo;->getentitlements"
+    ],
+    "string_patterns": [
+      "revenuecat",
+      "rc_",
+      "entitlement",
+      "pro_access",
+      "premium_access",
+      "all_access",
+      "offerings",
+      "customer_info"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.2,
+    "min_match_score": 12
+  },
+  {
+    "id": "pj08",
+    "category": "subscription",
+    "description": "Subscription active check — force active",
+    "method_names": [
+      "issubscriptionactive",
+      "hasactivesubscription",
+      "issubscribed",
+      "checksubscription"
+    ],
+    "class_patterns": [
+      "subscription",
+      "billing",
+      "membership"
+    ],
+    "required_calls": [],
+    "string_patterns": [
+      "subscription",
+      "subscribed",
+      "active"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.1,
+    "min_match_score": 11
+  },
+  {
+    "id": "AD_SHOW",
+    "category": "ads",
+    "description": "Controls whether ads should be displayed",
+    "method_names": [
+      "shouldshowad",
+      "shouldshowads",
+      "showad",
+      "showads",
+      "displayad",
+      "loadad",
+      "showinterstitial",
+      "showbannerad",
+      "showrewardedad",
+      "canshowad"
+    ],
+    "class_patterns": [
+      "admanager",
+      "adcontroller",
+      "adhelper",
+      "admob",
+      "adloader",
+      "adview"
+    ],
+    "required_calls": [
+      "loadad",
+      "show(",
+      "requestad",
+      "showinterstitial",
+      "loadinterstitial"
+    ],
+    "string_patterns": null,
+    "return_type": "V",
+    "patch_type": "return_void",
+    "weight": 0.7,
+    "min_match_score": 12
+  },
+  {
+    "id": "AD_FREE_CHECK",
+    "category": "ads",
+    "description": "Checks if user purchased ad removal",
+    "method_names": [
+      "isadfree",
+      "isadremoved",
+      "hasremovedads",
+      "isnoads",
+      "shouldhideads",
+      "isadsfree",
+      "haspurchasedadremoval",
+      "isadblocked"
+    ],
+    "class_patterns": [
+      "admanager",
+      "adcontroller",
+      "settings",
+      "premium"
+    ],
+    "required_calls": null,
+    "string_patterns": [
+      "remove_ads",
+      "ad_free",
+      "no_ads",
+      "ads_removed",
+      "ad_removal"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.8,
+    "min_match_score": 10
+  },
+  {
+    "id": "pj10",
+    "category": "ads",
+    "description": "Ad gating flag (shouldShowAds) — force no ads",
+    "method_names": [
+      "shouldshowads",
+      "canshowads",
+      "isadenabled",
+      "showads",
+      "isadsremoved"
+    ],
+    "class_patterns": [
+      "ads",
+      "advert",
+      "monetization"
+    ],
+    "required_calls": [],
+    "string_patterns": [
+      "show_ads",
+      "ads_enabled",
+      "remove_ads"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1.0,
+    "min_match_score": 10
+  },
+  {
+    "id": "ROOT_DETECT",
+    "category": "root_detection",
+    "description": "Detects rooted device",
+    "method_names": [
+      "isrooted",
+      "isdevicerooted",
+      "checkroot",
+      "detectroot",
+      "hassuperuser",
+      "checksu",
+      "isrooteddevice",
+      "rootcheck",
+      "isrootavailable"
+    ],
+    "class_patterns": [
+      "rootcheck",
+      "rootdetect",
+      "rootutil",
+      "rootbeer",
+      "safetyutils",
+      "devicecheck"
+    ],
+    "required_calls": [
+      "runtime;->exec",
+      "file;->exists",
+      "getdefault",
+      "canexecutecommand"
+    ],
+    "string_patterns": [
+      "/system/app/superuser.apk",
+      "/system/xbin/su",
+      "/sbin/su",
+      "/system/bin/su",
+      "/data/local/bin/su",
+      "com.noshufou.android.su",
+      "eu.chainfire.supersu",
+      "com.topjohnwu.magisk",
+      "test-keys",
+      "busybox"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1,
+    "min_match_score": 12
+  },
+  {
+    "id": "MAGISK_DETECT",
+    "category": "root_detection",
+    "description": "Detects Magisk or root hiding",
+    "method_names": [
+      "checkmagisk",
+      "detectmagisk",
+      "ismagiskinstalled",
+      "checkmagiskhide",
+      "detectroothiding",
+      "ismagiskpresent",
+      "findmagisk"
+    ],
+    "class_patterns": [
+      "magisk",
+      "roothide",
+      "magiskcheck",
+      "magiskdetect"
+    ],
+    "required_calls": [
+      "runtime;->exec",
+      "file;->exists",
+      "packagemanager;->getinstalledpackages",
+      "class;->forname"
+    ],
+    "string_patterns": [
+      "com.topjohnwu.magisk",
+      "magiskmanager",
+      "magiskhide",
+      "/sbin/.magisk",
+      "magisk.sqlite",
+      "zygisk"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 12
+  },
+  {
+    "id": "KERNELSU_DETECT",
+    "category": "root_detection",
+    "description": "KernelSU / APatch kernel-level root detection",
+    "method_names": [
+      "checkkernelsu",
+      "iskernelsuinstalled",
+      "detectkernelroot",
+      "iskernelrooted",
+      "checkapatch",
+      "isapatchinstalled",
+      "getksuversion",
+      "kernelrootcheck"
+    ],
+    "class_patterns": [
+      "kernelsu",
+      "apatch",
+      "kernelroot",
+      "zygisknext",
+      "ksucheck"
+    ],
+    "required_calls": [
+      "file;->exists",
+      "runtime;->exec",
+      "bufferedreader;->readline"
+    ],
+    "string_patterns": [
+      "kernelsu",
+      "ksud",
+      "/data/adb/ksud",
+      "apatch",
+      "apd",
+      "/data/adb/apd",
+      "zygisk_next",
+      "ksu_version",
+      "/proc/version"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1.1,
+    "min_match_score": 12
+  },
+  {
+    "id": "pj09",
+    "category": "root_detection",
+    "description": "BusyBox / su binary root check — force false",
+    "method_names": [
+      "checkbusybox",
+      "hasbusybox",
+      "detectsu",
+      "issubinarypresent",
+      "checkrootbinaries"
+    ],
+    "class_patterns": [
+      "root",
+      "busybox",
+      "superuser",
+      "detection"
+    ],
+    "required_calls": [],
+    "string_patterns": [
+      "busybox",
+      "/system/xbin/su",
+      "/system/bin/su",
+      "superuser.apk"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1.1,
+    "min_match_score": 11
+  },
+  {
+    "id": "EMULATOR_DETECT",
+    "category": "emulator_detection",
+    "description": "Detects Android emulator",
+    "method_names": [
+      "isemulator",
+      "detectemulator",
+      "checkemulator",
+      "isrunningonemu",
+      "isrunonemu",
+      "isvirtualdevice",
+      "issimulator",
+      "isemulatorenvironment"
+    ],
+    "class_patterns": [
+      "emulator",
+      "emucheck",
+      "devicecheck",
+      "environment",
+      "antiemulator"
+    ],
+    "required_calls": [
+      "build;->fingerprint",
+      "build;->model",
+      "build;->manufacturer",
+      "build;->hardware",
+      "build;->product",
+      "build;->brand",
+      "telephonymanager",
+      "sensormanager"
+    ],
+    "string_patterns": [
+      "generic",
+      "unknown",
+      "sdk",
+      "google_sdk",
+      "goldfish",
+      "ranchu",
+      "andy",
+      "ttvm_hdragon",
+      "genymotion",
+      "vbox86",
+      "nox",
+      "bluestacks",
+      "15555215554"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1,
+    "min_match_score": 12
+  },
+  {
+    "id": "ANTI_VM_DETECT",
+    "category": "emulator_detection",
+    "description": "Detects virtual machine/sandbox environment",
+    "method_names": [
+      "isvirtualmachine",
+      "isvm",
+      "issandbox",
+      "detectvm",
+      "checkvm",
+      "isvbox",
+      "isqemu",
+      "detectvirtualenvironment",
+      "isvmos",
+      "iscloudemulator"
+    ],
+    "class_patterns": [
+      "vmdetect",
+      "sandbox",
+      "virtual",
+      "antivm",
+      "environment"
+    ],
+    "required_calls": [
+      "build;->hardware",
+      "build;->model",
+      "build;->fingerprint",
+      "build;->manufacturer",
+      "file;->exists",
+      "runtime;->exec"
+    ],
+    "string_patterns": [
+      "vbox",
+      "virtualbox",
+      "vmware",
+      "qemu",
+      "genymotion",
+      "nox",
+      "bluestacks",
+      "memu",
+      "ldplayer",
+      "gameloop",
+      "mumu",
+      "/dev/vboxguest",
+      "/dev/vboxuser",
+      "vmos",
+      "x86",
+      "goldfish"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1,
+    "min_match_score": 12
+  },
+  {
+    "id": "APP_CLONE_DETECT",
+    "category": "emulator_detection",
+    "description": "Dual-space / parallel space / clone app detection",
+    "method_names": [
+      "iscloneapp",
+      "isparallelspace",
+      "isdualspace",
+      "checkcloneapp",
+      "detectclone",
+      "isrunninginclone",
+      "isworkprofile",
+      "ismultiuser",
+      "issecondaryuser",
+      "checkparallelspace"
+    ],
+    "class_patterns": [
+      "clonedetect",
+      "parallelspace",
+      "dualspace",
+      "multiuser",
+      "workprofile",
+      "cloneapp"
+    ],
+    "required_calls": [
+      "usermanager;->getusers",
+      "usermanager;->getuserid",
+      "packagemanager;->getinstalledpackages",
+      "createpackagecontextasuser"
+    ],
+    "string_patterns": [
+      "com.lbe.parallel",
+      "com.ludashi.dualspace",
+      "com.excelliance.dualaid",
+      "parallel_space",
+      "virtualapp",
+      "work_profile",
+      "clone_app",
+      "multi_space"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1.0,
+    "min_match_score": 12
+  },
+  {
+    "id": "DEVICE_FARM_DETECT",
+    "category": "emulator_detection",
+    "description": "Device farm / UIAutomator / cloud test automation detection",
+    "method_names": [
+      "isautomation",
+      "detectautomation",
+      "isuiautomationenabled",
+      "istestenvironment",
+      "checkdevicefarm",
+      "isinstrumentationenabled",
+      "isuitesting",
+      "checkautomation",
+      "isrobotrunning"
+    ],
+    "class_patterns": [
+      "uiautomation",
+      "instrumentationregistry",
+      "testfarm",
+      "devicefarm",
+      "automationdetect",
+      "uitestchecker"
+    ],
+    "required_calls": [
+      "instrumentationregistry;->getinstrumentation",
+      "activitymanager;->isruningintest",
+      "systemproperties;->get"
+    ],
+    "string_patterns": [
+      "uiautomator",
+      "espresso",
+      "robotium",
+      "appium",
+      "monkeyrunner",
+      "testlab",
+      "firebase_test_lab",
+      "automated_testing",
+      "ui_testing",
+      "automation_id"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 10
+  },
+  {
+    "id": "SPEED_HACK_DETECT",
+    "category": "emulator_detection",
+    "description": "Game speed-hack / frame-time manipulation detection",
+    "method_names": [
+      "detectspeedhack",
+      "checkgamespeed",
+      "isspeedhackactive",
+      "verifyframetime",
+      "checktimedrif",
+      "istimenormal",
+      "checkclockdrift",
+      "detecttimescale",
+      "verifyenginespeeed"
+    ],
+    "class_patterns": [
+      "speedhackdetector",
+      "gamespeed",
+      "frametimer",
+      "antispeedhack",
+      "clockchecker",
+      "speeddetect"
+    ],
+    "required_calls": [
+      "system;->nanotime",
+      "systemclock;->elapsedrealtime",
+      "systemclock;->uptimemillis",
+      "choreographer;->getlastframetime"
+    ],
+    "string_patterns": [
+      "speed_hack",
+      "game_speed",
+      "speedhack",
+      "timescale",
+      "speed_multiplier",
+      "clock_drift",
+      "frame_time_anomaly"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 10
+  },
+  {
+    "id": "MULTI_USER_CHECK",
+    "category": "emulator_detection",
+    "description": "Multi-user / work-profile secondary user detection",
+    "method_names": [
+      "ismultiuser",
+      "issecondaryuser",
+      "checkworkprofile",
+      "isworkprofile",
+      "ismanagedprofile",
+      "detectmultiuser",
+      "getuserbadge",
+      "checkprofiletype"
+    ],
+    "class_patterns": [
+      "usermanager",
+      "profilemanager",
+      "workprofile",
+      "multiusercheck",
+      "usercheck"
+    ],
+    "required_calls": [
+      "usermanager;->ismanageprofile",
+      "usermanager;->issystemuser",
+      "usermanager;->getuserid"
+    ],
+    "string_patterns": [
+      "work_profile",
+      "secondary_user",
+      "managed_profile",
+      "user_id",
+      "profile_owner",
+      "multi_user"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.8,
+    "min_match_score": 10
+  },
+  {
+    "id": "DEBUG_DETECT",
+    "category": "debug_detection",
+    "description": "Detects debugging/debugger attached",
+    "method_names": [
+      "isdebuggable",
+      "isdebugging",
+      "isdebuggerattached",
+      "checkdebug",
+      "detectdebugger",
+      "isbeingdebugged",
+      "isdebugmode",
+      "antidebug"
+    ],
+    "class_patterns": [
+      "debugcheck",
+      "debugdetect",
+      "antidebug",
+      "security",
+      "protection"
+    ],
+    "required_calls": [
+      "debug;->isdebuggable",
+      "debug;->isdebuggerconnected",
+      "debug;->waitingfordebugger",
+      "applicationinfo;->flags"
+    ],
+    "string_patterns": [
+      "flag_debuggable",
+      "android.os.debug",
+      "debuggerconnected"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 12
+  },
+  {
+    "id": "TAMPER_DETECT",
+    "category": "tamper_detection",
+    "description": "Detects APK tampering/modification",
+    "method_names": [
+      "istampered",
+      "checktamper",
+      "detecttamper",
+      "ismodified",
+      "isapkmodified",
+      "checkintegrity",
+      "verifyapk",
+      "isoriginal",
+      "isaltered"
+    ],
+    "class_patterns": [
+      "tamper",
+      "integrity",
+      "apkcheck",
+      "selfcheck",
+      "antimod"
+    ],
+    "required_calls": [
+      "packagemanager;->getpackageinfo",
+      "zipfile",
+      "crc32",
+      "messagedigest",
+      "checkselfpermission"
+    ],
+    "string_patterns": [
+      "classes.dex",
+      "androidmanifest.xml",
+      "meta-inf",
+      "sha-256",
+      "sha-1",
+      "md5"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1,
+    "min_match_score": 15
+  },
+  {
+    "id": "REFLECTION_INVOKE",
+    "category": "tamper_detection",
+    "description": "Detects reflection-based method invocation (Method.invoke)",
+    "method_names": [
+      "invoke",
+      "invokenative",
+      "invokemethod",
+      "callmethod",
+      "executereflection"
+    ],
+    "class_patterns": [
+      "reflect",
+      "reflection",
+      "method",
+      "invoke"
+    ],
+    "required_calls": [
+      "method;->invoke",
+      "class;->getmethod",
+      "class;->getdeclaredmethod",
+      "method;->setaccessible"
+    ],
+    "string_patterns": [
+      "java.lang.reflect.method",
+      "invoke"
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 0.9,
+    "min_match_score": 15
+  },
+  {
+    "id": "CLASS_FORNAME",
+    "category": "tamper_detection",
+    "description": "Detects dynamic class loading (Class.forName)",
+    "method_names": [
+      "loadclass",
+      "findclass",
+      "defineclass",
+      "forname",
+      "getclass"
+    ],
+    "class_patterns": [
+      "classloader",
+      "loader",
+      "dynamic"
+    ],
+    "required_calls": [
+      "class;->forname",
+      "classloader;->loadclass",
+      "classloader;->findclass"
+    ],
+    "string_patterns": [
+      "java.lang.class",
+      "classloader"
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 0.9,
+    "min_match_score": 15
+  },
+  {
+    "id": "REFLECTION_FIELD",
+    "category": "tamper_detection",
+    "description": "Detects reflection-based field access (Field.get/set)",
+    "method_names": [
+      "getfield",
+      "setfield",
+      "accessfield",
+      "modifyfield",
+      "readfield"
+    ],
+    "class_patterns": [
+      "reflect",
+      "field",
+      "accessor"
+    ],
+    "required_calls": [
+      "field;->get",
+      "field;->set",
+      "class;->getfield",
+      "class;->getdeclaredfield",
+      "field;->setaccessible"
+    ],
+    "string_patterns": [
+      "java.lang.reflect.field",
+      "field"
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 0.9,
+    "min_match_score": 15
+  },
+  {
+    "id": "PROXY_INVOKE",
+    "category": "tamper_detection",
+    "description": "Detects dynamic proxy creation (Proxy.newProxyInstance)",
+    "method_names": [
+      "newproxyinstance",
+      "createproxy",
+      "proxyinvoke",
+      "invocationhandler"
+    ],
+    "class_patterns": [
+      "proxy",
+      "invocationhandler",
+      "dynamic"
+    ],
+    "required_calls": [
+      "proxy;->newproxyinstance",
+      "invocationhandler;->invoke"
+    ],
+    "string_patterns": [
+      "java.lang.reflect.proxy",
+      "invocationhandler"
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 0.9,
+    "min_match_score": 15
+  },
+  {
+    "id": "DEX_CLASS_LOADER",
+    "category": "tamper_detection",
+    "description": "Detects dynamic DEX loading (DexClassLoader)",
+    "method_names": [
+      "loaddex",
+      "loadclassfromdex",
+      "dexloader",
+      "dynamicload",
+      "loadplugin"
+    ],
+    "class_patterns": [
+      "dexclassloader",
+      "classloader",
+      "dynamicload",
+      "plugin",
+      "hotfix"
+    ],
+    "required_calls": [
+      "dexclassloader;-><init>",
+      "dexclassloader;->loadclass",
+      "pathclassloader;-><init>"
+    ],
+    "string_patterns": [
+      "dalvik.system.dexclassloader",
+      "dalvik.system.pathclassloader",
+      ".dex",
+      ".jar",
+      "optimizeddirectory"
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 1,
+    "min_match_score": 15
+  },
+  {
+    "id": "INMEMORY_DEX_LOADER",
+    "category": "tamper_detection",
+    "description": "Detects in-memory DEX loading (InMemoryDexClassLoader)",
+    "method_names": [
+      "loadinmemorydex",
+      "loadfrommemory",
+      "memoryclassloader"
+    ],
+    "class_patterns": [
+      "inmemorydexclassloader",
+      "memoryloader"
+    ],
+    "required_calls": [
+      "inmemorydexclassloader;-><init>",
+      "bytebuffer"
+    ],
+    "string_patterns": [
+      "dalvik.system.inmemorydexclassloader",
+      "bytebuffer"
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 1,
+    "min_match_score": 15
+  },
+  {
+    "id": "NATIVE_LOAD",
+    "category": "tamper_detection",
+    "description": "Detects suspicious native library loading",
+    "method_names": [
+      "loadlibrary",
+      "load",
+      "loadnative",
+      "system.load",
+      "system.loadlibrary"
+    ],
+    "class_patterns": [
+      "nativeloader",
+      "jniloader",
+      "library"
+    ],
+    "required_calls": [
+      "system;->loadlibrary",
+      "system;->load",
+      "runtime;->loadlibrary"
+    ],
+    "string_patterns": [
+      ".so",
+      "lib/",
+      "jni/",
+      "native"
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 0.8,
+    "min_match_score": 12
+  },
+  {
+    "id": "PREFS_SECURITY_CHECK",
+    "category": "tamper_detection",
+    "description": "SharedPreferences integrity/tampering check",
+    "method_names": [
+      "validatepreferences",
+      "checkprefsintegrity",
+      "isprefsmodified",
+      "verifypreferences",
+      "checkstoredvalue",
+      "validatestored"
+    ],
+    "class_patterns": [
+      "prefs",
+      "preferences",
+      "secureprefs",
+      "encryptedprefs",
+      "securestorage"
+    ],
+    "required_calls": [
+      "sharedpreferences;->getstring",
+      "sharedpreferences;->getboolean",
+      "messagedigest;->digest",
+      "encryptedsharedpreferences"
+    ],
+    "string_patterns": [
+      "checksum",
+      "hash",
+      "hmac",
+      "integrity",
+      "pref_hash",
+      "stored_hash",
+      "validation_key"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.9,
+    "min_match_score": 15
+  },
+  {
+    "id": "WEBVIEW_JS_BRIDGE",
+    "category": "tamper_detection",
+    "description": "WebView JavaScript bridge (JS→Native interface)",
+    "method_names": [
+      "addjavascriptinterface",
+      "evaluatejavascript",
+      "onreceivevalue",
+      "postmessage",
+      "shouldoverrideurlloading",
+      "shouldinterceptrequest"
+    ],
+    "class_patterns": [
+      "webview",
+      "jsbridge",
+      "javascript",
+      "webinterface",
+      "bridgehandler"
+    ],
+    "required_calls": [
+      "webview;->addjavascriptinterface",
+      "webview;->evaluatejavascript",
+      "webview;->loaddatawithbaseurl"
+    ],
+    "string_patterns": [
+      "javascript:",
+      "JavascriptInterface",
+      "@JavascriptInterface",
+      "jsbridge",
+      "postMessage",
+      "window."
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 0.8,
+    "min_match_score": 15
+  },
+  {
+    "id": "BIOMETRIC_AUTH_BYPASS",
+    "category": "tamper_detection",
+    "description": "BiometricPrompt / FingerprintManager authentication gate",
+    "method_names": [
+      "onauthenticationsucceeded",
+      "onauthenticationerror",
+      "onauthenticationfailed",
+      "checkbiometric",
+      "canauthenticate",
+      "showauthprompt",
+      "isbiometricavailable",
+      "biometriccheck",
+      "authenticatebiometric",
+      "verifybiometric"
+    ],
+    "class_patterns": [
+      "biometricprompt",
+      "fingerprintmanager",
+      "biometricmanager",
+      "biometrichelper",
+      "authgate",
+      "fingerprintauth"
+    ],
+    "required_calls": [
+      "biometricprompt;->authenticate",
+      "fingerprintmanager;->authenticate",
+      "biometricmanager;->canadauthenticate"
+    ],
+    "string_patterns": [
+      "biometric",
+      "fingerprint",
+      "face_auth",
+      "biometric_gate",
+      "biometric_required"
+    ],
+    "return_type": "V",
+    "patch_type": "return_void",
+    "weight": 1.1,
+    "min_match_score": 12
+  },
+  {
+    "id": "DEVICE_BINDING_CHECK",
+    "category": "tamper_detection",
+    "description": "Device ID / IMEI / Android ID hardware binding check",
+    "method_names": [
+      "checkdevicebinding",
+      "validatedeviceid",
+      "isdevicebound",
+      "verifydevice",
+      "getdevicehash",
+      "isbounddevice",
+      "checkimei",
+      "verifyandroidid",
+      "isregistereddevice",
+      "validatehardwareid"
+    ],
+    "class_patterns": [
+      "devicebinding",
+      "hardwareid",
+      "devicecheck",
+      "devicevalidat",
+      "imeicheck",
+      "androididcheck"
+    ],
+    "required_calls": [
+      "telephonymanager;->getdeviceid",
+      "telephonymanager;->getimei",
+      "settings$secure;->getstring",
+      "telephonymanager;->getsubscriberid"
+    ],
+    "string_patterns": [
+      "android_id",
+      "device_id",
+      "imei",
+      "hardware_id",
+      "bound_device",
+      "device_fingerprint"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.2,
+    "min_match_score": 15
+  },
+  {
+    "id": "SCREEN_OVERLAY_DETECT",
+    "category": "tamper_detection",
+    "description": "Screen overlay / canDrawOverlays / SYSTEM_ALERT_WINDOW detection",
+    "method_names": [
+      "isoverlaydeteced",
+      "checkoverlay",
+      "detectoverlay",
+      "isoverlayactive",
+      "hasoverlaypermission",
+      "checkdrawoverlays",
+      "isalertwindowpermission",
+      "canshowoverlays",
+      "overlaycheck"
+    ],
+    "class_patterns": [
+      "overlaydetect",
+      "overlaycheck",
+      "windowsecurity",
+      "screenprotect",
+      "drawoverlays"
+    ],
+    "required_calls": [
+      "settings;->candrawoverlays",
+      "windowmanager$layoutparams;->type",
+      "view;->getwindowvisibleregion"
+    ],
+    "string_patterns": [
+      "candrawoverlays",
+      "type_application_overlay",
+      "system_alert_window",
+      "overlay_detected",
+      "draw_over_other_apps",
+      "overlay_attack"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.8,
+    "min_match_score": 10
+  },
+  {
+    "id": "SCREEN_CAPTURE_DETECT",
+    "category": "tamper_detection",
+    "description": "Screen recording/screenshot prevention",
+    "method_names": [
+      "isscreenrecording",
+      "isscreencapture",
+      "detectscreenrecord",
+      "preventscreenshot",
+      "setflagsecure",
+      "issecureflag",
+      "detectoverlay",
+      "isoverlaydetected"
+    ],
+    "class_patterns": [
+      "screenshot",
+      "screenrecord",
+      "capture",
+      "overlay",
+      "secure",
+      "screensecurity"
+    ],
+    "required_calls": [
+      "window;->setflags",
+      "window;->addflags",
+      "windowmanager;->getdefaultdisplay",
+      "mediaprojection"
+    ],
+    "string_patterns": [
+      "FLAG_SECURE",
+      "screen_capture",
+      "screen_recording",
+      "mediaprojection",
+      "overlay_detected"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.7,
+    "min_match_score": 12
+  },
+  {
+    "id": "SIGNATURE_VERIFY",
+    "category": "signature_check",
+    "description": "Verifies APK signing certificate",
+    "method_names": [
+      "checksignature",
+      "verifysignature",
+      "validatecert",
+      "checkappintegrity",
+      "isvalidcertificate",
+      "comparesignature",
+      "verifycertificate"
+    ],
+    "class_patterns": [
+      "signature",
+      "signing",
+      "certificate",
+      "apksignature",
+      "certcheck"
+    ],
+    "required_calls": [
+      "getpackageinfo",
+      "packageinfo;->signatures",
+      "signature;->tohashcode",
+      "signature;->tobytearray",
+      "messagedigest;->digest"
+    ],
+    "string_patterns": [
+      "sha-256",
+      "sha-1",
+      "get_signatures"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.1,
+    "min_match_score": 15
+  },
+  {
+    "id": "SIG_DIGEST_MATCH",
+    "category": "signature_check",
+    "description": "Compares computed signing-cert digest against an expected/hardcoded hash",
+    "method_names": [
+      "matchessignature",
+      "issignaturevalid",
+      "checkcerthash",
+      "verifysignaturehash",
+      "comparecertdigest",
+      "hasexpectedsignature",
+      "checkcertfingerprint"
+    ],
+    "class_patterns": [
+      "signature",
+      "signing",
+      "certificate",
+      "security",
+      "integrity",
+      "tamper"
+    ],
+    "required_calls": [
+      "messagedigest;->digest",
+      "arrays;->equals",
+      "string;->equals",
+      "signature;->tobytearray"
+    ],
+    "string_patterns": [
+      "sha-256",
+      "sha256",
+      "expected_signature",
+      "cert_hash",
+      "signing_cert"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.05,
+    "min_match_score": 14
+  },
+  {
+    "id": "PKG_SIGNATURE_QUERY",
+    "category": "signature_check",
+    "description": "Queries PackageManager signing certs (GET_SIGNING_CERTIFICATES / hasSigningCertificate)",
+    "method_names": [
+      "hassigningcertificate",
+      "getsigningcertificates",
+      "getapksignature",
+      "readsigninginfo",
+      "getsigninginfo"
+    ],
+    "class_patterns": [
+      "signature",
+      "signing",
+      "packagemanager",
+      "security",
+      "integrity"
+    ],
+    "required_calls": [
+      "packagemanager;->getpackageinfo",
+      "signinginfo;->getapkcontentssigners",
+      "packageinfo;->signinginfo",
+      "hassigningcertificate"
+    ],
+    "string_patterns": [
+      "get_signing_certificates",
+      "signinginfo",
+      "apkcontentssigners"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.0,
+    "min_match_score": 13
+  },
+  {
+    "id": "IAP_PAYLOAD_SIGNATURE",
+    "category": "signature_check",
+    "description": "Verifies Google Play purchase payload signature (INAPP_DATA_SIGNATURE, SHA1withRSA)",
+    "method_names": [
+      "verifypurchase",
+      "verify",
+      "checksignature",
+      "verifysignedmessage",
+      "validatesignature"
+    ],
+    "class_patterns": [
+      "security",
+      "billing",
+      "purchase",
+      "verifier"
+    ],
+    "required_calls": [
+      "signature;->verify",
+      "signature;->initverify",
+      "java/security/signature;->getinstance",
+      "base64;->decode"
+    ],
+    "string_patterns": [
+      "inapp_data_signature",
+      "sha1withrsa",
+      "sha256withrsa",
+      "signed_data",
+      "purchase signature"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.15,
+    "min_match_score": 13
+  },
+  {
+    "id": "SSL_PINNING",
+    "category": "ssl_pinning",
+    "description": "SSL/TLS certificate pinning check",
+    "method_names": [
+      "checkcertificate",
+      "checkservercertificate",
+      "verifyhostname",
+      "checkservertrusted",
+      "sslpinning",
+      "validatecertchain"
+    ],
+    "class_patterns": [
+      "sslpinning",
+      "certpinning",
+      "trustmanager",
+      "certificatepinner",
+      "networkpolicy"
+    ],
+    "required_calls": [
+      "x509trustmanager",
+      "checkservertrusted",
+      "certificatepinner",
+      "sslsocketfactory",
+      "hostnamevrifier"
+    ],
+    "string_patterns": [
+      "sha256/",
+      "pin-sha256",
+      "certificate",
+      "javax.net.ssl"
+    ],
+    "return_type": "V",
+    "patch_type": "return_void",
+    "weight": 0.8,
+    "min_match_score": 15
+  },
+  {
+    "id": "CERT_TRANSPARENCY_CHECK",
+    "category": "ssl_pinning",
+    "description": "Certificate Transparency (OkHttp CTPolicy / SCT validation)",
+    "method_names": [
+      "checkcertificatetransparency",
+      "verifyct",
+      "validatesct",
+      "checkctpolicy",
+      "enforcect",
+      "verifysct"
+    ],
+    "class_patterns": [
+      "certificatetransparency",
+      "ctverifier",
+      "ctpolicy",
+      "ctlog",
+      "okhttpctinterceptor",
+      "sctverifier"
+    ],
+    "required_calls": [
+      "x509certificate;->getextensionvalue",
+      "okhttp3",
+      "certificatepinner"
+    ],
+    "string_patterns": [
+      "certificate_transparency",
+      "ct_policy",
+      "sct",
+      "log_list",
+      "certificatetransparency",
+      "enforce_ct",
+      "google_ct"
+    ],
+    "return_type": "V",
+    "patch_type": "return_void",
+    "weight": 1.0,
+    "min_match_score": 12
+  },
+  {
+    "id": "NETWORK_SECURITY_POLICY",
+    "category": "ssl_pinning",
+    "description": "Network Security Config policy enforcement check",
+    "method_names": [
+      "checknetworkpolicy",
+      "verifynetworksecurity",
+      "istrafficsecure",
+      "checkcleartextpermitted",
+      "validatecertchain",
+      "networksecuritycheck"
+    ],
+    "class_patterns": [
+      "networksecuritypolicy",
+      "networksecurityconfig",
+      "cleartextcheck",
+      "netseccheck"
+    ],
+    "required_calls": [
+      "networksecuritypolicy;->iscleartexttrafficpermitted",
+      "networksecurityconfig",
+      "x509trustmanager"
+    ],
+    "string_patterns": [
+      "network_security_config",
+      "cleartextTrafficPermitted",
+      "trustAnchors",
+      "certificateTransparency",
+      "pinning"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.0,
+    "min_match_score": 12
+  },
+  {
+    "id": "pj05",
+    "category": "ssl_pinning",
+    "description": "Custom HostnameVerifier — accept all hosts",
+    "method_names": [
+      "verify",
+      "hostnameverifier"
+    ],
+    "class_patterns": [
+      "hostnameverifier",
+      "ssl",
+      "https",
+      "pinning"
+    ],
+    "required_calls": [
+      "verify"
+    ],
+    "string_patterns": [
+      "hostname",
+      "verify"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.2,
+    "min_match_score": 12
+  },
+  {
+    "id": "TRIAL_EXPIRY",
+    "category": "trial_expiry",
+    "description": "Checks if trial period has expired",
+    "method_names": [
+      "istrialexpired",
+      "istrialover",
+      "checkexpiry",
+      "isexpired",
+      "hastrialended",
+      "istrialvalid",
+      "gettrialstatus",
+      "checktrialperiod",
+      "istrialactive",
+      "gettrialdaysleft"
+    ],
+    "class_patterns": [
+      "trial",
+      "expiry",
+      "trialmanager",
+      "timecheck",
+      "periodcheck"
+    ],
+    "required_calls": [
+      "system;->currenttimemillis",
+      "calendar;->getinstance",
+      "date;->gettime",
+      "sharedpreferences"
+    ],
+    "string_patterns": [
+      "trial",
+      "expiry",
+      "expire",
+      "trial_start",
+      "first_launch",
+      "install_date",
+      "trial_end"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1,
+    "min_match_score": 12
+  },
+  {
+    "id": "TIME_TAMPER",
+    "category": "trial_expiry",
+    "description": "Detects system time manipulation",
+    "method_names": [
+      "istimemanipulated",
+      "checktimechange",
+      "istimecorrect",
+      "detecttimetamper",
+      "hastimedrift",
+      "verifysystemtime"
+    ],
+    "class_patterns": [
+      "timecheck",
+      "timetamper",
+      "clockcheck",
+      "ntpverify"
+    ],
+    "required_calls": [
+      "system;->currenttimemillis",
+      "systemclock;->elapsedrealtimeo",
+      "ntptime",
+      "sntpclient",
+      "settings$global;->getlong"
+    ],
+    "string_patterns": [
+      "auto_time",
+      "ntp",
+      "time.google.com",
+      "pool.ntp.org",
+      "time_drift"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.8,
+    "min_match_score": 12
+  },
+  {
+    "id": "GAME_COOLDOWN",
+    "category": "trial_expiry",
+    "description": "Game cooldown/timer/energy refill check",
+    "method_names": [
+      "iscooldownactive",
+      "iscooldownover",
+      "getcooldown",
+      "getremainingtime",
+      "gettimeremaining",
+      "isenergyfull",
+      "canplay",
+      "hasenoughenergy",
+      "getlives",
+      "getlivesremaining",
+      "canclaimdaily",
+      "hasdailyclaimed",
+      "isrewardready",
+      "gettimerticks",
+      "istimerexpired"
+    ],
+    "class_patterns": [
+      "cooldown",
+      "timer",
+      "energy",
+      "lives",
+      "daily",
+      "reward",
+      "stamina",
+      "refill"
+    ],
+    "required_calls": [
+      "system;->currenttimemillis",
+      "systemclock;->elapsedrealtimeo",
+      "sharedpreferences"
+    ],
+    "string_patterns": [
+      "cooldown",
+      "timer",
+      "energy",
+      "refill",
+      "daily_reward",
+      "last_claim",
+      "next_reward",
+      "lives_count",
+      "energy_refill_time"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.8,
+    "min_match_score": 10
+  },
+  {
+    "id": "pj04",
+    "category": "trial_expiry",
+    "description": "Trial days-remaining from local clock — force positive",
+    "method_names": [
+      "getremainingdays",
+      "getdaysleft",
+      "gettrialdays",
+      "daysuntilexpiry"
+    ],
+    "class_patterns": [
+      "trial",
+      "expiry",
+      "subscription",
+      "license"
+    ],
+    "required_calls": [
+      "currenttimemillis",
+      "gettime"
+    ],
+    "string_patterns": [
+      "trial",
+      "expire",
+      "days"
+    ],
+    "return_type": "I",
+    "patch_type": "return_max_int",
+    "weight": 1.0,
+    "min_match_score": 10
+  },
+  {
+    "id": "FEATURE_GATE",
+    "category": "feature_gate",
+    "description": "Checks if feature is unlocked/available",
+    "method_names": [
+      "isfeatureunlocked",
+      "hasfeature",
+      "isunlocked",
+      "canaccess",
+      "canuse",
+      "isavailable",
+      "isfeatureenabled",
+      "checkfeature",
+      "hasentitlement"
+    ],
+    "class_patterns": [
+      "feature",
+      "unlock",
+      "entitlement",
+      "featureflag",
+      "gate",
+      "capability"
+    ],
+    "required_calls": [
+      "set;->contains",
+      "list;->contains",
+      "getsharedpreferences",
+      "getboolean"
+    ],
+    "string_patterns": [
+      "unlocked",
+      "feature_",
+      "enabled",
+      "entitlement",
+      "capability"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.9,
+    "min_match_score": 10
+  },
+  {
+    "id": "UNLOCK_ALL",
+    "category": "feature_gate",
+    "description": "Controls full/all content unlock",
+    "method_names": [
+      "isallunlocked",
+      "hasallcontent",
+      "isfullaccess",
+      "arelevelsunlocked",
+      "iscontentlocked",
+      "islocked",
+      "islevelunlocked",
+      "canplaylevl"
+    ],
+    "class_patterns": [
+      "unlock",
+      "content",
+      "level",
+      "gamemanager",
+      "progressmanager",
+      "contentmanager"
+    ],
+    "required_calls": [
+      "getsharedpreferences",
+      "getboolean",
+      "set;->contains"
+    ],
+    "string_patterns": [
+      "unlocked",
+      "locked",
+      "all_content",
+      "full_access",
+      "level_"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.8,
+    "min_match_score": 10
+  },
+  {
+    "id": "FIREBASE_REMOTE_CONFIG",
+    "category": "feature_gate",
+    "description": "Firebase Remote Config feature flag check",
+    "method_names": [
+      "getremoteconfig",
+      "fetchconfig",
+      "getboolean",
+      "getstring",
+      "getlong",
+      "getdouble",
+      "isfeatureenabled",
+      "getfeatureflag",
+      "fetchandactivate",
+      "activatefetched"
+    ],
+    "class_patterns": [
+      "remoteconfig",
+      "firebaseremoteconfig",
+      "configmanager",
+      "featureflag",
+      "abtest"
+    ],
+    "required_calls": [
+      "firebaseremoteconfig;->getboolean",
+      "firebaseremoteconfig;->getstring",
+      "firebaseremoteconfig;->fetchandactivate"
+    ],
+    "string_patterns": [
+      "remote_config",
+      "feature_flag",
+      "ab_test",
+      "premium_enabled",
+      "ads_enabled",
+      "paywall_enabled",
+      "show_ads",
+      "force_update",
+      "kill_switch"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1,
+    "min_match_score": 12
+  },
+  {
+    "id": "RATE_LIMIT_CHECK",
+    "category": "feature_gate",
+    "description": "Rate limiting or usage quota check",
+    "method_names": [
+      "isratelimited",
+      "hasreachedlimit",
+      "isquotaexceeded",
+      "canperformaction",
+      "getremaininguses",
+      "getusagecount",
+      "hasfreeuses",
+      "isfreelimitreached",
+      "checkusagelimit",
+      "getdailyquota"
+    ],
+    "class_patterns": [
+      "ratelimit",
+      "quota",
+      "usage",
+      "limit",
+      "throttle",
+      "restriction"
+    ],
+    "required_calls": [
+      "sharedpreferences",
+      "getint",
+      "putint",
+      "system;->currenttimemillis"
+    ],
+    "string_patterns": [
+      "rate_limit",
+      "usage_count",
+      "daily_limit",
+      "free_uses",
+      "remaining",
+      "quota",
+      "max_uses",
+      "throttle"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 10
+  },
+  {
+    "id": "FORCE_UPDATE_CHECK",
+    "category": "feature_gate",
+    "description": "Forced app update check",
+    "method_names": [
+      "isupdaterequired",
+      "isforceupdate",
+      "needsupdate",
+      "checkversion",
+      "checkappversion",
+      "isversionvalid",
+      "isoutdated",
+      "isupdateavailable",
+      "shouldforceupdate",
+      "checkminimumsupportedversion"
+    ],
+    "class_patterns": [
+      "update",
+      "version",
+      "appupdate",
+      "forceupdate",
+      "versioncheck"
+    ],
+    "required_calls": [
+      "packagemanager;->getpackageinfo",
+      "packageinfo;->versioncode",
+      "packageinfo;->versionname"
+    ],
+    "string_patterns": [
+      "force_update",
+      "min_version",
+      "required_version",
+      "app_version",
+      "version_code",
+      "update_required",
+      "maintenance",
+      "kill_switch"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 12
+  },
+  {
+    "id": "CONSENT_GATE",
+    "category": "feature_gate",
+    "description": "Consent/GDPR/privacy gate check",
+    "method_names": [
+      "hasconsentgiven",
+      "isconsentrequired",
+      "hasconsented",
+      "showconsentdialog",
+      "isageverified",
+      "checkagegate",
+      "hasacceptedterms",
+      "iseuuser"
+    ],
+    "class_patterns": [
+      "consent",
+      "gdpr",
+      "privacy",
+      "agegate",
+      "terms",
+      "coppa"
+    ],
+    "required_calls": [
+      "sharedpreferences;->getboolean",
+      "consentinformation"
+    ],
+    "string_patterns": [
+      "consent",
+      "gdpr",
+      "privacy_accepted",
+      "age_gate",
+      "terms_accepted",
+      "coppa",
+      "has_consented",
+      "eu_user"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.6,
+    "min_match_score": 10
+  },
+  {
+    "id": "LEVEL_PROGRESSION",
+    "category": "feature_gate",
+    "description": "Game level/stage/chapter progression gate",
+    "method_names": [
+      "islevelcompleted",
+      "islevelunlocked",
+      "isstageavailable",
+      "canaccesslevel",
+      "getmaxlevel",
+      "getcurrentlevel",
+      "haschaptercompleted",
+      "iszonelocked",
+      "getunlockedlevels",
+      "canplaystage"
+    ],
+    "class_patterns": [
+      "level",
+      "stage",
+      "chapter",
+      "zone",
+      "progress",
+      "progression",
+      "campaign",
+      "world",
+      "map"
+    ],
+    "required_calls": [
+      "sharedpreferences;->getint",
+      "sharedpreferences;->getboolean",
+      "set;->contains"
+    ],
+    "string_patterns": [
+      "level_",
+      "stage_",
+      "chapter_",
+      "completed_levels",
+      "unlocked_levels",
+      "max_level",
+      "current_level"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.8,
+    "min_match_score": 10
+  },
+  {
+    "id": "GEO_RESTRICTION_CHECK",
+    "category": "feature_gate",
+    "description": "Geographic region-lock / country restriction check",
+    "method_names": [
+      "isregionallowed",
+      "checkregion",
+      "isgeoblock",
+      "getcountrycode",
+      "detectregion",
+      "iscountryrestricted",
+      "isregionrestricted",
+      "checklocale",
+      "iscountrysupported",
+      "regionallowed"
+    ],
+    "class_patterns": [
+      "geochecker",
+      "regionlock",
+      "countryvalidat",
+      "localefilter",
+      "regiondetector",
+      "geocheck",
+      "regioncheck"
+    ],
+    "required_calls": [
+      "locale;->getcountry",
+      "locale;->getdefault",
+      "telephonymanager;->getnetworkcountryiso",
+      "telephonymanager;->getsimcountryiso"
+    ],
+    "string_patterns": [
+      "country_code",
+      "geo_block",
+      "region_lock",
+      "restricted_country",
+      "allowed_countries",
+      "blocked_regions",
+      "unsupported_region"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.9,
+    "min_match_score": 12
+  },
+  {
+    "id": "pj02",
+    "category": "feature_gate",
+    "description": "Local feature-unlock flag — force unlocked",
+    "method_names": [
+      "isfeatureunlocked",
+      "isunlocked",
+      "hasfeature",
+      "isfeatureenabled",
+      "canuse"
+    ],
+    "class_patterns": [
+      "feature",
+      "gate",
+      "unlock",
+      "entitlement"
+    ],
+    "required_calls": [],
+    "string_patterns": [
+      "unlocked",
+      "feature_"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.1,
+    "min_match_score": 10
+  },
+  {
+    "id": "SANDBOX_ELEMENT_UNLOCK",
+    "category": "feature_gate",
+    "description": "Sandbox element/tool/brush lock gate (locked materials or tools) - report not locked",
+    "method_names": [
+      "islocked",
+      "iselementlocked",
+      "istoollocked",
+      "isbrushlocked",
+      "isitemlocked",
+      "ismateriallocked",
+      "isfeaturelocked",
+      "iscontentlocked"
+    ],
+    "class_patterns": [
+      "element",
+      "tool",
+      "brush",
+      "material",
+      "sand",
+      "engine",
+      "freemium",
+      "content"
+    ],
+    "required_calls": [],
+    "string_patterns": [
+      "never_unlock",
+      "unlock buttons",
+      "locked",
+      "element_locked",
+      "is_locked"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.95,
+    "min_match_score": 11
+  },
+  {
+    "id": "FRIDA_DETECT",
+    "category": "hook_detection",
+    "description": "Detects Frida hooking framework",
+    "method_names": [
+      "isfridadetected",
+      "checkfrida",
+      "detectfrida",
+      "isfridainstalled",
+      "isfridaserverrunning",
+      "checkforhooks",
+      "ishooked"
+    ],
+    "class_patterns": [
+      "frida",
+      "hookdetect",
+      "antihook",
+      "fridacheck",
+      "antifrida"
+    ],
+    "required_calls": [
+      "runtime;->exec",
+      "file;->exists",
+      "serversocket",
+      "localsocket"
+    ],
+    "string_patterns": [
+      "frida",
+      "frida-server",
+      "gmain",
+      "linjector",
+      "27042",
+      "/data/local/tmp/frida",
+      "re.frida.server"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 12
+  },
+  {
+    "id": "XPOSED_DETECT",
+    "category": "hook_detection",
+    "description": "Detects Xposed framework",
+    "method_names": [
+      "isxposedinstalled",
+      "checkxposed",
+      "detectxposed",
+      "isxposedactive",
+      "hasxposed"
+    ],
+    "class_patterns": [
+      "xposed",
+      "xposedcheck",
+      "antixposed",
+      "hookcheck"
+    ],
+    "required_calls": [
+      "classloader;->loadclass",
+      "class;->forname",
+      "stacktraceelement"
+    ],
+    "string_patterns": [
+      "de.robv.android.xposed",
+      "xposedbridge",
+      "xposed_bridge",
+      "xposedhelpers",
+      "lspatch",
+      "lsposed"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 12
+  },
+  {
+    "id": "LSPOSED_RIRU_DETECT",
+    "category": "hook_detection",
+    "description": "LSPosed / Riru / EdXposed module framework detection",
+    "method_names": [
+      "islsposedinstalled",
+      "isriruinstalled",
+      "checkriru",
+      "checklsposed",
+      "detectlsposed",
+      "isedxposedactive",
+      "checktaichi",
+      "islsposedactive"
+    ],
+    "class_patterns": [
+      "lsposed",
+      "riru",
+      "edxposed",
+      "taichi",
+      "virtualxposed",
+      "lspatch"
+    ],
+    "required_calls": [
+      "class;->forname",
+      "stacktraceelement",
+      "classloader;->loadclass"
+    ],
+    "string_patterns": [
+      "lsposed",
+      "lspatch",
+      "riru",
+      "rirud",
+      "edxposed",
+      "taichi",
+      "org.lsposed.lspatch",
+      "org.lsposed.manager",
+      "io.github.lsposed",
+      "de.robv.android.xposed"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1.0,
+    "min_match_score": 12
+  },
+  {
+    "id": "VIRTUAL_SPACE_DETECT",
+    "category": "hook_detection",
+    "description": "VirtualApp / VirtualXposed / Island virtual space detection",
+    "method_names": [
+      "isvirtualapp",
+      "isvirtualenvironment",
+      "detectvirtualspace",
+      "isvirtualxposed",
+      "isrunningvirtual",
+      "checkisland",
+      "isinsandbox",
+      "virtualspacecheck"
+    ],
+    "class_patterns": [
+      "virtualapp",
+      "virtualxposed",
+      "islandcheck",
+      "virtualspace",
+      "sandboxcheck",
+      "virtualdetect"
+    ],
+    "required_calls": [
+      "class;->forname",
+      "file;->exists",
+      "packagemanager;->getpackageinfo"
+    ],
+    "string_patterns": [
+      "io.va.exposed",
+      "com.lody.virtual",
+      "virtualapp",
+      "virtualxposed",
+      "com.oasisfeng.island",
+      "com.flyingzl.virtual"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 12
+  },
+  {
+    "id": "INSTALLER_CHECK",
+    "category": "installer_check",
+    "description": "Checks if installed from official store",
+    "method_names": [
+      "isfromplaystore",
+      "islegitinstall",
+      "checkinstaller",
+      "verifyinstaller",
+      "isvalidinstaller",
+      "getinstallerpackage"
+    ],
+    "class_patterns": [
+      "installer",
+      "storecheck",
+      "playstore",
+      "installverify"
+    ],
+    "required_calls": [
+      "getinstallerpackagename",
+      "getinstallsourceinfo",
+      "packagemanager"
+    ],
+    "string_patterns": [
+      "com.android.vending",
+      "com.google.android.feedback",
+      "com.amazon.venezia",
+      "com.sec.android.app.samsungapps"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.7,
+    "min_match_score": 12
+  },
+  {
+    "id": "INTEGRITY_CRC",
+    "category": "integrity_check",
+    "description": "Verifies file integrity via CRC/hash",
+    "method_names": [
+      "checkintegrity",
+      "verifycrc",
+      "verifyhash",
+      "checkdexcrc",
+      "validatehash",
+      "isintact",
+      "verifyapkintegrity",
+      "selfintegritycheck"
+    ],
+    "class_patterns": [
+      "integrity",
+      "crccheck",
+      "hashcheck",
+      "selfcheck",
+      "apkverify"
+    ],
+    "required_calls": [
+      "crc32",
+      "messagedigest;->digest",
+      "zipfile",
+      "zipentry;->getcrc",
+      "dexfile"
+    ],
+    "string_patterns": [
+      "classes.dex",
+      "crc32",
+      "sha-256",
+      "md5",
+      "checksum"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.9,
+    "min_match_score": 15
+  },
+  {
+    "id": "SAFETYNET_CHECK",
+    "category": "integrity_check",
+    "description": "Google SafetyNet/Play Integrity API check",
+    "method_names": [
+      "checksafetynet",
+      "verifysafetynet",
+      "checkplayintegrity",
+      "requestattestation",
+      "onsafetynetsuccess",
+      "handleattestation"
+    ],
+    "class_patterns": [
+      "safetynet",
+      "playintegrity",
+      "attestation",
+      "deviceverify"
+    ],
+    "required_calls": [
+      "safetynet;->attest",
+      "safetynetelient",
+      "integritymanager",
+      "integritytoken"
+    ],
+    "string_patterns": [
+      "safetynet",
+      "play_integrity",
+      "integrity_token",
+      "attestation",
+      "ctsprofilesmatch",
+      "basicintegrity"
+    ],
+    "return_type": "V",
+    "patch_type": "return_void",
+    "weight": 0.8,
+    "min_match_score": 12
+  },
+  {
+    "id": "PLAY_INTEGRITY_V2",
+    "category": "integrity_check",
+    "description": "Google Play Integrity API v2 attestation check",
+    "method_names": [
+      "requestintegritytoken",
+      "checkdeviceintegrity",
+      "checkappintegrity",
+      "checkaccountdetails",
+      "getapprecognitionverdict",
+      "getdevicerecognitionverdict",
+      "isdevicetrusted",
+      "checkplayprotect"
+    ],
+    "class_patterns": [
+      "playintegrity",
+      "integritymanager",
+      "integritytoken",
+      "deviceintegrity",
+      "appintegrity"
+    ],
+    "required_calls": [
+      "integritymanager;->requestintegritytoken",
+      "integritytokenrequest",
+      "integrityserviceclient",
+      "standardintegritymanager"
+    ],
+    "string_patterns": [
+      "play_integrity",
+      "integrity_token",
+      "MEETS_DEVICE_INTEGRITY",
+      "MEETS_BASIC_INTEGRITY",
+      "MEETS_STRONG_INTEGRITY",
+      "MEETS_VIRTUAL_INTEGRITY",
+      "app_recognition_verdict",
+      "device_recognition_verdict"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.3,
+    "min_match_score": 12
+  },
+  {
+    "id": "HARDWARE_ATTESTATION_CHECK",
+    "category": "integrity_check",
+    "description": "Android Keystore / TEE / StrongBox hardware attestation check",
+    "method_names": [
+      "verifyattestation",
+      "checkkeyattestation",
+      "validateattestationchain",
+      "verifydevicekey",
+      "checkstrongboxkey",
+      "isteebacked",
+      "verifykeystoreattestation",
+      "checkhardwarebackedkey"
+    ],
+    "class_patterns": [
+      "attestation",
+      "keyattestation",
+      "keystoreattestor",
+      "strongboxchecker",
+      "teeverifier",
+      "hardwareattestor"
+    ],
+    "required_calls": [
+      "keypairgenerator;->generatekeypair",
+      "keystore;->getentry",
+      "x509certificate;->getextensionvalue"
+    ],
+    "string_patterns": [
+      "attestation",
+      "strongbox",
+      "tee",
+      "key_attestation",
+      "hardware_backed",
+      "trusted_execution",
+      "MEETS_STRONG_INTEGRITY"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.4,
+    "min_match_score": 12
+  },
+  {
+    "id": "pj06",
+    "category": "integrity_check",
+    "description": "APK signature/hash self-verification — force valid",
+    "method_names": [
+      "verifyapksignature",
+      "checksignature",
+      "verifyintegrity",
+      "validateapp",
+      "checksum"
+    ],
+    "class_patterns": [
+      "integrity",
+      "signature",
+      "tamper",
+      "checksum"
+    ],
+    "required_calls": [
+      "getpackageinfo",
+      "messagedigest"
+    ],
+    "string_patterns": [
+      "signature",
+      "sha",
+      "md5",
+      "tamper"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.3,
+    "min_match_score": 13
+  },
+  {
+    "id": "SERVER_TOKEN_CHECK",
+    "category": "server_auth",
+    "description": "Validates server authentication token/session",
+    "method_names": [
+      "validatetoken",
+      "checktoken",
+      "verifytoken",
+      "isauthenticated",
+      "isloggedin",
+      "hassession",
+      "checksession",
+      "verifysession",
+      "isvalidtoken",
+      "authcheck",
+      "tokenvalid",
+      "sessionvalid"
+    ],
+    "class_patterns": [
+      "auth",
+      "authentication",
+      "session",
+      "token",
+      "login",
+      "user",
+      "account",
+      "api"
+    ],
+    "required_calls": [
+      "httpurlconnection",
+      "okhttp",
+      "retrofit",
+      "jsonobject",
+      "getstring",
+      "equals"
+    ],
+    "string_patterns": [
+      "token",
+      "auth",
+      "session",
+      "bearer",
+      "authorization",
+      "jwt",
+      "access_token",
+      "api_key",
+      "x-auth-token"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.2,
+    "min_match_score": 15
+  },
+  {
+    "id": "SERVER_RESPONSE_CHECK",
+    "category": "server_auth",
+    "description": "Validates server response signature/integrity",
+    "method_names": [
+      "validateresponse",
+      "checkresponse",
+      "verifyresponse",
+      "isresponsevalid",
+      "checksignature",
+      "verifysignature",
+      "validatedata",
+      "checkintegrity"
+    ],
+    "class_patterns": [
+      "api",
+      "network",
+      "response",
+      "server",
+      "http",
+      "rest",
+      "validation"
+    ],
+    "required_calls": [
+      "jsonobject",
+      "getstring",
+      "equals",
+      "messagedigest",
+      "signature",
+      "hmac",
+      "sha256"
+    ],
+    "string_patterns": [
+      "signature",
+      "hmac",
+      "hash",
+      "response",
+      "status",
+      "success",
+      "error",
+      "code"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1,
+    "min_match_score": 15
+  },
+  {
+    "id": "NETWORK_CHECK",
+    "category": "server_auth",
+    "description": "Network connectivity / online requirement check",
+    "method_names": [
+      "isnetworkavailable",
+      "isonline",
+      "isconnected",
+      "hasinternet",
+      "checkconnectivity",
+      "isoffline",
+      "requiresinternet",
+      "isserverreachable",
+      "checkserver"
+    ],
+    "class_patterns": [
+      "network",
+      "connectivity",
+      "internet",
+      "connection",
+      "online"
+    ],
+    "required_calls": [
+      "connectivitymanager;->getactivenetworkinfo",
+      "connectivitymanager;->getactivenetwork",
+      "networkinfo;->isconnected",
+      "networkcapabilities"
+    ],
+    "string_patterns": [
+      "network",
+      "connectivity",
+      "internet",
+      "wifi",
+      "mobile_data",
+      "offline"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.7,
+    "min_match_score": 12
+  },
+  {
+    "id": "OAUTH_TOKEN_VALIDATE",
+    "category": "server_auth",
+    "description": "OAuth2 / OpenID Connect token validation",
+    "method_names": [
+      "validateoauthtoken",
+      "verifyidtoken",
+      "exchangecodefortoken",
+      "refreshaccesstoken",
+      "introspecttoken",
+      "checkoauthtoken",
+      "validatejwt",
+      "verifyopenidtoken",
+      "checkaccesstoken"
+    ],
+    "class_patterns": [
+      "oauthclient",
+      "oauth2",
+      "openidconnect",
+      "idtoken",
+      "tokenvalidator",
+      "authorizationrequest",
+      "oauthmanager"
+    ],
+    "required_calls": [
+      "httpurlconnection",
+      "jsonobject;->getstring",
+      "jsonwebtoken",
+      "okhttp3"
+    ],
+    "string_patterns": [
+      "client_id",
+      "client_secret",
+      "redirect_uri",
+      "authorization_code",
+      "id_token",
+      "access_token",
+      "refresh_token",
+      "code_verifier",
+      "pkce",
+      "openid",
+      "oauth2"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.3,
+    "min_match_score": 15
+  },
+  {
+    "id": "FIREBASE_APP_CHECK",
+    "category": "server_auth",
+    "description": "Firebase App Check token validation",
+    "method_names": [
+      "getappchecktoken",
+      "validateappchecktoken",
+      "checkappcheck",
+      "verifyapptoken",
+      "gettoken",
+      "appendappchecktoken"
+    ],
+    "class_patterns": [
+      "firebaseappcheck",
+      "appcheck",
+      "appcheckprovider",
+      "appchecktokenresult",
+      "safetynettokenresult"
+    ],
+    "required_calls": [
+      "firebaseappcheck;->gettoken",
+      "appcheck;->gettoken",
+      "safetynettokenresult"
+    ],
+    "string_patterns": [
+      "firebase_app_check",
+      "app_check_token",
+      "x-firebase-appcheck",
+      "AppCheck",
+      "appcheck_debug_token",
+      "recaptcha_site_key"
+    ],
+    "return_type": "V",
+    "patch_type": "return_void",
+    "weight": 1.2,
+    "min_match_score": 12
+  },
+  {
+    "id": "REACHABILITY_CHECK",
+    "category": "server_auth",
+    "description": "Server reachability / maintenance-mode / health check",
+    "method_names": [
+      "isserverreachable",
+      "checkserverstatus",
+      "ismaintenancemode",
+      "isserviceavailable",
+      "pingsserver",
+      "checkapihealth",
+      "isserverdown",
+      "getserverstatus",
+      "checkbackend"
+    ],
+    "class_patterns": [
+      "servercheck",
+      "maintenancecheck",
+      "healthcheck",
+      "servicestatus",
+      "reachability",
+      "backendcheck"
+    ],
+    "required_calls": [
+      "httpurlconnection;->getresponsecode",
+      "inetaddress;->isreachable",
+      "okhttp3"
+    ],
+    "string_patterns": [
+      "maintenance_mode",
+      "server_status",
+      "health_check",
+      "service_unavailable",
+      "server_down",
+      "/health",
+      "/status",
+      "/ping"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.8,
+    "min_match_score": 10
+  },
+  {
+    "id": "pj03",
+    "category": "server_auth",
+    "description": "Client-side receipt/purchase validation — force valid",
+    "method_names": [
+      "validatereceipt",
+      "verifypurchase",
+      "checkreceipt",
+      "isreceiptvalid"
+    ],
+    "class_patterns": [
+      "receipt",
+      "purchase",
+      "billing",
+      "verify"
+    ],
+    "required_calls": [
+      "verify"
+    ],
+    "string_patterns": [
+      "receipt",
+      "purchase_token",
+      "signature"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.2,
+    "min_match_score": 12
+  },
+  {
+    "id": "ONLINE_DRM_CHECK",
+    "category": "drm",
+    "description": "Online DRM/content protection verification",
+    "method_names": [
+      "checkdrm",
+      "verifydrm",
+      "validatecontent",
+      "iscontentlicensed",
+      "canplaycontent",
+      "checkcontentprotection",
+      "verifyownership",
+      "haslicense",
+      "checkaccess"
+    ],
+    "class_patterns": [
+      "drm",
+      "contentprotection",
+      "media",
+      "player",
+      "streaming"
+    ],
+    "required_calls": [
+      "mediadrm",
+      "drmmanager",
+      "httpurlconnection",
+      "cipher",
+      "decrypt"
+    ],
+    "string_patterns": [
+      "widevine",
+      "playready",
+      "fairplay",
+      "drm",
+      "license",
+      "content_id",
+      "encryption",
+      "decrypt"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.1,
+    "min_match_score": 15
+  },
+  {
+    "id": "SAVE_ENCRYPTION",
+    "category": "drm",
+    "description": "Encrypts/decrypts save files",
+    "method_names": [
+      "encryptsave",
+      "decryptsave",
+      "loadsave",
+      "savegame",
+      "loadgame",
+      "encrypt",
+      "decrypt",
+      "encryptdata",
+      "decryptdata"
+    ],
+    "class_patterns": [
+      "save",
+      "savegame",
+      "gamedata",
+      "encryption",
+      "crypto",
+      "storage"
+    ],
+    "required_calls": [
+      "cipher;->init",
+      "cipher;->dofinal",
+      "secretkey",
+      "ivparameterspec",
+      "fileoutputstream",
+      "fileinputstream"
+    ],
+    "string_patterns": [
+      "aes",
+      "des",
+      "cipher",
+      "encrypt",
+      "save",
+      "game",
+      ".dat",
+      ".sav"
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 0.8,
+    "min_match_score": 15
+  },
+  {
+    "id": "GAME_WORLD_CHECK",
+    "category": "drm",
+    "description": "Game world/realm/marketplace content protection",
+    "method_names": [
+      "iscontentowned",
+      "hasdownloaded",
+      "ispackowned",
+      "isrealmactive",
+      "canjoindream",
+      "checkentitlement",
+      "ismarketplacepurchased",
+      "validatecontent",
+      "isworldaccessible",
+      "canloadworld"
+    ],
+    "class_patterns": [
+      "marketplace",
+      "realm",
+      "world",
+      "pack",
+      "content",
+      "downloadable",
+      "dlc",
+      "addon",
+      "skinpack",
+      "texturepack"
+    ],
+    "required_calls": [
+      "httpurlconnection",
+      "jsonobject",
+      "sharedpreferences",
+      "file;->exists"
+    ],
+    "string_patterns": [
+      "marketplace",
+      "realm",
+      "content_pack",
+      "dlc",
+      "skin_pack",
+      "texture_pack",
+      "minecoins",
+      "addon",
+      "entitlement"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1,
+    "min_match_score": 12
+  },
+  {
+    "id": "CURRENCY_SETTER",
+    "category": "currency",
+    "description": "Sets in-game currency/coins amount",
+    "method_names": [
+      "setcoins",
+      "setgems",
+      "setdiamonds",
+      "setcurrency",
+      "setgold",
+      "setbalance",
+      "setcredits",
+      "setstars",
+      "setenergy",
+      "addcoins",
+      "addgems",
+      "addcurrency"
+    ],
+    "class_patterns": [
+      "currency",
+      "wallet",
+      "inventory",
+      "economy",
+      "bank",
+      "coins",
+      "shop"
+    ],
+    "required_calls": [
+      "putint",
+      "putlong",
+      "sharedpreferences",
+      "apply",
+      "commit"
+    ],
+    "string_patterns": [
+      "coins",
+      "gems",
+      "diamonds",
+      "gold",
+      "currency",
+      "balance",
+      "credits"
+    ],
+    "return_type": "V",
+    "patch_type": "return_void",
+    "weight": 0.9,
+    "min_match_score": 12
+  },
+  {
+    "id": "CURRENCY_VALIDATION",
+    "category": "currency",
+    "description": "Validates currency amount (anti-cheat)",
+    "method_names": [
+      "validatecurrency",
+      "checkcurrency",
+      "verifycurrency",
+      "isvalidbalance",
+      "checkbalance",
+      "verifybalance",
+      "iscurrencyvalid",
+      "detectcheat",
+      "anticheat"
+    ],
+    "class_patterns": [
+      "currency",
+      "wallet",
+      "anticheat",
+      "validation",
+      "security",
+      "economy"
+    ],
+    "required_calls": [
+      "getint",
+      "getlong",
+      "sharedpreferences",
+      "messagedigest",
+      "equals"
+    ],
+    "string_patterns": [
+      "checksum",
+      "hash",
+      "validation",
+      "currency",
+      "balance",
+      "cheat"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1,
+    "min_match_score": 15
+  },
+  {
+    "id": "GAME_HP_DAMAGE",
+    "category": "currency",
+    "description": "Game HP/health/damage validation",
+    "method_names": [
+      "gethealth",
+      "gethp",
+      "getmaxhealth",
+      "getmaxhp",
+      "getdamage",
+      "getattack",
+      "getdefense",
+      "getarmor",
+      "getshield",
+      "getmana",
+      "getstamina",
+      "sethealth",
+      "sethp",
+      "setdamage",
+      "takedamage",
+      "dealdamage",
+      "applydamage",
+      "ishealthvalid",
+      "isdead",
+      "isalive",
+      "isinvincible",
+      "isgodmode"
+    ],
+    "class_patterns": [
+      "player",
+      "character",
+      "hero",
+      "entity",
+      "combat",
+      "battle",
+      "fight",
+      "stats",
+      "health",
+      "damage",
+      "gamemanager"
+    ],
+    "required_calls": [
+      "getint",
+      "getfloat",
+      "putint",
+      "putfloat",
+      "math;->max",
+      "math;->min",
+      "math;->clamp"
+    ],
+    "string_patterns": [
+      "health",
+      "hp",
+      "damage",
+      "attack",
+      "defense",
+      "armor",
+      "shield",
+      "mana",
+      "stamina",
+      "god_mode",
+      "invincible"
+    ],
+    "return_type": "I",
+    "patch_type": "return_max_int",
+    "weight": 0.8,
+    "min_match_score": 10
+  },
+  {
+    "id": "INVENTORY_CHECK",
+    "category": "currency",
+    "description": "Game inventory/item ownership check",
+    "method_names": [
+      "hasitem",
+      "ownsitem",
+      "getitemcount",
+      "isinventoryfull",
+      "hasenoughitems",
+      "getinventorysize",
+      "isitemowned",
+      "getresourcecount",
+      "hasmaterial"
+    ],
+    "class_patterns": [
+      "inventory",
+      "item",
+      "resource",
+      "material",
+      "backpack",
+      "storage",
+      "shop",
+      "store",
+      "market"
+    ],
+    "required_calls": [
+      "hashmap;->get",
+      "hashmap;->containskey",
+      "list;->contains",
+      "list;->size",
+      "sharedpreferences"
+    ],
+    "string_patterns": [
+      "inventory",
+      "item_",
+      "resource_",
+      "material_",
+      "owned_items",
+      "item_count"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.8,
+    "min_match_score": 10
+  },
+  {
+    "id": "pj01",
+    "category": "currency",
+    "description": "Client-side coin/gem balance getter — trusted to client",
+    "method_names": [
+      "getcoins",
+      "getgems",
+      "getbalance",
+      "getcurrency",
+      "getcredits"
+    ],
+    "class_patterns": [
+      "currency",
+      "wallet",
+      "balance",
+      "economy"
+    ],
+    "required_calls": [],
+    "string_patterns": [
+      "coins",
+      "gems",
+      "balance"
+    ],
+    "return_type": "I",
+    "patch_type": "return_max_int",
+    "weight": 1.1,
+    "min_match_score": 10
+  },
+  {
+    "id": "GAME_ANTICHEAT_MEMORY",
+    "category": "anti_cheat",
+    "description": "In-process memory scan / anti-cheat memory integrity check",
+    "method_names": [
+      "scanmemory",
+      "checkmemoryintegrity",
+      "detectmemoryhack",
+      "verifymemory",
+      "scancheatengine",
+      "detectgameguardian",
+      "checkmemoryscan",
+      "memoryscancheck",
+      "ismemorytampered"
+    ],
+    "class_patterns": [
+      "memoryscanner",
+      "memorychecker",
+      "anticheatenginee",
+      "memoryintegrity",
+      "cheatdetect",
+      "gameguardiandetect"
+    ],
+    "required_calls": [
+      "file;->exists",
+      "runtime;->exec",
+      "system;->loadlibrary",
+      "bufferedreader;->readline"
+    ],
+    "string_patterns": [
+      "gameguardian",
+      "gamekiller",
+      "cheatengine",
+      "lucky_patcher",
+      "memory_scan",
+      "memory_hack",
+      "/proc/self/maps",
+      "/proc/self/mem",
+      "com.cih.game_cih",
+      "org.sbtools.gamehack"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1.2,
+    "min_match_score": 12
+  }
+]

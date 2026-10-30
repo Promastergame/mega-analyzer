@@ -1,0 +1,15 @@
+{
+  "name": "bit-arena-bot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Headless reference client / coin-seeking bot for the Bit Arena demo game. No dependencies: uses the global fetch and WebSocket built into modern Node.",
+  "main": "bot.mjs",
+  "scripts": {
+    "start": "node bot.mjs",
+    "premium": "node bot.mjs --backend http://localhost:9340"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

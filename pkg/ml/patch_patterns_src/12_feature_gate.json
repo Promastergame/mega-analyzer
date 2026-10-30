@@ -1,0 +1,410 @@
+[
+  {
+    "id": "FEATURE_GATE",
+    "category": "feature_gate",
+    "description": "Checks if feature is unlocked/available",
+    "method_names": [
+      "isfeatureunlocked",
+      "hasfeature",
+      "isunlocked",
+      "canaccess",
+      "canuse",
+      "isavailable",
+      "isfeatureenabled",
+      "checkfeature",
+      "hasentitlement"
+    ],
+    "class_patterns": [
+      "feature",
+      "unlock",
+      "entitlement",
+      "featureflag",
+      "gate",
+      "capability"
+    ],
+    "required_calls": [
+      "set;->contains",
+      "list;->contains",
+      "getsharedpreferences",
+      "getboolean"
+    ],
+    "string_patterns": [
+      "unlocked",
+      "feature_",
+      "enabled",
+      "entitlement",
+      "capability"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.9,
+    "min_match_score": 10
+  },
+  {
+    "id": "UNLOCK_ALL",
+    "category": "feature_gate",
+    "description": "Controls full/all content unlock",
+    "method_names": [
+      "isallunlocked",
+      "hasallcontent",
+      "isfullaccess",
+      "arelevelsunlocked",
+      "iscontentlocked",
+      "islocked",
+      "islevelunlocked",
+      "canplaylevl"
+    ],
+    "class_patterns": [
+      "unlock",
+      "content",
+      "level",
+      "gamemanager",
+      "progressmanager",
+      "contentmanager"
+    ],
+    "required_calls": [
+      "getsharedpreferences",
+      "getboolean",
+      "set;->contains"
+    ],
+    "string_patterns": [
+      "unlocked",
+      "locked",
+      "all_content",
+      "full_access",
+      "level_"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.8,
+    "min_match_score": 10
+  },
+  {
+    "id": "FIREBASE_REMOTE_CONFIG",
+    "category": "feature_gate",
+    "description": "Firebase Remote Config feature flag check",
+    "method_names": [
+      "getremoteconfig",
+      "fetchconfig",
+      "getboolean",
+      "getstring",
+      "getlong",
+      "getdouble",
+      "isfeatureenabled",
+      "getfeatureflag",
+      "fetchandactivate",
+      "activatefetched"
+    ],
+    "class_patterns": [
+      "remoteconfig",
+      "firebaseremoteconfig",
+      "configmanager",
+      "featureflag",
+      "abtest"
+    ],
+    "required_calls": [
+      "firebaseremoteconfig;->getboolean",
+      "firebaseremoteconfig;->getstring",
+      "firebaseremoteconfig;->fetchandactivate"
+    ],
+    "string_patterns": [
+      "remote_config",
+      "feature_flag",
+      "ab_test",
+      "premium_enabled",
+      "ads_enabled",
+      "paywall_enabled",
+      "show_ads",
+      "force_update",
+      "kill_switch"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1,
+    "min_match_score": 12
+  },
+  {
+    "id": "RATE_LIMIT_CHECK",
+    "category": "feature_gate",
+    "description": "Rate limiting or usage quota check",
+    "method_names": [
+      "isratelimited",
+      "hasreachedlimit",
+      "isquotaexceeded",
+      "canperformaction",
+      "getremaininguses",
+      "getusagecount",
+      "hasfreeuses",
+      "isfreelimitreached",
+      "checkusagelimit",
+      "getdailyquota"
+    ],
+    "class_patterns": [
+      "ratelimit",
+      "quota",
+      "usage",
+      "limit",
+      "throttle",
+      "restriction"
+    ],
+    "required_calls": [
+      "sharedpreferences",
+      "getint",
+      "putint",
+      "system;->currenttimemillis"
+    ],
+    "string_patterns": [
+      "rate_limit",
+      "usage_count",
+      "daily_limit",
+      "free_uses",
+      "remaining",
+      "quota",
+      "max_uses",
+      "throttle"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 10
+  },
+  {
+    "id": "FORCE_UPDATE_CHECK",
+    "category": "feature_gate",
+    "description": "Forced app update check",
+    "method_names": [
+      "isupdaterequired",
+      "isforceupdate",
+      "needsupdate",
+      "checkversion",
+      "checkappversion",
+      "isversionvalid",
+      "isoutdated",
+      "isupdateavailable",
+      "shouldforceupdate",
+      "checkminimumsupportedversion"
+    ],
+    "class_patterns": [
+      "update",
+      "version",
+      "appupdate",
+      "forceupdate",
+      "versioncheck"
+    ],
+    "required_calls": [
+      "packagemanager;->getpackageinfo",
+      "packageinfo;->versioncode",
+      "packageinfo;->versionname"
+    ],
+    "string_patterns": [
+      "force_update",
+      "min_version",
+      "required_version",
+      "app_version",
+      "version_code",
+      "update_required",
+      "maintenance",
+      "kill_switch"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 12
+  },
+  {
+    "id": "CONSENT_GATE",
+    "category": "feature_gate",
+    "description": "Consent/GDPR/privacy gate check",
+    "method_names": [
+      "hasconsentgiven",
+      "isconsentrequired",
+      "hasconsented",
+      "showconsentdialog",
+      "isageverified",
+      "checkagegate",
+      "hasacceptedterms",
+      "iseuuser"
+    ],
+    "class_patterns": [
+      "consent",
+      "gdpr",
+      "privacy",
+      "agegate",
+      "terms",
+      "coppa"
+    ],
+    "required_calls": [
+      "sharedpreferences;->getboolean",
+      "consentinformation"
+    ],
+    "string_patterns": [
+      "consent",
+      "gdpr",
+      "privacy_accepted",
+      "age_gate",
+      "terms_accepted",
+      "coppa",
+      "has_consented",
+      "eu_user"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.6,
+    "min_match_score": 10
+  },
+  {
+    "id": "LEVEL_PROGRESSION",
+    "category": "feature_gate",
+    "description": "Game level/stage/chapter progression gate",
+    "method_names": [
+      "islevelcompleted",
+      "islevelunlocked",
+      "isstageavailable",
+      "canaccesslevel",
+      "getmaxlevel",
+      "getcurrentlevel",
+      "haschaptercompleted",
+      "iszonelocked",
+      "getunlockedlevels",
+      "canplaystage"
+    ],
+    "class_patterns": [
+      "level",
+      "stage",
+      "chapter",
+      "zone",
+      "progress",
+      "progression",
+      "campaign",
+      "world",
+      "map"
+    ],
+    "required_calls": [
+      "sharedpreferences;->getint",
+      "sharedpreferences;->getboolean",
+      "set;->contains"
+    ],
+    "string_patterns": [
+      "level_",
+      "stage_",
+      "chapter_",
+      "completed_levels",
+      "unlocked_levels",
+      "max_level",
+      "current_level"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.8,
+    "min_match_score": 10
+  },
+  {
+    "id": "GEO_RESTRICTION_CHECK",
+    "category": "feature_gate",
+    "description": "Geographic region-lock / country restriction check",
+    "method_names": [
+      "isregionallowed",
+      "checkregion",
+      "isgeoblock",
+      "getcountrycode",
+      "detectregion",
+      "iscountryrestricted",
+      "isregionrestricted",
+      "checklocale",
+      "iscountrysupported",
+      "regionallowed"
+    ],
+    "class_patterns": [
+      "geochecker",
+      "regionlock",
+      "countryvalidat",
+      "localefilter",
+      "regiondetector",
+      "geocheck",
+      "regioncheck"
+    ],
+    "required_calls": [
+      "locale;->getcountry",
+      "locale;->getdefault",
+      "telephonymanager;->getnetworkcountryiso",
+      "telephonymanager;->getsimcountryiso"
+    ],
+    "string_patterns": [
+      "country_code",
+      "geo_block",
+      "region_lock",
+      "restricted_country",
+      "allowed_countries",
+      "blocked_regions",
+      "unsupported_region"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.9,
+    "min_match_score": 12
+  },
+  {
+    "id": "pj02",
+    "category": "feature_gate",
+    "description": "Local feature-unlock flag — force unlocked",
+    "method_names": [
+      "isfeatureunlocked",
+      "isunlocked",
+      "hasfeature",
+      "isfeatureenabled",
+      "canuse"
+    ],
+    "class_patterns": [
+      "feature",
+      "gate",
+      "unlock",
+      "entitlement"
+    ],
+    "required_calls": [],
+    "string_patterns": [
+      "unlocked",
+      "feature_"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.1,
+    "min_match_score": 10
+  },
+  {
+    "id": "SANDBOX_ELEMENT_UNLOCK",
+    "category": "feature_gate",
+    "description": "Sandbox element/tool/brush lock gate (locked materials or tools) - report not locked",
+    "method_names": [
+      "islocked",
+      "iselementlocked",
+      "istoollocked",
+      "isbrushlocked",
+      "isitemlocked",
+      "ismateriallocked",
+      "isfeaturelocked",
+      "iscontentlocked"
+    ],
+    "class_patterns": [
+      "element",
+      "tool",
+      "brush",
+      "material",
+      "sand",
+      "engine",
+      "freemium",
+      "content"
+    ],
+    "required_calls": [],
+    "string_patterns": [
+      "never_unlock",
+      "unlock buttons",
+      "locked",
+      "element_locked",
+      "is_locked"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.95,
+    "min_match_score": 11
+  }
+]

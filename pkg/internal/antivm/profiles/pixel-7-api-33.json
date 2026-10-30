@@ -1,0 +1,42 @@
+{
+  "name": "Pixel 7-api-33",
+  "model": "Pixel 7",
+  "brand": "google",
+  "manufacturer": "Google",
+  "device": "panther",
+  "product": "panther",
+  "android_version": "13",
+  "api_level": 33,
+  "abi": "arm64-v8a",
+  "build_id": "TQ3A.250201.072",
+  "fingerprint": "google/panther/panther:13/TQ3A.250201.072/423396:user/release-keys",
+  "security_patch": "2025-08-01",
+  "locale": "en-US",
+  "timezone": "UTC",
+  "resolution": "1080x2400",
+  "density": 420,
+  "network": {
+    "mac_address": "C0:BD:D1:15:D4:06",
+    "wifi_ssid": "FamilyNet_9AD6",
+    "imei": "353916108062126",
+    "serial": "76558830D6A7"
+  },
+  "battery": {
+    "level": 44,
+    "status": "discharging",
+    "temperature": 293,
+    "health": "good",
+    "plugged": "none"
+  },
+  "sensor": {
+    "enabled": true,
+    "accelerometer": true,
+    "gyroscope": true
+  },
+  "operator": {
+    "name": "Vodafone",
+    "numeric": "26202",
+    "mcc": "262",
+    "mnc": "02"
+  }
+}

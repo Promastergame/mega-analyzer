@@ -1,0 +1,22 @@
+# Runtime scaffolding for running the lab locally without Docker.
+# The helper scripts (.rundata/lab-up.sh, lab-down.sh, shmshim.c) ARE kept;
+# everything generated at runtime is ignored.
+
+# Python virtualenv used to run the Django servers
+.venv/
+
+# Generated runtime state under .rundata/
+.rundata/pg/
+.rundata/mysql/
+.rundata/bin/
+.rundata/*.log
+.rundata/*.so
+.rundata/*-data/
+
+# Embedded database created by the standalone coin shop.
+go/coin-client-authoritative/*.db
+
+# Compiled lab binaries
+labs-*
+**/labs-*
+

@@ -1,0 +1,18 @@
+[package]
+name = "omnisec-disasm"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec multi-arch disassembly + lifting into OmniIR (Phase 1: x86 / x86_64 via iced-x86)."
+
+[dependencies]
+omnisec-core.workspace = true
+omnisec-ir.workspace = true
+iced-x86.workspace = true
+
+[dev-dependencies]
+
+[lints]
+workspace = true

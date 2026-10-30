@@ -1,0 +1,24 @@
+[package]
+name = "omnisec-micro-emu"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Micro-emulation and snapshot fuzzing engine using pure Rust omnisec-emu-x86 emulator"
+
+[dependencies]
+omnisec-emu-arm64 = { workspace = true }
+omnisec-emu-x86 = { workspace = true }
+omnisec-arm64-decode = { workspace = true }
+nifshim = { path = "../../../server/native/nifshim" }
+
+[lib]
+name = "omnisec_micro_emu_nif"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+test = false
+doctest = false
+
+[lints]
+workspace = true

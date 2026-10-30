@@ -1,0 +1,194 @@
+[
+  {
+    "id": "INTEGRITY_CRC",
+    "category": "integrity_check",
+    "description": "Verifies file integrity via CRC/hash",
+    "method_names": [
+      "checkintegrity",
+      "verifycrc",
+      "verifyhash",
+      "checkdexcrc",
+      "validatehash",
+      "isintact",
+      "verifyapkintegrity",
+      "selfintegritycheck"
+    ],
+    "class_patterns": [
+      "integrity",
+      "crccheck",
+      "hashcheck",
+      "selfcheck",
+      "apkverify"
+    ],
+    "required_calls": [
+      "crc32",
+      "messagedigest;->digest",
+      "zipfile",
+      "zipentry;->getcrc",
+      "dexfile"
+    ],
+    "string_patterns": [
+      "classes.dex",
+      "crc32",
+      "sha-256",
+      "md5",
+      "checksum"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.9,
+    "min_match_score": 15
+  },
+  {
+    "id": "SAFETYNET_CHECK",
+    "category": "integrity_check",
+    "description": "Google SafetyNet/Play Integrity API check",
+    "method_names": [
+      "checksafetynet",
+      "verifysafetynet",
+      "checkplayintegrity",
+      "requestattestation",
+      "onsafetynetsuccess",
+      "handleattestation"
+    ],
+    "class_patterns": [
+      "safetynet",
+      "playintegrity",
+      "attestation",
+      "deviceverify"
+    ],
+    "required_calls": [
+      "safetynet;->attest",
+      "safetynetelient",
+      "integritymanager",
+      "integritytoken"
+    ],
+    "string_patterns": [
+      "safetynet",
+      "play_integrity",
+      "integrity_token",
+      "attestation",
+      "ctsprofilesmatch",
+      "basicintegrity"
+    ],
+    "return_type": "V",
+    "patch_type": "return_void",
+    "weight": 0.8,
+    "min_match_score": 12
+  },
+  {
+    "id": "PLAY_INTEGRITY_V2",
+    "category": "integrity_check",
+    "description": "Google Play Integrity API v2 attestation check",
+    "method_names": [
+      "requestintegritytoken",
+      "checkdeviceintegrity",
+      "checkappintegrity",
+      "checkaccountdetails",
+      "getapprecognitionverdict",
+      "getdevicerecognitionverdict",
+      "isdevicetrusted",
+      "checkplayprotect"
+    ],
+    "class_patterns": [
+      "playintegrity",
+      "integritymanager",
+      "integritytoken",
+      "deviceintegrity",
+      "appintegrity"
+    ],
+    "required_calls": [
+      "integritymanager;->requestintegritytoken",
+      "integritytokenrequest",
+      "integrityserviceclient",
+      "standardintegritymanager"
+    ],
+    "string_patterns": [
+      "play_integrity",
+      "integrity_token",
+      "MEETS_DEVICE_INTEGRITY",
+      "MEETS_BASIC_INTEGRITY",
+      "MEETS_STRONG_INTEGRITY",
+      "MEETS_VIRTUAL_INTEGRITY",
+      "app_recognition_verdict",
+      "device_recognition_verdict"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.3,
+    "min_match_score": 12
+  },
+  {
+    "id": "HARDWARE_ATTESTATION_CHECK",
+    "category": "integrity_check",
+    "description": "Android Keystore / TEE / StrongBox hardware attestation check",
+    "method_names": [
+      "verifyattestation",
+      "checkkeyattestation",
+      "validateattestationchain",
+      "verifydevicekey",
+      "checkstrongboxkey",
+      "isteebacked",
+      "verifykeystoreattestation",
+      "checkhardwarebackedkey"
+    ],
+    "class_patterns": [
+      "attestation",
+      "keyattestation",
+      "keystoreattestor",
+      "strongboxchecker",
+      "teeverifier",
+      "hardwareattestor"
+    ],
+    "required_calls": [
+      "keypairgenerator;->generatekeypair",
+      "keystore;->getentry",
+      "x509certificate;->getextensionvalue"
+    ],
+    "string_patterns": [
+      "attestation",
+      "strongbox",
+      "tee",
+      "key_attestation",
+      "hardware_backed",
+      "trusted_execution",
+      "MEETS_STRONG_INTEGRITY"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.4,
+    "min_match_score": 12
+  },
+  {
+    "id": "pj06",
+    "category": "integrity_check",
+    "description": "APK signature/hash self-verification — force valid",
+    "method_names": [
+      "verifyapksignature",
+      "checksignature",
+      "verifyintegrity",
+      "validateapp",
+      "checksum"
+    ],
+    "class_patterns": [
+      "integrity",
+      "signature",
+      "tamper",
+      "checksum"
+    ],
+    "required_calls": [
+      "getpackageinfo",
+      "messagedigest"
+    ],
+    "string_patterns": [
+      "signature",
+      "sha",
+      "md5",
+      "tamper"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.3,
+    "min_match_score": 13
+  }
+]

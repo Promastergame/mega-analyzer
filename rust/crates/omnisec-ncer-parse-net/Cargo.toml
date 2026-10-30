@@ -1,0 +1,17 @@
+[package]
+name = "omnisec-ncer-parse-net"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec NCER — converts omnisec-mitm capture data into NCER typed events."
+
+[dependencies]
+omnisec-crypto = { path = "../omnisec-crypto" }
+omnisec-json = { path = "../omnisec-json" }
+omnisec-mitm = { path = "../omnisec-mitm" }
+omnisec-ncer-types = { path = "../omnisec-ncer-types" }
+
+[lints]
+workspace = true

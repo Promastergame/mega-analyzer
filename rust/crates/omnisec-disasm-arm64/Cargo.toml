@@ -1,0 +1,12 @@
+[package]
+name = "omnisec-disasm-arm64"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+omnisec-core = { path = "../omnisec-core" }
+omnisec-ir = { path = "../omnisec-ir" }
+omnisec-arm64-decode = { path = "../omnisec-arm64-decode" }
+
+[dev-dependencies]
+omnisec-disasm = { path = "../omnisec-disasm" }

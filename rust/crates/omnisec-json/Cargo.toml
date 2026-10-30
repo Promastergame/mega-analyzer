@@ -1,0 +1,15 @@
+[package]
+name = "omnisec-json"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Zero-dependency JSON value, parser and serializer for OmniSec (replaces serde_json)."
+
+[dependencies]
+omnisec-collections = { path = "../omnisec-collections" }
+omnisec-json-derive = { path = "../omnisec-json-derive" }
+
+[lints]
+workspace = true

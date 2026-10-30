@@ -1,0 +1,30 @@
+[package]
+name = "omnisec-forge"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec Forge — Phase-4 deterministic multi-arch payload compiler (ROP/JOP/DOP synthesis with SMT-guided chain assembly)."
+
+[lints]
+workspace = true
+
+[dependencies]
+omnisec-ipdg = { workspace = true }
+omnisec-smt = { workspace = true }
+omnisec-hdc = { workspace = true }
+omnisec-ir = { workspace = true }
+omnisec-core = { workspace = true }
+omnisec-json = { path = "../omnisec-json" }
+omnisec-graph = { path = "../omnisec-graph" }
+
+# Error handling
+
+# Graph algorithms for DOP data graphs
+
+# Data structures
+
+# Serialization (SynthesizedPayload is deterministic-serialisable)
+
+[dev-dependencies]

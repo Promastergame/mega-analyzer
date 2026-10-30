@@ -1,0 +1,9 @@
+# Performance
+
+The parser preallocates its event vector from capture counts. The Go collector preallocates capture arrays and snapshots its event slice under a short mutex hold. Evidence stores avoid rewriting identical content, and `EvidenceStore` (Go) additionally keeps an in-memory cache of hashes already confirmed on disk this process, so a repeat `Store` call for identical bytes skips the filesystem `stat` entirely.
+
+`bind_effects` (`omnisec-ncer-reconcile::effect_binder`) indexes requests by `(method, url)` into a `BTreeMap<timestamp, {ids}>` per key and resolves each response's nearest-preceding-within-window candidate with a single predecessor lookup, making the function `O(n log n)`. It used to scan every unbound request per response (`O(requests * responses)`); see [`docs/benchmarks/ncer_performance.md`](../benchmarks/ncer_performance.md) for the before/after numbers (10,000-event reconciliation went from ~29.7s to ~236ms). `bind_authority` and `bind_dns_flow` follow the same indexed-lookup shape.
+
+`run_pipeline` (`omnisec-ncer-reconcile-ffi`) runs all three binders serially below `PARALLEL_BINDER_THRESHOLD` (50,000 total events) and via `std::thread::scope` at or above it — benchmarking showed unconditional parallelism *loses* to serial by ~10-15% on small-to-medium captures (thread-spawn cost exceeds what overlapping saves) and only wins by ~8-10% once a capture is large. See `docs/benchmarks/ncer_performance.md` for the full 1,000/10,000/30,000/100,000-event comparison behind that threshold.
+
+Benchmarks live in `pkg/ncer/bench_test.go` and require the real FFI linked (`-tags 'cgo omnisec_ncer_reconcile_ffi'` against a release build of `omnisec-ncer-reconcile-ffi`) to measure real reconciliation cost rather than the stub's immediate error return. Evaluate changes with representative capture sizes; correctness and deterministic output take precedence over micro-optimizations.

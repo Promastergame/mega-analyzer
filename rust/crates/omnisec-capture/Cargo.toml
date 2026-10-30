@@ -1,0 +1,17 @@
+[package]
+name = "omnisec-capture"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec — unified, zero-copy packet-capture ingest, flow reassembly, and port-independent protocol classification for the network-interception subsystem."
+
+[dependencies]
+omnisec-crypto = { path = "../omnisec-crypto" }
+omnisec-json = { path = "../omnisec-json" }
+
+[dev-dependencies]
+
+[lints]
+workspace = true

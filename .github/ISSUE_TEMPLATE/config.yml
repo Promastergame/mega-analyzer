@@ -1,0 +1,10 @@
+# Mega-Analyzer is a solo-maintained project that does NOT accept code
+# contributions or pull requests. Issues are the one and only channel for
+# bug reports and feature suggestions.
+blank_issues_enabled: false
+assignees:
+  - Promastergame
+contact_links:
+  - name: Report a security vulnerability (private)
+    url: https://github.com/Promastergame/mega-analyzer/security/advisories/new
+    about: Do NOT open a public issue for security bugs. Use a private advisory — see docs/SECURITY.md.

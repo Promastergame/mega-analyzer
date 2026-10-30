@@ -1,0 +1,17 @@
+[package]
+name = "omnisec-loader"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec universal loader — trait + magic-byte dispatcher for every supported binary format."
+
+[dependencies]
+omnisec-json = { path = "../omnisec-json" }
+omnisec-core.workspace = true
+
+[dev-dependencies]
+
+[lints]
+workspace = true

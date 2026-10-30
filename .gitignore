@@ -1,0 +1,272 @@
+# Mega-Analyzer — Standard Git Ignore Configuration
+
+# ==============================================================================
+# COMPILATION & BINARIES
+# ==============================================================================
+*.exe
+*.exe~
+*.dll
+*.dll.lib
+*.so
+*.dylib
+*.test
+*.test.exe
+*.out
+*.pdb
+*.o
+*.obj
+target/
+**/target/
+vulnscan.exe
+/analyzer.exe
+/analyzer
+api.test.exe
+api-server.exe
+labs/servers/labs-*
+labs/servers/**/labs-*
+
+
+# ==============================================================================
+# TEMPORARY CACHES & RUNTIME LOGS
+# ==============================================================================
+logs/
+*.log
+*.tmp
+*.cache
+.analyzer-cache/
+*.prof
+*.pprof
+*.cover
+*.trace
+results.json
+erl_crash.dump
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.exp
+.test-go-cache/
+.test-tmp/
+/.tmp/
+tmp_il2cpp_out/
+
+# ==============================================================================
+# DEPLOYMENT & SCAN BUILD OUTPUTS
+# ==============================================================================
+# Repo-root build output dir (anchored: must not match nested src/bin/ dirs
+# like rust/crates/omnisec-ml-gnn/src/bin/, which hold committed sources).
+/bin/
+dist/
+coverage/
+coverage
+scratch/
+test_out/
+analysis_output/
+analysis_output*/
+pkg/internal/apkloader/output/
+output/
+
+
+*.zip
+*.apk
+.sc-research/
+# Local BSD reverse-engineering lab.
+/labs/bsd_emu/
+test_patch_out.json
+
+# Regenerated analyzer run outputs inside the demo fixture
+# (`analyzer -t demo/demo_test_apk -report all`, see demo/README.md) —
+# the fixture sources (src/, res/, smali, dex) stay tracked.
+demo/demo_test_apk/**/analysis.json
+demo/demo_test_apk/**/REPORT.html
+
+# ==============================================================================
+# DEVELOPER ENVIRONMENT & TOOLING
+# ==============================================================================
+.vscode/
+.idea/
+.VSCodeCounter/
+.elixir_ls/
+.lexical/
+node_modules/
+.env
+.env.*
+!.env.example
+!.env.example_ru
+
+# Portable editor preferences may contain local paths and scan state.
+apkED.local.configuration
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+nul
+
+# Passwords & Secrets
+пароли
+secrets.json
+
+# TLS private keys / certs — generate locally, never commit (see `mix gen.cert`)
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# ==============================================================================
+# LANGUAGE WORKSPACES
+# ==============================================================================
+
+# Zig
+zig-out/
+**/zig-out/
+zig-cache/
+**/zig-cache/
+.zig-cache/
+**/.zig-cache/
+
+# Rust (rust/)
+rust/target/
+rust/**/target/
+**/*.rs.bk
+Cargo.lock.bak
+
+# Elixir/Phoenix (server/)
+server/_build/
+server/deps/
+server/native/omnisec_worker_nif/target/
+server/native/omnisec_debugger_nif/target/
+server/priv/native/*.dll
+server/priv/native/*.so
+server/priv/native/*.dylib
+
+# Stray scratch / dump files
+smali_errors.txt
+/time_control.md
+/time_control.txt
+pkg/cmd/analyzer/server_*/
+
+# Build scripts (cicd.ps1 handles all platforms)
+build_windows.ps1
+cross_build_linux.ps1
+analyzer.flags.txt
+ninja.exe
+
+# Local backup binaries
+bin_backups/
+
+# Personal/internal README — never publish (Promaster-only, proprietary license + full history)
+README.me.md
+.claude/
+.agents/
+.codex/
+.memory/
+.aws/
+.ssh/
+.azure/
+.kube/
+.dai-*/
+.mimocode/
+.workbuddy-ai/
+.workbuddy/
+workbuddy/
+.workbuddy*
+
+# Extensionless self-compiled binaries left at the repo root by ad-hoc
+# `go build` runs (not caught by *.exe/*.so above since they have no suffix
+# on Linux). Add further ones here as they show up.
+/OmniSec-arm64
+/analyzer-api
+
+# Node artifacts unrelated to the Go/Rust toolchain in this repo.
+/package.json
+/package-lock.json
+
+# Note: parol.rs / parol2 are intentionally NOT ignored here — they are the
+# machine-code test fixture (hardcoded "1234" password, referenced by the
+# digit-table-merge recovery test comments in
+# rust/crates/omnisec-scan-native/src/strings.rs). If they should stay
+# permanently, move them into pkg/internal/apkloader/testdata/ instead of
+
+# Ignored workspace additions
+vscode-main/
+test_decoded/
+my-recovery.patch
+
+# Local toolchains and training outputs; source helpers remain publishable.
+/tools/*
+!/tools/webui-split/
+/tools/webui-split/split_report.txt
+
+# APK Editor is maintained in its own repository.
+/zig/apk_editor/
+
+# Local run/audit artifacts — never commit
+/SOURCE_MANIFEST.json
+.mega-analyzer-build-cache.json
+.mega-analyzer-decode-cache.json
+aud.txt
+AUDIT_*.md
+**/AUDIT_*.md
+cargo-metadata.json
+**/cargo-metadata.json
+
+# Distribution archives
+*.bundle
+Mega-Analyzer.zip
+Mega_Analyzer.zip
+Mega-Analyzer.md
+time_control.zip
+
+# Large data files — use Git LFS or release assets
+*.gnnbuf
+aetrium_anchors.json
+mitm_capture.jsonl
+
+# Zcode AI workspace — local only, never commit
+.zcode/
+.zcode
+
+# Local run/audit output — ad-hoc eval & review artifacts (removed 2026-09-18)
+outputs/
+outputs*/
+
+# Patch/editor backup artifacts
+*.orig
+*.backup
+*.original
+*.bak
+*.rej
+
+# Weight snapshots: dated production backups stay local, only the
+# canonical gnn_weights.json / .gnnbuf are tracked.
+*.production-backup-*.json
+
+# Generated demo runs inside demo_test_apk fixture (verify/final_cycle/
+# iterations, analyzer/patch runs, rebuilt APKs) — sources (src/, res/,
+# assets/, decompiled/, *.xml, *.md, build.ps1) stay tracked
+demo/demo_test_apk/verify*/
+demo/demo_test_apk/final_cycle*/
+demo/demo_test_apk/verification/
+demo/demo_test_apk/analyzer_run*/
+demo/demo_test_apk/patch_run*/
+demo/demo_test_apk/build/
+demo/demo_test_apk/analysis_check/
+demo/demo_test_apk/final_check/
+demo/demo_test_apk/full_fixed/
+demo/demo_test_apk/js_run_fixed/
+demo/demo_test_apk/*.apk
+demo/demo_test_apk/*.idsig
+
+# Agent work logs (codex sessions and similar scratch notes).
+codex_*
+
+# Local VM agent credentials and recovered sandbox reports (documented defaults).
+/vm-capture/
+/recovered/
+/PetyaDecryptor/
+/*.png
+

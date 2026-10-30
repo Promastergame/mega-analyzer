@@ -1,0 +1,68 @@
+{
+  "name": "gov_sso_webview_rules",
+  "source": "omnisec/mega-analyzer gov-SSO & WebView auth-flow taxonomy (validated on ru.dnevnik.app ESIA login)",
+  "rules": [
+    {
+      "id": "webview_ssl_bypass_proceed",
+      "title": "WebView SSL error bypass: SslErrorHandler.proceed() accepts an invalid certificate. In SSO/gov-auth flows this exposes the login page (and any ticket/token scraped from it) to MITM. Works across smali and Java sources; fires at the call site, so event-driven Kotlin that splits onReceivedSslError from the proceed() lambda is still caught.",
+      "severity": "high",
+      "cvss": 7.4,
+      "cwe": "cwe-295",
+      "owasp_mobile": "m3",
+      "masvs": "network-3",
+      "pattern_type": "regex",
+      "pattern": "Landroid/webkit/SslErrorHandler;->proceed\\(\\)V|\\.proceed\\(\\)\\s*;"
+    },
+    {
+      "id": "govsso_endpoint_reference",
+      "title": "Government SSO endpoint (Gosuslugi/ESIA) referenced from code: gov identity provider is part of the auth flow. Inventory finding — map which classes build or intercept these URLs.",
+      "severity": "info",
+      "cwe": "cwe-200",
+      "masvs": "auth-1",
+      "pattern_type": "regex",
+      "pattern": "esia\\.gosuslugi\\.ru|https?://(?:[a-z0-9-]+\\.)*gosuslugi\\.ru|esia\\.[-a-z0-9]+\\.ru/aas"
+    },
+    {
+      "id": "oauth_uuid_pair_hardcoded",
+      "title": "Hardcoded OAuth client credentials: two UUID literals within a short window in a file that also mentions token/authorization endpoints. Extractable client_id/client_secret pairs (as found shipping in refresh-token interceptors) let anyone impersonate the app against the auth API.",
+      "severity": "high",
+      "cvss": 7.5,
+      "cwe": "cwe-798",
+      "owasp_mobile": "m1",
+      "masvs": "auth-4",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "(?s)[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}.{0,600}?[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+        "(?i)\\brefresh.?token\\b|\\boauth\\b|\\bclient.?secret\\b|byrefreshtoken"
+      ]
+    },
+    {
+      "id": "webview_html_dump_auth",
+      "title": "WebView page HTML is dumped via evaluateJavascript + innerHTML. When the page is an SSO/login form this scrapes auth state (tickets, task ids) out of the DOM instead of using a documented redirect/callback — spoofable by anything that can alter the page.",
+      "severity": "warning",
+      "cvss": 5.3,
+      "cwe": "cwe-927",
+      "owasp_mobile": "m1",
+      "masvs": "platform-2",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "evaluateJavascript",
+        "innerHTML"
+      ]
+    },
+    {
+      "id": "webview_intent_scheme_redirect",
+      "title": "WebViewClient handles intent:// URLs by parsing them into an Intent and starting an activity. A page (or MITM peer, if SSL errors are also bypassed) can launch arbitrary components/deep links inside the app.",
+      "severity": "warning",
+      "cvss": 6.1,
+      "cwe": "cwe-939",
+      "owasp_mobile": "m1",
+      "masvs": "platform-2",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "shouldOverrideUrlLoading",
+        "parseUri"
+      ]
+    }
+  ]
+}

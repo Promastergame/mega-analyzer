@@ -1,0 +1,249 @@
+# Set MEGA_ANALYZER_API_TOKEN in .env before `docker-compose up -d`.
+# With no profiles, only the core `analyzer` service starts.
+# Other services use Compose profiles — opt in explicitly:
+#
+#   docker-compose --profile postgres up -d   # + PostgreSQL (needs .env, see .env.example)
+#   docker-compose --profile redis up -d      # + Redis (needs .env, see .env.example)
+#   docker-compose --profile mitm up -d       # + mitmproxy
+#   docker-compose --profile android up -d    # + Android emulator (Linux/KVM host only,
+#                                              #   not usable on Docker Desktop Windows/Mac)
+#
+# Copy .env.example to .env; fill database passwords only for their profiles.
+
+services:
+  # Main Mega-Analyzer service
+  analyzer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      cache_from:
+        - mega-analyzer:latest
+    image: mega-analyzer:latest
+    container_name: mega-analyzer
+    user: "1000:1000"
+    
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
+    
+    # Ports (REST API; the image CMD runs `analyzer --api --api-port 5000`)
+    ports:
+      - "127.0.0.1:5000:5000"
+    
+    # Volume mounts
+    volumes:
+      - ./workspace:/home/analyzer/workspace:rw
+      - ./reports:/home/analyzer/reports:rw
+      - ./configs:/home/analyzer/configs:ro
+    
+    # Environment variables
+    environment:
+      - MEGA_ANALYZER_API_BIND=0.0.0.0
+      - MEGA_ANALYZER_API_TOKEN=${MEGA_ANALYZER_API_TOKEN:?set MEGA_ANALYZER_API_TOKEN in .env}
+      - MEGA_ANALYZER_SCAN_ROOT=/home/analyzer/workspace
+      - MEGA_ANALYZER_JOB_ROOT=/home/analyzer/reports/api
+      - MEGA_ANALYZER_SCAN_CONCURRENCY=4
+      - MEGA_ANALYZER_WORKSPACE=/home/analyzer/workspace
+    
+    # Network configuration
+    networks:
+      - mega-analyzer-net
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+
+  # Optional: MITM proxy service (mitmproxy)
+  mitm-proxy:
+    image: mitmproxy/mitmproxy:latest
+    container_name: mega-analyzer-mitm
+    profiles: ["mitm"]
+
+    # Ports
+    ports:
+      - "127.0.0.1:8080:8080"  # HTTP proxy
+      - "127.0.0.1:8443:8443"  # HTTPS proxy
+    
+    # Volume mounts
+    volumes:
+      - ./mitm-data:/home/mitmproxy/.mitmproxy:rw
+      - ./mitm-scripts:/home/mitmproxy/scripts:ro
+    
+    # Environment
+    environment:
+      - MITMPROXY_LISTEN_HOST=0.0.0.0
+      - MITMPROXY_LISTEN_PORT=8080
+    
+    # Network
+    networks:
+      - mega-analyzer-net
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    
+    # Health check
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Optional: Android emulator service
+  android-emulator:
+    image: budtmo/docker-android:latest
+    container_name: mega-analyzer-android
+    profiles: ["android"]
+
+    # Privileged mode for emulator. Requires /dev/kvm (Linux/KVM host) and is
+    # NOT usable on Docker Desktop for Windows/Mac — only start this profile on
+    # a Linux host with KVM available.
+    privileged: true
+    
+    # Ports
+    ports:
+      - "127.0.0.1:5555:5555"  # ADB port
+      - "127.0.0.1:4444:4444"  # Emulator console
+    
+    # Volumes
+    volumes:
+      - ./android-data:/data:rw
+      - /dev/kvm:/dev/kvm:rw  # KVM acceleration
+    
+    # Environment
+    environment:
+      - EMULATOR_DEVICE=Pixel_5_API_31
+      - EMULATOR_HEADLESS=false
+      - EMULATOR_ADDITIONAL_ARGS=-no-window -gpu host
+    
+    # Network
+    networks:
+      - mega-analyzer-net
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "10"
+
+  # Optional: PostgreSQL for storing analysis results
+  postgres:
+    image: postgres:16-alpine
+    container_name: mega-analyzer-db
+    profiles: ["postgres"]
+
+    # Environment
+    environment:
+      - POSTGRES_DB=mega_analyzer
+      - POSTGRES_USER=analyzer
+      # The postgres entrypoint requires a password when this profile starts.
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-}
+      - POSTGRES_INITDB_ARGS=-c max_connections=200
+    
+    # Volumes
+    volumes:
+      - postgres-data:/var/lib/postgresql/data:rw
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    
+    # Ports
+    ports:
+      - "127.0.0.1:5432:5432"
+    
+    # Network
+    networks:
+      - mega-analyzer-net
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Health check
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analyzer"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+  # Optional: Redis for caching and session management
+  redis:
+    image: redis:7-alpine
+    container_name: mega-analyzer-cache
+    profiles: ["redis"]
+
+    # Ports
+    ports:
+      - "127.0.0.1:6379:6379"
+    
+    # Volumes
+    volumes:
+      - redis-data:/data:rw
+    
+    # Command
+    command: sh -c 'redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru --requirepass "$${REDIS_PASSWORD:?set REDIS_PASSWORD}"'
+    environment:
+      # The command above requires a password when this profile starts.
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-}
+    
+    # Network
+    networks:
+      - mega-analyzer-net
+    
+    # Restart policy
+    restart: unless-stopped
+    
+    # Health check
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli --no-auth-warning -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+
+# Networks
+networks:
+  mega-analyzer-net:
+    driver: bridge
+    driver_opts:
+      com.docker.network.bridge.name: br-mega-analyzer
+
+# Volumes
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local

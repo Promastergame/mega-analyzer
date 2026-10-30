@@ -1,0 +1,29 @@
+{
+  "state": {
+    "code": ".method public static configure(Landroid/view/View;)V\n    .locals 1\n    const/4 v0, 0x1\n    invoke-virtual {p0, v0}, Landroid/view/View;->setEnabled(Z)V\n    return-void\n.end method",
+    "line": 3
+  },
+  "questions": {
+    "role": {
+      "type": "choice",
+      "task": "literal_role",
+      "abstain_key": "unknown",
+      "instructions": "Classify the literal at the supplied line.",
+      "criteria": {
+        "bitmask": "Set of bit flags",
+        "flag_bit": "Individual flag bit",
+        "sentinel": "Special marker or absent value",
+        "color_argb": "ARGB color",
+        "layout_param": "Android layout parameter",
+        "boolean": "Boolean flag",
+        "limit_threshold": "Upper bound or threshold",
+        "counter_step": "Increment or counter step",
+        "duration_ms": "Delay or duration in milliseconds",
+        "resource_id": "Android resource identifier",
+        "index_or_size": "Index or size of a collection",
+        "api_constant": "API enum or mode constant",
+        "unknown": "Unknown role or insufficient evidence"
+      }
+    }
+  }
+}

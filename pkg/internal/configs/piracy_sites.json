@@ -1,0 +1,1882 @@
+{
+  "schema_version": 2,
+  "sites": [
+    {
+      "name": "4PDA",
+      "type": "forum",
+      "region": "RU",
+      "domains": ["4pda.ru", "4pda.to", "4pda.cc", "4pda.info", "4pda.biz"],
+      "patterns": [
+        {"value": "4pda.ru", "weight": 1.0},
+        {"value": "4pda.to", "weight": 1.0},
+        {"value": "4pda.cc", "weight": 1.0},
+        {"value": "4pda.info", "weight": 0.9},
+        {"value": "4pda.biz", "weight": 0.9},
+        {"value": "4pda", "weight": 0.85, "mode": "word"}
+      ],
+      "aliases": ["fourpda", "4-pda", "4 pda", "4_pda", "четырепда"],
+      "watermarks": [
+        {"value": "4pda", "confidence": 0.95},
+        {"value": "4pda_logo", "confidence": 0.9},
+        {"value": "4pda_banner", "confidence": 0.85},
+        {"value": "pda_watermark", "confidence": 0.8}
+      ],
+      "patterns_regex": ["4[\\._-]?pda", "четыре[\\._-]?пда"],
+      "scope": ["content", "path", "resource"],
+      "confidence": 0.95,
+      "risk_tags": ["repack", "mod", "russian_warez"],
+      "description": "Largest Russian mobile software forum",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "5Play",
+      "type": "warez",
+      "region": "RU",
+      "domains": ["5play.ru", "5play.org", "5play.mobi", "5play.club", "5play.pro", "5play.me"],
+      "patterns": [
+        {"value": "5play.ru", "weight": 1.0},
+        {"value": "5play.org", "weight": 1.0},
+        {"value": "5play.mobi", "weight": 1.0},
+        {"value": "5play.club", "weight": 1.0},
+        {"value": "5play.pro", "weight": 0.95},
+        {"value": "5play", "weight": 0.85, "mode": "word"}
+      ],
+      "aliases": ["fiveplay", "5_play", "5-play", "five_play", "пятьплей"],
+      "watermarks": [
+        {"value": "5play", "confidence": 0.95},
+        {"value": "5play_mod", "confidence": 0.9},
+        {"value": "5play_logo", "confidence": 0.85}
+      ],
+      "patterns_regex": ["5[\\._-]?play"],
+      "confidence": 0.95,
+      "risk_tags": ["repack", "billing_bypass", "russian_warez"],
+      "description": "Russian APK warez site with mods",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "Androeed",
+      "type": "warez",
+      "region": "RU",
+      "domains": ["androeed.ru", "androeed.org", "androeed.net", "androeed.com"],
+      "patterns": [
+        {"value": "androeed.ru", "weight": 1.0},
+        {"value": "androeed.org", "weight": 1.0},
+        {"value": "androeed.net", "weight": 1.0},
+        {"value": "androeed", "weight": 0.9, "mode": "word"}
+      ],
+      "aliases": ["andro_eed", "andro-eed"],
+      "watermarks": [
+        {"value": "androeed", "confidence": 0.9},
+        {"value": "androeed_logo", "confidence": 0.85}
+      ],
+      "patterns_regex": ["andro[\\._-]?eed"],
+      "confidence": 0.95,
+      "risk_tags": ["repack", "mod", "russian_warez"],
+      "description": "Russian Android warez site",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "PDALife",
+      "type": "warez",
+      "region": "RU",
+      "domains": ["pdalife.ru", "pdalife.info", "pdalife.com", "pdalife.org"],
+      "patterns": [
+        {"value": "pdalife.ru", "weight": 1.0},
+        {"value": "pdalife.info", "weight": 1.0},
+        {"value": "pdalife.com", "weight": 1.0},
+        {"value": "pdalife", "weight": 0.85, "mode": "word"}
+      ],
+      "aliases": ["pda_life", "pda-life"],
+      "watermarks": [
+        {"value": "pdalife", "confidence": 0.85},
+        {"value": "pdalife_logo", "confidence": 0.8}
+      ],
+      "patterns_regex": ["pda[\\._-]?life"],
+      "confidence": 0.9,
+      "risk_tags": ["repack", "russian_warez"],
+      "description": "Russian mobile software site",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "Trashbox",
+      "type": "warez",
+      "region": "RU",
+      "domains": ["trashbox.ru", "trashbox.mobi"],
+      "patterns": [
+        {"value": "trashbox.ru", "weight": 1.0},
+        {"value": "trashbox.mobi", "weight": 1.0},
+        {"value": "trashbox", "weight": 0.8, "mode": "word"}
+      ],
+      "watermarks": [{"value": "trashbox", "confidence": 0.8}],
+      "confidence": 0.85,
+      "risk_tags": ["repack", "russian_warez"],
+      "description": "Russian APK repository",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "RuTracker",
+      "type": "torrent",
+      "region": "RU",
+      "domains": ["rutracker.org", "rutracker.net", "rutracker.nl"],
+      "patterns": [
+        {"value": "rutracker.org", "weight": 1.0},
+        {"value": "rutracker", "weight": 0.9, "mode": "word"}
+      ],
+      "aliases": ["ru_tracker", "рутрекер"],
+      "watermarks": [{"value": "rutracker", "confidence": 0.9}],
+      "patterns_regex": ["ru[\\._-]?tracker"],
+      "confidence": 0.9,
+      "risk_tags": ["torrent", "piracy", "russian_warez"],
+      "description": "Russian torrent tracker",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "NNM-Club",
+      "type": "torrent",
+      "region": "RU",
+      "domains": ["nnmclub.to", "nnm-club.me", "nnm-club.lib"],
+      "patterns": [
+        {"value": "nnmclub", "weight": 1.0},
+        {"value": "nnm-club", "weight": 1.0},
+        {"value": "nnm_club", "weight": 1.0}
+      ],
+      "watermarks": [{"value": "nnmclub", "confidence": 0.9}],
+      "patterns_regex": ["nnm[\\._-]?club"],
+      "confidence": 0.9,
+      "risk_tags": ["torrent", "piracy", "russian_warez"],
+      "description": "Russian torrent/warez community",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "APKs.in",
+      "type": "warez",
+      "region": "RU",
+      "domains": ["apks.in", "apks.ru"],
+      "patterns": [
+        {"value": "apks.in", "weight": 1.0},
+        {"value": "apks.ru", "weight": 1.0}
+      ],
+      "confidence": 0.9,
+      "risk_tags": ["repack", "russian_warez"],
+      "description": "Russian APK warez",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "ModsApk.ru",
+      "type": "warez",
+      "region": "RU",
+      "domains": ["modsapk.ru", "mods-apk.ru"],
+      "patterns": [
+        {"value": "modsapk.ru", "weight": 1.0},
+        {"value": "mods-apk.ru", "weight": 1.0}
+      ],
+      "watermarks": [{"value": "modsapk", "confidence": 0.9}],
+      "confidence": 0.95,
+      "risk_tags": ["mod", "repack", "russian_warez"],
+      "description": "Russian MOD APK site",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "AndroidFreeTop",
+      "type": "warez",
+      "region": "RU",
+      "domains": ["androidfreetop.com", "androidfreetop.ru"],
+      "patterns": [
+        {"value": "androidfreetop", "weight": 1.0}
+      ],
+      "confidence": 0.9,
+      "risk_tags": ["repack", "russian_warez"],
+      "description": "Russian Android warez",
+      "evidence_strength": "strong"
+    },
+
+    {
+      "name": "HappyMod",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["happymod.com", "happymod.net", "happymod.io", "happymod.org"],
+      "patterns": [
+        {"value": "happymod.com", "weight": 1.0},
+        {"value": "happymod.net", "weight": 1.0},
+        {"value": "happymod.io", "weight": 1.0},
+        {"value": "happymod", "weight": 0.95, "mode": "word"},
+        {"value": "happy_mod", "weight": 0.9},
+        {"value": "happy-mod", "weight": 0.9}
+      ],
+      "aliases": ["happy_mod", "happy-mod", "happy.mod", "hm_mod"],
+      "watermarks": [
+        {"value": "happymod", "confidence": 0.98},
+        {"value": "happy_mod", "confidence": 0.95},
+        {"value": "hm_logo", "confidence": 0.85},
+        {"value": "happymod_banner", "confidence": 0.9},
+        {"value": "hm_watermark", "confidence": 0.85}
+      ],
+      "patterns_regex": ["happy[\\._\\-\\s]?mod", "hm[\\._-]?mod"],
+      "scope": ["content", "path", "resource"],
+      "confidence": 0.98,
+      "risk_tags": ["iap_bypass", "repack", "mod", "chinese_origin"],
+      "description": "Largest MOD APK platform",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "APKMody",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["apkmody.io", "apkmody.com", "apkmody.net"],
+      "patterns": [
+        {"value": "apkmody.io", "weight": 1.0},
+        {"value": "apkmody.com", "weight": 1.0},
+        {"value": "apkmody", "weight": 0.9, "mode": "word"}
+      ],
+      "aliases": ["apk_mody", "apk-mody"],
+      "watermarks": [
+        {"value": "apkmody", "confidence": 0.95},
+        {"value": "apkmody_logo", "confidence": 0.85}
+      ],
+      "patterns_regex": ["apk[\\._-]?mody"],
+      "confidence": 0.95,
+      "risk_tags": ["iap_bypass", "mod"],
+      "description": "MOD APK distribution site",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "ModDroid",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["moddroid.com", "moddroid.co", "moddroid.io"],
+      "patterns": [
+        {"value": "moddroid.com", "weight": 1.0},
+        {"value": "moddroid.co", "weight": 1.0},
+        {"value": "moddroid", "weight": 0.9, "mode": "word"}
+      ],
+      "aliases": ["mod_droid", "mod-droid"],
+      "watermarks": [
+        {"value": "moddroid", "confidence": 0.95},
+        {"value": "moddroid_logo", "confidence": 0.85}
+      ],
+      "patterns_regex": ["mod[\\._-]?droid"],
+      "confidence": 0.95,
+      "risk_tags": ["mod", "iap_bypass"],
+      "description": "MOD APK distribution",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "Platinmods",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["platinmods.com", "platinmods.net", "platinmods.org"],
+      "patterns": [
+        {"value": "platinmods.com", "weight": 1.0},
+        {"value": "platinmods.net", "weight": 1.0},
+        {"value": "platinmods", "weight": 0.95, "mode": "word"},
+        {"value": "platin_mods", "weight": 0.9}
+      ],
+      "aliases": ["platin", "platin_mods", "platin-mods", "pm_mods"],
+      "watermarks": [
+        {"value": "platinmods", "confidence": 0.98},
+        {"value": "platin_logo", "confidence": 0.9},
+        {"value": "pm_logo", "confidence": 0.85},
+        {"value": "pm_watermark", "confidence": 0.85}
+      ],
+      "patterns_regex": ["platin[\\._-]?mods", "pm[\\._-]?mods"],
+      "scope": ["content", "path", "resource"],
+      "confidence": 0.98,
+      "risk_tags": ["mod", "game_hack", "memory_edit"],
+      "description": "Premium game modding forum",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "Sbenny",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["sbenny.com", "sbenny.net"],
+      "patterns": [
+        {"value": "sbenny.com", "weight": 1.0},
+        {"value": "sbenny", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [
+        {"value": "sbenny", "confidence": 0.95},
+        {"value": "sbenny_logo", "confidence": 0.85}
+      ],
+      "confidence": 0.95,
+      "risk_tags": ["mod", "premium_unlock"],
+      "description": "MOD APK forum",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "BlackMod",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["blackmod.net", "blackmod.org"],
+      "patterns": [
+        {"value": "blackmod.net", "weight": 1.0},
+        {"value": "blackmod", "weight": 0.9, "mode": "word"}
+      ],
+      "aliases": ["black_mod", "black-mod"],
+      "watermarks": [
+        {"value": "blackmod", "confidence": 0.95},
+        {"value": "blackmod_logo", "confidence": 0.85}
+      ],
+      "patterns_regex": ["black[\\._-]?mod"],
+      "confidence": 0.95,
+      "risk_tags": ["mod", "game_hack"],
+      "description": "MOD APK site",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "An1",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["an1.com", "an1.io"],
+      "patterns": [
+        {"value": "an1.com", "weight": 1.0},
+        {"value": "an1.io", "weight": 1.0},
+        {"value": "an1", "weight": 0.7, "mode": "word"}
+      ],
+      "watermarks": [{"value": "an1", "confidence": 0.8}],
+      "confidence": 0.9,
+      "risk_tags": ["mod"],
+      "description": "MOD APK platform",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "RevDL",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["revdl.com", "revdl.net"],
+      "patterns": [
+        {"value": "revdl.com", "weight": 1.0},
+        {"value": "revdl", "weight": 0.9, "mode": "word"}
+      ],
+      "aliases": ["rev_dl", "rev-dl"],
+      "watermarks": [{"value": "revdl", "confidence": 0.9}],
+      "confidence": 0.95,
+      "risk_tags": ["mod", "repack"],
+      "description": "MOD APK distribution",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "APKDone",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["apkdone.com", "apkdone.net"],
+      "patterns": [
+        {"value": "apkdone.com", "weight": 1.0},
+        {"value": "apkdone", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [{"value": "apkdone", "confidence": 0.9}],
+      "confidence": 0.95,
+      "risk_tags": ["mod", "premium_unlock"],
+      "description": "MOD APK site",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "RexDL",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["rexdl.com", "rexdl.co"],
+      "patterns": [
+        {"value": "rexdl.com", "weight": 1.0},
+        {"value": "rexdl", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [{"value": "rexdl", "confidence": 0.9}],
+      "confidence": 0.95,
+      "risk_tags": ["mod", "repack"],
+      "description": "MOD APK platform",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "APKGod",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["apkgod.net", "apkgod.co"],
+      "patterns": [
+        {"value": "apkgod.net", "weight": 1.0},
+        {"value": "apkgod", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [{"value": "apkgod", "confidence": 0.9}],
+      "confidence": 0.95,
+      "risk_tags": ["mod", "premium_unlock"],
+      "description": "MOD APK site",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "JENAPK",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["jenapk.com"],
+      "patterns": [
+        {"value": "jenapk.com", "weight": 1.0},
+        {"value": "jenapk", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [{"value": "jenapk", "confidence": 0.9}],
+      "confidence": 0.95,
+      "risk_tags": ["mod"],
+      "description": "MOD APK distribution",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "APKCombo",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["apkcombo.com", "apkcombo.org"],
+      "patterns": [
+        {"value": "apkcombo.com", "weight": 1.0},
+        {"value": "apkcombo", "weight": 0.85, "mode": "word"}
+      ],
+      "watermarks": [{"value": "apkcombo", "confidence": 0.7}],
+      "confidence": 0.75,
+      "is_legitimate_mirror": true,
+      "risk_tags": ["repack"],
+      "description": "APK distribution (mixed)",
+      "evidence_strength": "medium"
+    },
+
+    {
+      "name": "Lucky Patcher",
+      "type": "cracking",
+      "region": "GLOBAL",
+      "domains": ["luckypatcher.com", "luckypatchers.com", "lucky-patcher.com", "luckypatcher.net"],
+      "patterns": [
+        {"value": "luckypatcher", "weight": 1.0},
+        {"value": "lucky_patcher", "weight": 1.0},
+        {"value": "lucky-patcher", "weight": 1.0},
+        {"value": "lucky patcher", "weight": 1.0},
+        {"value": "chelpus", "weight": 0.98},
+        {"value": "lp_main", "weight": 0.95},
+        {"value": "lp_core", "weight": 0.95},
+        {"value": "lp_utils", "weight": 0.9}
+      ],
+      "aliases": ["lucky.patcher", "luckypatch", "лаки патчер"],
+      "watermarks": [
+        {"value": "luckypatcher", "confidence": 0.99},
+        {"value": "lucky_patcher", "confidence": 0.99},
+        {"value": "lp_icon", "confidence": 0.95},
+        {"value": "lp_logo", "confidence": 0.95},
+        {"value": "lp_patched", "confidence": 0.9},
+        {"value": "chelpus", "confidence": 0.95}
+      ],
+      "patterns_regex": [
+        "lucky[\\._\\s\\-]?patcher",
+        "chelpus\\.\\w+",
+        "ru\\.chelpus\\.",
+        "com\\.chelpus\\."
+      ],
+      "scope": ["content", "path", "resource"],
+      "confidence": 0.99,
+      "risk_tags": ["iap_bypass", "lvl_bypass", "signature_spoof", "crack", "billing_bypass"],
+      "description": "Most popular Android cracking tool",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "Game Guardian",
+      "type": "cracking",
+      "region": "GLOBAL",
+      "domains": ["gameguardian.net", "gameguardian.app"],
+      "patterns": [
+        {"value": "gameguardian", "weight": 1.0},
+        {"value": "game_guardian", "weight": 1.0},
+        {"value": "game-guardian", "weight": 1.0},
+        {"value": "gg_mem", "weight": 0.95},
+        {"value": "gg_inject", "weight": 0.95}
+      ],
+      "aliases": ["game.guardian", "гейм гвардиан"],
+      "watermarks": [
+        {"value": "gameguardian", "confidence": 0.98},
+        {"value": "gg_logo", "confidence": 0.9}
+      ],
+      "patterns_regex": [
+        "game[\\._\\s\\-]?guardian"
+      ],
+      "scope": ["content", "path", "resource"],
+      "confidence": 0.98,
+      "risk_tags": ["memory_hack", "cheat", "game_hack", "root_required"],
+      "description": "Game memory hacking tool",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "Freedom",
+      "type": "cracking",
+      "region": "GLOBAL",
+      "domains": ["freedom.apk", "freedomapk.com"],
+      "patterns": [
+        {"value": "cc.madkite.freedom", "weight": 1.0},
+        {"value": "madkite.freedom", "weight": 1.0},
+        {"value": "freedom_root", "weight": 0.95},
+        {"value": "freedom_fake", "weight": 0.95}
+      ],
+      "aliases": ["freedom_apk"],
+      "watermarks": [
+        {"value": "freedom", "confidence": 0.85},
+        {"value": "madkite", "confidence": 0.95}
+      ],
+      "patterns_regex": [
+        "madkite\\.freedom",
+        "cc\\.madkite\\.",
+        "freedom[\\._-]?root"
+      ],
+      "confidence": 0.98,
+      "risk_tags": ["iap_bypass", "billing_bypass", "root_required"],
+      "description": "In-app purchase bypass tool",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "CreeHack",
+      "type": "cracking",
+      "region": "GLOBAL",
+      "domains": ["creehack.com"],
+      "patterns": [
+        {"value": "creehack", "weight": 1.0},
+        {"value": "cree_hack", "weight": 1.0},
+        {"value": "creehack.game", "weight": 0.95}
+      ],
+      "watermarks": [{"value": "creehack", "confidence": 0.95}],
+      "patterns_regex": ["cree[\\._-]?hack"],
+      "confidence": 0.98,
+      "risk_tags": ["iap_bypass", "billing_bypass"],
+      "description": "In-app purchase cracking tool",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "Xmodgames",
+      "type": "cracking",
+      "region": "GLOBAL",
+      "domains": ["xmodgames.com", "xmodgame.com"],
+      "patterns": [
+        {"value": "xmodgames", "weight": 1.0},
+        {"value": "xmodgame", "weight": 1.0},
+        {"value": "xmod", "weight": 0.8, "mode": "word"}
+      ],
+      "watermarks": [{"value": "xmodgames", "confidence": 0.95}],
+      "patterns_regex": ["x[\\._-]?mod[\\._-]?game"],
+      "confidence": 0.95,
+      "risk_tags": ["cheat", "game_hack"],
+      "description": "Game cheating platform",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "SB Game Hacker",
+      "type": "cracking",
+      "region": "GLOBAL",
+      "domains": ["sbgamehacker.com"],
+      "patterns": [
+        {"value": "sbgamehacker", "weight": 1.0},
+        {"value": "sb_game_hacker", "weight": 1.0},
+        {"value": "sbhacker", "weight": 0.9}
+      ],
+      "watermarks": [{"value": "sbgamehacker", "confidence": 0.95}],
+      "patterns_regex": ["sb[\\._-]?game[\\._-]?hacker"],
+      "confidence": 0.98,
+      "risk_tags": ["memory_hack", "game_hack"],
+      "description": "Game memory hacking tool",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "Leo PlayCard",
+      "type": "cracking",
+      "region": "GLOBAL",
+      "domains": ["leoplay.card"],
+      "patterns": [
+        {"value": "leoplaycard", "weight": 1.0},
+        {"value": "leo_playcard", "weight": 1.0},
+        {"value": "leoplay", "weight": 0.9}
+      ],
+      "watermarks": [{"value": "leoplaycard", "confidence": 0.95}],
+      "patterns_regex": ["leo[\\._-]?play[\\._-]?card"],
+      "confidence": 0.98,
+      "risk_tags": ["iap_bypass", "billing_bypass"],
+      "description": "In-app purchase bypass",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "ACMarket",
+      "type": "cracking",
+      "region": "GLOBAL",
+      "domains": ["acmarket.net", "acmarket.app", "acmarket.in"],
+      "patterns": [
+        {"value": "acmarket.net", "weight": 1.0},
+        {"value": "acmarket.app", "weight": 1.0},
+        {"value": "acmarket", "weight": 0.95, "mode": "word"},
+        {"value": "ac_market", "weight": 0.95},
+        {"value": "ac-market", "weight": 0.95}
+      ],
+      "aliases": ["ac.market", "acmkt"],
+      "watermarks": [
+        {"value": "acmarket", "confidence": 0.98},
+        {"value": "ac_market", "confidence": 0.95},
+        {"value": "acmarket_logo", "confidence": 0.9}
+      ],
+      "patterns_regex": ["ac[\\._\\-\\s]?market"],
+      "confidence": 0.98,
+      "risk_tags": ["crack", "iap_bypass", "alternative_store"],
+      "description": "Cracked app store",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "TutuApp",
+      "type": "cracking",
+      "region": "GLOBAL",
+      "domains": ["tutuapp.vip", "tutuapp.com", "tutuapp.net", "tutu.app"],
+      "patterns": [
+        {"value": "tutuapp.vip", "weight": 1.0},
+        {"value": "tutuapp.com", "weight": 1.0},
+        {"value": "tutuapp", "weight": 0.95, "mode": "word"},
+        {"value": "tutu_app", "weight": 0.95},
+        {"value": "tutu-app", "weight": 0.95}
+      ],
+      "aliases": ["tutu-app", "tutu.app", "tutu_helper"],
+      "watermarks": [
+        {"value": "tutuapp", "confidence": 0.95},
+        {"value": "tutu_logo", "confidence": 0.85}
+      ],
+      "patterns_regex": ["tutu[\\._\\-\\s]?app"],
+      "confidence": 0.95,
+      "risk_tags": ["crack", "alternative_store", "chinese_origin"],
+      "description": "Third-party app store with cracks",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "iHackedIt",
+      "type": "cracking",
+      "region": "GLOBAL",
+      "domains": ["ihackedit.com"],
+      "patterns": [
+        {"value": "ihackedit.com", "weight": 1.0},
+        {"value": "ihackedit", "weight": 0.95, "mode": "word"},
+        {"value": "i_hacked_it", "weight": 0.9}
+      ],
+      "watermarks": [{"value": "ihackedit", "confidence": 0.98}],
+      "patterns_regex": ["i[\\._-]?hacked[\\._-]?it"],
+      "confidence": 0.98,
+      "risk_tags": ["crack", "mod"],
+      "description": "Cracking/modding site",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "AppSara",
+      "type": "cracking",
+      "region": "GLOBAL",
+      "domains": ["appsara.net"],
+      "patterns": [
+        {"value": "appsara", "weight": 1.0},
+        {"value": "app_sara", "weight": 1.0}
+      ],
+      "watermarks": [{"value": "appsara", "confidence": 0.95}],
+      "patterns_regex": ["app[\\._-]?sara"],
+      "confidence": 0.98,
+      "risk_tags": ["iap_bypass", "billing_bypass"],
+      "description": "In-app purchase bypass",
+      "evidence_strength": "strong"
+    },
+
+    {
+      "name": "ReVanced",
+      "type": "modding_framework",
+      "region": "GLOBAL",
+      "domains": ["revanced.app", "revanced.io", "revanced.net"],
+      "patterns": [
+        {"value": "revanced", "weight": 0.9, "mode": "word"},
+        {"value": "revanced.app", "weight": 1.0},
+        {"value": "app.revanced", "weight": 1.0},
+        {"value": "revanced_patches", "weight": 0.95},
+        {"value": "revanced_manager", "weight": 0.9}
+      ],
+      "aliases": ["re_vanced", "re-vanced"],
+      "watermarks": [{"value": "revanced", "confidence": 0.85}],
+      "patterns_regex": [
+        "revanced\\.\\w+",
+        "app\\.revanced\\.",
+        "revanced[\\._-]?manager",
+        "revanced[\\._-]?patches"
+      ],
+      "confidence": 0.85,
+      "risk_tags": ["ad_removal", "youtube_mod", "premium_bypass"],
+      "description": "YouTube/app patching framework",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "Vanced",
+      "type": "modding_framework",
+      "region": "GLOBAL",
+      "domains": ["vancedapp.com", "vanced.app"],
+      "patterns": [
+        {"value": "vanced", "weight": 0.85, "mode": "word"},
+        {"value": "vancedapp", "weight": 1.0},
+        {"value": "youtube_vanced", "weight": 1.0},
+        {"value": "microg", "weight": 0.8}
+      ],
+      "aliases": ["youtube_vanced", "yt_vanced"],
+      "watermarks": [
+        {"value": "vanced", "confidence": 0.85},
+        {"value": "vancedapp", "confidence": 0.9}
+      ],
+      "patterns_regex": [
+        "vanced[\\._-]?app",
+        "youtube[\\._-]?vanced",
+        "yt[\\._-]?vanced"
+      ],
+      "confidence": 0.85,
+      "risk_tags": ["ad_removal", "youtube_mod", "premium_bypass"],
+      "description": "YouTube Vanced (discontinued but signatures persist)",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "LSPatch",
+      "type": "modding_framework",
+      "region": "GLOBAL",
+      "domains": ["lspatch.app"],
+      "patterns": [
+        {"value": "lspatch", "weight": 0.95},
+        {"value": "ls_patch", "weight": 0.95},
+        {"value": "lspatch.loader", "weight": 1.0}
+      ],
+      "patterns_regex": ["ls[\\._-]?patch"],
+      "confidence": 0.9,
+      "risk_tags": ["root_bypass", "framework", "injection"],
+      "description": "LSPosed framework for non-rooted devices",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "Xposed",
+      "type": "modding_framework",
+      "region": "GLOBAL",
+      "domains": ["xposed.info"],
+      "patterns": [
+        {"value": "xposed", "weight": 0.85, "mode": "word"},
+        {"value": "xposed.installer", "weight": 1.0},
+        {"value": "de.robv.android.xposed", "weight": 1.0},
+        {"value": "xposedbridge", "weight": 1.0}
+      ],
+      "patterns_regex": [
+        "xposed\\w*",
+        "de\\.robv\\.android\\.xposed"
+      ],
+      "confidence": 0.85,
+      "risk_tags": ["framework", "root_required", "injection"],
+      "description": "Xposed framework",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "LSPosed",
+      "type": "modding_framework",
+      "region": "GLOBAL",
+      "domains": ["lsposed.org"],
+      "patterns": [
+        {"value": "lsposed", "weight": 0.95, "mode": "word"},
+        {"value": "org.lsposed", "weight": 1.0},
+        {"value": "lsposed.manager", "weight": 1.0}
+      ],
+      "patterns_regex": [
+        "ls[\\._-]?posed",
+        "org\\.lsposed\\."
+      ],
+      "confidence": 0.9,
+      "risk_tags": ["framework", "root_required", "injection"],
+      "description": "LSPosed framework",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "EdXposed",
+      "type": "modding_framework",
+      "region": "GLOBAL",
+      "domains": ["edxposed.org"],
+      "patterns": [
+        {"value": "edxposed", "weight": 0.95, "mode": "word"},
+        {"value": "org.meowcat.edxposed", "weight": 1.0}
+      ],
+      "patterns_regex": [
+        "ed[\\._-]?xposed",
+        "org\\.meowcat\\.edxposed"
+      ],
+      "confidence": 0.9,
+      "risk_tags": ["framework", "root_required", "injection"],
+      "description": "EdXposed framework",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "Magisk",
+      "type": "root_tool",
+      "region": "GLOBAL",
+      "domains": ["magiskmanager.com"],
+      "patterns": [
+        {"value": "magisk", "weight": 0.8, "mode": "word"},
+        {"value": "com.topjohnwu.magisk", "weight": 1.0},
+        {"value": "magisk_hide", "weight": 0.95},
+        {"value": "magiskhide", "weight": 0.95}
+      ],
+      "patterns_regex": [
+        "com\\.topjohnwu\\.magisk",
+        "magisk[\\._-]?hide"
+      ],
+      "confidence": 0.75,
+      "risk_tags": ["root", "hide_root"],
+      "description": "Magisk root manager",
+      "evidence_strength": "weak"
+    },
+
+    {
+      "name": "Baidu",
+      "type": "chinese_store",
+      "region": "CN",
+      "domains": ["shouji.baidu.com", "apk.baidu.com", "as.baidu.com"],
+      "patterns": [
+        {"value": "shouji.baidu.com", "weight": 1.0},
+        {"value": "apk.baidu.com", "weight": 1.0},
+        {"value": "baidu_apk", "weight": 0.9},
+        {"value": "com.baidu.appsearch", "weight": 1.0},
+        {"value": "baidusdk", "weight": 0.85}
+      ],
+      "aliases": ["baidu_store", "百度"],
+      "watermarks": [{"value": "baidu", "confidence": 0.7}],
+      "patterns_regex": [
+        "baidu[\\._-]?apk",
+        "com\\.baidu\\.\\w+"
+      ],
+      "confidence": 0.75,
+      "risk_tags": ["chinese_origin", "alternative_store"],
+      "description": "Baidu Chinese app store",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "QQ App Store",
+      "type": "chinese_store",
+      "region": "CN",
+      "domains": ["sj.qq.com", "myapp.com", "android.myapp.com"],
+      "patterns": [
+        {"value": "sj.qq.com", "weight": 1.0},
+        {"value": "myapp.com", "weight": 1.0},
+        {"value": "com.tencent.android.qqdownloader", "weight": 1.0},
+        {"value": "tencent_sdk", "weight": 0.8}
+      ],
+      "aliases": ["应用宝", "yingyongbao", "tencent_store"],
+      "watermarks": [{"value": "myapp", "confidence": 0.7}],
+      "patterns_regex": [
+        "com\\.tencent\\.\\w+",
+        "sj\\.qq\\."
+      ],
+      "confidence": 0.7,
+      "risk_tags": ["chinese_origin", "alternative_store"],
+      "description": "Tencent/QQ app store",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "360 Mobile Assistant",
+      "type": "chinese_store",
+      "region": "CN",
+      "domains": ["app.360.cn", "zhushou.360.cn"],
+      "patterns": [
+        {"value": "app.360.cn", "weight": 1.0},
+        {"value": "zhushou.360.cn", "weight": 1.0},
+        {"value": "com.qihoo.appstore", "weight": 1.0},
+        {"value": "360sdk", "weight": 0.85}
+      ],
+      "aliases": ["360助手", "360_store"],
+      "watermarks": [{"value": "360", "confidence": 0.6}],
+      "patterns_regex": [
+        "com\\.qihoo\\.\\w+",
+        "360[\\._-]?sdk"
+      ],
+      "confidence": 0.7,
+      "risk_tags": ["chinese_origin", "alternative_store"],
+      "description": "360 Chinese app store",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "Wandoujia",
+      "type": "chinese_store",
+      "region": "CN",
+      "domains": ["wandoujia.com", "www.wandoujia.com"],
+      "patterns": [
+        {"value": "wandoujia.com", "weight": 1.0},
+        {"value": "com.wandoujia.phoenix2", "weight": 1.0},
+        {"value": "wandoujia", "weight": 0.9, "mode": "word"}
+      ],
+      "aliases": ["豌豆荚"],
+      "watermarks": [{"value": "wandoujia", "confidence": 0.8}],
+      "confidence": 0.75,
+      "risk_tags": ["chinese_origin", "alternative_store"],
+      "description": "Wandoujia Chinese app store",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "Coolapk",
+      "type": "chinese_store",
+      "region": "CN",
+      "domains": ["coolapk.com", "www.coolapk.com"],
+      "patterns": [
+        {"value": "coolapk.com", "weight": 1.0},
+        {"value": "com.coolapk.market", "weight": 1.0},
+        {"value": "coolapk", "weight": 0.9, "mode": "word"}
+      ],
+      "aliases": ["酷安", "ku_an"],
+      "watermarks": [{"value": "coolapk", "confidence": 0.8}],
+      "confidence": 0.75,
+      "risk_tags": ["chinese_origin", "alternative_store"],
+      "description": "Coolapk Chinese enthusiast store",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "Xiaomi Market",
+      "type": "chinese_store",
+      "region": "CN",
+      "domains": ["app.mi.com", "market.xiaomi.com"],
+      "patterns": [
+        {"value": "app.mi.com", "weight": 1.0},
+        {"value": "com.xiaomi.market", "weight": 1.0}
+      ],
+      "aliases": ["小米应用商店", "miui_store"],
+      "confidence": 0.6,
+      "is_legitimate_mirror": true,
+      "risk_tags": ["chinese_origin", "alternative_store"],
+      "description": "Xiaomi official store (legitimate but region-specific)",
+      "evidence_strength": "weak"
+    },
+    {
+      "name": "Huawei AppGallery",
+      "type": "chinese_store",
+      "region": "CN",
+      "domains": ["appgallery.huawei.com", "hicloud.com"],
+      "patterns": [
+        {"value": "appgallery.huawei.com", "weight": 1.0},
+        {"value": "com.huawei.appmarket", "weight": 1.0}
+      ],
+      "aliases": ["华为应用市场", "huawei_store"],
+      "confidence": 0.5,
+      "is_legitimate_mirror": true,
+      "risk_tags": ["chinese_origin", "alternative_store"],
+      "description": "Huawei official store (legitimate)",
+      "evidence_strength": "weak"
+    },
+    {
+      "name": "9Apps",
+      "type": "chinese_store",
+      "region": "CN",
+      "domains": ["9apps.com", "www.9apps.com"],
+      "patterns": [
+        {"value": "9apps.com", "weight": 1.0},
+        {"value": "com.mobile.indiapp", "weight": 1.0},
+        {"value": "9apps", "weight": 0.85, "mode": "word"}
+      ],
+      "watermarks": [{"value": "9apps", "confidence": 0.8}],
+      "confidence": 0.8,
+      "risk_tags": ["chinese_origin", "alternative_store", "india"],
+      "description": "9Apps store (Alibaba)",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "PPAssistant",
+      "type": "chinese_store",
+      "region": "CN",
+      "domains": ["pp.cn", "www.pp.cn"],
+      "patterns": [
+        {"value": "pp.cn", "weight": 1.0},
+        {"value": "ppassistant", "weight": 1.0},
+        {"value": "pp助手", "weight": 1.0}
+      ],
+      "aliases": ["pp助手"],
+      "watermarks": [{"value": "ppassistant", "confidence": 0.9}],
+      "confidence": 0.85,
+      "risk_tags": ["chinese_origin", "jailbreak"],
+      "description": "PP Assistant (iOS jailbreak, Android alternative store)",
+      "evidence_strength": "strong"
+    },
+
+    {
+      "name": "Mobilism",
+      "type": "forum",
+      "region": "GLOBAL",
+      "domains": ["mobilism.org", "mobilism.me", "mobilism.cc"],
+      "patterns": [
+        {"value": "mobilism.org", "weight": 1.0},
+        {"value": "mobilism.me", "weight": 1.0},
+        {"value": "mobilism", "weight": 0.95, "mode": "word"}
+      ],
+      "watermarks": [
+        {"value": "mobilism", "confidence": 0.98},
+        {"value": "mobilism_logo", "confidence": 0.9}
+      ],
+      "confidence": 0.98,
+      "risk_tags": ["piracy", "repack", "forum"],
+      "description": "Major mobile piracy forum",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "Nulled",
+      "type": "forum",
+      "region": "GLOBAL",
+      "domains": ["nulled.to", "nulled.ch", "nulled.io"],
+      "patterns": [
+        {"value": "nulled.to", "weight": 1.0},
+        {"value": "nulled.ch", "weight": 1.0},
+        {"value": "nulled", "weight": 0.8, "mode": "word"}
+      ],
+      "watermarks": [{"value": "nulled", "confidence": 0.9}],
+      "confidence": 0.95,
+      "risk_tags": ["piracy", "cracking", "forum"],
+      "description": "Cracking forum",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "CrackWatch",
+      "type": "forum",
+      "region": "GLOBAL",
+      "domains": ["crackwatch.com", "r/crackwatch"],
+      "patterns": [
+        {"value": "crackwatch", "weight": 1.0}
+      ],
+      "watermarks": [{"value": "crackwatch", "confidence": 0.9}],
+      "confidence": 0.9,
+      "risk_tags": ["piracy", "crack_scene"],
+      "description": "Crack release tracking",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "CSRin.ru",
+      "type": "forum",
+      "region": "GLOBAL",
+      "domains": ["cs.rin.ru", "csrin.ru"],
+      "patterns": [
+        {"value": "cs.rin.ru", "weight": 1.0},
+        {"value": "csrin.ru", "weight": 1.0},
+        {"value": "csrin", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [{"value": "csrin", "confidence": 0.95}],
+      "confidence": 0.95,
+      "risk_tags": ["piracy", "steam_crack"],
+      "description": "Steam underground forum",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "BlackHatWorld",
+      "type": "forum",
+      "region": "GLOBAL",
+      "domains": ["blackhatworld.com"],
+      "patterns": [
+        {"value": "blackhatworld.com", "weight": 1.0},
+        {"value": "blackhatworld", "weight": 0.9, "mode": "word"},
+        {"value": "bhw", "weight": 0.7, "mode": "word"}
+      ],
+      "confidence": 0.85,
+      "risk_tags": ["black_hat", "seo_spam"],
+      "description": "Black hat marketing forum",
+      "evidence_strength": "medium"
+    },
+
+    {
+      "name": "APKPure",
+      "type": "mirror",
+      "region": "GLOBAL",
+      "domains": ["apkpure.com", "apkpure.net", "apkpure.co"],
+      "patterns": [
+        {"value": "apkpure.com", "weight": 1.0},
+        {"value": "apkpure.net", "weight": 1.0},
+        {"value": "apkpure", "weight": 0.7, "mode": "word"}
+      ],
+      "aliases": ["apk_pure", "apk-pure"],
+      "watermarks": [{"value": "apkpure", "confidence": 0.5}],
+      "confidence": 0.5,
+      "is_legitimate_mirror": true,
+      "false_positive_words": ["apkpure.analytics", "com.apkpure.aegon", "apkpure_tracking"],
+      "risk_tags": ["alternative_store"],
+      "description": "APK mirror (generally legitimate)",
+      "evidence_strength": "weak"
+    },
+    {
+      "name": "APKMirror",
+      "type": "mirror",
+      "region": "GLOBAL",
+      "domains": ["apkmirror.com"],
+      "patterns": [
+        {"value": "apkmirror.com", "weight": 1.0},
+        {"value": "apkmirror", "weight": 0.6, "mode": "word"}
+      ],
+      "confidence": 0.35,
+      "is_legitimate_mirror": true,
+      "risk_tags": ["alternative_store"],
+      "description": "APK mirror (legitimate, by Android Police)",
+      "evidence_strength": "weak"
+    },
+    {
+      "name": "Aptoide",
+      "type": "store",
+      "region": "GLOBAL",
+      "domains": ["aptoide.com", "en.aptoide.com"],
+      "patterns": [
+        {"value": "aptoide.com", "weight": 1.0},
+        {"value": "aptoide", "weight": 0.7, "mode": "word"},
+        {"value": "com.aptoide.partners", "weight": 0.9}
+      ],
+      "aliases": ["apt_oide"],
+      "watermarks": [{"value": "aptoide", "confidence": 0.5}],
+      "confidence": 0.5,
+      "is_legitimate_mirror": true,
+      "risk_tags": ["alternative_store"],
+      "description": "Alternative app store (mixed content)",
+      "evidence_strength": "weak"
+    },
+    {
+      "name": "Uptodown",
+      "type": "mirror",
+      "region": "GLOBAL",
+      "domains": ["uptodown.com", "en.uptodown.com"],
+      "patterns": [
+        {"value": "uptodown.com", "weight": 1.0},
+        {"value": "uptodown", "weight": 0.7, "mode": "word"}
+      ],
+      "confidence": 0.4,
+      "is_legitimate_mirror": true,
+      "risk_tags": ["alternative_store"],
+      "description": "APK mirror (generally legitimate)",
+      "evidence_strength": "weak"
+    },
+    {
+      "name": "APKHere",
+      "type": "mirror",
+      "region": "GLOBAL",
+      "domains": ["apkhere.com"],
+      "patterns": [
+        {"value": "apkhere.com", "weight": 1.0},
+        {"value": "apkhere", "weight": 0.85, "mode": "word"}
+      ],
+      "watermarks": [{"value": "apkhere", "confidence": 0.8}],
+      "confidence": 0.8,
+      "risk_tags": ["alternative_store", "mixed_content"],
+      "description": "APK mirror (mixed legitimate/pirated)",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "GetJar",
+      "type": "store",
+      "region": "GLOBAL",
+      "domains": ["getjar.com"],
+      "patterns": [
+        {"value": "getjar.com", "weight": 1.0},
+        {"value": "getjar", "weight": 0.7, "mode": "word"}
+      ],
+      "confidence": 0.5,
+      "is_legitimate_mirror": true,
+      "risk_tags": ["alternative_store"],
+      "description": "Alternative app store",
+      "evidence_strength": "weak"
+    },
+    {
+      "name": "SlideME",
+      "type": "store",
+      "region": "GLOBAL",
+      "domains": ["slideme.org"],
+      "patterns": [
+        {"value": "slideme.org", "weight": 1.0},
+        {"value": "slideme", "weight": 0.7, "mode": "word"}
+      ],
+      "confidence": 0.5,
+      "is_legitimate_mirror": true,
+      "risk_tags": ["alternative_store"],
+      "description": "Alternative app store",
+      "evidence_strength": "weak"
+    },
+    {
+      "name": "F-Droid",
+      "type": "store",
+      "region": "GLOBAL",
+      "domains": ["f-droid.org"],
+      "patterns": [
+        {"value": "f-droid.org", "weight": 1.0},
+        {"value": "f-droid", "weight": 0.5, "mode": "word"},
+        {"value": "fdroid", "weight": 0.5, "mode": "word"}
+      ],
+      "confidence": 0.2,
+      "is_legitimate_mirror": true,
+      "risk_tags": ["open_source_store"],
+      "description": "Open source app store (legitimate)",
+      "evidence_strength": "weak"
+    },
+
+    {
+      "name": "APKFab",
+      "type": "warez",
+      "region": "GLOBAL",
+      "domains": ["apkfab.com"],
+      "patterns": [
+        {"value": "apkfab.com", "weight": 1.0},
+        {"value": "apkfab", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [{"value": "apkfab", "confidence": 0.85}],
+      "confidence": 0.85,
+      "risk_tags": ["mod", "repack"],
+      "description": "MOD APK distribution",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "Modyolo",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["modyolo.com"],
+      "patterns": [
+        {"value": "modyolo.com", "weight": 1.0},
+        {"value": "modyolo", "weight": 0.95, "mode": "word"}
+      ],
+      "watermarks": [{"value": "modyolo", "confidence": 0.95}],
+      "confidence": 0.95,
+      "risk_tags": ["mod", "iap_bypass"],
+      "description": "MOD APK platform",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "APKMB",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["apkmb.com"],
+      "patterns": [
+        {"value": "apkmb.com", "weight": 1.0},
+        {"value": "apkmb", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [{"value": "apkmb", "confidence": 0.9}],
+      "confidence": 0.95,
+      "risk_tags": ["mod"],
+      "description": "MOD APK site",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "ModsAPK",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["modsapk.com", "modsapk.net"],
+      "patterns": [
+        {"value": "modsapk.com", "weight": 1.0},
+        {"value": "modsapk", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [{"value": "modsapk", "confidence": 0.95}],
+      "confidence": 0.95,
+      "risk_tags": ["mod", "iap_bypass"],
+      "description": "MOD APK platform",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "APKDL",
+      "type": "warez",
+      "region": "GLOBAL",
+      "domains": ["apkdl.in", "apkdl.io"],
+      "patterns": [
+        {"value": "apkdl.in", "weight": 1.0},
+        {"value": "apkdl", "weight": 0.9, "mode": "word"}
+      ],
+      "confidence": 0.85,
+      "risk_tags": ["repack"],
+      "description": "APK download site",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "APKsFull",
+      "type": "warez",
+      "region": "GLOBAL",
+      "domains": ["apksfull.com"],
+      "patterns": [
+        {"value": "apksfull.com", "weight": 1.0},
+        {"value": "apksfull", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [{"value": "apksfull", "confidence": 0.9}],
+      "confidence": 0.9,
+      "risk_tags": ["mod", "premium_unlock"],
+      "description": "Full version APKs",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "AndroidRepublic",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["androidrepublic.org"],
+      "patterns": [
+        {"value": "androidrepublic.org", "weight": 1.0},
+        {"value": "androidrepublic", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [{"value": "androidrepublic", "confidence": 0.95}],
+      "confidence": 0.95,
+      "risk_tags": ["mod", "game_hack"],
+      "description": "Game modding forum",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "JENAPK",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["jenapk.com"],
+      "patterns": [
+        {"value": "jenapk.com", "weight": 1.0},
+        {"value": "jenapk", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [{"value": "jenapk", "confidence": 0.9}],
+      "confidence": 0.95,
+      "risk_tags": ["mod"],
+      "description": "MOD APK distribution",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "Ihackedit",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["ihackedit.com"],
+      "patterns": [
+        {"value": "ihackedit.com", "weight": 1.0},
+        {"value": "ihackedit", "weight": 0.95, "mode": "word"}
+      ],
+      "watermarks": [{"value": "ihackedit", "confidence": 0.98}],
+      "confidence": 0.98,
+      "risk_tags": ["mod", "crack"],
+      "description": "MOD/Crack APK site",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "ApkMagic",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["apkmagic.com.ar"],
+      "patterns": [
+        {"value": "apkmagic", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [{"value": "apkmagic", "confidence": 0.9}],
+      "confidence": 0.9,
+      "risk_tags": ["mod"],
+      "description": "MOD APK site",
+      "evidence_strength": "strong"
+    },
+
+    {
+      "name": "LuluBox",
+      "type": "cheat_tool",
+      "region": "GLOBAL",
+      "domains": ["lulubox.com"],
+      "patterns": [
+        {"value": "lulubox", "weight": 1.0},
+        {"value": "com.lulu.lulubox", "weight": 1.0},
+        {"value": "lulu_box", "weight": 0.95}
+      ],
+      "watermarks": [{"value": "lulubox", "confidence": 0.98}],
+      "patterns_regex": ["lulu[\\._-]?box", "com\\.lulu\\."],
+      "confidence": 0.98,
+      "risk_tags": ["game_hack", "plugin", "skin_unlock"],
+      "description": "Game plugin/cheat tool",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "Parallel Space",
+      "type": "clone_tool",
+      "region": "GLOBAL",
+      "domains": ["parallelspace-app.com"],
+      "patterns": [
+        {"value": "parallelspace", "weight": 0.8},
+        {"value": "com.lbe.parallel.intl", "weight": 1.0}
+      ],
+      "patterns_regex": ["parallel[\\._-]?space", "com\\.lbe\\.parallel"],
+      "confidence": 0.7,
+      "risk_tags": ["clone_app", "dual_app"],
+      "description": "App cloning tool (can be used for piracy)",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "Dual Space",
+      "type": "clone_tool",
+      "region": "GLOBAL",
+      "domains": ["dualspace.mobi"],
+      "patterns": [
+        {"value": "dualspace", "weight": 0.8},
+        {"value": "dual_space", "weight": 0.8},
+        {"value": "com.ludashi.dualspace", "weight": 1.0}
+      ],
+      "patterns_regex": ["dual[\\._-]?space", "com\\.ludashi\\."],
+      "confidence": 0.7,
+      "risk_tags": ["clone_app", "dual_app"],
+      "description": "App cloning tool",
+      "evidence_strength": "medium"
+    },
+    {
+      "name": "VirtualXposed",
+      "type": "clone_tool",
+      "region": "GLOBAL",
+      "domains": [],
+      "patterns": [
+        {"value": "virtualxposed", "weight": 1.0},
+        {"value": "io.va.exposed", "weight": 1.0},
+        {"value": "virtual_xposed", "weight": 0.95}
+      ],
+      "patterns_regex": ["virtual[\\._-]?xposed", "io\\.va\\.exposed"],
+      "confidence": 0.9,
+      "risk_tags": ["xposed", "virtual", "clone_app"],
+      "description": "Xposed without root (virtual environment)",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "TaiChi",
+      "type": "framework",
+      "region": "GLOBAL",
+      "domains": ["taichi.cool"],
+      "patterns": [
+        {"value": "taichi", "weight": 0.85, "mode": "word"},
+        {"value": "me.weishu.exp", "weight": 1.0},
+        {"value": "taichi_magisk", "weight": 0.95}
+      ],
+      "patterns_regex": ["me\\.weishu\\."],
+      "confidence": 0.85,
+      "risk_tags": ["xposed", "framework"],
+      "description": "Xposed framework alternative",
+      "evidence_strength": "medium"
+    },
+
+    {
+      "name": "CoinMiner Generic",
+      "type": "malware",
+      "region": "GLOBAL",
+      "domains": [],
+      "patterns": [
+        {"value": "coinhive", "weight": 1.0},
+        {"value": "cryptonight", "weight": 0.95},
+        {"value": "minergate", "weight": 0.95},
+        {"value": "cryptoloot", "weight": 0.95},
+        {"value": "coin-hive", "weight": 1.0},
+        {"value": "miner.start", "weight": 0.9},
+        {"value": "webminer", "weight": 0.85},
+        {"value": "deepminer", "weight": 0.9},
+        {"value": "coinimp", "weight": 0.95}
+      ],
+      "patterns_regex": [
+        "coin[\\._-]?hive",
+        "crypto[\\._-]?loot",
+        "miner[\\._-]?gate",
+        "web[\\._-]?miner",
+        "startMining\\(",
+        "CoinHive\\.Anonymous"
+      ],
+      "confidence": 0.99,
+      "risk_tags": ["cryptominer", "malware", "resource_abuse"],
+      "description": "Cryptocurrency mining scripts/code",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "Ad Fraud SDK",
+      "type": "malware",
+      "region": "GLOBAL",
+      "domains": [],
+      "patterns": [
+        {"value": "click_injection", "weight": 1.0},
+        {"value": "fake_click", "weight": 0.95},
+        {"value": "ad_stacking", "weight": 0.9},
+        {"value": "click_flood", "weight": 0.95},
+        {"value": "invisible_ad", "weight": 0.9},
+        {"value": "hidden_webview", "weight": 0.85}
+      ],
+      "patterns_regex": [
+        "click[\\._-]?inject",
+        "fake[\\._-]?click",
+        "ad[\\._-]?fraud"
+      ],
+      "confidence": 0.95,
+      "risk_tags": ["ad_fraud", "malware", "click_fraud"],
+      "description": "Ad fraud/click injection code",
+      "evidence_strength": "strong"
+    },
+
+    {
+      "name": "VN-Zoom",
+      "type": "warez",
+      "region": "VN",
+      "domains": ["vn-zoom.com", "vnz.vn"],
+      "patterns": [
+        {"value": "vn-zoom.com", "weight": 1.0},
+        {"value": "vnzoom", "weight": 0.9},
+        {"value": "vn_zoom", "weight": 0.9}
+      ],
+      "watermarks": [{"value": "vnzoom", "confidence": 0.9}],
+      "patterns_regex": ["vn[\\._-]?zoom"],
+      "confidence": 0.9,
+      "risk_tags": ["vietnamese_warez"],
+      "description": "Vietnamese warez forum",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "Apk4All",
+      "type": "warez",
+      "region": "ID",
+      "domains": ["apk4all.com"],
+      "patterns": [
+        {"value": "apk4all.com", "weight": 1.0},
+        {"value": "apk4all", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [{"value": "apk4all", "confidence": 0.9}],
+      "confidence": 0.9,
+      "risk_tags": ["indonesian_warez"],
+      "description": "Indonesian APK warez",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "ModAPKStore",
+      "type": "modding",
+      "region": "TR",
+      "domains": ["modapkstore.com"],
+      "patterns": [
+        {"value": "modapkstore", "weight": 0.95}
+      ],
+      "watermarks": [{"value": "modapkstore", "confidence": 0.9}],
+      "confidence": 0.95,
+      "risk_tags": ["mod", "turkish_warez"],
+      "description": "Turkish MOD APK site",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "ApkSafari",
+      "type": "warez",
+      "region": "TR",
+      "domains": ["apksafari.com"],
+      "patterns": [
+        {"value": "apksafari", "weight": 0.9}
+      ],
+      "watermarks": [{"value": "apksafari", "confidence": 0.85}],
+      "confidence": 0.9,
+      "risk_tags": ["mod", "turkish_warez"],
+      "description": "Turkish APK site",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "ApkPolis",
+      "type": "warez",
+      "region": "TR",
+      "domains": ["apkpolis.com"],
+      "patterns": [
+        {"value": "apkpolis", "weight": 0.9}
+      ],
+      "watermarks": [{"value": "apkpolis", "confidence": 0.9}],
+      "confidence": 0.9,
+      "risk_tags": ["mod", "turkish_warez"],
+      "description": "Turkish APK site",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "APKSum",
+      "type": "warez",
+      "region": "GLOBAL",
+      "domains": ["apksum.com"],
+      "patterns": [
+        {"value": "apksum.com", "weight": 1.0},
+        {"value": "apksum", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [{"value": "apksum", "confidence": 0.85}],
+      "confidence": 0.85,
+      "risk_tags": ["mod"],
+      "description": "MOD APK site",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "ModRoid",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["modroid.co"],
+      "patterns": [
+        {"value": "modroid.co", "weight": 1.0},
+        {"value": "modroid", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [{"value": "modroid", "confidence": 0.9}],
+      "confidence": 0.95,
+      "risk_tags": ["mod"],
+      "description": "MOD APK platform",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "TechBigs",
+      "type": "modding",
+      "region": "GLOBAL",
+      "domains": ["techbigs.com"],
+      "patterns": [
+        {"value": "techbigs.com", "weight": 1.0},
+        {"value": "techbigs", "weight": 0.9, "mode": "word"}
+      ],
+      "watermarks": [{"value": "techbigs", "confidence": 0.9}],
+      "confidence": 0.9,
+      "risk_tags": ["mod"],
+      "description": "MOD APK distribution",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "GB WhatsApp",
+      "type": "mod_app",
+      "region": "GLOBAL",
+      "domains": ["gbwhatsapp.net", "gbwa.download"],
+      "patterns": [
+        {"value": "gbwhatsapp", "weight": 1.0},
+        {"value": "gb_whatsapp", "weight": 1.0},
+        {"value": "gbwa", "weight": 0.9, "mode": "word"},
+        {"value": "com.gbwhatsapp", "weight": 1.0}
+      ],
+      "watermarks": [{"value": "gbwhatsapp", "confidence": 0.98}],
+      "patterns_regex": ["gb[\\._-]?whatsapp", "com\\.gb\\w*whatsapp"],
+      "confidence": 0.98,
+      "risk_tags": ["whatsapp_mod", "privacy_risk", "unofficial_mod"],
+      "description": "Unofficial WhatsApp mod",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "FM WhatsApp",
+      "type": "mod_app",
+      "region": "GLOBAL",
+      "domains": ["fmwhatsapp.app"],
+      "patterns": [
+        {"value": "fmwhatsapp", "weight": 1.0},
+        {"value": "fm_whatsapp", "weight": 1.0},
+        {"value": "fmwa", "weight": 0.9, "mode": "word"},
+        {"value": "com.fmwhatsapp", "weight": 1.0}
+      ],
+      "watermarks": [{"value": "fmwhatsapp", "confidence": 0.98}],
+      "patterns_regex": ["fm[\\._-]?whatsapp"],
+      "confidence": 0.98,
+      "risk_tags": ["whatsapp_mod", "privacy_risk", "unofficial_mod"],
+      "description": "Unofficial WhatsApp mod",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "YoWhatsApp",
+      "type": "mod_app",
+      "region": "GLOBAL",
+      "domains": ["yowhatsapp.net"],
+      "patterns": [
+        {"value": "yowhatsapp", "weight": 1.0},
+        {"value": "yo_whatsapp", "weight": 1.0},
+        {"value": "yowa", "weight": 0.85, "mode": "word"},
+        {"value": "com.yowhatsapp", "weight": 1.0}
+      ],
+      "watermarks": [{"value": "yowhatsapp", "confidence": 0.98}],
+      "patterns_regex": ["yo[\\._-]?whatsapp"],
+      "confidence": 0.98,
+      "risk_tags": ["whatsapp_mod", "privacy_risk", "unofficial_mod"],
+      "description": "Unofficial WhatsApp mod",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "Spotify MOD",
+      "type": "mod_app",
+      "region": "GLOBAL",
+      "domains": [],
+      "patterns": [
+        {"value": "spotify_mod", "weight": 1.0},
+        {"value": "spotify_premium_mod", "weight": 1.0},
+        {"value": "spotifymod", "weight": 1.0},
+        {"value": "xmanager", "weight": 0.95},
+        {"value": "spotify_dogfood", "weight": 0.95}
+      ],
+      "patterns_regex": ["spotify[\\._-]?(mod|premium[\\._-]?mod|cracked)"],
+      "confidence": 0.98,
+      "risk_tags": ["premium_bypass", "ad_removal", "music_piracy"],
+      "description": "Modified Spotify with premium features",
+      "evidence_strength": "strong"
+    },
+    {
+      "name": "Netflix MOD",
+      "type": "mod_app",
+      "region": "GLOBAL",
+      "domains": [],
+      "patterns": [
+        {"value": "netflix_mod", "weight": 1.0},
+        {"value": "netflix_premium", "weight": 0.95},
+        {"value": "netflixmod", "weight": 1.0}
+      ],
+      "patterns_regex": ["netflix[\\._-]?(mod|premium|cracked)"],
+      "confidence": 0.98,
+      "risk_tags": ["premium_bypass", "streaming_piracy"],
+      "description": "Modified Netflix",
+      "evidence_strength": "strong"
+    }
+  ],
+
+  "mod_patterns": [
+    {"value": "modded", "weight": 1.0, "mode": "word"},
+    {"value": "cracked", "weight": 1.0, "mode": "word"},
+    {"value": "patched", "weight": 0.9, "mode": "word"},
+    {"value": "hacked", "weight": 0.95, "mode": "word"},
+    {"value": "cheated", "weight": 0.9, "mode": "word"},
+    {"value": "unlocked", "weight": 0.85, "mode": "word"},
+    {"value": "premium_unlocked", "weight": 1.0},
+    {"value": "pro_unlocked", "weight": 1.0},
+    {"value": "vip_unlocked", "weight": 1.0},
+    {"value": "gold_unlocked", "weight": 1.0},
+    {"value": "diamond_unlocked", "weight": 1.0},
+    {"value": "all_unlocked", "weight": 1.0},
+    {"value": "full_unlocked", "weight": 1.0},
+    {"value": "everything_unlocked", "weight": 1.0},
+    {"value": "unlimited_coins", "weight": 1.0},
+    {"value": "unlimited_gems", "weight": 1.0},
+    {"value": "unlimited_money", "weight": 1.0},
+    {"value": "unlimited_gold", "weight": 1.0},
+    {"value": "unlimited_diamonds", "weight": 1.0},
+    {"value": "unlimited_credits", "weight": 1.0},
+    {"value": "unlimited_resources", "weight": 1.0},
+    {"value": "unlimited_energy", "weight": 1.0},
+    {"value": "unlimited_lives", "weight": 1.0},
+    {"value": "unlimited_health", "weight": 1.0},
+    {"value": "unlimited_ammo", "weight": 1.0},
+    {"value": "unlimited_everything", "weight": 1.0},
+    {"value": "infinite_coins", "weight": 1.0},
+    {"value": "infinite_gems", "weight": 1.0},
+    {"value": "infinite_money", "weight": 1.0},
+    {"value": "infinite_gold", "weight": 1.0},
+    {"value": "free_purchase", "weight": 1.0},
+    {"value": "free_shopping", "weight": 1.0},
+    {"value": "free_iap", "weight": 1.0},
+    {"value": "free_in_app", "weight": 1.0},
+    {"value": "mega_mod", "weight": 1.0},
+    {"value": "mega_hack", "weight": 1.0},
+    {"value": "super_mod", "weight": 0.95},
+    {"value": "ultra_mod", "weight": 0.95},
+    {"value": "god_mode", "weight": 1.0},
+    {"value": "godmode", "weight": 1.0},
+    {"value": "no_ads", "weight": 0.8, "mode": "word"},
+    {"value": "no_advertisements", "weight": 0.85},
+    {"value": "ad_free", "weight": 0.8, "mode": "word"},
+    {"value": "ads_removed", "weight": 0.9},
+    {"value": "ads_disabled", "weight": 0.9},
+    {"value": "remove_ads", "weight": 0.85},
+    {"value": "adfree", "weight": 0.8, "mode": "word"},
+    {"value": "mod_apk", "weight": 0.95},
+    {"value": "mod_menu", "weight": 1.0},
+    {"value": "modmenu", "weight": 1.0},
+    {"value": "_modded", "weight": 0.8},
+    {"value": "_patched", "weight": 0.75},
+    {"value": "_cracked", "weight": 0.85},
+    {"value": "_hacked", "weight": 0.85},
+    {"value": "_unlocked", "weight": 0.75},
+    {"value": "anti_ban", "weight": 0.9, "mode": "word"},
+    {"value": "antiban", "weight": 0.9, "mode": "word"},
+    {"value": "anti_detect", "weight": 0.9},
+    {"value": "no_root", "weight": 0.7, "mode": "word"},
+    {"value": "no_jailbreak", "weight": 0.7},
+    {"value": "wall_hack", "weight": 1.0},
+    {"value": "wallhack", "weight": 1.0},
+    {"value": "aimbot", "weight": 1.0, "mode": "word"},
+    {"value": "aim_bot", "weight": 1.0, "mode": "word"},
+    {"value": "esp_hack", "weight": 1.0},
+    {"value": "speed_hack", "weight": 1.0},
+    {"value": "speedhack", "weight": 1.0},
+    {"value": "damage_hack", "weight": 1.0},
+    {"value": "one_hit", "weight": 0.95},
+    {"value": "one_shot", "weight": 0.9},
+    {"value": "instakill", "weight": 0.95},
+    {"value": "instant_kill", "weight": 0.95},
+    {"value": "high_damage", "weight": 0.85},
+    {"value": "no_recoil", "weight": 0.9},
+    {"value": "no_spread", "weight": 0.9},
+    {"value": "auto_aim", "weight": 0.95, "mode": "word"},
+    {"value": "autoaim", "weight": 0.95, "mode": "word"},
+    {"value": "headshot", "weight": 0.7, "mode": "word"},
+    {"value": "bypass_anticheat", "weight": 1.0},
+    {"value": "антибан", "weight": 0.9},
+    {"value": "мод_меню", "weight": 1.0},
+    {"value": "взлом", "weight": 0.95},
+    {"value": "взломанная", "weight": 0.95},
+    {"value": "бесконечные", "weight": 0.9},
+    {"value": "много_денег", "weight": 0.95}
+  ],
+
+  "crack_patterns": [
+    {"value": "license_removed", "weight": 1.0},
+    {"value": "license_bypass", "weight": 1.0},
+    {"value": "license_crack", "weight": 1.0},
+    {"value": "license_check_bypass", "weight": 1.0},
+    {"value": "signature_bypass", "weight": 1.0},
+    {"value": "signature_spoof", "weight": 1.0},
+    {"value": "signature_verification_bypass", "weight": 1.0},
+    {"value": "lvl_bypass", "weight": 1.0},
+    {"value": "lvl_removed", "weight": 1.0},
+    {"value": "license_verification_bypass", "weight": 1.0},
+    {"value": "billing_crack", "weight": 1.0},
+    {"value": "billing_bypass", "weight": 1.0},
+    {"value": "billing_hook", "weight": 1.0},
+    {"value": "iap_crack", "weight": 1.0},
+    {"value": "iap_bypass", "weight": 1.0},
+    {"value": "iap_hook", "weight": 1.0},
+    {"value": "iap_free", "weight": 1.0},
+    {"value": "in_app_billing_hack", "weight": 1.0},
+    {"value": "play_billing_crack", "weight": 1.0},
+    {"value": "google_play_crack", "weight": 1.0},
+    {"value": "lucky_patcher", "weight": 1.0},
+    {"value": "luckypatcher", "weight": 1.0},
+    {"value": "game_guardian", "weight": 1.0},
+    {"value": "gameguardian", "weight": 1.0},
+    {"value": "freedom_apk", "weight": 1.0},
+    {"value": "creehack", "weight": 1.0},
+    {"value": "cracked_by", "weight": 0.95},
+    {"value": "patched_by", "weight": 0.9},
+    {"value": "hacked_by", "weight": 0.95},
+    {"value": "modded_by", "weight": 0.85},
+    {"value": "modified_by", "weight": 0.75},
+    {"value": "repack_by", "weight": 0.85},
+    {"value": "repacked_by", "weight": 0.85},
+    {"value": "xposed", "weight": 0.85, "mode": "word"},
+    {"value": "lsposed", "weight": 0.9, "mode": "word"},
+    {"value": "edxposed", "weight": 0.9, "mode": "word"},
+    {"value": "taichi", "weight": 0.85, "mode": "word"},
+    {"value": "root_bypass", "weight": 0.95},
+    {"value": "root_hide", "weight": 0.9, "mode": "word"},
+    {"value": "magisk_hide", "weight": 0.85},
+    {"value": "safetynet_bypass", "weight": 0.95},
+    {"value": "play_integrity_bypass", "weight": 0.95},
+    {"value": "ssl_pinning_bypass", "weight": 0.9},
+    {"value": "certificate_bypass", "weight": 0.9},
+    {"value": "anti_tamper_bypass", "weight": 0.95},
+    {"value": "integrity_check_bypass", "weight": 0.95},
+    {"value": "drm_removed", "weight": 1.0},
+    {"value": "drm_crack", "weight": 1.0},
+    {"value": "drm_bypass", "weight": 1.0},
+    {"value": "widevine_crack", "weight": 1.0},
+    {"value": "keygen", "weight": 0.95},
+    {"value": "serial_generator", "weight": 0.95},
+    {"value": "activation_crack", "weight": 1.0},
+    {"value": "trial_reset", "weight": 0.9},
+    {"value": "trial_bypass", "weight": 0.95},
+    {"value": "time_crack", "weight": 0.9},
+    {"value": "chelpus", "weight": 0.98},
+    {"value": "smali_patch", "weight": 0.85},
+    {"value": "dex_patch", "weight": 0.85},
+    {"value": "hook_billing", "weight": 1.0},
+    {"value": "inject_purchase", "weight": 1.0}
+  ],
+
+  "watermark_patterns": [
+    {"value": "watermark", "confidence": 0.5},
+    {"value": "mod_banner", "confidence": 0.9},
+    {"value": "banner_mod", "confidence": 0.9},
+    {"value": "mod_logo", "confidence": 0.85},
+    {"value": "logo_mod", "confidence": 0.85},
+    {"value": "hacked_by", "confidence": 0.95},
+    {"value": "cracked_by", "confidence": 0.95},
+    {"value": "patched_by", "confidence": 0.9},
+    {"value": "mod_by", "confidence": 0.85},
+    {"value": "modded_by", "confidence": 0.85},
+    {"value": "crack_by", "confidence": 0.95},
+    {"value": "repack_by", "confidence": 0.85},
+    {"value": "powered_by_mod", "confidence": 0.9},
+    {"value": "mod_splash", "confidence": 0.9},
+    {"value": "splash_mod", "confidence": 0.9},
+    {"value": "intro_mod", "confidence": 0.85},
+    {"value": "mod_intro", "confidence": 0.85},
+    {"value": "overlay_mod", "confidence": 0.85},
+    {"value": "_wm", "confidence": 0.6},
+    {"value": "_logo", "confidence": 0.5},
+    {"value": "_banner", "confidence": 0.6},
+    {"value": "piracy_warning", "confidence": 0.7},
+    {"value": "modapk_logo", "confidence": 0.95},
+    {"value": "modapk_banner", "confidence": 0.95},
+    {"value": "взломано", "confidence": 0.95},
+    {"value": "пиратка", "confidence": 0.95},
+    {"value": "от_", "confidence": 0.6}
+  ],
+
+  "false_positive_patterns": [
+    {"value": "com.google.android.gms", "weight": 1.0},
+    {"value": "com.android.vending", "weight": 1.0},
+    {"value": "play.google.com", "weight": 1.0},
+    {"value": "googleapis.com", "weight": 1.0},
+    {"value": "crashlytics", "weight": 0.8},
+    {"value": "firebase", "weight": 0.7},
+    {"value": "analytics", "weight": 0.6},
+    {"value": "admob", "weight": 0.5},
+    {"value": "test", "weight": 0.4, "mode": "word"},
+    {"value": "debug", "weight": 0.4, "mode": "word"},
+    {"value": "example", "weight": 0.5, "mode": "word"},
+    {"value": "sample", "weight": 0.5, "mode": "word"}
+  ]
+}

@@ -1,0 +1,19 @@
+[package]
+name = "omnisec-debugger-ffi"
+version = "0.1.0"
+edition = "2024"
+description = "C FFI bridge for omnisec-debugger (CGO-compatible)"
+
+[lib]
+name = "omnisec_debugger_ffi"
+crate-type = ["cdylib", "staticlib"]
+
+[dependencies]
+omnisec-json = { path = "../omnisec-json" }
+omnisec-debugger = { path = "../omnisec-debugger" }
+omnisec-core = { path = "../omnisec-core" }
+omnisec-emu-x86 = { path = "../omnisec-emu-x86" }
+omnisec-loader = { path = "../omnisec-loader" }
+omnisec-loader-elf = { path = "../omnisec-loader-elf" }
+omnisec-loader-pe = { path = "../omnisec-loader-pe" }
+iced-x86 = { version = "1.21", default-features = false, features = ["std", "decoder", "intel", "gas", "nasm", "masm", "instr_info"] }

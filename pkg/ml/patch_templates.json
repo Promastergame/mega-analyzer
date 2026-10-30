@@ -1,0 +1,62 @@
+{
+  "nop": {
+    "type": "nop",
+    "description": "Replace with no-operation",
+    "code": "    nop",
+    "registers": 0
+  },
+  "remove_check": {
+    "type": "remove_check",
+    "description": "Remove conditional check (always take success branch)",
+    "code": "    # removed if-check, always falls through",
+    "registers": 0
+  },
+  "return_false": {
+    "type": "return_false",
+    "description": "Always return false (disable detection)",
+    "code": "    const/4 v0, 0x0\n    return v0",
+    "registers": 1
+  },
+  "return_max_int": {
+    "type": "return_max_int",
+    "description": "Return max integer (unlimited currency)",
+    "code": "    const v0, 0x7fffffff\n    return v0",
+    "registers": 1
+  },
+  "return_true": {
+    "type": "return_true",
+    "description": "Always return true (bypass check)",
+    "code": "    const/4 v0, 0x1\n    return v0",
+    "registers": 1
+  },
+  "return_void": {
+    "type": "return_void",
+    "description": "Return immediately (skip execution)",
+    "code": "    return-void",
+    "registers": 0
+  },
+  "return_long_max": {
+    "type": "return_long_max",
+    "description": "Return Long.MAX_VALUE (unlimited resource — wide return)",
+    "code": "    const-wide/32 v0, 0x7fffffff\n    return-wide v0",
+    "registers": 2
+  },
+  "return_null_object": {
+    "type": "return_null_object",
+    "description": "Return null object (disable object-returning probe)",
+    "code": "    const/4 v0, 0x0\n    return-object v0",
+    "registers": 1
+  },
+  "return_zero_int": {
+    "type": "return_zero_int",
+    "description": "Return 0 as int (reset counter / balance)",
+    "code": "    const/4 v0, 0x0\n    return v0",
+    "registers": 1
+  },
+  "goto_success": {
+    "type": "goto_success",
+    "description": "Replace conditional branch with unconditional goto (always take success path)",
+    "code": "    goto :success_branch",
+    "registers": 0
+  }
+}

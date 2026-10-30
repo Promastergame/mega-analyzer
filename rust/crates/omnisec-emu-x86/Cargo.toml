@@ -1,0 +1,19 @@
+[package]
+name = "omnisec-emu-x86"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec x86/x64 micro-emulator for crypto unpacking, string decryption, and shellcode analysis."
+
+[dependencies]
+iced-x86 = { workspace = true }
+omnisec-json = { path = "../omnisec-json" }
+omnisec-core.workspace = true
+omnisec-net-obfs = { path = "../omnisec-net-obfs" }
+
+[dev-dependencies]
+
+[lints]
+workspace = true
