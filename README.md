@@ -161,12 +161,12 @@ Mega-Analyzer combines a standalone Go core with optional native and device anal
 | Single binary, no JDK/SDK | ✅ | ❌ | ⚠️ JRE | ⚠️ JRE | n/a | n/a |
 | APK / DEX static audit | ✅ | ✅ | <img src=".github/assets/icons/search.svg" width="18"> decompile | ➖ | ➖ | ➖ |
 | Native PE / ELF / Mach-O | ✅ | ➖ | ➖ | 🥇 deep RE | ➖ | ➖ |
-| Dynamic sandbox | ✅ Win + Android | ⚠️ VM addon | ➖ | ➖ | ⚠️ cloud; limited free tier | ⚠️ |
+| Dynamic sandbox | ✅ Win + Android | ⚠️ VM addon | ➖ | ➖ | ⚠️ limited free tier | ⚠️ |
 | Live device view + input | ✅ | ➖ | ➖ | ➖ | ✅ | ➖ |
 | Decrypted traffic / MITM | ✅ | ⚠️ | ➖ | ➖ | ✅ | ➖ |
 | Offline ML scoring | ✅ | ➖ | ➖ | ➖ | ➖ | ⚠️ |
 | SARIF / code scanning | ✅ | ➖ | ➖ | ➖ | ➖ | ➖ |
-| Binary size | ~60 MB | ~500 MB+ | ~120 MB | ~1 GB+ | n/a (cloud) | n/a (cloud) |
+| Binary size | ~60 MB | ~500 MB+ | ~120 MB | ~1 GB+ | n/a | n/a (cloud) |
 | License | BSD-3-Clause OR GPLv2 | GPL v3 | Apache 2.0 | Apache 2.0 | proprietary | proprietary |
 | Price | free | free | free | free | freemium | freemium |
 
