@@ -38,7 +38,4 @@ See [QUICKSTART.md](QUICKSTART.md) and [FlagiFiles.md](FlagiFiles.md).
 Mega-Analyzer is dual-licensed under [BSD-3-Clause](LICENSE) OR [GPLv2](COPYING),
 at your option. Third-party components retain their own licenses; see [NOTICE.txt](NOTICE.txt).
 
-New major versions will be paid upgrades; downloaded free versions remain usable
-without buying an upgrade. You can also commission a feature, integration or
-standalone utility:
-[upgrades and contacting the author](https://github.com/Promastergame/mega-analyzer/blob/main/docs/SUPPORT.md).
+You can support Mega-Analyzer with a voluntary [donation via DonationAlerts](https://www.donationalerts.com/r/promastergame).

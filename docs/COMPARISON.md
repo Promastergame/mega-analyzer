@@ -24,7 +24,7 @@ MobSF is the most direct alternative for mobile security analysis. This is an ho
 | SARIF / CI code scanning | ✅ | ➖ |
 | Binary size | ~60 MB | ~500 MB+ |
 | License | BSD-3-Clause OR GPLv2 | GPL v3 |
-| Price | [current version free](SUPPORT.md#versions-and-upgrades) | free |
+| Price | free | free |
 
 ✅ first-class · ⚠️ partial · ➖ not available
 

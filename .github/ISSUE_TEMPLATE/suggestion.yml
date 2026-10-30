@@ -42,7 +42,7 @@ body:
     id: principles
     attributes:
       label: Fits the project principles
-      description: Mega-Analyzer is offline-first and lightweight. Suggestions are welcome free of charge; custom work uses the separate order form. See the README "Principles" section.
+      description: Mega-Analyzer is offline-first and lightweight. Suggestions are welcome.
       options:
         - label: This stays 100% offline (no external APIs, telemetry, or cloud calls)
         - label: This does not require heavy AI/LLM dependencies or large model weights

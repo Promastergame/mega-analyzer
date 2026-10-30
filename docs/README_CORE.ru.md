@@ -38,7 +38,4 @@ Web UI выполняет не более двух сканов одноврем
 Mega-Analyzer распространяется под [BSD-3-Clause](LICENSE) ИЛИ [GPLv2](COPYING),
 на ваш выбор. Сторонние компоненты сохраняют свои лицензии; см. [NOTICE.txt](NOTICE.txt).
 
-Новые крупные версии будут платными; скачанными бесплатными версиями можно
-продолжать пользоваться без покупки обновления. Можно заказать функцию,
-интеграцию или отдельную утилиту:
-[обновления и связь с автором](https://github.com/Promastergame/mega-analyzer/blob/main/docs/SUPPORT.ru.md).
+Поддержать Mega-Analyzer можно добровольным [донатом через DonationAlerts](https://www.donationalerts.com/r/promastergame).

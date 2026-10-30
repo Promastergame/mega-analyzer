@@ -42,11 +42,6 @@ see [build variants](docs/BUILD.md).
 
 mega-analyzer is dual-licensed under [BSD](LICENSE) OR [GPLv2](COPYING).
 
-**The current version is free. New major versions will be paid upgrades:** you can
-keep using a downloaded free version without buying an upgrade.
-Need a feature, integration or utility? [Commission custom development](docs/SUPPORT.md#custom-development).
-[Version and upgrade terms](docs/SUPPORT.md#versions-and-upgrades).
-
 <img src=".github/assets/report.png" alt="Mega-Analyzer HTML report" width="860">
 
 ---
@@ -166,16 +161,18 @@ Mega-Analyzer combines a standalone Go core with optional native and device anal
 | Single binary, no JDK/SDK | ✅ | ❌ | ⚠️ JRE | ⚠️ JRE | n/a | n/a |
 | APK / DEX static audit | ✅ | ✅ | <img src=".github/assets/icons/search.svg" width="18"> decompile | ➖ | ➖ | ➖ |
 | Native PE / ELF / Mach-O | ✅ | ➖ | ➖ | 🥇 deep RE | ➖ | ➖ |
-| Dynamic sandbox | ✅ Win + Android | ⚠️ VM addon | ➖ | ➖ | 🥇 cloud scale | ⚠️ |
+| Dynamic sandbox | ✅ Win + Android | ⚠️ VM addon | ➖ | ➖ | ⚠️ cloud; limited free tier | ⚠️ |
 | Live device view + input | ✅ | ➖ | ➖ | ➖ | ✅ | ➖ |
 | Decrypted traffic / MITM | ✅ | ⚠️ | ➖ | ➖ | ✅ | ➖ |
 | Offline ML scoring | ✅ | ➖ | ➖ | ➖ | ➖ | ⚠️ |
 | SARIF / code scanning | ✅ | ➖ | ➖ | ➖ | ➖ | ➖ |
 | Binary size | ~60 MB | ~500 MB+ | ~120 MB | ~1 GB+ | n/a (cloud) | n/a (cloud) |
 | License | BSD-3-Clause OR GPLv2 | GPL v3 | Apache 2.0 | Apache 2.0 | proprietary | proprietary |
-| Price | [current version free](docs/SUPPORT.md#versions-and-upgrades) | free | free | free | paid | freemium |
+| Price | free | free | free | free | freemium | freemium |
 
-> Where the others win: **Ghidra** is the gold standard for deep native reverse engineering; **ANY.RUN** has cloud-scale dynamic infrastructure; **MobSF** has a mature ecosystem and integrations. Use them together — Mega-Analyzer plays nicely as the offline, single-binary first pass. Full breakdown: [**docs/COMPARISON.md**](docs/COMPARISON.md).
+> Where the others win: **Ghidra** is the gold standard for deep native reverse engineering; **MobSF** has a mature ecosystem and integrations. Mega-Analyzer works as an offline, single-binary first pass alongside these tools. Full breakdown: [**docs/COMPARISON.md**](docs/COMPARISON.md).
+
+> **ANY.RUN access and privacy** (reported free-tier experience, October 2026): hosted VMs save you from setting up your own VM. The service is **freemium**, but registration requires a business email on your own domain; acquiring and maintaining that domain and mailbox can cost money even with a free service plan. Reported free-tier limits are **5 minutes per run** and **5 uses of ML features**. Analyses are **public**, including the video recording of your session; **private analysis requires a paid subscription**. These restrictions make the free tier a poor fit for confidential samples or longer interactive investigations.
 
 ---
 
@@ -407,26 +404,14 @@ These constraints are non-negotiable and define what the project is:
 | [docs/RELEASING.md](docs/RELEASING.md) | Release workflow and signature verification |
 | [docs/SECURITY.md](docs/SECURITY.md) | How to report vulnerabilities (private advisory) |
 | [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | How to report bugs and suggest ideas (no PRs) |
-| [docs/SUPPORT.md](docs/SUPPORT.md) | Where to get help |
 | [docs/CODE_OF_CONDUCT.md](docs/CODE_OF_CONDUCT.md) | Community standards |
 | [docs/DONATION.md](docs/DONATION.md) | Support the project |
 
 ---
 
-## <img src=".github/assets/icons/bolt.svg" width="20"> Support and custom development
+## <img src=".github/assets/icons/bolt.svg" width="20"> Support the project
 
-Mega-Analyzer is built and maintained by Promaster and is available under
-[BSD-3-Clause](LICENSE) OR [GPLv2](COPYING), at your option.
-
-**Custom development:** new features, integrations, automation and standalone utilities.
-[Describe your task](https://github.com/Promastergame/mega-analyzer/issues/new?template=custom_work.yml) —
-scope, price and schedule are agreed in writing before work starts.
-[More about upgrades and custom work](docs/SUPPORT.md).
-
-Donations help fund build infrastructure, compute and project development.
-They are voluntary support; upgrades and commissioned work are purchased separately.
-[Ways to support](docs/DONATION.md) · [DonationAlerts](https://www.donationalerts.com/r/promastergame).
-
+You can support Mega-Analyzer with a voluntary [donation via DonationAlerts](https://www.donationalerts.com/r/promastergame).
 
 ---
 

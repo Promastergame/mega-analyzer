@@ -4,11 +4,6 @@
 
 This is the honest, public roadmap — things that are planned, not things that are done. See [ML_ROADMAP.md](ML_ROADMAP.md) for the ML-specific plan.
 
-The current version is free; new major versions will be paid upgrades. Buying an
-upgrade is optional, and you can keep using a downloaded free version.
-Features and integrations can also be commissioned separately.
-[Upgrade and custom development terms](SUPPORT.md).
-
 ---
 
 ## 1. Sandbox: ANY.RUN-level analysis, local and offline

@@ -184,7 +184,6 @@ Yes. Mega-Analyzer is dual-licensed under [BSD-3-Clause](../LICENSE) OR
 [GPLv2](../COPYING), at your option. Commercial use, modification and
 redistribution are allowed under the terms of the license you choose.
 Third-party components retain their own licenses, listed in [NOTICE.txt](../NOTICE.txt).
-For custom development, see [contacting the author](SUPPORT.md).
 
 ### Why aren't pull requests accepted?
 
