@@ -1,0 +1,110 @@
+{
+  "go_tests": "NOT RUN: Go/gofmt unavailable; package installation unavailable",
+  "go_compilation": "NOT RUN",
+  "gofmt": "NOT RUN",
+  "browser_e2e": "NOT RUN",
+  "node_syntax_checks": "PASS app.js, workspace.js",
+  "node_workspace_logic_smoke": "PASS; fake DOM, not browser rendering",
+  "shell_syntax": "PASS bash -n scripts/validate-jar-workspace.sh",
+  "html_duplicate_ids": [],
+  "workspace_js_dom_references": "PASS",
+  "source_lexical_checks": [
+    {
+      "file": "pkg/cmd/analyzer/web/assets.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/cmd/analyzer/web/handlers_scan.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/cmd/analyzer/web/handlers_workspace.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/cmd/analyzer/web/job.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/cmd/analyzer/web/router.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/cmd/analyzer/web/runner.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/cmd/analyzer/web/scan_flags.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/cmd/analyzer/web/security.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/cmd/analyzer/web/server.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/cmd/analyzer/web/workspace.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/cmd/analyzer/web/workspace_test.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/internal/apkloader/extractor.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/internal/jarloader/analyzer.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/internal/jarloader/bytecode.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/internal/jarloader/bytecode_findings.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/internal/jarloader/bytecode_test.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/internal/jarloader/classfile.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/internal/types/analysis_result.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    },
+    {
+      "file": "pkg/internal/types/jvm_evidence_test.go",
+      "balanced_lexical_delimiters": true,
+      "import_qualifiers_present": true
+    }
+  ],
+  "new_test_functions": 25,
+  "new_fuzz_targets": 1
+}

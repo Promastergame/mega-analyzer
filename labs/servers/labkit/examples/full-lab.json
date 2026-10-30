@@ -1,0 +1,46 @@
+{
+  "log_level": "info",
+  "servers": [
+    {
+      "name": "api",
+      "kind": "http",
+      "addr": "127.0.0.1:18101",
+      "scenario": {
+        "fixed_latency": "5ms",
+        "jitter_latency": "10ms"
+      },
+      "http": {
+        "routes": [
+          {"path": "/api/status", "status": 200, "body": "{\"ok\":true}", "headers": {"Content-Type": "application/json"}},
+          {"path": "/api/teapot", "status": 418, "body": "I am a teapot"},
+          {"path": "/ws", "websocket": true}
+        ]
+      }
+    },
+    {
+      "name": "flaky",
+      "kind": "http",
+      "addr": "127.0.0.1:18102",
+      "scenario": {
+        "error_rate": 0.25,
+        "error_status": 503,
+        "timeout_rate": 0.05,
+        "timeout_duration": "2s",
+        "seed": 42
+      },
+      "http": {}
+    },
+    {
+      "name": "tcp-echo",
+      "kind": "tcp",
+      "addr": "127.0.0.1:18103",
+      "tcp": {"framing": "length", "max_conns": 512, "read_timeout": "30s"}
+    },
+    {
+      "name": "udp-echo",
+      "kind": "udp",
+      "addr": "127.0.0.1:18104",
+      "udp": {"mode": "echo"}
+    }
+  ]
+}

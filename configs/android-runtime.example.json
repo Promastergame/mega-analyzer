@@ -1,0 +1,42 @@
+{
+  "name": "android-lab",
+  "mode": "android-sdk",
+  "avd_name": "MegaAnalyzer_API_35",
+  "device": "pixel_7",
+  "locale": "en-US",
+  "timezone": "UTC",
+  "system_tag": "google_apis",
+  "network": {
+    "wifi_enabled": false,
+    "dns_servers": [
+      "10.0.2.3"
+    ],
+    "http_proxy": "",
+    "net_speed": "full",
+    "net_delay": "none"
+  },
+  "display": {
+    "mode": "scrcpy",
+    "skin": "pixel_7",
+    "gpu": "host",
+    "no_audio": true,
+    "no_boot_anim": true
+  },
+  "mitm": {
+    "enabled": false,
+    "http_proxy": "127.0.0.1:8080",
+    "ca_cert_path": "certs/mega-analyzer-lab-ca.crt",
+    "install_user_ca": true,
+    "allow_user_ca_for_apps": false,
+    "capture_path": "artifacts/mitm/capture.jsonl",
+    "redact_authorization": true
+  },
+  "snapshot": {
+    "enabled": true,
+    "name": "clean",
+    "storage_path": "",
+    "cold_boot": false,
+    "save_on_exit": false,
+    "load_on_start": true
+  }
+}

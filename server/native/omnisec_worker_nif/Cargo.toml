@@ -1,0 +1,30 @@
+[package]
+name = "omnisec_worker_nif"
+version = "0.2.0"
+edition = "2024"
+description = "Rust NIF worker for OmniSec Elixir server (dependency-free NIF bridge)"
+
+[lib]
+name = "omnisec_worker_nif"
+crate-type = ["cdylib"]
+
+[dependencies]
+nifshim = { path = "../nifshim" }
+omnisec-json = { path = "../../../rust/crates/omnisec-json" }
+omnisec-ml-inference = { path = "../../../rust/crates/omnisec-ml-inference" }
+omnisec-hdc = { path = "../../../rust/crates/omnisec-hdc" }
+omnisec-ebpf = { path = "../../../rust/crates/omnisec-ebpf" }
+omnisec-loader-dex = { path = "../../../rust/crates/omnisec-loader-dex" }
+omnisec-loader-elf = { path = "../../../rust/crates/omnisec-loader-elf" }
+omnisec-loader = { path = "../../../rust/crates/omnisec-loader" }
+omnisec-scan-native = { path = "../../../rust/crates/omnisec-scan-native" }
+# `rustler` dependency removed — replaced by the local zero-dependency
+# `nifshim` crate (see native/nifshim).
+# `serde`/`serde_json` replaced by in-house `omnisec-json`;
+# `rustc-hash` replaced by `std::collections::HashMap`;
+# `boreal` (YARA) removed for zero-dep build — `scan_yara` returns unavailable.
+
+# Zero-dep fork of iced-x86 (lazy_static -> std LazyLock, transitive via
+# omnisec-scan-native -> omnisec-disasm).
+[patch.crates-io]
+iced-x86 = { path = "../../../third-party/iced-x86" }

@@ -1,0 +1,23 @@
+[package]
+name = "omnisec-z3-worker"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Heavy symbolic execution worker powered by Z3 solver (dependency-free NIF bridge)"
+
+[dependencies]
+nifshim = { path = "../../../server/native/nifshim" }
+
+[lib]
+name = "omnisec_symexec_nif"
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+test = false
+doctest = false
+
+[lints]
+workspace = true
+# `rustler` dependency removed — replaced by the local zero-dependency
+# `nifshim` crate (see server/native/nifshim).

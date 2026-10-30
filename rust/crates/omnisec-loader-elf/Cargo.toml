@@ -1,0 +1,17 @@
+[package]
+name = "omnisec-loader-elf"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec ELF loader — parses Linux/BSD ELF binaries into LoadedBinary."
+
+[dependencies]
+omnisec-core.workspace = true
+omnisec-loader.workspace = true
+
+[dev-dependencies]
+
+[lints]
+workspace = true

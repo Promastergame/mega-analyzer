@@ -1,0 +1,142 @@
+[
+  {
+    "id": "ONLINE_DRM_CHECK",
+    "category": "drm",
+    "description": "Online DRM/content protection verification",
+    "method_names": [
+      "checkdrm",
+      "verifydrm",
+      "validatecontent",
+      "iscontentlicensed",
+      "canplaycontent",
+      "checkcontentprotection",
+      "verifyownership",
+      "haslicense",
+      "checkaccess"
+    ],
+    "class_patterns": [
+      "drm",
+      "contentprotection",
+      "media",
+      "player",
+      "streaming"
+    ],
+    "required_calls": [
+      "mediadrm",
+      "drmmanager",
+      "httpurlconnection",
+      "cipher",
+      "decrypt"
+    ],
+    "string_patterns": [
+      "widevine",
+      "playready",
+      "fairplay",
+      "drm",
+      "license",
+      "content_id",
+      "encryption",
+      "decrypt"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.1,
+    "min_match_score": 15
+  },
+  {
+    "id": "SAVE_ENCRYPTION",
+    "category": "drm",
+    "description": "Encrypts/decrypts save files",
+    "method_names": [
+      "encryptsave",
+      "decryptsave",
+      "loadsave",
+      "savegame",
+      "loadgame",
+      "encrypt",
+      "decrypt",
+      "encryptdata",
+      "decryptdata"
+    ],
+    "class_patterns": [
+      "save",
+      "savegame",
+      "gamedata",
+      "encryption",
+      "crypto",
+      "storage"
+    ],
+    "required_calls": [
+      "cipher;->init",
+      "cipher;->dofinal",
+      "secretkey",
+      "ivparameterspec",
+      "fileoutputstream",
+      "fileinputstream"
+    ],
+    "string_patterns": [
+      "aes",
+      "des",
+      "cipher",
+      "encrypt",
+      "save",
+      "game",
+      ".dat",
+      ".sav"
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 0.8,
+    "min_match_score": 15
+  },
+  {
+    "id": "GAME_WORLD_CHECK",
+    "category": "drm",
+    "description": "Game world/realm/marketplace content protection",
+    "method_names": [
+      "iscontentowned",
+      "hasdownloaded",
+      "ispackowned",
+      "isrealmactive",
+      "canjoindream",
+      "checkentitlement",
+      "ismarketplacepurchased",
+      "validatecontent",
+      "isworldaccessible",
+      "canloadworld"
+    ],
+    "class_patterns": [
+      "marketplace",
+      "realm",
+      "world",
+      "pack",
+      "content",
+      "downloadable",
+      "dlc",
+      "addon",
+      "skinpack",
+      "texturepack"
+    ],
+    "required_calls": [
+      "httpurlconnection",
+      "jsonobject",
+      "sharedpreferences",
+      "file;->exists"
+    ],
+    "string_patterns": [
+      "marketplace",
+      "realm",
+      "content_pack",
+      "dlc",
+      "skin_pack",
+      "texture_pack",
+      "minecoins",
+      "addon",
+      "entitlement"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1,
+    "min_match_score": 12
+  }
+]

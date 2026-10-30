@@ -1,0 +1,18 @@
+[package]
+name = "omnisec-ncer-reconcile"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec NCER — causal reconciliation: binds effects (responses, callbacks) back to the requests/initiators that caused them."
+
+[dependencies]
+omnisec-json = { path = "../omnisec-json" }
+omnisec-ncer-types = { path = "../omnisec-ncer-types" }
+omnisec-ncer-evidence = { path = "../omnisec-ncer-evidence" }
+
+[dev-dependencies]
+
+[lints]
+workspace = true

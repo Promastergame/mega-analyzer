@@ -1,0 +1,22 @@
+[
+  "00_license_check.json",
+  "01_billing.json",
+  "02_premium_check.json",
+  "03_subscription.json",
+  "04_ads.json",
+  "05_root_detection.json",
+  "06_emulator_detection.json",
+  "07_debug_detection.json",
+  "08_tamper_detection.json",
+  "09_signature_check.json",
+  "10_ssl_pinning.json",
+  "11_trial_expiry.json",
+  "12_feature_gate.json",
+  "13_hook_detection.json",
+  "14_installer_check.json",
+  "15_integrity_check.json",
+  "16_server_auth.json",
+  "17_drm.json",
+  "18_currency.json",
+  "19_anti_cheat.json"
+]

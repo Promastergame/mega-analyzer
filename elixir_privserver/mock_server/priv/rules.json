@@ -1,0 +1,66 @@
+{
+  "$comment": "Declarative responses for the Mega-Analyzer mock server. First match wins. Reload from the dashboard - no restart needed. Values $premium_token, $free_token, $now and $rand_hex are generated per request.",
+  "rules": [
+    {
+      "name": "bit-arena-premium-session",
+      "description": "Hands the demo game a premium entitlement token for any account.",
+      "match": { "path": "^/api/v1/session" },
+      "response": {
+        "status": 200,
+        "json": {
+          "account": "lab",
+          "tier": "premium",
+          "token": "$premium_token",
+          "perks": {
+            "skin": "golden",
+            "speed_mult": 1.35,
+            "coin_mult": 2,
+            "trail": true
+          },
+          "issued_at": "$now"
+        }
+      }
+    },
+    {
+      "name": "active-pro-license",
+      "description": "Any license/subscription check reports a lifetime professional plan.",
+      "match": { "path": "(license|subscription|entitlement|billing|plan)" },
+      "response": {
+        "status": 200,
+        "json": {
+          "error": false,
+          "active": true,
+          "plan": "professional",
+          "tier": "premium",
+          "seats": 999,
+          "license_key": "$rand_hex",
+          "expires": "2099-12-31T23:59:59Z"
+        }
+      }
+    },
+    {
+      "name": "unlock-all-features",
+      "description": "Feature-flag and remote-config endpoints answer yes to everything.",
+      "match": { "path": "(feature|flag|remote_config|remoteconfig|experiment)" },
+      "response": {
+        "status": 200,
+        "json": {
+          "error": false,
+          "features": { "*": true },
+          "ads_enabled": false,
+          "trial": false,
+          "checked_at": "$now"
+        }
+      }
+    },
+    {
+      "name": "telemetry-sink",
+      "description": "Swallow analytics/crash uploads quietly instead of 404-ing them.",
+      "match": { "path": "(analytics|telemetry|metrics|crash|report|log)" },
+      "response": {
+        "status": 200,
+        "json": { "error": false, "accepted": true }
+      }
+    }
+  ]
+}

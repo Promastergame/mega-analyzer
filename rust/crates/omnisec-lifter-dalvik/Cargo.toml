@@ -1,0 +1,24 @@
+[package]
+name = "omnisec-lifter-dalvik"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Dalvik bytecode → OmniIR lifter with C-ABI FFI for Go interop"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+omnisec-json = { path = "../omnisec-json" }
+omnisec-core.workspace = true
+omnisec-ir.workspace = true
+omnisec-cfg.workspace = true
+omnisec-deobfuscator.workspace = true
+
+
+[dev-dependencies]
+
+[lints]
+workspace = true

@@ -1,0 +1,24 @@
+[package]
+name = "omnisec_debugger_nif"
+version = "0.2.0"
+edition = "2024"
+description = "Rust NIF bridge for OmniSec Debugger — remote debugging via Elixir (dependency-free NIF bridge)"
+
+[lib]
+name = "omnisec_debugger_nif"
+crate-type = ["cdylib"]
+
+[dependencies]
+nifshim = { path = "../nifshim" }
+omnisec-json = { path = "../../../rust/crates/omnisec-json" }
+omnisec-debugger = { path = "../../../rust/crates/omnisec-debugger" }
+omnisec-core = { path = "../../../rust/crates/omnisec-core" }
+omnisec-emu-x86 = { path = "../../../rust/crates/omnisec-emu-x86" }
+iced-x86 = { version = "1.21", default-features = false, features = ["std", "decoder", "intel", "gas", "nasm", "masm", "instr_info"] }
+# `rustler` dependency removed — replaced by the local zero-dependency
+# `nifshim` crate (see native/nifshim).
+# `serde`/`serde_json` replaced by in-house `omnisec-json`.
+
+# Zero-dep fork of iced-x86 (lazy_static -> std LazyLock).
+[patch.crates-io]
+iced-x86 = { path = "../../../third-party/iced-x86" }

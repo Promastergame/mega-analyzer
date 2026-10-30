@@ -1,0 +1,164 @@
+[
+  {
+    "id": "TRIAL_EXPIRY",
+    "category": "trial_expiry",
+    "description": "Checks if trial period has expired",
+    "method_names": [
+      "istrialexpired",
+      "istrialover",
+      "checkexpiry",
+      "isexpired",
+      "hastrialended",
+      "istrialvalid",
+      "gettrialstatus",
+      "checktrialperiod",
+      "istrialactive",
+      "gettrialdaysleft"
+    ],
+    "class_patterns": [
+      "trial",
+      "expiry",
+      "trialmanager",
+      "timecheck",
+      "periodcheck"
+    ],
+    "required_calls": [
+      "system;->currenttimemillis",
+      "calendar;->getinstance",
+      "date;->gettime",
+      "sharedpreferences"
+    ],
+    "string_patterns": [
+      "trial",
+      "expiry",
+      "expire",
+      "trial_start",
+      "first_launch",
+      "install_date",
+      "trial_end"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1,
+    "min_match_score": 12
+  },
+  {
+    "id": "TIME_TAMPER",
+    "category": "trial_expiry",
+    "description": "Detects system time manipulation",
+    "method_names": [
+      "istimemanipulated",
+      "checktimechange",
+      "istimecorrect",
+      "detecttimetamper",
+      "hastimedrift",
+      "verifysystemtime"
+    ],
+    "class_patterns": [
+      "timecheck",
+      "timetamper",
+      "clockcheck",
+      "ntpverify"
+    ],
+    "required_calls": [
+      "system;->currenttimemillis",
+      "systemclock;->elapsedrealtimeo",
+      "ntptime",
+      "sntpclient",
+      "settings$global;->getlong"
+    ],
+    "string_patterns": [
+      "auto_time",
+      "ntp",
+      "time.google.com",
+      "pool.ntp.org",
+      "time_drift"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.8,
+    "min_match_score": 12
+  },
+  {
+    "id": "GAME_COOLDOWN",
+    "category": "trial_expiry",
+    "description": "Game cooldown/timer/energy refill check",
+    "method_names": [
+      "iscooldownactive",
+      "iscooldownover",
+      "getcooldown",
+      "getremainingtime",
+      "gettimeremaining",
+      "isenergyfull",
+      "canplay",
+      "hasenoughenergy",
+      "getlives",
+      "getlivesremaining",
+      "canclaimdaily",
+      "hasdailyclaimed",
+      "isrewardready",
+      "gettimerticks",
+      "istimerexpired"
+    ],
+    "class_patterns": [
+      "cooldown",
+      "timer",
+      "energy",
+      "lives",
+      "daily",
+      "reward",
+      "stamina",
+      "refill"
+    ],
+    "required_calls": [
+      "system;->currenttimemillis",
+      "systemclock;->elapsedrealtimeo",
+      "sharedpreferences"
+    ],
+    "string_patterns": [
+      "cooldown",
+      "timer",
+      "energy",
+      "refill",
+      "daily_reward",
+      "last_claim",
+      "next_reward",
+      "lives_count",
+      "energy_refill_time"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.8,
+    "min_match_score": 10
+  },
+  {
+    "id": "pj04",
+    "category": "trial_expiry",
+    "description": "Trial days-remaining from local clock — force positive",
+    "method_names": [
+      "getremainingdays",
+      "getdaysleft",
+      "gettrialdays",
+      "daysuntilexpiry"
+    ],
+    "class_patterns": [
+      "trial",
+      "expiry",
+      "subscription",
+      "license"
+    ],
+    "required_calls": [
+      "currenttimemillis",
+      "gettime"
+    ],
+    "string_patterns": [
+      "trial",
+      "expire",
+      "days"
+    ],
+    "return_type": "I",
+    "patch_type": "return_max_int",
+    "weight": 1.0,
+    "min_match_score": 10
+  }
+]

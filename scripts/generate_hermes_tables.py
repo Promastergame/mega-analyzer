@@ -1,0 +1,129 @@
+#!/usr/bin/env python3
+"""Generate HBC instruction tables from pinned, unmodified Hermes definitions.
+
+Usage: python scripts/generate_hermes_tables.py --source-dir <download directory>
+The directory contains v<VERSION>-BytecodeList.def and BytecodeFileFormat.h.
+Input hashes and commit IDs are recorded beside the generated tables.
+No compiler, network access or third-party Python package is needed.
+"""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import re
+import subprocess
+
+ROOT = Path(__file__).resolve().parents[1]
+SPEC = ROOT / "pkg/internal/apkloader/hermes_spec"
+OUTPUT = ROOT / "pkg/internal/apkloader/hermes_opcodes_generated.go"
+OPERANDS = {
+    "Reg8": ("r", "uint8_t"), "Reg32": ("R", "uint32_t"),
+    "UInt8": ("b", "uint8_t"), "UInt16": ("h", "uint16_t"),
+    "UInt32": ("i", "uint32_t"), "Addr8": ("a", "int8_t"),
+    "Addr32": ("A", "int32_t"), "Imm32": ("I", "int32_t"),
+    "Double": ("d", "double"),
+}
+
+
+def definitions(text):
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.S)
+    text = re.sub(r"//[^\n]*", "", text)
+    # Directive continuation lines must not look like real opcode declarations.
+    text = re.sub(r"\\\r?\n", " ", text)
+    output, wasm = [], False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped == "#ifdef HERMES_RUN_WASM":
+            wasm = True
+        elif stripped == "#endif" and wasm:
+            wasm = False
+        elif stripped.startswith("#if") and not stripped.startswith("#ifndef"):
+            raise ValueError(f"unhandled conditional: {stripped}")
+        elif not wasm and not stripped.startswith("#"):
+            output.append(line)
+    return "\n".join(output)
+
+
+def opcodes(text):
+    text = definitions(text)
+    for name, ctype in re.findall(r"DEFINE_OPERAND_TYPE\((\w+),\s*(\w+)\)", text):
+        assert name in OPERANDS and OPERANDS[name][1] == ctype, (name, ctype)
+    ops = []
+    for match in re.finditer(r"^\s*DEFINE_(OPCODE|JUMP)_([0-6])\(([^)]+)\)", text, re.M):
+        family, count, args = match.groups()
+        parts = [x.strip() for x in args.split(",")]
+        name = parts[0]
+        if family == "JUMP":
+            for suffix, address in [("", "a"), ("Long", "A")]:
+                ops.append([name + suffix, address + "r" * (int(count) - 1), 0, 0, 0])
+        else:
+            assert len(parts) - 1 == int(count), match.group()
+            ops.append([name, "".join(OPERANDS[x][0] for x in parts[1:]), 0, 0, 0])
+    by_name = {x[0]: x for x in ops}
+    assert len(by_name) == len(ops) and len(ops) <= 256
+    for kind, name, number in re.findall(r"OPERAND_(STRING|FUNCTION|BIGINT)_ID\((\w+),\s*(\d+)\)", text):
+        op = by_name[name]
+        number = int(number)
+        assert 0 < number <= len(op[1])
+        op[{"STRING": 2, "FUNCTION": 3, "BIGINT": 4}[kind]] |= 1 << (number - 1)
+    # Early versions predate function-ID annotations. These instruction
+    # families explicitly document Arg3 as an index in the function table.
+    for base in ("CallDirect", "CreateClosure", "CreateGeneratorClosure",
+                 "CreateAsyncClosure", "CreateGenerator"):
+        for suffix in ("", "LongIndex"):
+            name = base + suffix
+            if name in by_name:
+                assert by_name[name][1] in ("rbh", "rbi", "rrh", "rri")
+                by_name[name][3] |= 4
+    return ops
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--source-dir", type=Path, required=True)
+    args = parser.parse_args()
+    manifest = json.loads((SPEC / "manifest.json").read_text())
+    unique, versions = {}, []
+    for entry in manifest:
+        version = entry["version"]
+        sources = {}
+        for name in ("BytecodeList.def", "BytecodeFileFormat.h"):
+            data = (args.source_dir / f"v{version}-{name}").read_bytes()
+            digest = hashlib.sha256(data).hexdigest()
+            assert digest == entry["sha256"][name], f"modified input: v{version}-{name}"
+            sources[name] = data.decode()
+        ops = opcodes(sources["BytecodeList.def"])
+        fingerprint = json.dumps(ops)
+        if fingerprint not in unique:
+            unique[fingerprint] = (version, ops)
+        table_version = unique[fingerprint][0]
+        header = sources["BytecodeFileFormat.h"].split("struct BytecodeFileHeader {")[1].split("BytecodeFileHeader(")[0]
+        fields = re.findall(r"uint32_t (\w+);", header)[1:]
+        padding = int(re.search(r"padding\[(\d+)\]", header)[1])
+        assert 32 + len(fields) * 4 + 1 + padding == 128
+        layout = "hermesClassic" if version <= 96 else ("hermesCompact" if version <= 98 else "hermesTyped")
+        versions.append((version, table_version, layout,
+                         "bigIntCount" in fields, "functionSourceCount" in fields,
+                         "numStringSwitchImms" in fields))
+    lines = [
+        "// Code generated by scripts/generate_hermes_tables.py; DO NOT EDIT.",
+        "// Derived from facebook/hermes (MIT). See hermes_spec/LICENSE and manifest.json.",
+        "package apkloader", "",
+        "var hermesVersions = map[uint32]hermesVersionSpec{",
+    ]
+    for version, table, layout, bigint, sources, switches in versions:
+        flags = ", ".join(str(x).lower() for x in (bigint, sources, switches))
+        lines.append(f"\t{version}: {{hermesOps{table}, {layout}, {flags}}},")
+    lines += ["}", ""]
+    for version, ops in unique.values():
+        lines.append(f"var hermesOps{version} = []hermesOpcode{{")
+        for number, (name, operands, strings, functions, bigints) in enumerate(ops):
+            lines.append(f'\t{{"{name}", "{operands}", {strings}, {functions}, {bigints}}}, // {number}')
+        lines += ["}", ""]
+    OUTPUT.write_text("\n".join(lines), newline="\n")
+    subprocess.run(["gofmt", "-w", str(OUTPUT)], check=True)
+    print(f"{len(versions)} pinned versions, {len(unique)} distinct opcode tables")
+
+
+if __name__ == "__main__":
+    main()

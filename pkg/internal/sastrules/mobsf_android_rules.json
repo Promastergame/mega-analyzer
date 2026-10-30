@@ -1,0 +1,687 @@
+{
+  "name": "android_security_rules",
+  "source": "MobSF v4.4.6",
+  "rules": [
+    {
+      "id": "android_ip_disclosure",
+      "title": "IP Address disclosure",
+      "severity": "warning",
+      "cvss": 4.3,
+      "cwe": "cwe-200",
+      "masvs": "code-2",
+      "pattern_type": "regex",
+      "pattern": "(?:^|[^.\\d])(?:(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\\.){3}(?:25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])(?:[^.\\d]|$)"
+    },
+    {
+      "id": "android_hiddenui",
+      "title": "Hidden elements in view can be used to hide data from user. But this data can be leaked",
+      "severity": "high",
+      "cvss": 4.3,
+      "cwe": "cwe-919",
+      "owasp_mobile": "m1",
+      "masvs": "storage-7",
+      "pattern_type": "regex",
+      "pattern": "setVisibility\\(View\\.GONE\\)|setVisibility\\(View\\.INVISIBLE\\)"
+    },
+    {
+      "id": "android_insecure_ssl",
+      "title": "Insecure Implementation of SSL. Trusting all the certificates or accepting self signed certificates is a critical Security Hole. This application is vulnerable to MITM attacks",
+      "severity": "high",
+      "cvss": 7.4,
+      "cwe": "cwe-295",
+      "owasp_mobile": "m3",
+      "masvs": "network-3",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05g-Testing-Network-Communication.md#android-network-apis",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "javax\\.net\\.ssl",
+        "TrustAllSSLSocket-Factory|AllTrustSSLSocketFactory|NonValidatingSSLSocketFactory|net\\.SSLCertificateSocketFactory|ALLOW_ALL_HOSTNAME_VERIFIER|\\.setDefaultHostnameVerifier\\(|NullHostnameVerifier\\("
+      ]
+    },
+    {
+      "id": "android_webview_external",
+      "title": "WebView load files from external storage. Files in external storage can be modified by any application.",
+      "severity": "high",
+      "cvss": 5.0,
+      "cwe": "cwe-919",
+      "owasp_mobile": "m1",
+      "masvs": "platform-6",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05h-Testing-Platform-Interaction.md#static-analysis-7",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "\\.loadUrl\\(.{0,48}getExternalStorageDirectory\\(",
+        "webkit\\.WebView"
+      ]
+    },
+    {
+      "id": "android_write_app_dir",
+      "title": "App can write to App Directory. Sensitive Information should be encrypted.",
+      "severity": "info",
+      "cvss": 3.9,
+      "cwe": "cwe-276",
+      "masvs": "storage-14",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "MODE_PRIVATE",
+        "Context\\.MODE_PRIVATE"
+      ]
+    },
+    {
+      "id": "android_insecure_random",
+      "title": "The App uses an insecure Random Number Generator.",
+      "severity": "warning",
+      "cvss": 7.5,
+      "cwe": "cwe-330",
+      "owasp_mobile": "m5",
+      "masvs": "crypto-6",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04g-Testing-Cryptography.md#weak-random-number-generators",
+      "pattern_type": "regex",
+      "pattern": "java\\.util\\.Random(?:[^A-Za-z]|$)"
+    },
+    {
+      "id": "android_logging",
+      "title": "The App logs information. Sensitive information should never be logged.",
+      "severity": "info",
+      "cvss": 7.5,
+      "cwe": "cwe-532",
+      "masvs": "storage-3",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05d-Testing-Data-Storage.md#logs",
+      "pattern_type": "regex",
+      "pattern": "Log\\.(v|d|i|w|e|f|s)|System\\.out\\.print|System\\.err\\.print"
+    },
+    {
+      "id": "android_sql_cipher",
+      "title": "This App uses SQL Cipher. Ensure that secrets are not hardcoded in code.",
+      "severity": "info",
+      "masvs": "crypto-1",
+      "pattern_type": "regex",
+      "pattern": "SQLiteOpenHelper\\.getWritableDatabase\\("
+    },
+    {
+      "id": "android_tapjacking",
+      "title": "This app has capabilities to prevent tapjacking attacks.",
+      "severity": "good",
+      "masvs": "platform-9",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05h-Testing-Platform-Interaction.md#testing-for-overlay-attacks-mstg-platform-9",
+      "pattern_type": "regex",
+      "pattern": "setFilterTouchesWhenObscured\\(true\\)"
+    },
+    {
+      "id": "android_read_write_external",
+      "title": "App can read/write to External Storage. Any App can read data written to External Storage.",
+      "severity": "warning",
+      "cvss": 5.5,
+      "cwe": "cwe-276",
+      "owasp_mobile": "m2",
+      "masvs": "storage-2",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05d-Testing-Data-Storage.md#external-storage",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "\\.getExternalStorage",
+        "\\.getExternalFilesDir\\("
+      ]
+    },
+    {
+      "id": "android_temp_file",
+      "title": "App creates temp file. Sensitive information should never be written into a temp file.",
+      "severity": "warning",
+      "cvss": 5.5,
+      "cwe": "cwe-276",
+      "owasp_mobile": "m2",
+      "masvs": "storage-2",
+      "pattern_type": "regex",
+      "pattern": "\\.createTempFile\\("
+    },
+    {
+      "id": "android_webview",
+      "title": "Insecure WebView Implementation. Execution of user controlled code in WebView is a critical Security Hole.",
+      "severity": "warning",
+      "cvss": 8.8,
+      "cwe": "cwe-749",
+      "owasp_mobile": "m1",
+      "masvs": "platform-7",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05h-Testing-Platform-Interaction.md#testing-javascript-execution-in-webviews-mstg-platform-5",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "setJavaScriptEnabled\\(true\\)",
+        "addJavascriptInterface\\("
+      ]
+    },
+    {
+      "id": "android_webview_allow_file_from_url",
+      "title": "Ensure that user controlled URLs never reaches the Webview. Enabling file access from URLs in WebView can leak sensitive information from the file system.",
+      "severity": "warning",
+      "cvss": 6.1,
+      "cwe": "cwe-200",
+      "owasp_mobile": "m1",
+      "masvs": "platform-7",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05h-Testing-Platform-Interaction.md#static-analysis-6",
+      "pattern_type": "regex_and_or",
+      "first": "setJavaScriptEnabled\\(true\\)",
+      "second": [
+        "\\.setAllowFileAccessFromFileURLs\\(true\\)",
+        "\\.setAllowUniversalAccessFromFileURLs\\(true\\)"
+      ]
+    },
+    {
+      "id": "android_sql_cipher_aes256",
+      "title": "This App uses SQL Cipher. SQLCipher provides 256-bit AES encryption to sqlite database files.",
+      "severity": "info",
+      "masvs": "crypto-1",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "SQLiteDatabase\\.loadLibs\\(",
+        "net\\.sqlcipher\\."
+      ]
+    },
+    {
+      "id": "android_download_manager",
+      "title": "This App download files using Android Download Manager",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "android\\.app\\.DownloadManager",
+        "getSystemService\\(DOWNLOAD_SERVICE\\)"
+      ]
+    },
+    {
+      "id": "android_db_encryption",
+      "title": "This App use Realm Database with encryption.",
+      "severity": "good",
+      "masvs": "crypto-1",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "io\\.realm\\.Realm",
+        "\\.encryptionKey\\("
+      ]
+    },
+    {
+      "id": "android_webview_debug",
+      "title": "Remote WebView debugging is enabled.",
+      "severity": "high",
+      "cvss": 5.4,
+      "cwe": "cwe-919",
+      "owasp_mobile": "m1",
+      "masvs": "resilience-2",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04c-Tampering-and-Reverse-Engineering.md#debugging-and-tracing",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "\\.setWebContentsDebuggingEnabled\\(true\\)",
+        "WebView"
+      ]
+    },
+    {
+      "id": "android_aar_jar_debug_enabled",
+      "title": "Debug configuration enabled. Production builds must not be debuggable.",
+      "severity": "high",
+      "cvss": 5.4,
+      "cwe": "cwe-919",
+      "owasp_mobile": "m1",
+      "masvs": "resilience-2",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04c-Tampering-and-Reverse-Engineering.md#debugging-and-tracing",
+      "pattern_type": "regex_and",
+      "patterns": [
+        " class BuildConfig",
+        "DEBUG.{1,25}?true"
+      ]
+    },
+    {
+      "id": "android_clipboard_listen",
+      "title": "This app listens to Clipboard changes. Some malware also listen to Clipboard changes.",
+      "severity": "info",
+      "masvs": "platform-4",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04b-Mobile-App-Security-Testing.md#clipboard",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "content\\.ClipboardManager",
+        "OnPrimaryClipChangedListener"
+      ]
+    },
+    {
+      "id": "android_clipboard_copy",
+      "title": "This App copies data to clipboard. Sensitive data should not be copied to clipboard as other applications can access it.",
+      "severity": "info",
+      "masvs": "storage-10",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04b-Mobile-App-Security-Testing.md#clipboard",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "content\\.ClipboardManager",
+        "setPrimaryClip\\("
+      ]
+    },
+    {
+      "id": "android_webview_ignore_ssl",
+      "title": "Insecure WebView Implementation. WebView ignores SSL Certificate errors and accept any SSL Certificate. This application is vulnerable to MITM attacks",
+      "severity": "high",
+      "cvss": 7.4,
+      "cwe": "cwe-295",
+      "owasp_mobile": "m3",
+      "masvs": "network-3",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05g-Testing-Network-Communication.md#webview-server-certificate-verification",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "onReceivedSslError\\(WebView",
+        "\\.proceed\\(\\);"
+      ]
+    },
+    {
+      "id": "android_sql_raw_query",
+      "title": "App uses SQLite Database and execute raw SQL query. Untrusted user input in raw SQL queries can cause SQL Injection. Also sensitive information should be encrypted and written to the database.",
+      "severity": "warning",
+      "cvss": 5.9,
+      "cwe": "cwe-89",
+      "owasp_mobile": "m7",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04h-Testing-Code-Quality.md#injection-flaws-mstg-arch-2-and-mstg-platform-2",
+      "pattern_type": "regex_and_or",
+      "first": "android\\.database\\.sqlite",
+      "second": [
+        "rawQuery\\(",
+        "execSQL\\("
+      ]
+    },
+    {
+      "id": "android_detect_frida",
+      "title": "This App detects frida server.",
+      "severity": "good",
+      "masvs": "resilience-4",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05j-Testing-Resiliency-Against-Reverse-Engineering.md#testing-reverse-engineering-tools-detection-mstg-resilience-4",
+      "pattern_type": "regex_and_or",
+      "first": "fridaserver",
+      "second": [
+        "27047",
+        "REJECT",
+        "LIBFRIDA"
+      ]
+    },
+    {
+      "id": "android_ssl_pinning",
+      "title": "This App uses SSL certificate pinning to detect or  prevent MITM attacks in secure communication channel.",
+      "severity": "good",
+      "masvs": "network-4",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05g-Testing-Network-Communication.md#testing-custom-certificate-stores-and-certificate-pinning-mstg-network-4",
+      "pattern_type": "regex_and_or",
+      "first": "org\\.thoughtcrime\\.ssl\\.pinning|\\.getTrustManagers\\(|TrustManagerFactory\\.|CertificatePinner\\.Builder\\(|Retrofit\\.Builder\\(|Picasso\\.Builder\\(|\\.setHostnameVerifier\\(",
+      "second": [
+        "PinningHelper\\.getPinnedHttpsURLConnection|PinningHelper\\.getPinnedHttpClient|PinningSSLSocketFactory\\(",
+        "\\.setCertificateEntry\\(|trustedChain|\\.init\\(",
+        "\\.add\\(",
+        "\\.baseUrl\\(",
+        "\\.downloader\\(",
+        "PinningHostnameVerifier\\(|\\.verify\\(|DynamicPinningHostnameVerifier\\("
+      ]
+    },
+    {
+      "id": "android_certificate_transparency",
+      "title": "This App enforce TLS Certificate Transparency which helps to  detect SSL certificates that have been mistakenly issued by a  certificate authority or maliciously acquired from an otherwise  unimpeachable certificate authority.",
+      "severity": "good",
+      "masvs": "network-4",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05g-Testing-Network-Communication.md#testing-custom-certificate-stores-and-certificate-pinning-mstg-network-4",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "CTHostnameVerifierBuilder\\(",
+        "CTInterceptorBuilder\\("
+      ]
+    },
+    {
+      "id": "android_prevent_screenshot",
+      "title": "This App has capabilities to prevent against Screenshots from Recent Task History/ Now On Tap etc.",
+      "severity": "good",
+      "masvs": "storage-9",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05d-Testing-Data-Storage.md#finding-sensitive-information-in-auto-generated-screenshots-mstg-storage-9",
+      "pattern_type": "regex_and_or",
+      "first": "\\.FLAG_SECURE",
+      "second": [
+        "getWindow\\(\\)\\.setFlags\\(",
+        "getWindow\\(\\)\\.addFlags\\("
+      ]
+    },
+    {
+      "id": "android_debuggable",
+      "title": "DexGuard Debug Detection code to detect whether an App is debuggable or not is identified.",
+      "severity": "good",
+      "masvs": "resilience-2",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04c-Tampering-and-Reverse-Engineering.md#debugging-and-tracing",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "import dexguard\\.util",
+        "DebugDetector\\.isDebuggable"
+      ]
+    },
+    {
+      "id": "android_debugger_detect",
+      "title": "DexGuard Debugger Detection code is identified.",
+      "severity": "good",
+      "masvs": "resilience-2",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04c-Tampering-and-Reverse-Engineering.md#debugging-and-tracing",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "import dexguard\\.util",
+        "DebugDetector\\.isDebuggerConnected"
+      ]
+    },
+    {
+      "id": "android_emulator_detect",
+      "title": "DexGuard Emulator Detection code is identified.",
+      "severity": "good",
+      "masvs": "resilience-5",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04c-Tampering-and-Reverse-Engineering.md#debugging-and-tracing",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "import dexguard\\.util",
+        "EmulatorDetector\\.isRunningInEmulator"
+      ]
+    },
+    {
+      "id": "android_debug_sign",
+      "title": "DexGuard code to detect whether the App is signed with a debug key or not is identified.",
+      "severity": "good",
+      "masvs": "code-2",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "import dexguard\\.util",
+        "DebugDetector\\.isSignedWithDebugKey"
+      ]
+    },
+    {
+      "id": "android_dexguard_root_detection",
+      "title": "DexGuard Root Detection code is identified.",
+      "severity": "good",
+      "masvs": "resilience-1",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05j-Testing-Resiliency-Against-Reverse-Engineering.md#testing-root-detection-mstg-resilience-1",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "import dexguard\\.util",
+        "RootDetector\\.isDeviceRooted"
+      ]
+    },
+    {
+      "id": "android_tamper_detect",
+      "title": "DexGuard App Tamper Detection code is identified.",
+      "severity": "good",
+      "masvs": "resilience-3",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04c-Tampering-and-Reverse-Engineering.md#mobile-app-tampering-and-reverse-engineering",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "import dexguard\\.util",
+        "TamperDetector\\.checkApk"
+      ]
+    },
+    {
+      "id": "android_certificate_tamper",
+      "title": "DexGuard Signer Certificate Tamper Detection code is identified.",
+      "severity": "good",
+      "masvs": "resilience-3",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04c-Tampering-and-Reverse-Engineering.md#mobile-app-tampering-and-reverse-engineering",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "import dexguard\\.util",
+        "CertificateChecker\\.checkCertificate"
+      ]
+    },
+    {
+      "id": "android_package_tamper",
+      "title": "The App may use package signature for tamper detection.",
+      "severity": "good",
+      "masvs": "resilience-3",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04c-Tampering-and-Reverse-Engineering.md#mobile-app-tampering-and-reverse-engineering",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "PackageManager\\.GET_SIGNATURES",
+        "getPackageName\\("
+      ]
+    },
+    {
+      "id": "android_safetynet",
+      "title": "This App uses SafetyNet API.",
+      "severity": "good",
+      "masvs": "resilience-7",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05j-Testing-Resiliency-Against-Reverse-Engineering.md#safetynet",
+      "pattern_type": "regex",
+      "pattern": "com.google\\.android\\.gms\\.safetynet\\.SafetyNetApi"
+    },
+    {
+      "id": "android_su_detect",
+      "title": "This App may request root (Super User) privileges.",
+      "severity": "warning",
+      "cwe": "cwe-250",
+      "masvs": "resilience-1",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05j-Testing-Resiliency-Against-Reverse-Engineering.md#testing-root-detection-mstg-resilience-1",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "com\\.noshufou\\.android\\.su",
+        "com\\.thirdparty\\.superuser",
+        "eu\\.chainfire\\.supersu",
+        "com\\.koushikdutta\\.superuser",
+        "eu\\.chainfire\\.",
+        "com\\.saurik\\.substrate",
+        "de\\.robv\\.android\\.xposed\\.installer"
+      ]
+    },
+    {
+      "id": "android_jackson_deserialize",
+      "title": "The app uses jackson deserialization library. Deserialization of untrusted input can result in arbitrary code execution.",
+      "severity": "high",
+      "cvss": 7.5,
+      "cwe": "cwe-502",
+      "owasp_mobile": "m7",
+      "masvs": "platform-8",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "com\\.fasterxml\\.jackson\\.databind\\.ObjectMapper",
+        "\\.enableDefaultTyping\\("
+      ]
+    },
+    {
+      "id": "android_aes_ecb",
+      "title": "The App uses ECB mode in Cryptographic encryption algorithm. ECB mode is known to be weak as it results in the same ciphertext for identical blocks of plaintext.",
+      "severity": "high",
+      "cvss": 5.9,
+      "cwe": "cwe-327",
+      "owasp_mobile": "m5",
+      "masvs": "crypto-2",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04g-Testing-Cryptography.md#weak-block-cipher-mode",
+      "pattern_type": "regex",
+      "pattern": "Cipher\\.getInstance\\(\\s*\"\\s*AES\\/ECB"
+    },
+    {
+      "id": "android_aws_ecb_default",
+      "title": "Calling Cipher.getInstance(\"AES\") will return AES ECB mode by default. ECB mode is known to be weak as it results in the same ciphertext for identical blocks of plaintext.",
+      "severity": "high",
+      "cvss": 5.9,
+      "cwe": "cwe-327",
+      "owasp_mobile": "m5",
+      "masvs": "crypto-2",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04g-Testing-Cryptography.md#weak-block-cipher-mode",
+      "pattern_type": "regex",
+      "pattern": "Cipher\\.getInstance\\(\"AES\"\\)"
+    },
+    {
+      "id": "android_rsa_no_oaep",
+      "title": "This App uses RSA Crypto without OAEP padding. The purpose of the padding scheme is to prevent a number of attacks on RSA that only work when the encryption is performed without padding.",
+      "severity": "high",
+      "cvss": 5.9,
+      "cwe": "cwe-780",
+      "owasp_mobile": "m5",
+      "masvs": "crypto-3",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04g-Testing-Cryptography.md#mobile-app-cryptography",
+      "pattern_type": "regex",
+      "pattern": "Cipher\\.getinstance\\(\\\"rsa/.{1,48}/nopadding"
+    },
+    {
+      "id": "android_world_writable",
+      "title": "The file or SharedPreference is World Writable. Any App can write to the file",
+      "severity": "high",
+      "cvss": 6.0,
+      "cwe": "cwe-276",
+      "owasp_mobile": "m2",
+      "masvs": "storage-2",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05d-Testing-Data-Storage.md#testing-local-storage-for-sensitive-data-mstg-storage-1-and-mstg-storage-2",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "MODE_WORLD_WRITABLE",
+        "\\.getSharedPreferences\\(.{0,50}?2\\)",
+        "openFileOutput\\(\\s*\".{1,48}\"\\s*,\\s*2\\s*\\)"
+      ]
+    },
+    {
+      "id": "android_world_readable",
+      "title": "The file or SharedPreference is World Readable. Any App can read from the file",
+      "severity": "high",
+      "cvss": 4.0,
+      "cwe": "cwe-276",
+      "owasp_mobile": "m2",
+      "masvs": "storage-2",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05d-Testing-Data-Storage.md#testing-local-storage-for-sensitive-data-mstg-storage-1-and-mstg-storage-2",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "MODE_WORLD_READABLE",
+        "\\.getSharedPreferences\\(.{0,50}?1\\)",
+        "openFileOutput\\(\\s*\".{1,48}\"\\s*,\\s*1\\s*\\)"
+      ]
+    },
+    {
+      "id": "android_world_read_write",
+      "title": "The file is World Readable and Writable. Any App can read/write to the file",
+      "severity": "high",
+      "cvss": 6.0,
+      "cwe": "cwe-276",
+      "owasp_mobile": "m2",
+      "masvs": "storage-2",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05d-Testing-Data-Storage.md#testing-local-storage-for-sensitive-data-mstg-storage-1-and-mstg-storage-2",
+      "pattern_type": "regex",
+      "pattern": "openFileOutput\\(\\s*\".{1,48}\"\\s*,\\s*3\\s*\\)"
+    },
+    {
+      "id": "android_weak_hash",
+      "title": "Weak Hash algorithm used",
+      "severity": "high",
+      "cvss": 7.4,
+      "cwe": "cwe-327",
+      "owasp_mobile": "m5",
+      "masvs": "crypto-4",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04g-Testing-Cryptography.md#identifying-insecure-andor-deprecated-cryptographic-algorithms-mstg-crypto-4",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "\\.getInstance\\(.{0,48}md4",
+        "\\.getInstance\\(.{0,48}MD4"
+      ]
+    },
+    {
+      "id": "android_weak_ciphers",
+      "title": "Weak Encryption algorithm used",
+      "severity": "high",
+      "cvss": 7.4,
+      "cwe": "cwe-327",
+      "owasp_mobile": "m5",
+      "masvs": "crypto-4",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04g-Testing-Cryptography.md#identifying-insecure-andor-deprecated-cryptographic-algorithms-mstg-crypto-4",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "\\.getInstance\\(.{0,48}rc2",
+        "\\.getInstance\\(.{0,48}RC2",
+        "\\.getInstance\\(.{0,48}rc4",
+        "\\.getInstance\\(.{0,48}RC4",
+        "\\.getInstance\\(.{0,48}blowfish",
+        "\\.getInstance\\(.{0,48}BLOWFISH",
+        "Cipher\\.getInstance\\(.{0,48}DES",
+        "Cipher\\.getInstance\\(.{0,48}des"
+      ]
+    },
+    {
+      "id": "cbc_padding_oracle",
+      "title": "The App uses the encryption mode CBC with PKCS5/PKCS7 padding. This configuration is vulnerable to padding oracle attacks.",
+      "severity": "high",
+      "cvss": 7.4,
+      "cwe": "cwe-649",
+      "owasp_mobile": "m5",
+      "masvs": "crypto-3",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04g-Testing-Cryptography.md#identifying-insecure-andor-deprecated-cryptographic-algorithms-mstg-crypto-4",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "\\.getInstance\\(.{0,48}\\/CBC\\/PKCS5Padding",
+        "\\.getInstance\\(.{0,48}\\/CBC\\/PKCS7Padding"
+      ]
+    },
+    {
+      "id": "android_md5",
+      "title": "MD5 is a weak hash known to have hash collisions.",
+      "severity": "warning",
+      "cvss": 7.4,
+      "cwe": "cwe-327",
+      "owasp_mobile": "m5",
+      "masvs": "crypto-4",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04g-Testing-Cryptography.md#identifying-insecure-andor-deprecated-cryptographic-algorithms-mstg-crypto-4",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "\\.getInstance\\(.{0,48}MD5",
+        "\\.getInstance\\(.{0,48}md5",
+        "DigestUtils\\.md5\\("
+      ]
+    },
+    {
+      "id": "android_sha1",
+      "title": "SHA-1 is a weak hash known to have hash collisions.",
+      "severity": "warning",
+      "cvss": 5.9,
+      "cwe": "cwe-327",
+      "owasp_mobile": "m5",
+      "masvs": "crypto-4",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04g-Testing-Cryptography.md#identifying-insecure-andor-deprecated-cryptographic-algorithms-mstg-crypto-4",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "\\.getInstance\\(.{0,48}SHA-1",
+        "\\.getInstance\\(.{0,48}sha-1",
+        "\\.getInstance\\(.{0,48}SHA1",
+        "\\.getInstance\\(.{0,48}sha1",
+        "DigestUtils\\.sha\\("
+      ]
+    },
+    {
+      "id": "android_weak_iv",
+      "title": "The App may use weak IVs like \"0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00\" or \"0x01,0x02,0x03,0x04,0x05,0x06,0x07\". Not using a random IV makes the resulting ciphertext much more predictable and susceptible to a dictionary attack.",
+      "severity": "high",
+      "cvss": 9.8,
+      "cwe": "cwe-329",
+      "owasp_mobile": "m5",
+      "masvs": "crypto-3",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x04g-Testing-Cryptography.md#mobile-app-cryptography",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00",
+        "0x01,0x02,0x03,0x04,0x05,0x06,0x07"
+      ]
+    },
+    {
+      "id": "android_detect_root",
+      "title": "This App may have root detection capabilities.",
+      "severity": "good",
+      "masvs": "resilience-1",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05j-Testing-Resiliency-Against-Reverse-Engineering.md#testing-root-detection-mstg-resilience-1",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "\\.contains\\(\"test-keys\"\\)",
+        "\\/system\\/app\\/Superuser.apk",
+        "isDeviceRooted\\(\\)",
+        "\\/system\\/bin\\/failsafe\\/su",
+        "\\/system\\/bin\\/su",
+        "\\/system\\/xbin\\/su",
+        "\\/sbin\\/su",
+        "\\/system\\/sd\\/xbin\\/su",
+        "\"\\/system\\/xbin\\/which\", \"su\"",
+        "RootTools\\.isAccessGiven\\(\\)"
+      ]
+    },
+    {
+      "id": "android_hardcoded",
+      "title": "Files may contain hardcoded sensitive information like usernames, passwords, keys etc.",
+      "severity": "warning",
+      "cvss": 7.4,
+      "cwe": "cwe-312",
+      "owasp_mobile": "m9",
+      "masvs": "storage-14",
+      "ref": "https://github.com/MobSF/owasp-mstg/blob/master/Document/0x05d-Testing-Data-Storage.md#checking-memory-for-sensitive-data-mstg-storage-10",
+      "pattern_type": "regex",
+      "pattern": "(password\\s*=\\s*[\\'|\\\"].{1,100}[\\'|\\\"]\\s{0,5})|(pass\\s*=\\s*[\\'|\\\"].{1,100}[\\'|\\\"]\\s{0,5})|(username\\s*=\\s*[\\'|\\\"].{1,100}[\\'|\\\"]\\s{0,5})|(secret\\s*=\\s*[\\'|\\\"].{1,100}[\\'|\\\"]\\s{0,5})|(key\\s*=\\s*[\\'|\\\"].{1,100}[\\'|\\\"]\\s{0,5})"
+    }
+  ]
+}

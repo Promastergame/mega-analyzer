@@ -1,0 +1,37 @@
+# Example: run Mega-Analyzer in CI and surface findings in the GitHub
+# Security tab ("Code scanning alerts").
+#
+# Copy this file to .github/workflows/ in your own repository and adjust the
+# `target` to point at the app/binary you want scanned.
+
+name: Security scan
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  security-events: write   # required to upload SARIF to code scanning
+
+jobs:
+  mega-analyzer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mega-Analyzer scan
+        id: scan
+        uses: Promastergame/mega-analyzer@v1
+        with:
+          target: path/to/your-app.apk   # APK / DEX / PE / ELF / decompiled dir
+          report: full
+
+      - name: Upload SARIF
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: ${{ steps.scan.outputs.sarif-file }}
+          category: mega-analyzer

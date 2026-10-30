@@ -1,0 +1,33 @@
+{
+  "_comment": "Reference tunables for precisiongate. Root-causes proven on shattered-pixel-dungeon-3.3.8.apk (clean FOSS scored CRITICAL 71/100). The Go code is the source of truth; this mirrors it for review.",
+  "localizationBundleGlobs": [
+    "assets/messages/**",
+    "**/*_??.properties",
+    "**/*_??_??.properties",
+    "res/values-*/**"
+  ],
+  "ambiguousLangTokens": {
+    "magisk":   "Swedish for 'magical'; only real as pkg com.topjohnwu.magisk or in code",
+    "unlocked": "game vocabulary: 'Badge unlocked'",
+    "cracked":  "game vocabulary: 'a cracked censer'",
+    "patched":  "changelog vocabulary",
+    "autoaim":  "present as a class field name, not a cheat loader",
+    "unlock":   "badge/achievement vocabulary",
+    "premium":  "generic monetization word"
+  },
+  "requireStandaloneToken": true,
+  "codeCorroboration": {
+    "getdeviceid": ["TelephonyManager", "telephony"],
+    "exec":        ["Ljava/lang/Runtime;->exec", "ProcessBuilder"],
+    "des":         ["Cipher", "getInstance"],
+    "runtime":     ["->exec", "->halt(", "addShutdownHook"]
+  },
+  "media": {
+    "entropyExemptFormats": ["mp3","ogg","opus","aac","m4a","png","jpg","jpeg","webp","gif","zip","jar","gz","zst","xz"],
+    "polyglotHeaderWindowBytes": 64
+  },
+  "signatureCheck": {
+    "triggerKeyword": "getpackageinfo (standalone token, code context only)",
+    "realOnlyIfContains": ["GET_SIGNATURES","GET_SIGNING_CERTIFICATES","getSigningInfo","signingInfo","apkContentsSigners","MessageDigest"]
+  }
+}

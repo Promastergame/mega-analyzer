@@ -1,0 +1,1362 @@
+package privserver
+
+import (
+	"encoding/json"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+)
+
+// Generate writes the Elixir / OTP private server skeleton into outputDir.
+// Returns the absolute path of the generated project root.
+func Generate(plan *Plan, outputDir string) (string, error) {
+	if err := plan.Validate(); err != nil {
+		return "", err
+	}
+	root := outputDir
+	if root == "" {
+		root = "private_server"
+	}
+	if err := os.MkdirAll(root, 0o755); err != nil {
+		return "", fmt.Errorf("create root dir: %w", err)
+	}
+
+	dirs := []string{
+		"config",
+		"lib",
+		filepath.Join("lib", strings.ToLower(plan.Module)),
+		filepath.Join("lib", strings.ToLower(plan.Module), "handlers"),
+		filepath.Join("lib", strings.ToLower(plan.Module), "admin"),
+		"priv/replays",
+		"priv/static",
+		"test",
+	}
+	for _, d := range dirs {
+		if err := os.MkdirAll(filepath.Join(root, d), 0o755); err != nil {
+			return "", fmt.Errorf("mkdir %s: %w", d, err)
+		}
+	}
+
+	files := []generatedFile{
+		{Path: "mix.exs", Content: renderMixExs(plan)},
+		{Path: "config/config.exs", Content: renderConfigExs(plan)},
+		{Path: "config/runtime.exs", Content: renderRuntimeExs(plan)},
+		{Path: filepath.Join("lib", strings.ToLower(plan.Module)+".ex"), Content: renderRootModule(plan)},
+		{Path: filepath.Join("lib", strings.ToLower(plan.Module), "application.ex"), Content: renderApplication(plan)},
+		{Path: filepath.Join("lib", strings.ToLower(plan.Module), "listener.ex"), Content: renderListener(plan)},
+		{Path: filepath.Join("lib", strings.ToLower(plan.Module), "session.ex"), Content: renderSession(plan)},
+		{Path: filepath.Join("lib", strings.ToLower(plan.Module), "router.ex"), Content: renderRouter(plan)},
+		{Path: filepath.Join("lib", strings.ToLower(plan.Module), "replay_store.ex"), Content: renderReplayStore(plan)},
+		{Path: filepath.Join("lib", strings.ToLower(plan.Module), "state_machine.ex"), Content: renderStateMachine(plan)},
+		{Path: filepath.Join("lib", strings.ToLower(plan.Module), "admin", "router.ex"), Content: renderAdminRouter(plan)},
+		{Path: filepath.Join("lib", strings.ToLower(plan.Module), "admin", "dashboard.ex"), Content: renderAdminDashboard(plan)},
+		{Path: filepath.Join("lib", strings.ToLower(plan.Module), "handlers", "default.ex"), Content: renderHandlersDefault(plan)},
+		{Path: "priv/replays/replays.json", Content: renderReplaysJSON(plan)},
+		{Path: "README.md", Content: renderProjectReadme(plan)},
+		{Path: "README_RU.md", Content: renderProjectReadmeRU(plan)},
+	}
+
+	for _, f := range files {
+		path := filepath.Join(root, f.Path)
+		if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+			return "", fmt.Errorf("mkdir for %s: %w", f.Path, err)
+		}
+		if err := os.WriteFile(path, []byte(f.Content), 0o644); err != nil {
+			return "", fmt.Errorf("write %s: %w", f.Path, err)
+		}
+	}
+	return root, nil
+}
+
+type generatedFile struct {
+	Path    string
+	Content string
+}
+
+func renderMixExs(plan *Plan) string {
+	app := elixirAppName(plan.Module)
+	return joinLines(
+		"defmodule "+plan.Module+".MixProject do",
+		"  use Mix.Project",
+		"",
+		"  def project do",
+		"    [",
+		fmt.Sprintf("      app: :%s,", app),
+		"      version: \"0.1.0\",",
+		"      elixir: \"~> 1.17\",",
+		"      start_permanent: Mix.env() == :prod,",
+		"      deps: deps()",
+		"    ]",
+		"  end",
+		"",
+		"  def application do",
+		"    [",
+		"      extra_applications: [:logger, :crypto],",
+		"      mod: {"+plan.Module+".Application, []}",
+		"    ]",
+		"  end",
+		"",
+		"  defp deps do",
+		"    [",
+		"      {:plug_cowboy, \"~> 2.7\"},",
+		"      {:jason, \"~> 1.4\"}",
+		"    ]",
+		"  end",
+		"end",
+	)
+}
+
+func renderConfigExs(plan *Plan) string {
+	app := elixirAppName(plan.Module)
+	return joinLines(
+		"import Config",
+		"",
+		"config :"+app+",",
+		fmt.Sprintf("  listen_port: %d,", plan.Listen.Port),
+		fmt.Sprintf("  admin_port: %d,", plan.Listen.AdminPort),
+		fmt.Sprintf("  transport: :%s,", plan.Transport.Protocol),
+		fmt.Sprintf("  framing: :%s,", elixirAtom(plan.Framing.Style)),
+		"  game_name: "+elixirString(plan.GameName)+",",
+		"  authorized_lab_only: true",
+		"",
+		"config :logger, :console, format: \"[$level] $message\\n\"",
+	)
+}
+
+func renderRuntimeExs(plan *Plan) string {
+	app := elixirAppName(plan.Module)
+	return joinLines(
+		"import Config",
+		"",
+		"if config_env() == :prod do",
+		"  config :"+app+",",
+		"    listen_port: String.to_integer(System.get_env(\""+strings.ToUpper(app)+"_LISTEN_PORT\") || "+fmt.Sprintf("\"%d\"", plan.Listen.Port)+"),",
+		"    admin_port: String.to_integer(System.get_env(\""+strings.ToUpper(app)+"_ADMIN_PORT\") || "+fmt.Sprintf("\"%d\"", plan.Listen.AdminPort)+")",
+		"end",
+	)
+}
+
+func renderRootModule(plan *Plan) string {
+	return joinLines(
+		"defmodule "+plan.Module+" do",
+		"  @moduledoc \"\"\"",
+		"  "+plan.Module+" - authorized-lab mock backend for "+plan.GameName+".",
+		"  Generated by Mega-Analyzer Make-Server pipeline.",
+		"  \"\"\"",
+		"",
+		"  def info do",
+		"    %{",
+		"      game: "+elixirString(plan.GameName)+",",
+		"      transport: "+elixirAtomString(plan.Transport.Protocol)+",",
+		"      framing: "+elixirAtomString(plan.Framing.Style)+",",
+		"      module: "+elixirString(plan.Module)+",",
+		"      authorized_lab_only: true",
+		"    }",
+		"  end",
+		"end",
+	)
+}
+
+func renderApplication(plan *Plan) string {
+	return joinLines(
+		"defmodule "+plan.Module+".Application do",
+		"  @moduledoc false",
+		"",
+		"  use Application",
+		"  require Logger",
+		"",
+		"  @impl true",
+		"  def start(_type, _args) do",
+		"    children = [",
+		"      "+plan.Module+".ReplayStore,",
+		"      {Registry, keys: :unique, name: "+plan.Module+".SessionRegistry},",
+		"      {DynamicSupervisor, name: "+plan.Module+".SessionSupervisor, strategy: :one_for_one},",
+		"      "+plan.Module+".Listener,",
+		"      {Plug.Cowboy, scheme: :http, plug: "+plan.Module+".Admin.Router,",
+		fmt.Sprintf("        options: [port: Application.get_env(:%s, :admin_port, %d)]}", elixirAppName(plan.Module), plan.Listen.AdminPort),
+		"    ]",
+		"",
+		"    Logger.info(\"\"\"",
+		"    ────────────────────────────────────────────────────────",
+		"     "+plan.Module+" lab server (authorized use only)",
+		fmt.Sprintf("     listener: tcp/%d   admin: http/%d", plan.Listen.Port, plan.Listen.AdminPort),
+		"     game:     "+plan.GameName,
+		fmt.Sprintf("     transport: %s   framing: %s", plan.Transport.Protocol, plan.Framing.Style),
+		"    ────────────────────────────────────────────────────────",
+		"    \"\"\")",
+		"",
+		"    opts = [strategy: :one_for_one, name: "+plan.Module+".Supervisor]",
+		"    Supervisor.start_link(children, opts)",
+		"  end",
+		"end",
+	)
+}
+
+func renderListener(plan *Plan) string {
+	app := elixirAppName(plan.Module)
+	return joinLines(
+		"defmodule "+plan.Module+".Listener do",
+		"  @moduledoc \"Accepts client connections and spawns a session per client.\"",
+		"",
+		"  use GenServer",
+		"  require Logger",
+		"",
+		"  def start_link(_opts \\\\ []) do",
+		"    GenServer.start_link(__MODULE__, [], name: __MODULE__)",
+		"  end",
+		"",
+		"  @impl true",
+		"  def init(_) do",
+		"    port = Application.get_env(:"+app+", :listen_port, "+fmt.Sprintf("%d", plan.Listen.Port)+")",
+		"    {:ok, socket} = :gen_tcp.listen(port, [:binary, packet: :raw, active: false, reuseaddr: true])",
+		"    Logger.info(\"listening on tcp/\" <> Integer.to_string(port))",
+		"    send(self(), :accept)",
+		"    {:ok, %{socket: socket}}",
+		"  end",
+		"",
+		"  @impl true",
+		"  def handle_info(:accept, %{socket: socket} = state) do",
+		"    case :gen_tcp.accept(socket, 1_000) do",
+		"      {:ok, client} ->",
+		"        {:ok, pid} = DynamicSupervisor.start_child(",
+		"          "+plan.Module+".SessionSupervisor,",
+		"          {"+plan.Module+".Session, %{socket: client}}",
+		"        )",
+		"        :gen_tcp.controlling_process(client, pid)",
+		"        send(pid, :ready)",
+		"      {:error, :timeout} -> :ok",
+		"      {:error, reason} -> Logger.warning(\"accept error: \" <> inspect(reason))",
+		"    end",
+		"    send(self(), :accept)",
+		"    {:noreply, state}",
+		"  end",
+		"end",
+	)
+}
+
+func renderSession(plan *Plan) string {
+	return joinLines(
+		"defmodule "+plan.Module+".Session do",
+		"  @moduledoc \"GenServer that owns a single TCP client connection.\"",
+		"",
+		"  use GenServer",
+		"  require Logger",
+		"",
+		"  alias "+plan.Module+".{Router, StateMachine}",
+		"",
+		"  def start_link(args), do: GenServer.start_link(__MODULE__, args)",
+		"",
+		"  @impl true",
+		"  def init(%{socket: socket}) do",
+		"    sid = :erlang.unique_integer([:positive])",
+		"    Registry.register("+plan.Module+".SessionRegistry, sid, %{state: :connected, last_seen: System.system_time(:second)})",
+		"    {:ok, %{socket: socket, sid: sid, state: :connected, buffer: <<>>, last_seen: System.system_time(:second)}}",
+		"  end",
+		"",
+		"  @impl true",
+		"  def handle_info(:ready, state) do",
+		"    :inet.setopts(state.socket, [active: :once])",
+		"    {:noreply, state}",
+		"  end",
+		"",
+		"  def handle_info({:tcp, _socket, data}, state) do",
+		"    buffer = state.buffer <> data",
+		"    case Router.parse(buffer) do",
+		"      {:ok, msg, rest} ->",
+		"        next = StateMachine.next(state.state, msg.id)",
+		"        Router.dispatch(self(), state.socket, msg, %{state: next, sid: state.sid})",
+		"        :inet.setopts(state.socket, [active: :once])",
+		"        new_last = System.system_time(:second)",
+		"        Registry.update_value("+plan.Module+".SessionRegistry, state.sid, fn _ -> %{state: next, last_seen: new_last} end)",
+		"        {:noreply, %{state | buffer: rest, state: next, last_seen: new_last}}",
+		"      :more ->",
+		"        :inet.setopts(state.socket, [active: :once])",
+		"        {:noreply, %{state | buffer: buffer}}",
+		"      :error ->",
+		"        Logger.warning(\"session \" <> Integer.to_string(state.sid) <> \" garbled frame\")",
+		"        {:stop, :normal, state}",
+		"    end",
+		"  end",
+		"",
+		"  def handle_info({:tcp_closed, _socket}, state), do: {:stop, :normal, state}",
+		"  def handle_info({:tcp_error, _socket, reason}, state) do",
+		"    Logger.warning(\"session \" <> Integer.to_string(state.sid) <> \" tcp_error: \" <> inspect(reason))",
+		"    {:stop, :normal, state}",
+		"  end",
+		"end",
+	)
+}
+
+func renderRouter(plan *Plan) string {
+	frame := plan.Framing
+	var b strings.Builder
+	b.WriteString("defmodule " + plan.Module + ".Router do\n")
+	b.WriteString("  @moduledoc \"Parses incoming frames and dispatches to handlers + replays.\"\n\n")
+	b.WriteString("  require Logger\n  alias " + plan.Module + ".{ReplayStore, Handlers.Default}\n\n")
+
+	switch frame.Style {
+	case "supercell":
+		b.WriteString("  def parse(<<id::unsigned-big-16, len::unsigned-big-24, _ver::unsigned-big-16, rest::binary>> = data) do\n")
+		b.WriteString("    if byte_size(rest) >= len do\n")
+		b.WriteString("      <<payload::binary-size(len), tail::binary>> = rest\n")
+		b.WriteString("      {:ok, %{id: id, payload: payload, raw: data}, tail}\n")
+		b.WriteString("    else\n      :more\n    end\n  end\n")
+		b.WriteString("  def parse(<<>>), do: :more\n")
+		b.WriteString("  def parse(b) when byte_size(b) < 7, do: :more\n")
+		b.WriteString("  def parse(_), do: :error\n")
+	case "websocket", "http":
+		b.WriteString("  def parse(data), do: {:ok, %{id: 0, payload: data, raw: data}, <<>>}\n")
+	default:
+		b.WriteString("  def parse(<<id::unsigned-big-16, len::unsigned-big-32, rest::binary>> = data) do\n")
+		b.WriteString("    if byte_size(rest) >= len do\n")
+		b.WriteString("      <<payload::binary-size(len), tail::binary>> = rest\n")
+		b.WriteString("      {:ok, %{id: id, payload: payload, raw: data}, tail}\n")
+		b.WriteString("    else\n      :more\n    end\n  end\n")
+		b.WriteString("  def parse(b) when byte_size(b) < 6, do: :more\n")
+		b.WriteString("  def parse(_), do: :error\n")
+	}
+	b.WriteString("\n  def dispatch(_session, socket, %{id: id} = msg, ctx) do\n")
+	b.WriteString("    Logger.info(\"<< id=\" <> Integer.to_string(id) <> \" len=\" <> Integer.to_string(byte_size(msg.payload)) <> \" sid=\" <> Integer.to_string(ctx.sid))\n")
+	b.WriteString("    handler_result = Default.handle(id, msg, ctx)\n")
+	b.WriteString("    case handler_result do\n")
+	b.WriteString("      :replay ->\n")
+	b.WriteString("        case ReplayStore.best_response(id) do\n")
+	b.WriteString("          {:ok, %{message_id: rid, payload: payload}} -> send_frame(socket, rid, payload)\n")
+	b.WriteString("          :miss -> :ok\n")
+	b.WriteString("        end\n")
+	b.WriteString("      {:reply, rid, payload} -> send_frame(socket, rid, payload)\n")
+	b.WriteString("      _ -> :ok\n")
+	b.WriteString("    end\n  end\n")
+
+	switch frame.Style {
+	case "supercell":
+		b.WriteString("\n  def send_frame(socket, id, payload) do\n")
+		b.WriteString("    len = byte_size(payload)\n")
+		b.WriteString("    frame = <<id::unsigned-big-16, len::unsigned-big-24, 0::unsigned-big-16, payload::binary>>\n")
+		b.WriteString("    :gen_tcp.send(socket, frame)\n  end\n")
+	default:
+		b.WriteString("\n  def send_frame(socket, id, payload) do\n")
+		b.WriteString("    len = byte_size(payload)\n")
+		b.WriteString("    frame = <<id::unsigned-big-16, len::unsigned-big-32, payload::binary>>\n")
+		b.WriteString("    :gen_tcp.send(socket, frame)\n  end\n")
+	}
+	b.WriteString("end\n")
+	return b.String()
+}
+
+func renderReplayStore(plan *Plan) string {
+	return joinLines(
+		"defmodule "+plan.Module+".ReplayStore do",
+		"  @moduledoc \"ETS-backed canned responses loaded from priv/replays/replays.json\"",
+		"",
+		"  use GenServer",
+		"  require Logger",
+		"",
+		"  @table :replay_store",
+		"",
+		"  def start_link(_), do: GenServer.start_link(__MODULE__, [], name: __MODULE__)",
+		"",
+		"  def best_response(id) do",
+		"    case :ets.lookup(@table, id) do",
+		"      [{^id, payload}] -> {:ok, %{message_id: id, payload: payload}}",
+		"      _ -> :miss",
+		"    end",
+		"  end",
+		"",
+		"  def put_response(id, payload) when is_integer(id) and is_binary(payload) do",
+		"    :ets.insert(@table, {id, payload})",
+		"  end",
+		"",
+		"  def all, do: :ets.tab2list(@table)",
+		"",
+		"  @impl true",
+		"  def init(_) do",
+		"    :ets.new(@table, [:set, :named_table, :public, read_concurrency: true])",
+		"    path = Path.join(:code.priv_dir(:"+elixirAppName(plan.Module)+"), \"replays/replays.json\")",
+		"    case File.read(path) do",
+		"      {:ok, data} -> data |> Jason.decode!() |> Map.get(\"entries\", []) |> Enum.each(&load_entry/1)",
+		"      {:error, _} -> Logger.warning(\"replays.json missing, replay-first mode disabled\")",
+		"    end",
+		"    {:ok, %{}}",
+		"  end",
+		"",
+		"  defp load_entry(%{\"message_id\" => id, \"payload_hex\" => hex}) when is_integer(id) do",
+		"    case Base.decode16(hex, case: :mixed) do",
+		"      {:ok, payload} -> :ets.insert(@table, {id, payload})",
+		"      :error -> :ok",
+		"    end",
+		"  end",
+		"  defp load_entry(_), do: :ok",
+		"end",
+	)
+}
+
+func renderStateMachine(plan *Plan) string {
+	var b strings.Builder
+	b.WriteString("defmodule " + plan.Module + ".StateMachine do\n")
+	b.WriteString("  @moduledoc \"State transitions derived from the discovery plan.\"\n\n")
+	if len(plan.Messages) == 0 {
+		b.WriteString("  def next(state, _id), do: state\nend\n")
+		return b.String()
+	}
+	for _, m := range plan.Messages {
+		if !m.Stateful || m.NextState == "" {
+			continue
+		}
+		b.WriteString(fmt.Sprintf("  def next(_state, %d), do: %s\n", int(m.ID), elixirAtom(m.NextState)))
+	}
+	b.WriteString("  def next(state, _id), do: state\nend\n")
+	return b.String()
+}
+
+func renderAdminRouter(plan *Plan) string {
+	return joinLines(
+		"defmodule "+plan.Module+".Admin.Router do",
+		"  use Plug.Router",
+		"  alias "+plan.Module+".{ReplayStore, Admin.Dashboard}",
+		"",
+		"  plug :match",
+		"  plug :dispatch",
+		"",
+		"  get \"/\" do",
+		"    conn",
+		"    |> put_resp_content_type(\"text/html\")",
+		"    |> send_resp(200, Dashboard.render())",
+		"  end",
+		"",
+		"  get \"/api/status\" do",
+		"    body = Jason.encode!(%{ok: true, info: "+plan.Module+".info()})",
+		"    conn |> put_resp_content_type(\"application/json\") |> send_resp(200, body)",
+		"  end",
+		"",
+		"  get \"/api/replays\" do",
+		"    entries = ReplayStore.all() |> Enum.map(fn {id, payload} -> %{id: id, size: byte_size(payload), hex: Base.encode16(payload, case: :lower)} end)",
+		"    body = Jason.encode!(%{ok: true, entries: entries})",
+		"    conn |> put_resp_content_type(\"application/json\") |> send_resp(200, body)",
+		"  end",
+		"",
+		"  get \"/api/sessions\" do",
+		"    sessions = ",
+		"      Registry.select("+plan.Module+".SessionRegistry, [{{:\"$1\", :\"$2\", :\"$3\"}, [], [{{:\"$1\", :\"$2\", :\"$3\"}}]}])",
+		"      |> Enum.map(fn {pid, sid, meta} ->",
+		"        %{",
+		"          pid: inspect(pid),",
+		"          sid: sid,",
+		"          state: Map.get(meta, :state, :unknown),",
+		"          last_seen: Map.get(meta, :last_seen, 0)",
+		"        }",
+		"      end)",
+		"    body = Jason.encode!(%{ok: true, sessions: sessions})",
+		"    conn |> put_resp_content_type(\"application/json\") |> send_resp(200, body)",
+		"  end",
+		"",
+		"  post \"/api/replays/override\" do",
+		"    {:ok, body, conn} = read_body(conn)",
+		"    case Jason.decode(body) do",
+		"      {:ok, %{\"message_id\" => id, \"payload_hex\" => hex}} ->",
+		"        case Base.decode16(hex, case: :mixed) do",
+		"          {:ok, binary} ->",
+		"            ReplayStore.put_response(id, binary)",
+		"            resp = Jason.encode!(%{ok: true, message: \"Response overridden for id #{id}\"})",
+		"            conn |> put_resp_content_type(\"application/json\") |> send_resp(200, resp)",
+		"          :error ->",
+		"            resp = Jason.encode!(%{ok: false, error: \"Invalid hex payload\"})",
+		"            conn |> put_resp_content_type(\"application/json\") |> send_resp(400, resp)",
+		"        end",
+		"      _ ->",
+		"        resp = Jason.encode!(%{ok: false, error: \"Invalid JSON body\"})",
+		"        conn |> put_resp_content_type(\"application/json\") |> send_resp(400, resp)",
+		"    end",
+		"  end",
+		"",
+		"  match _ do",
+		"    send_resp(conn, 404, \"not found\")",
+		"  end",
+		"end",
+	)
+}
+
+func renderAdminDashboard(plan *Plan) string {
+	pinningDetected := "No"
+	pinningReason := "No certificate pinning checks detected in target files."
+	if plan.Pinning.Detected {
+		pinningDetected = "Yes"
+		pinningReason = plan.Pinning.Reason
+	}
+
+	return `defmodule ` + plan.Module + `.Admin.Dashboard do
+  @moduledoc "Static HTML dashboard rendered server-side."
+
+  def render do
+    info = ` + plan.Module + `.info()
+    """
+    <!doctype html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>` + plan.GameName + ` - Private Server Lab</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
+        :root {
+          --bg: #090616;
+          --panel: rgba(22, 19, 43, 0.45);
+          --border: rgba(139, 92, 246, 0.15);
+          --border-focus: rgba(139, 92, 246, 0.4);
+          --text: #eef2ff;
+          --text-muted: #94a3b8;
+          --primary: #8b5cf6;
+          --primary-glow: rgba(139, 92, 246, 0.3);
+          --accent: #d946ef;
+          --success: #10b981;
+          --success-glow: rgba(16, 185, 129, 0.2);
+          --warning: #f59e0b;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+          background: var(--bg);
+          color: var(--text);
+          font-family: 'Plus Jakarta Sans', sans-serif;
+          background-image: radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 40%),
+                            radial-gradient(circle at 90% 80%, rgba(217, 70, 239, 0.08) 0%, transparent 45%);
+          background-attachment: fixed;
+          min-height: 100vh;
+          padding: 40px 24px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 32px;
+        }
+        .logo-area {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .logo-icon {
+          width: 42px;
+          height: 42px;
+          background: linear-gradient(135deg, var(--primary), var(--accent));
+          border-radius: 12px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 20px var(--primary-glow);
+          color: #fff;
+        }
+        .logo-text h1 {
+          font-family: 'Outfit', sans-serif;
+          font-size: 24px;
+          font-weight: 700;
+          letter-spacing: -0.5px;
+          background: linear-gradient(to right, #ffffff, #c084fc);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+        .logo-text p {
+          font-size: 11px;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          margin-top: 2px;
+        }
+        .status-badge {
+          background: var(--panel);
+          border: 1px solid var(--border);
+          border-radius: 999px;
+          padding: 6px 14px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+          font-weight: 600;
+        }
+        .status-indicator {
+          width: 8px;
+          height: 8px;
+          background: var(--success);
+          border-radius: 50%;
+          box-shadow: 0 0 10px var(--success-glow);
+          animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+          0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+          70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(16, 185, 129, 0); }
+          100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+        .grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 20px;
+          margin-bottom: 32px;
+        }
+        @media (max-width: 900px) {
+          .grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px) {
+          .grid { grid-template-columns: 1fr; }
+        }
+        .card {
+          background: var(--panel);
+          border: 1px solid var(--border);
+          border-radius: 16px;
+          padding: 20px;
+          backdrop-filter: blur(16px);
+          -webkit-backdrop-filter: blur(16px);
+          box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .card:hover {
+          border-color: var(--border-focus);
+          transform: translateY(-2px);
+          box-shadow: 0 12px 40px rgba(139, 92, 246, 0.08);
+        }
+        .stat-card {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        .stat-icon {
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
+          background: rgba(139, 92, 246, 0.1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: var(--primary);
+          border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+        .stat-icon.accent {
+          background: rgba(217, 70, 239, 0.1);
+          color: var(--accent);
+          border-color: rgba(217, 70, 239, 0.2);
+        }
+        .stat-info .label {
+          font-size: 11px;
+          color: var(--text-muted);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .stat-info .value {
+          font-family: 'Outfit', sans-serif;
+          font-size: 22px;
+          font-weight: 700;
+          margin-top: 4px;
+        }
+        .layout-split {
+          display: grid;
+          grid-template-columns: 1fr 2fr;
+          gap: 24px;
+          margin-bottom: 32px;
+        }
+        @media (max-width: 900px) {
+          .layout-split { grid-template-columns: 1fr; }
+        }
+        .section-title {
+          font-family: 'Outfit', sans-serif;
+          font-size: 18px;
+          font-weight: 600;
+          margin-bottom: 16px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .sessions-list {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+          max-height: 400px;
+          overflow-y: auto;
+        }
+        .session-item {
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(255,255,255,0.05);
+          border-radius: 12px;
+          padding: 14px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          transition: all 0.2s;
+        }
+        .session-item:hover {
+          background: rgba(255,255,255,0.04);
+        }
+        .session-details {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .session-id {
+          font-family: monospace;
+          font-weight: 600;
+          font-size: 14px;
+        }
+        .session-pid {
+          font-size: 11px;
+          color: var(--text-muted);
+        }
+        .session-meta {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 4px;
+        }
+        .session-state {
+          font-size: 11px;
+          font-weight: 700;
+          text-transform: uppercase;
+          padding: 2px 8px;
+          border-radius: 6px;
+          background: rgba(139, 92, 246, 0.15);
+          color: #c084fc;
+        }
+        .session-state.connected {
+          background: rgba(16, 185, 129, 0.15);
+          color: #34d399;
+        }
+        .session-time {
+          font-size: 11px;
+          color: var(--text-muted);
+        }
+        .replays-container {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+        }
+        .search-bar {
+          position: relative;
+          display: flex;
+          gap: 12px;
+        }
+        .search-input {
+          flex: 1;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 12px 16px;
+          color: var(--text);
+          font-family: inherit;
+          font-size: 14px;
+          transition: all 0.2s;
+        }
+        .search-input:focus {
+          outline: none;
+          border-color: var(--primary);
+          background: rgba(255,255,255,0.05);
+          box-shadow: 0 0 10px rgba(139,92,246,0.15);
+        }
+        .search-icon-svg {
+          position: absolute;
+          right: 16px;
+          top: 50%;
+          transform: translateY(-50%);
+          color: var(--text-muted);
+          pointer-events: none;
+          width: 18px;
+          height: 18px;
+        }
+        .table-wrapper {
+          border-radius: 12px;
+          overflow: hidden;
+          border: 1px solid rgba(255,255,255,0.05);
+          max-height: 350px;
+          overflow-y: auto;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          text-align: left;
+          font-size: 13px;
+        }
+        th {
+          background: rgba(255,255,255,0.02);
+          color: var(--text-muted);
+          font-weight: 600;
+          text-transform: uppercase;
+          font-size: 11px;
+          letter-spacing: 0.5px;
+          padding: 12px 16px;
+          border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        td {
+          padding: 12px 16px;
+          border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        tr:last-child td { border-bottom: none; }
+        tr { transition: background 0.2s; }
+        tr:hover { background: rgba(255,255,255,0.01); }
+        .message-id-badge {
+          font-family: monospace;
+          font-weight: 600;
+          color: var(--accent);
+        }
+        .size-badge {
+          font-family: monospace;
+          background: rgba(255,255,255,0.05);
+          border-radius: 4px;
+          padding: 2px 6px;
+          color: var(--text-muted);
+        }
+        .btn-action {
+          background: transparent;
+          border: 1px solid rgba(255,255,255,0.1);
+          color: var(--text);
+          padding: 6px 12px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 12px;
+          transition: all 0.2s;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .btn-action:hover {
+          background: rgba(255,255,255,0.05);
+          border-color: var(--primary);
+          color: var(--primary);
+        }
+        .payload-viewer {
+          display: none;
+          background: rgba(0,0,0,0.3);
+          padding: 14px;
+          border-radius: 8px;
+          font-family: monospace;
+          font-size: 12px;
+          word-break: break-all;
+          white-space: pre-wrap;
+          margin-top: 8px;
+          border: 1px solid rgba(255,255,255,0.03);
+        }
+        .override-panel {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          gap: 12px;
+          background: rgba(139, 92, 246, 0.05);
+          border: 1px dashed var(--border);
+          border-radius: 12px;
+          padding: 16px;
+          margin-top: 8px;
+        }
+        .override-title {
+          grid-column: 1 / -1;
+          font-size: 11px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          color: var(--primary);
+          margin-bottom: 4px;
+        }
+        .override-inputs {
+          display: flex;
+          gap: 12px;
+        }
+        .override-inputs input {
+          background: rgba(0,0,0,0.2);
+          border: 1px solid var(--border);
+          border-radius: 8px;
+          padding: 8px 12px;
+          color: var(--text);
+          font-size: 13px;
+        }
+        .override-inputs input:focus {
+          outline: none;
+          border-color: var(--primary);
+        }
+        .btn-primary {
+          background: var(--primary);
+          color: #fff;
+          border: none;
+          padding: 8px 16px;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 13px;
+          font-weight: 600;
+          transition: all 0.2s;
+        }
+        .btn-primary:hover {
+          background: #7c3aed;
+          box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+        .bypass-card {
+          grid-column: 1 / -1;
+          background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(217, 70, 239, 0.05) 100%);
+          border: 1px solid var(--border);
+          padding: 24px;
+        }
+        .bypass-card h3 {
+          font-family: 'Outfit', sans-serif;
+          color: var(--accent);
+          font-size: 16px;
+          margin-bottom: 12px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .bypass-card p {
+          font-size: 13px;
+          color: var(--text-muted);
+          line-height: 1.6;
+          margin-bottom: 16px;
+        }
+        .code-box {
+          background: rgba(0,0,0,0.4);
+          border: 1px solid rgba(255,255,255,0.05);
+          border-radius: 8px;
+          padding: 12px 16px;
+          font-family: monospace;
+          font-size: 12px;
+          color: #a78bfa;
+          position: relative;
+        }
+        .empty-state {
+          text-align: center;
+          padding: 40px 20px;
+          color: var(--text-muted);
+        }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <!-- Header -->
+        <header class="header">
+          <div class="logo-area">
+            <div class="logo-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <div class="logo-text">
+              <h1>` + plan.GameName + ` Lab</h1>
+              <p>Spoofing Mock Server</p>
+            </div>
+          </div>
+          <div class="status-badge">
+            <span class="status-indicator"></span>
+            <span>Online (Lab Authorized)</span>
+          </div>
+        </header>
+
+        <!-- Stats Grid -->
+        <div class="grid">
+          <div class="card stat-card">
+            <div class="stat-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
+            </div>
+            <div class="stat-info">
+              <div class="label">Transport</div>
+              <div class="value">#{Atom.to_string(info.transport)}</div>
+            </div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon accent">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+            </div>
+            <div class="stat-info">
+              <div class="label">Framing</div>
+              <div class="value">#{Atom.to_string(info.framing)}</div>
+            </div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div class="stat-info">
+              <div class="label">Active Clients</div>
+              <div class="value" id="sessions-count">0</div>
+            </div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-icon accent">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+            <div class="stat-info">
+              <div class="label">Canned Replays</div>
+              <div class="value" id="replays-count">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Split Grid -->
+        <div class="layout-split">
+          <!-- Sessions -->
+          <div class="card">
+            <h2 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg>
+              Active Sessions
+            </h2>
+            <div class="sessions-list" id="sessions-list">
+              <div class="empty-state">No active connections.</div>
+            </div>
+          </div>
+
+          <!-- Replays list -->
+          <div class="card">
+            <h2 class="section-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+              Replay Database & Overrides
+            </h2>
+            <div class="replays-container">
+              <div class="search-bar">
+                <input type="text" id="search-input" class="search-input" placeholder="Search by Message ID...">
+                <svg class="search-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              </div>
+
+              <div class="table-wrapper">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Msg ID</th>
+                      <th>Direction</th>
+                      <th>Size</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="replays-tbody">
+                    <tr><td colspan="4" class="empty-state">Loading...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Override Panel -->
+              <div class="override-panel">
+                <div class="override-title">Fast Message Bypass / Payload Override</div>
+                <div class="override-inputs">
+                  <input type="number" id="override-id" placeholder="Message ID" style="width: 140px;">
+                  <input type="text" id="override-hex" placeholder="Payload hex bytes..." style="flex: 1;">
+                </div>
+                <button class="btn-primary" onclick="submitOverride()">Apply Override</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bypasses Card -->
+        <div class="card bypass-card">
+          <h3>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            SSL / Certificate Pinning Guide
+          </h3>
+          <p>
+            SSL Pinning detected in client: <strong>` + pinningDetected + `</strong>. ` + pinningReason + `
+            <br>
+            Use Mega-Analyzer's high-efficiency smart-patcher client tool to redirect requests from your target build:
+          </p>
+          <div class="code-box">
+            analyzer.exe --patch-client --apk &lt;yours.apk&gt; --server-ip 127.0.0.1:` + fmt.Sprintf("%d", plan.Listen.Port) + ` --bypass-ssl --mode research
+          </div>
+        </div>
+      </div>
+
+      <script>
+        async function fetchSessions() {
+          try {
+            const res = await fetch('/api/sessions');
+            const data = await res.json();
+            if (data.ok) {
+              const list = document.getElementById('sessions-list');
+              const count = document.getElementById('sessions-count');
+              count.textContent = data.sessions.length;
+              if (data.sessions.length === 0) {
+                list.innerHTML = '<div class="empty-state">No active connections.</div>';
+                return;
+              }
+              list.innerHTML = data.sessions.map(s => {
+                const age = Math.max(0, Math.floor(Date.now() / 1000 - s.last_seen));
+                const ageText = age === 0 ? 'just now' : age + 's ago';
+                const stateClass = s.state === 'connected' ? 'connected' : '';
+                return '<div class="session-item">' +
+                  '<div class="session-details">' +
+                    '<span class="session-id">Session #' + s.sid + '</span>' +
+                    '<span class="session-pid">PID ' + s.pid + '</span>' +
+                  '</div>' +
+                  '<div class="session-meta">' +
+                    '<span class="session-state ' + stateClass + '">' + s.state + '</span>' +
+                    '<span class="session-time">Seen ' + ageText + '</span>' +
+                  '</div>' +
+                '</div>';
+              }).join('');
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }
+
+        let allReplays = [];
+
+        async function fetchReplays() {
+          try {
+            const res = await fetch('/api/replays');
+            const data = await res.json();
+            if (data.ok) {
+              allReplays = data.entries;
+              document.getElementById('replays-count').textContent = allReplays.length;
+              renderReplaysTable(allReplays);
+            }
+          } catch (e) {
+            console.error(e);
+          }
+        }
+
+        function renderReplaysTable(entries) {
+          const tbody = document.getElementById('replays-tbody');
+          if (entries.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4" class="empty-state">No replays loaded.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = entries.map(e => {
+            return '<tr>' +
+              '<td><span class="message-id-badge">' + e.id + '</span></td>' +
+              '<td><span style="text-transform: capitalize; color: #a78bfa; font-weight: 500;">server_to_client</span></td>' +
+              '<td><span class="size-badge">' + e.size + ' bytes</span></td>' +
+              '<td>' +
+                '<div style="display: flex; gap: 8px;">' +
+                  '<button class="btn-action" onclick="togglePayload(' + e.id + ')">' +
+                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>' +
+                    ' Payload' +
+                  '</button>' +
+                  '<button class="btn-action" onclick="prepareOverride(' + e.id + ', \'' + e.hex + '\')">' +
+                    '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>' +
+                    ' Edit' +
+                  '</button>' +
+                '</div>' +
+                '<div id="payload-' + e.id + '" class="payload-viewer">' + e.hex + '</div>' +
+              '</td>' +
+            '</tr>';
+          }).join('');
+        }
+
+        function togglePayload(id) {
+          const el = document.getElementById('payload-' + id);
+          el.style.display = el.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function prepareOverride(id, hex) {
+          document.getElementById('override-id').value = id;
+          document.getElementById('override-hex').value = hex;
+          document.getElementById('override-hex').focus();
+        }
+
+        async function submitOverride() {
+          const idInput = document.getElementById('override-id');
+          const hexInput = document.getElementById('override-hex');
+          const id = parseInt(idInput.value);
+          const hex = hexInput.value.trim();
+          if (!id || !hex) {
+            alert('Please specify a valid Message ID and HEX payload.');
+            return;
+          }
+          try {
+            const res = await fetch('/api/replays/override', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ message_id: id, payload_hex: hex })
+            });
+            const data = await res.json();
+            if (data.ok) {
+              alert('Successfully overridden.');
+              fetchReplays();
+            } else {
+              alert('Error: ' + data.error);
+            }
+          } catch (e) {
+            alert('Error connecting to Server API.');
+          }
+        }
+
+        document.getElementById('search-input').addEventListener('input', (e) => {
+          const query = e.target.value.trim();
+          if (!query) {
+            renderReplaysTable(allReplays);
+            return;
+          }
+          const filtered = allReplays.filter(e => e.id.toString().includes(query));
+          renderReplaysTable(filtered);
+        });
+
+        // Init
+        fetchReplays();
+        fetchSessions();
+        setInterval(fetchSessions, 2000);
+      </script>
+    </body>
+    </html>
+    """
+  end
+end`
+}
+
+func renderHandlersDefault(plan *Plan) string {
+	var b strings.Builder
+	b.WriteString("defmodule " + plan.Module + ".Handlers.Default do\n")
+	b.WriteString("  @moduledoc \"Default per-message stubs. Replay-first: unknown ids fall through to ReplayStore.\"\n\n")
+	b.WriteString("  require Logger\n\n")
+	if len(plan.Messages) == 0 {
+		b.WriteString("  def handle(_id, _msg, _ctx), do: :replay\nend\n")
+		return b.String()
+	}
+	for _, m := range plan.Messages {
+		comment := fmt.Sprintf("  # %s (%s)", m.Name, m.Direction)
+		b.WriteString(comment + "\n")
+		switch {
+		case m.Direction == "server_to_client":
+			b.WriteString(fmt.Sprintf("  def handle(%d, _msg, _ctx), do: :ok\n", int(m.ID)))
+		case m.Replay:
+			b.WriteString(fmt.Sprintf("  def handle(%d, _msg, _ctx), do: :replay\n", int(m.ID)))
+		default:
+			b.WriteString(fmt.Sprintf("  def handle(%d, msg, ctx) do\n", int(m.ID)))
+			b.WriteString("    Logger.debug(\"handler stub " + m.Name + " sid=\" <> Integer.to_string(ctx.sid) <> \" len=\" <> Integer.to_string(byte_size(msg.payload)))\n")
+			b.WriteString("    :replay\n  end\n")
+		}
+	}
+	b.WriteString("\n  def handle(_id, _msg, _ctx), do: :replay\nend\n")
+	return b.String()
+}
+
+func renderReplaysJSON(plan *Plan) string {
+	type fileFormat struct {
+		Game    string        `json:"game"`
+		Module  string        `json:"module"`
+		Entries []ReplayEntry `json:"entries"`
+		Note    string        `json:"note"`
+	}
+	payload := fileFormat{
+		Game:    plan.GameName,
+		Module:  plan.Module,
+		Entries: plan.Replays,
+		Note:    "Edit payload_hex to replace stub bytes with real captures (authorized lab only).",
+	}
+	data, _ := json.MarshalIndent(payload, "", "  ")
+	return string(data) + "\n"
+}
+
+func renderProjectReadme(plan *Plan) string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "# %s lab server\n\nGenerated by Mega-Analyzer Make-Server pipeline.\n\n", plan.GameName)
+	b.WriteString("> ⚠ Authorized lab use only. This mock server is meant to be pointed at\n")
+	b.WriteString("> your own / authorized client builds during reverse engineering and\n")
+	b.WriteString("> protocol research. Do NOT use it against live third-party servers.\n\n")
+	fmt.Fprintf(&b, "- Transport: **%s** (TLS: %v, WebSocket: %v)\n", plan.Transport.Protocol, plan.Transport.UsesTLS, plan.Transport.UsesWebSocket)
+	fmt.Fprintf(&b, "- Framing: **%s**\n", plan.Framing.Style)
+	fmt.Fprintf(&b, "- Listen: **%s:%d** (admin: %d)\n", plan.Listen.Host, plan.Listen.Port, plan.Listen.AdminPort)
+	fmt.Fprintf(&b, "- Module: `%s`\n", plan.Module)
+	fmt.Fprintf(&b, "- Readiness score: **%d / 100** (%s)\n\n", plan.Readiness.Score, plan.Readiness.Risk)
+
+	b.WriteString("## Run\n\n```\nmix deps.get\nmix run --no-halt\n```\n\n")
+	b.WriteString("Admin dashboard: http://localhost:" + fmt.Sprintf("%d", plan.Listen.AdminPort) + "\n\n")
+
+	if len(plan.Endpoints) > 0 {
+		b.WriteString("## Detected endpoints\n\n| Address | Port | File | Confidence |\n|---|---:|---|---:|\n")
+		for _, e := range plan.Endpoints {
+			port := ""
+			if e.Port > 0 {
+				port = fmt.Sprintf("%d", e.Port)
+			}
+			fmt.Fprintf(&b, "| `%s` | %s | `%s` | %.2f |\n", e.Address, port, e.FilePath, e.Confidence)
+		}
+		b.WriteString("\n")
+	}
+	if plan.Pinning.Detected {
+		b.WriteString("## Pinning hints\n\n")
+		for _, h := range plan.Pinning.Hints {
+			fmt.Fprintf(&b, "- %s\n", h)
+		}
+		b.WriteString("\nTo bypass for your authorized build use the Mega-Analyzer patcher:\n\n")
+		b.WriteString("```\nanalyzer --patch-client --apk <yours.apk> --server-ip <host:port> --bypass-ssl --mode research\n```\n\n")
+	}
+	if len(plan.Messages) > 0 {
+		b.WriteString("## Generated message stubs\n\n| ID | Name | Direction | Replay | Stateful |\n|---:|---|---|:---:|:---:|\n")
+		for _, m := range plan.Messages {
+			fmt.Fprintf(&b, "| %d | %s | %s | %v | %v |\n", int(m.ID), m.Name, m.Direction, m.Replay, m.Stateful)
+		}
+		b.WriteString("\n")
+	}
+	if len(plan.Readiness.CriticalGaps) > 0 {
+		b.WriteString("## Critical gaps\n\n")
+		for _, g := range plan.Readiness.CriticalGaps {
+			fmt.Fprintf(&b, "- %s\n", g)
+		}
+		b.WriteString("\n")
+	}
+	b.WriteString("## Files of interest\n\n")
+	b.WriteString("- `lib/" + strings.ToLower(plan.Module) + "/router.ex` — frame parser and dispatcher\n")
+	b.WriteString("- `lib/" + strings.ToLower(plan.Module) + "/handlers/default.ex` — per-message stubs\n")
+	b.WriteString("- `lib/" + strings.ToLower(plan.Module) + "/replay_store.ex` — canned responses from ETS\n")
+	b.WriteString("- `priv/replays/replays.json` — payload hex bytes; edit with real captures\n")
+	b.WriteString("- `lib/" + strings.ToLower(plan.Module) + "/admin/dashboard.ex` — admin HTML\n")
+	return b.String()
+}
+
+func renderProjectReadmeRU(plan *Plan) string {
+	var b strings.Builder
+	fmt.Fprintf(&b, "# %s lab server\n\nGenerated by the Mega-Analyzer Make-Server pipeline.\n\n", plan.GameName)
+	b.WriteString("> Warning: for authorized lab use only.\n")
+	b.WriteString("> This mock server is meant for your own / authorized builds.\n")
+	b.WriteString("> Do NOT use it against other people's live servers.\n\n")
+	fmt.Fprintf(&b, "- Transport: **%s** (TLS: %v, WebSocket: %v)\n", plan.Transport.Protocol, plan.Transport.UsesTLS, plan.Transport.UsesWebSocket)
+	fmt.Fprintf(&b, "- Framing: **%s**\n", plan.Framing.Style)
+	fmt.Fprintf(&b, "- Listen: **%s:%d** (admin: %d)\n", plan.Listen.Host, plan.Listen.Port, plan.Listen.AdminPort)
+	fmt.Fprintf(&b, "- Module: `%s`\n", plan.Module)
+	fmt.Fprintf(&b, "- Readiness: **%d / 100** (%s)\n\n", plan.Readiness.Score, plan.Readiness.Risk)
+	b.WriteString("## Run\n\n```\nmix deps.get\nmix run --no-halt\n```\n\n")
+	b.WriteString("Admin UI: http://localhost:" + fmt.Sprintf("%d", plan.Listen.AdminPort) + "\n")
+	return b.String()
+}
+
+func elixirAppName(module string) string {
+	var b strings.Builder
+	for i, r := range module {
+		if r >= 'A' && r <= 'Z' {
+			if i > 0 {
+				b.WriteByte('_')
+			}
+			b.WriteRune(r + ('a' - 'A'))
+			continue
+		}
+		b.WriteRune(r)
+	}
+	out := b.String()
+	if out == "" {
+		return "private_server"
+	}
+	return out
+}
+
+func elixirString(s string) string {
+	escaped := strings.ReplaceAll(s, "\\", "\\\\")
+	escaped = strings.ReplaceAll(escaped, "\"", "\\\"")
+	return "\"" + escaped + "\""
+}
+
+func elixirAtom(s string) string {
+	out := strings.ToLower(strings.TrimSpace(s))
+	if out == "" {
+		return "unknown"
+	}
+	var b strings.Builder
+	for i, r := range out {
+		switch {
+		case r >= 'a' && r <= 'z':
+			b.WriteRune(r)
+		case r >= '0' && r <= '9' && i > 0:
+			b.WriteRune(r)
+		case r == '_' && i > 0:
+			b.WriteRune(r)
+		case r == '-':
+			b.WriteByte('_')
+		}
+	}
+	if b.Len() == 0 {
+		return "unknown"
+	}
+	return b.String()
+}
+
+func elixirAtomString(s string) string {
+	return ":" + elixirAtom(s)
+}
+
+func joinLines(lines ...string) string {
+	return strings.Join(lines, "\n") + "\n"
+}

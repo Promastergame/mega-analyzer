@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="84" height="20" role="img" aria-label="Rust: 1.96.1">
+  <title>Rust: 1.96.1</title>
+  <defs><clipPath id="c"><rect width="84" height="20" rx="3"/></clipPath></defs>
+  <g clip-path="url(#c)">
+    <rect width="38" height="20" fill="#24292f"/>
+    <rect x="38" width="46" height="20" fill="#DEA584"/>
+  </g>
+  <text x="19" y="14" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11" font-weight="600" fill="#fff">Rust</text>
+  <text x="61" y="14" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11" fill="#fff">1.96.1</text>
+</svg>

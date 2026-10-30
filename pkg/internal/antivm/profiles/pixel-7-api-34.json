@@ -1,0 +1,42 @@
+{
+  "name": "Pixel 7-api-34",
+  "model": "Pixel 7",
+  "brand": "google",
+  "manufacturer": "Google",
+  "device": "panther",
+  "product": "panther",
+  "android_version": "14",
+  "api_level": 34,
+  "abi": "arm64-v8a",
+  "build_id": "UP1A.240901.191",
+  "fingerprint": "google/panther/panther:14/UP1A.240901.191/669555:user/release-keys",
+  "security_patch": "2024-09-01",
+  "locale": "en-US",
+  "timezone": "UTC",
+  "resolution": "1080x2400",
+  "density": 420,
+  "network": {
+    "mac_address": "64:CC:2E:7B:19:05",
+    "wifi_ssid": "MyWiFi_D4C7",
+    "imei": "353916101524361",
+    "serial": "D9126624"
+  },
+  "battery": {
+    "level": 71,
+    "status": "discharging",
+    "temperature": 354,
+    "health": "good",
+    "plugged": "none"
+  },
+  "sensor": {
+    "enabled": true,
+    "accelerometer": true,
+    "gyroscope": true
+  },
+  "operator": {
+    "name": "MTS",
+    "numeric": "25001",
+    "mcc": "250",
+    "mnc": "01"
+  }
+}

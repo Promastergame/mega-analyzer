@@ -1,0 +1,17 @@
+[package]
+name = "omnisec-loader-pe"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec PE loader — parses Windows EXE / DLL / SYS / OCX into LoadedBinary."
+
+[dependencies]
+omnisec-core.workspace = true
+omnisec-loader.workspace = true
+
+[dev-dependencies]
+
+[lints]
+workspace = true

@@ -1,0 +1,206 @@
+{
+  "ml_negative_database_v2": {
+    "metadata": {
+      "version": "2.0.0",
+      "created": "2025-06-01",
+      "description": "Synthetic NON-secrets — extended with 4 new groups",
+      "new_groups": [
+        "looks_like_secret_but_not",
+        "random_identifiers",
+        "file_checksums",
+        "code_references"
+      ],
+      "total_records": 160
+    },
+    "negatives": [
+
+      // ══════════════════════════════════════════════════════════════════════
+      // GROUP 1 — ПОХОЖИ НА СЕКРЕТЫ, НО ЭТО ПРОСТО ТЕКСТ
+      // Уменьшает false-positive на документацию, названия, описания
+      // ══════════════════════════════════════════════════════════════════════
+
+      { "id": "lls_001", "value": "my-api-key-service-description",        "reason": "looks like key but docs text" },
+      { "id": "lls_002", "value": "openai-api-key-configuration",          "reason": "config field name, not value" },
+      { "id": "lls_003", "value": "secret-management-best-practices",      "reason": "article title with 'secret'" },
+      { "id": "lls_004", "value": "how-to-rotate-your-access-token",       "reason": "docs URL slug" },
+      { "id": "lls_005", "value": "api-key-not-found",                     "reason": "error message text" },
+      { "id": "lls_006", "value": "invalid_api_key",                       "reason": "error code string" },
+      { "id": "lls_007", "value": "api_key_expired",                       "reason": "error code string" },
+      { "id": "lls_008", "value": "missing_secret_key",                    "reason": "error code string" },
+      { "id": "lls_009", "value": "secret_key_too_short",                  "reason": "validation message" },
+      { "id": "lls_010", "value": "token_validation_failed",               "reason": "error message text" },
+      { "id": "lls_011", "value": "aws-access-key-id",                     "reason": "field name, not key value" },
+      { "id": "lls_012", "value": "github_personal_access_token",          "reason": "env variable name" },
+      { "id": "lls_013", "value": "STRIPE_SECRET_KEY",                     "reason": "env variable name, not value" },
+      { "id": "lls_014", "value": "OPENAI_API_KEY",                        "reason": "env variable name, not value" },
+      { "id": "lls_015", "value": "ANTHROPIC_API_KEY",                     "reason": "env variable name, not value" },
+      { "id": "lls_016", "value": "DATABASE_SECRET",                       "reason": "env variable name, not value" },
+      { "id": "lls_017", "value": "JWT_SECRET",                            "reason": "env variable name, not value" },
+      { "id": "lls_018", "value": "FIREBASE_API_KEY",                      "reason": "env variable name, not value" },
+      { "id": "lls_019", "value": "DISCORD_BOT_TOKEN",                     "reason": "env variable name, not value" },
+      { "id": "lls_020", "value": "TELEGRAM_BOT_TOKEN",                    "reason": "env variable name, not value" },
+      { "id": "lls_021", "value": "api_key_field",                         "reason": "json field name" },
+      { "id": "lls_022", "value": "secret_key_column",                     "reason": "database column name" },
+      { "id": "lls_023", "value": "auth_token_header",                     "reason": "http header name description" },
+      { "id": "lls_024", "value": "bearer_token_required",                 "reason": "auth requirement description" },
+      { "id": "lls_025", "value": "store-api-key-in-vault",                "reason": "instruction text" },
+      { "id": "lls_026", "value": "never-hardcode-secrets",                "reason": "security advice text" },
+      { "id": "lls_027", "value": "rotate-tokens-every-90-days",           "reason": "policy text" },
+      { "id": "lls_028", "value": "key-rotation-policy-v2",                "reason": "document title" },
+      { "id": "lls_029", "value": "secret-scanning-enabled",               "reason": "feature flag name" },
+      { "id": "lls_030", "value": "token-refresh-interval-3600",           "reason": "config parameter name" },
+      { "id": "lls_031", "value": "private-key-infrastructure",            "reason": "PKI term, not a key" },
+      { "id": "lls_032", "value": "public-key-cryptography-standards",     "reason": "crypto topic name" },
+      { "id": "lls_033", "value": "api-gateway-key-management",            "reason": "service feature name" },
+      { "id": "lls_034", "value": "secret-store-integration-guide",        "reason": "docs title" },
+      { "id": "lls_035", "value": "aBcDeFgHiJkLmNoPqRsTuVwXyZ",           "reason": "alphabet sequence, not entropy" },
+      { "id": "lls_036", "value": "sk-description-of-the-service-here",    "reason": "slug with sk- prefix but text" },
+      { "id": "lls_037", "value": "sk-learn",                              "reason": "scikit-learn library name" },
+      { "id": "lls_038", "value": "sk-build",                              "reason": "package name with sk- prefix" },
+      { "id": "lls_039", "value": "api-key-management-service",            "reason": "service name text" },
+      { "id": "lls_040", "value": "token-bucket-rate-limiter",             "reason": "algorithm name with 'token'" },
+
+      // ══════════════════════════════════════════════════════════════════════
+      // GROUP 2 — НАСТОЯЩИЕ СЛУЧАЙНЫЕ СТРОКИ, НО НЕ СЕКРЕТЫ
+      // UUID, ULID, CUID, ObjectID, serial numbers — выглядят как токены
+      // ══════════════════════════════════════════════════════════════════════
+
+      { "id": "uid_001", "value": "550e8400-e29b-41d4-a716-446655440000",       "reason": "UUID v1 example" },
+      { "id": "uid_002", "value": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",       "reason": "UUID v1 real" },
+      { "id": "uid_003", "value": "6ba7b811-9dad-11d1-80b4-00c04fd430c8",       "reason": "UUID v1 real" },
+      { "id": "uid_004", "value": "123e4567-e89b-12d3-a456-426614174000",       "reason": "UUID v4 example from RFC" },
+      { "id": "uid_005", "value": "f47ac10b-58cc-4372-a567-0e02b2c3d479",       "reason": "UUID v4 random" },
+      { "id": "uid_006", "value": "7c9e6679-7425-40de-944b-e07fc1f90ae7",       "reason": "UUID v4 random" },
+      { "id": "uid_007", "value": "550e8400-e29b-41d4-a716-446655440001",       "reason": "UUID v4 random" },
+      { "id": "uid_008", "value": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",       "reason": "UUID v4 random" },
+      { "id": "uid_009", "value": "01ARZ3NDEKTSV4RRFFQ69G5FAV",                "reason": "ULID identifier" },
+      { "id": "uid_010", "value": "01BX5ZZKBKACTAV9WEVGEMMVS0",                "reason": "ULID identifier" },
+      { "id": "uid_011", "value": "01HXYZ1234ABCDEF5678GHIJ90",                "reason": "ULID identifier" },
+      { "id": "uid_012", "value": "cjld2cyuq0000t3rmniod1foy",                  "reason": "CUID identifier" },
+      { "id": "uid_013", "value": "cjld2cjxh0000qzrmn831i7rn",                  "reason": "CUID identifier" },
+      { "id": "uid_014", "value": "clh3x8v9t0000ml08fxjb2k9z",                  "reason": "CUID2 identifier" },
+      { "id": "uid_015", "value": "507f1f77bcf86cd799439011",                   "reason": "MongoDB ObjectID" },
+      { "id": "uid_016", "value": "507f191e810c19729de860ea",                   "reason": "MongoDB ObjectID" },
+      { "id": "uid_017", "value": "64f5a7b43c6d7e8f9a0b1c2d",                  "reason": "MongoDB ObjectID" },
+      { "id": "uid_018", "value": "SN-2024-MB-001-XR7T",                        "reason": "product serial number" },
+      { "id": "uid_019", "value": "IMZ-889-2025-UNIT-0042",                     "reason": "device serial number" },
+      { "id": "uid_020", "value": "TXN-20250601-000293847",                     "reason": "transaction ID" },
+      { "id": "uid_021", "value": "ORD-7f3a9b2c1d4e5f6a",                      "reason": "order identifier" },
+      { "id": "uid_022", "value": "REQ-2025-06-ab3cd4ef",                      "reason": "request trace ID" },
+      { "id": "uid_023", "value": "usr_01J3KM7NQPXVWZRA4T5YBH6C8D",            "reason": "prefixed user ID" },
+      { "id": "uid_024", "value": "sess_9f2a1b3c4d5e6f7a8b9c0d1e",             "reason": "session ID" },
+      { "id": "uid_025", "value": "evt_1OaBC2LkdIwHu7ixmkd3WXYZ",              "reason": "Stripe-style event ID" },
+      { "id": "uid_026", "value": "msg_aBcDeFgH1234567890iJkLmN",               "reason": "message identifier" },
+      { "id": "uid_027", "value": "job_01HXYZ9876FEDC5432BAIJ10",               "reason": "background job ID" },
+      { "id": "uid_028", "value": "pipe_7a8b9c0d1e2f3a4b5c6d7e8f",             "reason": "pipeline run ID" },
+      { "id": "uid_029", "value": "run_20250601_143022_abc123def",              "reason": "ML run identifier" },
+      { "id": "uid_030", "value": "exp_v2_baseline_bert_20250512",              "reason": "experiment identifier" },
+
+      // ══════════════════════════════════════════════════════════════════════
+      // GROUP 3 — ХЭШИ РЕАЛЬНЫХ ФАЙЛОВ / КОНТЕНТА
+      // Длинный hex ≠ ключ. Чексуммы, дайджесты, fingerprints
+      // ══════════════════════════════════════════════════════════════════════
+
+      { "id": "hsh_001", "value": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",  "reason": "SHA-256 of 'test'" },
+      { "id": "hsh_002", "value": "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3",                          "reason": "SHA-1 of 'test'" },
+      { "id": "hsh_003", "value": "098f6bcd4621d373cade4e832627b4f6",                                  "reason": "MD5 of 'test'" },
+      { "id": "hsh_004", "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",  "reason": "SHA-256 of empty string" },
+      { "id": "hsh_005", "value": "ba7816bf8f01cfea414140de5dae2ec73b00361bbef0469f492c5754179e6f5",   "reason": "SHA-256 of 'abc'" },
+      { "id": "hsh_006", "value": "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e", "reason": "SHA-512 of empty string" },
+      { "id": "hsh_007", "value": "d8e8fca2dc0f896fd7cb4cb0031ba249",                                  "reason": "MD5 checksum of a file" },
+      { "id": "hsh_008", "value": "f1d2d2f924e986ac86fdf7b36c94bcdf32beec15",                          "reason": "SHA-1 file checksum" },
+      { "id": "hsh_009", "value": "b94f6f125c79e3a5ffaa826f584c10d52ada669e6762051b826b55776d05a8d7",  "reason": "SHA-256 file checksum" },
+      { "id": "hsh_010", "value": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08", "reason": "Docker image digest format" },
+      { "id": "hsh_011", "value": "sha256:a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3", "reason": "Docker layer digest" },
+      { "id": "hsh_012", "value": "md5-kAla/JILmriS+UkFpMHwUQ==",                                     "reason": "S3 ETag MD5 base64" },
+      { "id": "hsh_013", "value": "1:iKjKvEQ+5+6mPFd5h3LD8Q==:3lHf9oAb7cD2eF1gH4iJ5k==",            "reason": "bcrypt-style hash" },
+      { "id": "hsh_014", "value": "$2b$12$KIXg3bKr3PmC7V.1gJzX3uJ5R5K5R5K5R5K5R5K5R5K5R5K5R5K5R",   "reason": "bcrypt password hash" },
+      { "id": "hsh_015", "value": "$argon2id$v=19$m=65536,t=2,p=1$c29tZXNhbHQ$RdescudvJCsgt3ub+b+dWQ", "reason": "Argon2 password hash" },
+      { "id": "hsh_016", "value": "v1:aaaaaaaaaaaaaaaa:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",              "reason": "Fernet-style token structure" },
+      { "id": "hsh_017", "value": "1220f1d2d2f924e986ac86fdf7b36c94bcdf32beec153d3071f432aa4c8b99e6b", "reason": "IPFS CIDv1 multihash" },
+      { "id": "hsh_018", "value": "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o",                  "reason": "IPFS CIDv0 hash" },
+      { "id": "hsh_019", "value": "zQmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o",                 "reason": "IPFS CIDv1 base58" },
+      { "id": "hsh_020", "value": "integrity:sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxL2",           "reason": "SRI integrity attribute" },
+      { "id": "hsh_021", "value": "etag: \"33a64df551425fcc55e4d42a148795d9f25f89d4\"",              "reason": "HTTP ETag header value" },
+      { "id": "hsh_022", "value": "pgp-fingerprint: 4096R/0x12AB34CD56EF7890",                        "reason": "PGP key fingerprint" },
+      { "id": "hsh_023", "value": "SHA1:nThbg6kXUpJWGl7E1IGOCspRomTxdCARLviKw6E5SY8",                "reason": "SSH public key fingerprint" },
+      { "id": "hsh_024", "value": "MD5:16:27:ac:a5:76:28:2d:36:63:1b:56:4d:eb:df:a6:48",             "reason": "SSH MD5 fingerprint" },
+      { "id": "hsh_025", "value": "model-weights-sha256: 7c9e6679742540de944be07fc1f90ae71234abcd", "reason": "ML model weight checksum" },
+      { "id": "hsh_026", "value": "dataset-hash: 4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b", "reason": "dataset integrity hash" },
+      { "id": "hsh_027", "value": "commit: 2fd4e1c67a2d28fced849ee1bb76e7391b93eb12",                "reason": "git commit SHA" },
+      { "id": "hsh_028", "value": "tree: 4b825dc642cb6eb9a060e54bf8d69288fbee4904",                  "reason": "git tree SHA" },
+      { "id": "hsh_029", "value": "blob: 83baae61804e65cc73a7201a7252750c76066a30",                  "reason": "git blob SHA" },
+      { "id": "hsh_030", "value": "cc:01:23:45:67:89:ab:cd:ef:01:23:45:67:89:ab:cd:ef:01:23:45",    "reason": "X.509 cert serial hex" },
+
+      // ══════════════════════════════════════════════════════════════════════
+      // GROUP 4 — КОДОВЫЕ ПРИМЕРЫ И ССЫЛКИ
+      // Код, конфиги, комментарии — не секрет, а инструкция
+      // ══════════════════════════════════════════════════════════════════════
+
+      // — JavaScript / TypeScript
+      { "id": "cod_001", "value": "const apiKey = process.env.API_KEY",               "reason": "JS env reference, not value" },
+      { "id": "cod_002", "value": "const secret = process.env.SECRET_KEY ?? ''",      "reason": "JS env with fallback" },
+      { "id": "cod_003", "value": "import { API_KEY } from './config'",               "reason": "JS import statement" },
+      { "id": "cod_004", "value": "Authorization: `Bearer ${token}`",                 "reason": "JS template literal header" },
+      { "id": "cod_005", "value": "headers: { 'X-API-Key': process.env.API_KEY }",    "reason": "JS fetch headers object" },
+      { "id": "cod_006", "value": "if (!process.env.OPENAI_KEY) throw new Error()",   "reason": "JS validation code" },
+      { "id": "cod_007", "value": "export const TOKEN = process.env.NEXT_PUBLIC_TOKEN","reason": "Next.js public env" },
+      { "id": "cod_008", "value": "const client = new OpenAI({ apiKey: key })",       "reason": "SDK initialization code" },
+      { "id": "cod_009", "value": "anthropic = Anthropic(api_key=os.environ['KEY'])", "reason": "Python SDK init" },
+      { "id": "cod_010", "value": "os.environ.get('SECRET_KEY', 'fallback')",         "reason": "Python env access" },
+
+      // — Python
+      { "id": "cod_011", "value": "import os; key = os.getenv('API_KEY')",            "reason": "Python env reference" },
+      { "id": "cod_012", "value": "from dotenv import load_dotenv; load_dotenv()",    "reason": "Python dotenv loader" },
+      { "id": "cod_013", "value": "SECRET_KEY = config('DJANGO_SECRET', default='')", "reason": "Django decouple pattern" },
+      { "id": "cod_014", "value": "boto3.client('s3', aws_access_key_id=key)",        "reason": "Python boto3 init" },
+      { "id": "cod_015", "value": "keyring.get_password('service', 'username')",      "reason": "Python keyring lookup" },
+
+      // — Shell / ENV files
+      { "id": "cod_016", "value": "export API_KEY=$(cat /run/secrets/api_key)",       "reason": "shell secret from file" },
+      { "id": "cod_017", "value": "API_KEY=${API_KEY:?'API_KEY is not set'}",         "reason": "bash required env check" },
+      { "id": "cod_018", "value": "echo $SECRET_KEY | docker secret create mykey -", "reason": "docker secret create cmd" },
+      { "id": "cod_019", "value": "kubectl create secret generic my-secret --from-literal=key=$KEY", "reason": "k8s secret creation cmd" },
+      { "id": "cod_020", "value": "vault kv get secret/myapp/api_key",                "reason": "vault CLI command" },
+
+      // — Config files (.env, yaml, toml)
+      { "id": "cod_021", "value": "API_KEY=<your_key_here>",                          "reason": ".env template line" },
+      { "id": "cod_022", "value": "# API_KEY=your_key_goes_here",                    "reason": ".env commented example" },
+      { "id": "cod_023", "value": "SECRET_KEY=os.environ.get('SECRET_KEY')",          "reason": "settings.py pattern" },
+      { "id": "cod_024", "value": "api_key: ${SECRET_API_KEY}",                       "reason": "YAML env substitution" },
+      { "id": "cod_025", "value": "token = \"{{ vault('secret/token') }}\"",          "reason": "YAML vault template" },
+      { "id": "cod_026", "value": "[secrets]\napi_key = %(API_KEY)s",                 "reason": "INI config pattern" },
+      { "id": "cod_027", "value": "secret_key = ENV[\"SECRET_KEY\"]",                 "reason": "Ruby ENV access" },
+      { "id": "cod_028", "value": "apiKey: process.env['REACT_APP_KEY']",             "reason": "React env reference" },
+      { "id": "cod_029", "value": "VITE_API_KEY=${VITE_API_KEY}",                     "reason": "Vite env variable" },
+      { "id": "cod_030", "value": "spring.datasource.password=${DB_PASS}",            "reason": "Spring Boot config" },
+
+      // — CI/CD и инфраструктура
+      { "id": "cod_031", "value": "- name: API_KEY\n  valueFrom:\n    secretKeyRef:\n      name: my-secret\n      key: api-key", "reason": "k8s pod env from secret" },
+      { "id": "cod_032", "value": "${{ secrets.API_KEY }}",                           "reason": "GitHub Actions secret ref" },
+      { "id": "cod_033", "value": "${{ secrets.DOCKER_PASSWORD }}",                   "reason": "GitHub Actions secret ref" },
+      { "id": "cod_034", "value": "${env.SECRET_TOKEN}",                              "reason": "GitLab CI variable ref" },
+      { "id": "cod_035", "value": "$(SECRET_KEY)",                                    "reason": "Makefile variable ref" },
+      { "id": "cod_036", "value": "tf_var_api_key = var.api_key",                    "reason": "Terraform variable ref" },
+      { "id": "cod_037", "value": "data.aws_secretsmanager_secret_version.key.secret_string", "reason": "Terraform AWS SM ref" },
+      { "id": "cod_038", "value": "azurekeyvault:https://vault.azure.net/secrets/key", "reason": "Azure KV reference string" },
+      { "id": "cod_039", "value": "arn:aws:secretsmanager:us-east-1:123456789012:secret:mykey-AbCdEf", "reason": "AWS Secrets Manager ARN" },
+      { "id": "cod_040", "value": "projects/my-project/secrets/my-secret/versions/latest", "reason": "GCP Secret Manager path" },
+
+      // — Комментарии и документация
+      { "id": "cod_041", "value": "// TODO: move API_KEY to environment variable",    "reason": "code comment with 'key'" },
+      { "id": "cod_042", "value": "# Never commit your secret key to git",            "reason": "security comment" },
+      { "id": "cod_043", "value": "/* Replace YOUR_API_KEY with actual value */",     "reason": "block comment placeholder" },
+      { "id": "cod_044", "value": "-- store credentials in vault, not here",          "reason": "SQL comment" },
+      { "id": "cod_045", "value": "<!-- api-key goes in server config, not HTML -->", "reason": "HTML comment" },
+
+      // — Логи и трейсы
+      { "id": "cod_046", "value": "[WARN] API_KEY not set, using default",            "reason": "log line about key" },
+      { "id": "cod_047", "value": "[ERROR] Invalid or missing secret_key",            "reason": "log error message" },
+      { "id": "cod_048", "value": "api_key=***REDACTED***",                           "reason": "redacted log value" },
+      { "id": "cod_049", "value": "token=[FILTERED]",                                 "reason": "filtered log value" },
+      { "id": "cod_050", "value": "Authorization: Bearer sk-***",                     "reason": "partially masked header log" }
+
+    ]
+  }
+}

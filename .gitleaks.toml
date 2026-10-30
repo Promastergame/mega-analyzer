@@ -1,0 +1,436 @@
+# Default detectors apply to every source, test and document.
+# Exceptions match BOTH one reviewed file path AND an exact synthetic value
+# or non-secret identifier. No directory, Markdown or test-wide exclusion.
+# The config may repeat those exact values as escaped regex literals.
+# Review additions individually; never generate exceptions from an unreviewed scan.
+# targetRules is required: in Gitleaks 8.30.1 directory mode, global path
+# allowlists can skip a file before their regex condition is evaluated.
+# Rule-scoped exceptions keep new credentials in the same file detectable.
+# See docs/SECRET_SCANNING.md and scripts/test_gitleaks_policy.py.
+[extend]
+useDefault = true
+
+[[allowlists]]
+targetRules = ["generic-api-key"]
+description = "Synthetic detector input, test data or laboratory example in demo/README.md"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Ademo/README\\.md\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\AdisableTls=true\\z",
+]
+
+[[allowlists]]
+targetRules = ["slack-webhook-url", "stripe-access-token"]
+description = "Synthetic detector input, test data or laboratory example in demo/vulnerable-app/assets/config.properties"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Ademo/vulnerable\\-app/assets/config\\.properties\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\Ahttps://hooks\\.slack\\.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX\\z",
+  "\\Ask_live_4eC39HqLyjWDarjtT1zdp7dcEXAMPLE0000\\z",
+]
+
+[[allowlists]]
+targetRules = ["github-pat"]
+description = "Synthetic detector input, test data or laboratory example in demo/vulnerable-app/smali/com/megademo/insecure/MainActivity.smali"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Ademo/vulnerable\\-app/smali/com/megademo/insecure/MainActivity\\.smali\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\Aghp_wWPw5k4aXcaT4fNP0UcnZwJUVFk6LO0pZZZZ\\z",
+]
+
+[[allowlists]]
+targetRules = ["jwt"]
+description = "Synthetic detector input, test data or laboratory example in labs/servers/go/admin-jwt-none/README.md"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Alabs/servers/go/admin\\-jwt\\-none/README\\.md\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\AeyJhbGciOiJub25lIiwidHlwIjoiSldUIn0\\.eyJzdWIiOiJhdHRhY2tlciIsInJvbGUiOiJhZG1pbiIsImV4cCI6OTk5OTk5OTk5OX0\\.\\z",
+]
+
+[[allowlists]]
+targetRules = ["generic-api-key"]
+description = "Synthetic detector input, test data or laboratory example in labs/servers/labkit/websocket_test.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Alabs/servers/labkit/websocket_test\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\AdGhlIHNhbXBsZSBub25jZQ==\\z",
+]
+
+[[allowlists]]
+targetRules = ["generic-api-key"]
+description = "Synthetic detector input, test data or laboratory example in pkg/internal/codescan/fusion_test.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/internal/codescan/fusion_test\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\AAKIA1234567890123456\\z",
+]
+
+[[allowlists]]
+targetRules = ["gcp-api-key", "generic-api-key", "github-pat", "jwt", "slack-bot-token", "stripe-access-token"]
+description = "Synthetic detector input, test data or laboratory example in pkg/internal/codescan/scanners_test.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/internal/codescan/scanners_test\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\AAIzaSyD\\-mock\\-active\\-maps\\-key\\-1234567890\\z",
+  "\\AAIzaSyD\\-mock\\-firebase\\-key\\-1234567890123\\z",
+  "\\AAIzaSyD\\-mock\\-generic\\-config\\-key\\-1234567\\z",
+  "\\AAKIA1234567890123456\\z",
+  "\\Aabcdef1234567890\\z",
+  "\\AeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\\.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ\\.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c\\z",
+  "\\Aghp_123456789012345678901234567890123456\\z",
+  "\\Ask_live_12345678901234567890\\z",
+  "\\Axoxb\\-1234567890\\-1234567890\\z",
+]
+
+[[allowlists]]
+targetRules = ["private-key"]
+description = "Synthetic detector input, test data or laboratory example in pkg/internal/pipeline/security_heuristics.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/internal/pipeline/security_heuristics\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\A\\-\\-\\-\\-\\-BEGIN\\ PRIVATE\\ KEY\\-\\-\\-\\-\\-\"\\),\\ types\\.CategoryCredential,\\ types\\.SeverityCritical,\\ ConfidenceDefinitive,\\ \"PEM\\ private\\ key\"\\},\\n\\t\\{\\[\\]byte\\(\"\\-\\-\\-\\-\\-BEGIN\\ RSA\\ PRIVATE\\ KEY\\-\\-\\-\\-\\-\\z",
+]
+
+[[allowlists]]
+targetRules = ["generic-api-key"]
+description = "Synthetic detector input, test data or laboratory example in pkg/internal/sandbox/crypto_material_test.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/internal/sandbox/crypto_material_test\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\A2b7e151628aed2a6abf7158809cf4f3c\\z",
+]
+
+[[allowlists]]
+targetRules = ["generic-api-key"]
+description = "Synthetic detector input, test data or laboratory example in pkg/internal/sandbox/sandbox_more_test.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/internal/sandbox/sandbox_more_test\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\Aabcdef1234567890abcdef1234567890\\.evil\\.com\\z",
+]
+
+[[allowlists]]
+targetRules = ["gcp-api-key", "github-pat", "jwt"]
+description = "Synthetic detector input, test data or laboratory example in pkg/internal/sastrules/secrets_crypto_test.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/internal/sastrules/secrets_crypto_test\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\AAIzaSyA1234567890abcdefghijklmnopqrstuv\\z",
+  "\\AeyJhbGciOiJIUzI1NiJ9\\.eyJzdWIiOiIxMjM0NTY3ODkwIn0\\.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U\\z",
+  "\\Aghp_16C7e42F292c6912E7710c838347Ae178B4a\\z",
+]
+
+[[allowlists]]
+targetRules = ["generic-api-key", "stripe-access-token"]
+description = "Synthetic detector input, test data or laboratory example in pkg/internal/secrets/generic_test.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/internal/secrets/generic_test\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\AG7kQ9pLzX2mW8vR4tY6nB1cH5jF3sD0a\\z",
+  "\\AKd82Lm91aZ4Xq73Bvco55Twe10Rui44\\z",
+  "\\AaZ4Xq91Lmn82Bvc73Kdo55Twe10Rui44\\z",
+  "\\Ask_live_0123456789abcdefghijABCD\\z",
+  "\\AwJalrXUtnFEMIK7MDENGbPxRfiCYzQ8pLm3vT9k\\z",
+]
+
+[[allowlists]]
+targetRules = ["airtable-personnal-access-token", "databricks-api-token", "digitalocean-pat", "generic-api-key", "linear-api-key", "planetscale-api-token", "postman-api-token", "rubygems-api-token", "shopify-access-token", "square-access-token"]
+description = "Synthetic detector input, test data or laboratory example in pkg/internal/secrets/providers_extra_test.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/internal/secrets/providers_extra_test\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\AGOCSPX\\-1234abcd5678efgh9012ijkl3456\\z",
+  "\\APMAK\\-0123456789abcdef01234567\\-0123456789abcdef0123456789abcdef01\\z",
+  "\\Adapi0123456789abcdef0123456789abcdef\\z",
+  "\\Adop_v1_0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\\z",
+  "\\Alin_api_0123456789ABCDEFGHIJ0123456789abcdefghij\\z",
+  "\\Antn_0123456789abcdefghijABCDEFGHIJ0123456789xy\\z",
+  "\\Apat0123456789abcd\\.0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\\z",
+  "\\Apscale_tkn_abcdefghij0123456789ABCDEFGHIJ\\.klmno\\z",
+  "\\Arubygems_0123456789abcdef0123456789abcdef0123456789abcdef\\z",
+  "\\Ashpat_0123456789abcdef0123456789abcdef\\z",
+  "\\Asq0atp\\-abcdEFGH1234ijklMNOP56\\z",
+  "\\Asq0csp\\-abcdEFGH1234ijklMNOP5678qrstUVWX9012yz34567\\z",
+  "\\AwJalrXUtnFEMIK7MDENGbPxRfiCYzQ8pLm3vT9kQ\\z",
+]
+
+[[allowlists]]
+targetRules = ["mailgun-private-api-token"]
+description = "Synthetic detector input, test data or laboratory example in pkg/internal/secrets/providers_test.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/internal/secrets/providers_test\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\Akey\\-00000000000000000000000000000000\\z",
+  "\\Akey\\-0123456789abcdef0fedcba987654321\\z",
+]
+
+[[allowlists]]
+targetRules = ["generic-api-key"]
+description = "Synthetic detector input, test data or laboratory example in pkg/ml/llm_but_this_ml_lol/capabilities_test.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/ml/llm_but_this_ml_lol/capabilities_test\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\Aghp_AbC1dEf2GhI3jKl4MnO5pQr6StU7vWx8\\z",
+]
+
+[[allowlists]]
+targetRules = ["aws-access-token", "generic-api-key", "gitlab-pat", "private-key", "slack-bot-token"]
+description = "Synthetic detector input, test data or laboratory example in pkg/ml/llm_but_this_ml_lol/classify_test.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/ml/llm_but_this_ml_lol/classify_test\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\A\\-\\-\\-\\-\\-BEGIN\\ PRIVATE\\ KEY\\-\\-\\-\\-\\-\\\\nMIIEvQIBADANBgk\\.\\.\\.\\\\n\\-\\-\\-\\-\\-END\\ PRIVATE\\ KEY\\-\\-\\-\\-\\-\",\\ true\\},\\n\\t\\t\\{\"BEGIN\\ EC\",\\ \"\\-\\-\\-\\-\\-BEGIN\\ EC\\ PRIVATE\\ KEY\\-\\-\\-\\-\\-\\z",
+  "\\AAKIA1B2C3D4E5F6G7H8J\\z",
+  "\\AAKIAJKLMNOPQRSTUVWXY\\z",
+  "\\AXy7Qw9Zr2Vt4Bn\\z",
+  "\\Aglpat\\-Ab1Cd2Ef3Gh4Ij5Kl6Mn\\z",
+  "\\Ask\\-live_1234567890\\z",
+  "\\Ask\\-live_1234567890abcdef\\z",
+  "\\Axoxb\\-1234567890123\\-1234567890123\\-xxxx\\z",
+]
+
+[[allowlists]]
+targetRules = ["azure-ad-client-secret", "gcp-api-key", "generic-api-key", "gitlab-deploy-token", "gitlab-pat", "gitlab-runner-authentication-token", "jwt", "slack-app-token", "slack-bot-token", "stripe-access-token"]
+description = "Synthetic detector input, test data or laboratory example in pkg/ml/llm_but_this_ml_lol/keys_dataset.json"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/ml/llm_but_this_ml_lol/keys_dataset\\.json\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\A1234567890abcdef1234567890abcdef12345\\z",
+  "\\AAIzaSyZyXwVuTsRqPoNmLkJiHgFedcba9876543\\z",
+  "\\AFwoGZXIvYXdzEJr//////////wEaDKU3pqAbCdEfGhIjKl\\z",
+  "\\AFwoGZXIvYXdzEJr//////////wEaDZyXwVuTsRqPoNmLk\\z",
+  "\\ANKJFK\\-GPHP7\\-G8C3J\\-P6JXR\\-HQRJR\\z",
+  "\\ASKabcdef1234567890abcdef12345678\\z",
+  "\\ASKfedcba0987654321fedcba09876543\\z",
+  "\\AVK7JG\\-NPHTM\\-C97JM\\-9MPGT\\-3V66T\\z",
+  "\\AZyXwVuTsRqPoNmLkJiHgFedcba987654\\z",
+  "\\AZyXwVuTsRqPoNmLkJiHgFedcba9876543210\\z",
+  "\\AZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZyXwVuTsRqPoNmLkJiHgFedcba98==\\z",
+  "\\AZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxw\\z",
+  "\\AZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxwv\\z",
+  "\\AZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxwvu\\z",
+  "\\Aa1b2c3d4\\-e5f6\\-7890\\-abcd\\-ef1234567890\\z",
+  "\\AaBc8Q\\~dEfGhIjKlMnOpQrStUvWxYz\\.1234567\\-AB\\z",
+  "\\AaBcDeFgH1234567890\\-IjKlMnOp\\z",
+  "\\Aatort_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210\\z",
+  "\\Ab2c3d4e5\\-f6a7\\-8901\\-bcde\\-f12345678901\\z",
+  "\\Adapi\\-ZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZYXWVU\\z",
+  "\\AeyJhIjoiYWJjZGVmZ2hpamtsbW5vcCIsInQiOiJhMWIyYzNkNC1lNWY2LTc4OTAtYWJjZC1lZjEyMzQ1Njc4OTAiLCJzIjoiYUJjRGVGZ0hpSmtMbU5vUHFSc1R1VndYeVoxMjM0NTY3ODkwIn0=\\z",
+  "\\AeyJhIjoienlYd1Z1VHNScVBvTm1MayIsInQiOiJ6OXk4eDd3Ni12NXU0LTMyMTAtelh5dy12dTk4NzY1NDMyMTAiLCJzIjoiWnlYd1Z1VHNScVBvTm1Ma0ppSGdGZWRjYmE5ODc2NTQzMjEwIn0=\\z",
+  "\\AeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\\.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwicHJvamVjdF9pZCI6Inp5eHd2dXRzcnFwb25tbGsiLCJpYXQiOjE3NDg0NjQwMDB9\\.ZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxw\\z",
+  "\\AeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\\.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJwcm9qZWN0X2lkIjoiYWJjZGVmZ2hpamtsbW5vcCIsImlhdCI6MTc0ODQ2NDAwMH0\\.ZyXwVuTsRqPoNmLkJiHgFedcba9876543210\\z",
+  "\\AeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\\.eyJzdWIiOiJ1c3JfZGF0YWJvdDAwMiIsImlzcyI6Imh0dHBzOi8vYXV0aC5kYXRhLXNjaWVuY2UuaW8iLCJhdWQiOiJodHRwczovL2FwaS5kYXRhLXNjaWVuY2UuaW8iLCJleHAiOjE3ODAwMDAwMDAsImlhdCI6MTc0ODQ2NDAwMH0\\.ZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxwvu\\z",
+  "\\AeyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImFiY2RlZjEyMzQ1NiJ9\\.eyJzdWIiOiJ1c3JfbWxib3QwMDEiLCJpc3MiOiJodHRwczovL2F1dGgubWwtcmVzZWFyY2guaW8iLCJhdWQiOiJodHRwczovL2FwaS5tbC1yZXNlYXJjaC5pbyIsImV4cCI6MTc4MDAwMDAwMCwiaWF0IjoxNzQ4NDY0MDAwLCJzY29wZXMiOlsicmVhZDptb2RlbHMiLCJ3cml0ZTpkYXRhc2V0cyJdfQ\\.ABCDEFGHIJKLMNOPabcdefghijklmnop1234567890\\z",
+  "\\AeyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9\\.atlassian_ZyXwVuTsRqPoNmLkJiHgFedcba9876\\z",
+  "\\Afedcba9876543210fedcba9876543210fedcb\\z",
+  "\\Aghcr_pat_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZYXWVUTS\\z",
+  "\\Agldt\\-ZyXwVuTsRqPoNmLkJiHg\\z",
+  "\\Agldt\\-aBcDeFgHiJkLmNoPqRsT\\z",
+  "\\Aglpat\\-ZyXwVuTsRqPoNmLkJiHg\\z",
+  "\\Aglpat\\-aBcDeFgHiJkLmNoPqRsT\\z",
+  "\\Aglrt\\-ZyXwVuTsRqPoNmLkJiHg\\z",
+  "\\Aglrt\\-ZyXwVuTsRqPoNmLkJiHgFedcba98765\\z",
+  "\\Aglrt\\-aBcDeFgHiJkLmNoPqRsT\\z",
+  "\\Apk_test_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210fedcbazyx\\z",
+  "\\Ark_live_aBcDeFgHiJkLmNoPqRsTuVwXy\\z",
+  "\\Ark_test_ZyXwVuTsRqPoNmLkJiHgFedcb\\z",
+  "\\Art_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxwvutsrqponmlk\\z",
+  "\\Ask_test_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210fedcbazyxwv\\z",
+  "\\Awh_sec_ZyXwVuTsRqPoNmLkJiHgFedc987654\\z",
+  "\\Axapp\\-1\\-B02EXAMPLE98\\-9876543210987\\-ZyXwVuTsRqPoNmLkJiHgFedcba9876543210\\z",
+  "\\Axoxb\\-1234567890123\\-1234567890123\\-aBcDeFgHiJkLmNoPqRsTuVwX\\z",
+  "\\Axoxb\\-9876543210987\\-9876543210987\\-ZyXwVuTsRqPoNmLkJiHgFedcb\\z",
+  "\\Axoxe\\-1\\-ZyXwVuTsRqPoNmLkJiHgFedcba9876543210\\z",
+  "\\Axoxp\\-9876543210987\\-9876543210987\\-9876543210987\\-ZyXwVuTsRqPoNmLkJiHgFedcba\\z",
+  "\\Ay8x7w6v5\\-u4t3\\-2109\\-yxwv\\-u98765432109\\z",
+]
+
+[[allowlists]]
+targetRules = ["azure-ad-client-secret", "gcp-api-key", "generic-api-key", "gitlab-deploy-token", "gitlab-pat", "gitlab-runner-authentication-token", "jwt", "slack-app-token", "slack-bot-token", "stripe-access-token"]
+description = "Synthetic detector input, test data or laboratory example in pkg/ml/llm_but_this_ml_lol/ml_dataset_this_is_keys.json"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/ml/llm_but_this_ml_lol/ml_dataset_this_is_keys\\.json\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\A1234567890abcdef1234567890abcdef12345\\z",
+  "\\AAIzaSyZyXwVuTsRqPoNmLkJiHgFedcba9876543\\z",
+  "\\AFwoGZXIvYXdzEJr//////////wEaDKU3pqAbCdEfGhIjKl\\z",
+  "\\AFwoGZXIvYXdzEJr//////////wEaDZyXwVuTsRqPoNmLk\\z",
+  "\\ANKJFK\\-GPHP7\\-G8C3J\\-P6JXR\\-HQRJR\\z",
+  "\\ASKabcdef1234567890abcdef12345678\\z",
+  "\\ASKfedcba0987654321fedcba09876543\\z",
+  "\\AVK7JG\\-NPHTM\\-C97JM\\-9MPGT\\-3V66T\\z",
+  "\\AZyXwVuTsRqPoNmLkJiHgFedcba987654\\z",
+  "\\AZyXwVuTsRqPoNmLkJiHgFedcba9876543210\\z",
+  "\\AZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZyXwVuTsRqPoNmLkJiHgFedcba98==\\z",
+  "\\AZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxw\\z",
+  "\\AZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxwv\\z",
+  "\\AZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxwvu\\z",
+  "\\Aa1b2c3d4\\-e5f6\\-7890\\-abcd\\-ef1234567890\\z",
+  "\\AaBc8Q\\~dEfGhIjKlMnOpQrStUvWxYz\\.1234567\\-AB\\z",
+  "\\AaBcDeFgH1234567890\\-IjKlMnOp\\z",
+  "\\Aatort_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210\\z",
+  "\\Ab2c3d4e5\\-f6a7\\-8901\\-bcde\\-f12345678901\\z",
+  "\\Adapi\\-ZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZYXWVU\\z",
+  "\\AeyJhIjoiYWJjZGVmZ2hpamtsbW5vcCIsInQiOiJhMWIyYzNkNC1lNWY2LTc4OTAtYWJjZC1lZjEyMzQ1Njc4OTAiLCJzIjoiYUJjRGVGZ0hpSmtMbU5vUHFSc1R1VndYeVoxMjM0NTY3ODkwIn0=\\z",
+  "\\AeyJhIjoienlYd1Z1VHNScVBvTm1MayIsInQiOiJ6OXk4eDd3Ni12NXU0LTMyMTAtelh5dy12dTk4NzY1NDMyMTAiLCJzIjoiWnlYd1Z1VHNScVBvTm1Ma0ppSGdGZWRjYmE5ODc2NTQzMjEwIn0=\\z",
+  "\\AeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\\.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwicHJvamVjdF9pZCI6Inp5eHd2dXRzcnFwb25tbGsiLCJpYXQiOjE3NDg0NjQwMDB9\\.ZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxw\\z",
+  "\\AeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\\.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJwcm9qZWN0X2lkIjoiYWJjZGVmZ2hpamtsbW5vcCIsImlhdCI6MTc0ODQ2NDAwMH0\\.ZyXwVuTsRqPoNmLkJiHgFedcba9876543210\\z",
+  "\\AeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\\.eyJzdWIiOiJ1c3JfZGF0YWJvdDAwMiIsImlzcyI6Imh0dHBzOi8vYXV0aC5kYXRhLXNjaWVuY2UuaW8iLCJhdWQiOiJodHRwczovL2FwaS5kYXRhLXNjaWVuY2UuaW8iLCJleHAiOjE3ODAwMDAwMDAsImlhdCI6MTc0ODQ2NDAwMH0\\.ZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxwvu\\z",
+  "\\AeyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImFiY2RlZjEyMzQ1NiJ9\\.eyJzdWIiOiJ1c3JfbWxib3QwMDEiLCJpc3MiOiJodHRwczovL2F1dGgubWwtcmVzZWFyY2guaW8iLCJhdWQiOiJodHRwczovL2FwaS5tbC1yZXNlYXJjaC5pbyIsImV4cCI6MTc4MDAwMDAwMCwiaWF0IjoxNzQ4NDY0MDAwLCJzY29wZXMiOlsicmVhZDptb2RlbHMiLCJ3cml0ZTpkYXRhc2V0cyJdfQ\\.ABCDEFGHIJKLMNOPabcdefghijklmnop1234567890\\z",
+  "\\AeyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9\\.atlassian_ZyXwVuTsRqPoNmLkJiHgFedcba9876\\z",
+  "\\Afedcba9876543210fedcba9876543210fedcb\\z",
+  "\\Aghcr_pat_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZYXWVUTS\\z",
+  "\\Agldt\\-ZyXwVuTsRqPoNmLkJiHg\\z",
+  "\\Agldt\\-aBcDeFgHiJkLmNoPqRsT\\z",
+  "\\Aglpat\\-ZyXwVuTsRqPoNmLkJiHg\\z",
+  "\\Aglpat\\-aBcDeFgHiJkLmNoPqRsT\\z",
+  "\\Aglrt\\-ZyXwVuTsRqPoNmLkJiHg\\z",
+  "\\Aglrt\\-ZyXwVuTsRqPoNmLkJiHgFedcba98765\\z",
+  "\\Aglrt\\-aBcDeFgHiJkLmNoPqRsT\\z",
+  "\\Apk_test_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210fedcbazyx\\z",
+  "\\Ark_live_aBcDeFgHiJkLmNoPqRsTuVwXy\\z",
+  "\\Ark_test_ZyXwVuTsRqPoNmLkJiHgFedcb\\z",
+  "\\Art_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxwvutsrqponmlk\\z",
+  "\\Ask_test_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210fedcbazyxwv\\z",
+  "\\Awh_sec_ZyXwVuTsRqPoNmLkJiHgFedc987654\\z",
+  "\\Axapp\\-1\\-B02EXAMPLE98\\-9876543210987\\-ZyXwVuTsRqPoNmLkJiHgFedcba9876543210\\z",
+  "\\Axoxb\\-1234567890123\\-1234567890123\\-aBcDeFgHiJkLmNoPqRsTuVwX\\z",
+  "\\Axoxb\\-9876543210987\\-9876543210987\\-ZyXwVuTsRqPoNmLkJiHgFedcb\\z",
+  "\\Axoxe\\-1\\-ZyXwVuTsRqPoNmLkJiHgFedcba9876543210\\z",
+  "\\Axoxp\\-9876543210987\\-9876543210987\\-9876543210987\\-ZyXwVuTsRqPoNmLkJiHgFedcba\\z",
+  "\\Ay8x7w6v5\\-u4t3\\-2109\\-yxwv\\-u98765432109\\z",
+]
+
+[[allowlists]]
+targetRules = ["generic-api-key"]
+description = "Synthetic detector input, test data or laboratory example in pkg/ncer/labtest/admin_backdoor_test.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/ncer/labtest/admin_backdoor_test\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\AeyJhbGciOiJub25lIiwidHlwIjoiSldUIn0\\z",
+]
+
+[[allowlists]]
+targetRules = ["generic-api-key", "jwt"]
+description = "Synthetic detector input, test data or laboratory example in pkg/vulnscan/checks_jwt.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/vulnscan/checks_jwt\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\AeyJhbGciOiJIUzI1NiJ9\\.eyJnYXJiYWdlIjp0cnVlfQ\\.INVALID_SIGNATURE_XXXXX\\z",
+]
+
+[[allowlists]]
+targetRules = ["generic-api-key", "jwt"]
+description = "Synthetic detector input, test data or laboratory example in pkg/vulnscan/vulnscan_extra_test.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/vulnscan/vulnscan_extra_test\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\AeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\\.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ\\.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c\\z",
+  "\\AeyJhbGciOiJIUzI1NiJ9\\.\\z",
+  "\\AeyJhbGciOiJIUzI1NiJ9\\.eyJzdWIiOiIxIn0\\.abc\\z",
+]
+
+[[allowlists]]
+targetRules = ["generic-api-key"]
+description = "Synthetic detector input, test data or laboratory example in pkg/vulnscan/vulnscan_more3_test.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/vulnscan/vulnscan_more3_test\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\AeyJhbGciOiJIUzI1NiJ9\\.eyJzdWIiOiJ1c2VyIn0\\.abc\\z",
+]
+
+[[allowlists]]
+targetRules = ["jwt"]
+description = "Synthetic detector input, test data or laboratory example in pkg/vulnscan/vulnscan_more_test.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/vulnscan/vulnscan_more_test\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\AeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\\.eyJzdWIiOiIxMjM0NTY3ODkwIn0\\.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c\\z",
+]
+
+[[allowlists]]
+targetRules = ["generic-api-key", "github-pat", "jwt"]
+description = "Synthetic detector input, test data or laboratory example in pkg/vulnscan/web_scanner_test.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/vulnscan/web_scanner_test\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\AeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\\.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ\\.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c\\z",
+  "\\Aghp_123456789012345678901234567890123456\\z",
+]
+
+[[allowlists]]
+targetRules = ["aws-access-token", "generic-api-key", "jwt", "private-key", "slack-bot-token"]
+description = "Synthetic detector input, test data or laboratory example in testkit/native_test_corpus/src/secrets_sample.c"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Atestkit/native_test_corpus/src/secrets_sample\\.c\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\AAKIAIOSFODNN7EXAMPLE\\z",
+  "\\AeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\\.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ\\.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c\\z",
+  "\\A\\-\\-\\-\\-\\-BEGIN\\ RSA\\ PRIVATE\\ KEY\\-\\-\\-\\-\\-\\\\n\"\\n\\ \\ \\ \\ \"MIIBOgIBAAJBAKFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEF\\\\n\"\\n\\ \\ \\ \\ \"AKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKEFAKE\\\\n\"\\n\\ \\ \\ \\ \"\\-\\-\\-\\-\\-END\\ RSA\\ PRIVATE\\ KEY\\-\\-\\-\\-\\-\\z",
+  "\\Axoxb\\-1234567890\\-1234567890123\\-ABCDEFGHIJKLMNOPQRSTUVWX\\z",
+]
+
+[[allowlists]]
+targetRules = ["generic-api-key"]
+description = "Non-secret code identifiers in third-party/iced-x86/src/code.rs"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Athird\\-party/iced\\-x86/src/code\\.rs\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\AAesenc128kl_xmm_m384\\z",
+]
+
+[[allowlists]]
+targetRules = ["generic-api-key"]
+description = "Non-secret code identifiers in zig/apk_editor/android/src/lab/apked/ApkPackager.java"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Azig/apk_editor/android/src/lab/apked/ApkPackager\\.java\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\Aapked\\-sign\\.p12\\z",
+]
+
+[[allowlists]]
+targetRules = ["generic-api-key"]
+description = "Non-secret code identifiers in zig/apk_editor/libs/zstd/lib/common/xxhash.h"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Azig/apk_editor/libs/zstd/lib/common/xxhash\\.h\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\A_mm512_srli_epi64\\z",
+]
+
+[[allowlists]]
+targetRules = ["generic-api-key"]
+description = "Non-secret code identifiers in zig/apk_editor/src/logic/packfinish.zig"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Azig/apk_editor/src/logic/packfinish\\.zig\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\Awin32\\.BCRYPT_HANDLE\\z",
+]

@@ -1,0 +1,14 @@
+[package]
+name = "nifshim"
+version = "0.1.0"
+edition = "2021"
+description = "Zero-dependency Erlang/BEAM NIF runtime (replaces rustler)."
+license = "MIT OR Apache-2.0"
+
+[lib]
+name = "nifshim"
+path = "src/lib.rs"
+
+# Intentionally NO [dependencies] and NO [build-dependencies].
+# The only "dependency" is a working C compiler on PATH (cc/gcc/clang),
+# which is already required to build any Rust std/cdylib target.

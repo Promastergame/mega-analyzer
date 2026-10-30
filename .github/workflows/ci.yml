@@ -1,0 +1,132 @@
+# CI pipeline — closes the "no CI" gap from the security audit (improvement #4).
+#
+# Gates before merge:
+#   - go vet + go build
+#   - go test -race ./...
+#   - fuzz smoke: short go-fuzz runs over the AXML/ARSC/Hermes/DEX parsers
+#   - cargo check + cargo test (workspace)
+#   - cargo clippy (advisory until the existing warning backlog is burned down)
+#   - mix test (Elixir server; compiles the Rust NIF first, needs cargo)
+#   - gitleaks secret scan
+name: CI
+
+on:
+  # Manual trigger from GitHub Actions tab (saves your monthly CI minutes)
+  workflow_dispatch:
+  # Automated runs disabled on push/cron to prevent accidental minute drain.
+  # Uncomment below if you want automated checks on Pull Requests only:
+  # pull_request:
+  #   paths-ignore:
+  #     - '**.md'
+  #     - '**.txt'
+  #     - '**.png'
+  #     - '**.svg'
+  #     - '.env.example*'
+  #     - 'LICENSE'
+  #     - 'COPYING'
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    uses: ./.github/workflows/core.yml
+
+  rust:
+    name: Rust (check, clippy, test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
+        with:
+          elixir-version: "1.20.1"
+          otp-version: "28"
+      - name: Install pinned Rust toolchain
+        run: python3 scripts/setup_rust.py
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        with:
+          workspaces: rust
+      - name: cargo check
+        working-directory: rust
+        run: cargo check --workspace --all-targets
+      - name: cargo clippy (advisory)
+        # -D warnings stays off until the pre-existing warning backlog is
+        # fixed; loader crates get indexing/slicing lint per audit #3.
+        working-directory: rust
+        run: |
+          cargo clippy --workspace --all-targets
+          cargo clippy -p omnisec-loader-elf -p omnisec-loader-pe -p omnisec-loader-dex -p omnisec-loader-macho -- -W clippy::indexing_slicing
+      - name: cargo test
+        working-directory: rust
+        run: cargo test --workspace
+
+  elixir:
+    name: Elixir (server, mix test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: erlef/setup-beam@54075bcc5e249e4758d363f27d099f55d843f124 # v1
+        with:
+          elixir-version: "1.20.1"
+          otp-version: "28"
+      - name: Install pinned Rust toolchain
+        run: python3 scripts/setup_rust.py
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2
+        with:
+          workspaces: |
+            server/native/omnisec_worker_nif
+            server/native/omnisec_debugger_nif
+            rust
+      - name: mix deps.get
+        working-directory: server
+        run: mix deps.get
+      - name: mix compile
+        working-directory: server
+        run: mix compile --warnings-as-errors
+      - name: mix test
+        working-directory: server
+        run: mix test
+
+  security:
+    name: Secrets (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - id: gitleaks
+        uses: gacts/gitleaks@4fd785dcdaf557fda64e05b0ae033b8f7d82fb81 # v1
+        with:
+          version: 8.30.1
+          run: 'false'
+      - run: '"${{ steps.gitleaks.outputs.gitleaks-bin }}" git --redact --no-banner --log-opts=--all .'
+      - run: python3 scripts/test_gitleaks_policy.py --gitleaks "${{ steps.gitleaks.outputs.gitleaks-bin }}"
+
+  # Deep fuzzing is too expensive for every push; run it on the weekly cron.
+  fuzz-deep:
+    name: Fuzz deep (weekly)
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - name: Fuzz campaign (5m per target)
+        run: |
+          set -e
+          for spec in \
+            apkloader:FuzzAXMLDecode apkloader:FuzzParseARSC apkloader:FuzzHermes apkloader:FuzzParseDEXBytes \
+            apkid:FuzzScanArchive apkid/dex:FuzzParseDEX apkid/elf:FuzzScanELF \
+            dns:FuzzUnpack wsx:FuzzReadFrame ipaloader:FuzzDecodeBPlist; do
+            pkg="${spec%%:*}"; target="${spec##*:}"
+            echo "::group::${pkg} ${target}"
+            go test -run "^${target}$" -fuzz "^${target}$" -fuzztime 5m "./pkg/internal/${pkg}/"
+            echo "::endgroup::"
+          done

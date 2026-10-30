@@ -1,0 +1,233 @@
+[
+  {
+    "id": "demo-001",
+    "apk_hash": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+    "apk_name": "com.example.banking_v2.3.apk",
+    "package": "com.example.banking",
+    "timestamp": "2026-06-01T10:00:00Z",
+    "total_files": 312,
+    "analyzed_files": 289,
+    "total_matches": 47,
+    "critical_count": 8,
+    "fast_path_hits": 21,
+    "saved_from_fast_path": 5,
+    "profile": "default",
+    "keyword_stats": {
+      "hardcoded_key": {
+        "keyword": "hardcoded_key",
+        "triggered": 6, "in_app_code": 6, "in_library": 0, "dampened": 0, "in_file_name": 0,
+        "sum_importance": 54.0, "sum_importance_sq": 504.0, "sum_raw_importance": 54.0,
+        "marked_relevant": 1, "marked_noise": 0, "apks_seen_in": 1
+      },
+      "AES/ECB": {
+        "keyword": "AES/ECB",
+        "triggered": 3, "in_app_code": 3, "in_library": 0, "dampened": 0, "in_file_name": 0,
+        "sum_importance": 27.0, "sum_importance_sq": 243.0, "sum_raw_importance": 27.0,
+        "marked_relevant": 1, "marked_noise": 0, "apks_seen_in": 1
+      },
+      "setWebContentsDebuggingEnabled": {
+        "keyword": "setWebContentsDebuggingEnabled",
+        "triggered": 2, "in_app_code": 2, "in_library": 0, "dampened": 0, "in_file_name": 0,
+        "sum_importance": 18.0, "sum_importance_sq": 162.0, "sum_raw_importance": 18.0,
+        "marked_relevant": 1, "marked_noise": 0, "apks_seen_in": 1
+      },
+      "okhttp3": {
+        "keyword": "okhttp3",
+        "triggered": 12, "in_app_code": 0, "in_library": 12, "dampened": 12, "in_file_name": 2,
+        "sum_importance": 1.2, "sum_importance_sq": 0.15, "sum_raw_importance": 1.2,
+        "marked_relevant": 0, "marked_noise": 1, "apks_seen_in": 1
+      },
+      "gson": {
+        "keyword": "gson",
+        "triggered": 8, "in_app_code": 0, "in_library": 8, "dampened": 8, "in_file_name": 0,
+        "sum_importance": 0.8, "sum_importance_sq": 0.08, "sum_raw_importance": 0.8,
+        "marked_relevant": 0, "marked_noise": 1, "apks_seen_in": 1
+      },
+      "Log.d": {
+        "keyword": "Log.d",
+        "triggered": 45, "in_app_code": 10, "in_library": 35, "dampened": 30, "in_file_name": 0,
+        "sum_importance": 5.0, "sum_importance_sq": 0.6, "sum_raw_importance": 5.0,
+        "marked_relevant": 0, "marked_noise": 0, "apks_seen_in": 1
+      }
+    },
+    "library_stats": {
+      "com/squareup/okhttp3/": {
+        "category": "network",
+        "total_files": 48, "matched_files": 12, "dampened_matches": 12,
+        "high_value_files": 0, "sum_importance": 1.2
+      },
+      "com/google/gson/": {
+        "category": "serialization",
+        "total_files": 22, "matched_files": 8, "dampened_matches": 8,
+        "high_value_files": 0, "sum_importance": 0.8
+      }
+    },
+    "category_stats": {
+      "crypto": { "total": 9, "critical": 4, "high": 3, "medium": 2, "low": 0 },
+      "network": { "total": 5, "critical": 0, "high": 2, "medium": 3, "low": 0 },
+      "storage": { "total": 3, "critical": 0, "high": 1, "medium": 2, "low": 0 }
+    },
+    "top_files": [
+      { "path": "smali/com/example/banking/CryptoUtils.smali", "match_count": 9, "importance": 54.0 },
+      { "path": "smali/com/example/banking/WebViewActivity.smali", "match_count": 2, "importance": 18.0 }
+    ],
+    "dampening_stats": {
+      "total_dampened": 50, "library_dampened": 48, "noise_dampened": 2, "saved_time_ms": 120
+    }
+  },
+  {
+    "id": "demo-002",
+    "apk_hash": "b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3",
+    "apk_name": "com.example.game_v1.0.apk",
+    "package": "com.example.game",
+    "timestamp": "2026-06-02T12:00:00Z",
+    "total_files": 876,
+    "analyzed_files": 203,
+    "total_matches": 12,
+    "critical_count": 1,
+    "fast_path_hits": 673,
+    "saved_from_fast_path": 673,
+    "profile": "default",
+    "keyword_stats": {
+      "hardcoded_key": {
+        "keyword": "hardcoded_key",
+        "triggered": 1, "in_app_code": 1, "in_library": 0, "dampened": 0, "in_file_name": 0,
+        "sum_importance": 9.0, "sum_importance_sq": 81.0, "sum_raw_importance": 9.0,
+        "marked_relevant": 0, "marked_noise": 0, "apks_seen_in": 1
+      },
+      "unity": {
+        "keyword": "unity",
+        "triggered": 230, "in_app_code": 0, "in_library": 230, "dampened": 230, "in_file_name": 10,
+        "sum_importance": 2.3, "sum_importance_sq": 0.02, "sum_raw_importance": 2.3,
+        "marked_relevant": 0, "marked_noise": 1, "apks_seen_in": 1
+      },
+      "okhttp3": {
+        "keyword": "okhttp3",
+        "triggered": 14, "in_app_code": 0, "in_library": 14, "dampened": 14, "in_file_name": 0,
+        "sum_importance": 1.4, "sum_importance_sq": 0.14, "sum_raw_importance": 1.4,
+        "marked_relevant": 0, "marked_noise": 1, "apks_seen_in": 1
+      },
+      "AES/ECB": {
+        "keyword": "AES/ECB",
+        "triggered": 1, "in_app_code": 0, "in_library": 1, "dampened": 1, "in_file_name": 0,
+        "sum_importance": 0.5, "sum_importance_sq": 0.25, "sum_raw_importance": 0.5,
+        "marked_relevant": 0, "marked_noise": 0, "apks_seen_in": 1
+      }
+    },
+    "library_stats": {
+      "com/unity3d/": {
+        "category": "game_engine",
+        "total_files": 450, "matched_files": 230, "dampened_matches": 230,
+        "high_value_files": 0, "sum_importance": 2.3
+      },
+      "com/squareup/okhttp3/": {
+        "category": "network",
+        "total_files": 48, "matched_files": 14, "dampened_matches": 14,
+        "high_value_files": 0, "sum_importance": 1.4
+      }
+    },
+    "category_stats": {
+      "crypto": { "total": 2, "critical": 1, "high": 0, "medium": 1, "low": 0 }
+    },
+    "top_files": [
+      { "path": "smali/com/example/game/LicenseCheck.smali", "match_count": 1, "importance": 9.0 }
+    ],
+    "dampening_stats": {
+      "total_dampened": 244, "library_dampened": 244, "noise_dampened": 0, "saved_time_ms": 890
+    }
+  },
+  {
+    "id": "demo-003",
+    "apk_hash": "c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
+    "apk_name": "com.example.vpn_v3.1.apk",
+    "package": "com.example.vpn",
+    "timestamp": "2026-06-03T09:30:00Z",
+    "total_files": 541,
+    "analyzed_files": 498,
+    "total_matches": 93,
+    "critical_count": 19,
+    "fast_path_hits": 43,
+    "saved_from_fast_path": 12,
+    "profile": "default",
+    "keyword_stats": {
+      "hardcoded_key": {
+        "keyword": "hardcoded_key",
+        "triggered": 14, "in_app_code": 14, "in_library": 0, "dampened": 0, "in_file_name": 0,
+        "sum_importance": 126.0, "sum_importance_sq": 1134.0, "sum_raw_importance": 126.0,
+        "marked_relevant": 1, "marked_noise": 0, "apks_seen_in": 1
+      },
+      "setWebContentsDebuggingEnabled": {
+        "keyword": "setWebContentsDebuggingEnabled",
+        "triggered": 4, "in_app_code": 4, "in_library": 0, "dampened": 0, "in_file_name": 0,
+        "sum_importance": 36.0, "sum_importance_sq": 324.0, "sum_raw_importance": 36.0,
+        "marked_relevant": 1, "marked_noise": 0, "apks_seen_in": 1
+      },
+      "Cipher.getInstance": {
+        "keyword": "Cipher.getInstance",
+        "triggered": 9, "in_app_code": 9, "in_library": 0, "dampened": 0, "in_file_name": 0,
+        "sum_importance": 81.0, "sum_importance_sq": 729.0, "sum_raw_importance": 81.0,
+        "marked_relevant": 1, "marked_noise": 0, "apks_seen_in": 1
+      },
+      "okhttp3": {
+        "keyword": "okhttp3",
+        "triggered": 18, "in_app_code": 0, "in_library": 18, "dampened": 18, "in_file_name": 3,
+        "sum_importance": 1.8, "sum_importance_sq": 0.18, "sum_raw_importance": 1.8,
+        "marked_relevant": 0, "marked_noise": 1, "apks_seen_in": 1
+      },
+      "retrofit2": {
+        "keyword": "retrofit2",
+        "triggered": 22, "in_app_code": 0, "in_library": 22, "dampened": 22, "in_file_name": 0,
+        "sum_importance": 2.2, "sum_importance_sq": 0.22, "sum_raw_importance": 2.2,
+        "marked_relevant": 0, "marked_noise": 1, "apks_seen_in": 1
+      },
+      "AES/ECB": {
+        "keyword": "AES/ECB",
+        "triggered": 7, "in_app_code": 7, "in_library": 0, "dampened": 0, "in_file_name": 0,
+        "sum_importance": 63.0, "sum_importance_sq": 567.0, "sum_raw_importance": 63.0,
+        "marked_relevant": 1, "marked_noise": 0, "apks_seen_in": 1
+      },
+      "Log.d": {
+        "keyword": "Log.d",
+        "triggered": 38, "in_app_code": 5, "in_library": 33, "dampened": 28, "in_file_name": 0,
+        "sum_importance": 4.5, "sum_importance_sq": 0.53, "sum_raw_importance": 4.5,
+        "marked_relevant": 0, "marked_noise": 0, "apks_seen_in": 1
+      },
+      "gson": {
+        "keyword": "gson",
+        "triggered": 11, "in_app_code": 0, "in_library": 11, "dampened": 11, "in_file_name": 0,
+        "sum_importance": 1.1, "sum_importance_sq": 0.11, "sum_raw_importance": 1.1,
+        "marked_relevant": 0, "marked_noise": 1, "apks_seen_in": 1
+      }
+    },
+    "library_stats": {
+      "com/squareup/okhttp3/": {
+        "category": "network",
+        "total_files": 48, "matched_files": 18, "dampened_matches": 18,
+        "high_value_files": 0, "sum_importance": 1.8
+      },
+      "com/squareup/retrofit2/": {
+        "category": "network",
+        "total_files": 35, "matched_files": 22, "dampened_matches": 22,
+        "high_value_files": 0, "sum_importance": 2.2
+      },
+      "com/google/gson/": {
+        "category": "serialization",
+        "total_files": 22, "matched_files": 11, "dampened_matches": 11,
+        "high_value_files": 0, "sum_importance": 1.1
+      }
+    },
+    "category_stats": {
+      "crypto": { "total": 30, "critical": 12, "high": 10, "medium": 8, "low": 0 },
+      "network": { "total": 18, "critical": 4, "high": 8, "medium": 6, "low": 0 },
+      "webview": { "total": 4, "critical": 3, "high": 1, "medium": 0, "low": 0 }
+    },
+    "top_files": [
+      { "path": "smali/com/example/vpn/CryptoManager.smali", "match_count": 21, "importance": 189.0 },
+      { "path": "smali/com/example/vpn/TunnelService.smali", "match_count": 14, "importance": 126.0 },
+      { "path": "smali/com/example/vpn/WebDebugActivity.smali", "match_count": 4, "importance": 36.0 }
+    ],
+    "dampening_stats": {
+      "total_dampened": 79, "library_dampened": 79, "noise_dampened": 0, "saved_time_ms": 340
+    }
+  }
+]

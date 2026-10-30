@@ -1,0 +1,147 @@
+[
+  {
+    "id": "SIGNATURE_VERIFY",
+    "category": "signature_check",
+    "description": "Verifies APK signing certificate",
+    "method_names": [
+      "checksignature",
+      "verifysignature",
+      "validatecert",
+      "checkappintegrity",
+      "isvalidcertificate",
+      "comparesignature",
+      "verifycertificate"
+    ],
+    "class_patterns": [
+      "signature",
+      "signing",
+      "certificate",
+      "apksignature",
+      "certcheck"
+    ],
+    "required_calls": [
+      "getpackageinfo",
+      "packageinfo;->signatures",
+      "signature;->tohashcode",
+      "signature;->tobytearray",
+      "messagedigest;->digest"
+    ],
+    "string_patterns": [
+      "sha-256",
+      "sha-1",
+      "get_signatures"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.1,
+    "min_match_score": 15
+  },
+  {
+    "id": "SIG_DIGEST_MATCH",
+    "category": "signature_check",
+    "description": "Compares computed signing-cert digest against an expected/hardcoded hash",
+    "method_names": [
+      "matchessignature",
+      "issignaturevalid",
+      "checkcerthash",
+      "verifysignaturehash",
+      "comparecertdigest",
+      "hasexpectedsignature",
+      "checkcertfingerprint"
+    ],
+    "class_patterns": [
+      "signature",
+      "signing",
+      "certificate",
+      "security",
+      "integrity",
+      "tamper"
+    ],
+    "required_calls": [
+      "messagedigest;->digest",
+      "arrays;->equals",
+      "string;->equals",
+      "signature;->tobytearray"
+    ],
+    "string_patterns": [
+      "sha-256",
+      "sha256",
+      "expected_signature",
+      "cert_hash",
+      "signing_cert"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.05,
+    "min_match_score": 14
+  },
+  {
+    "id": "PKG_SIGNATURE_QUERY",
+    "category": "signature_check",
+    "description": "Queries PackageManager signing certs (GET_SIGNING_CERTIFICATES / hasSigningCertificate)",
+    "method_names": [
+      "hassigningcertificate",
+      "getsigningcertificates",
+      "getapksignature",
+      "readsigninginfo",
+      "getsigninginfo"
+    ],
+    "class_patterns": [
+      "signature",
+      "signing",
+      "packagemanager",
+      "security",
+      "integrity"
+    ],
+    "required_calls": [
+      "packagemanager;->getpackageinfo",
+      "signinginfo;->getapkcontentssigners",
+      "packageinfo;->signinginfo",
+      "hassigningcertificate"
+    ],
+    "string_patterns": [
+      "get_signing_certificates",
+      "signinginfo",
+      "apkcontentssigners"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.0,
+    "min_match_score": 13
+  },
+  {
+    "id": "IAP_PAYLOAD_SIGNATURE",
+    "category": "signature_check",
+    "description": "Verifies Google Play purchase payload signature (INAPP_DATA_SIGNATURE, SHA1withRSA)",
+    "method_names": [
+      "verifypurchase",
+      "verify",
+      "checksignature",
+      "verifysignedmessage",
+      "validatesignature"
+    ],
+    "class_patterns": [
+      "security",
+      "billing",
+      "purchase",
+      "verifier"
+    ],
+    "required_calls": [
+      "signature;->verify",
+      "signature;->initverify",
+      "java/security/signature;->getinstance",
+      "base64;->decode"
+    ],
+    "string_patterns": [
+      "inapp_data_signature",
+      "sha1withrsa",
+      "sha256withrsa",
+      "signed_data",
+      "purchase signature"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.15,
+    "min_match_score": 13
+  }
+]

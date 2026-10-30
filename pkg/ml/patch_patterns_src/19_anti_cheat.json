@@ -1,0 +1,48 @@
+[
+  {
+    "id": "GAME_ANTICHEAT_MEMORY",
+    "category": "anti_cheat",
+    "description": "In-process memory scan / anti-cheat memory integrity check",
+    "method_names": [
+      "scanmemory",
+      "checkmemoryintegrity",
+      "detectmemoryhack",
+      "verifymemory",
+      "scancheatengine",
+      "detectgameguardian",
+      "checkmemoryscan",
+      "memoryscancheck",
+      "ismemorytampered"
+    ],
+    "class_patterns": [
+      "memoryscanner",
+      "memorychecker",
+      "anticheatenginee",
+      "memoryintegrity",
+      "cheatdetect",
+      "gameguardiandetect"
+    ],
+    "required_calls": [
+      "file;->exists",
+      "runtime;->exec",
+      "system;->loadlibrary",
+      "bufferedreader;->readline"
+    ],
+    "string_patterns": [
+      "gameguardian",
+      "gamekiller",
+      "cheatengine",
+      "lucky_patcher",
+      "memory_scan",
+      "memory_hack",
+      "/proc/self/maps",
+      "/proc/self/mem",
+      "com.cih.game_cih",
+      "org.sbtools.gamehack"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1.2,
+    "min_match_score": 12
+  }
+]

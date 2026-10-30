@@ -1,0 +1,202 @@
+[
+  {
+    "id": "FCS_RBG_EXT.1.1",
+    "type": "code",
+    "choice_type": "or",
+    "polarity": "positive",
+    "severity": 4,
+    "message": "Random Bit Generation Services: platform DRBG (SecureRandom) is used",
+    "choice": [
+      ["java\\.security\\.SecureRandom|Ljava/security/SecureRandom;"]
+    ],
+    "class": "Cryptographic Support"
+  },
+  {
+    "id": "FCS_RBG_EXT.1.1-weak-rng",
+    "type": "code",
+    "choice_type": "or",
+    "polarity": "negative",
+    "severity": 3,
+    "message": "Insecure java.util.Random referenced (use SecureRandom for security-relevant randomness)",
+    "choice": [
+      ["Ljava/util/Random;|java\\.util\\.Random"]
+    ],
+    "class": "Cryptographic Support"
+  },
+  {
+    "id": "FCS_STO_EXT.1.1",
+    "type": "code",
+    "choice_type": "or",
+    "polarity": "positive",
+    "severity": 4,
+    "message": "Storage of Credentials: platform secure storage (AndroidKeyStore / EncryptedSharedPreferences) is used",
+    "choice": [
+      ["AndroidKeyStore|EncryptedSharedPreferences|Landroid/security/keystore/|androidx\\.security\\.crypto|MasterKey"]
+    ],
+    "class": "Cryptographic Support"
+  },
+  {
+    "id": "FCS_STO_EXT.1.1-plaintext-secrets",
+    "type": "code",
+    "choice_type": "or",
+    "polarity": "negative",
+    "severity": 10,
+    "message": "Possible plaintext credential written to SharedPreferences",
+    "choice": [
+      ["(?i)putString\\(.{0,40}(password|passwd|pwd|secret|token|api_?key)"]
+    ],
+    "class": "Cryptographic Support"
+  },
+  {
+    "id": "FCS_CKM.1.1(1)-weak-rsa",
+    "type": "code",
+    "choice_type": "or",
+    "polarity": "negative",
+    "severity": 10,
+    "message": "Weak asymmetric key size (512/768/1024 bit) — NIAP requires RSA >= 2048",
+    "choice": [
+      ["(initialize|setKeySize)\\((512|768|1024)[,)]"]
+    ],
+    "class": "Cryptographic Support"
+  },
+  {
+    "id": "FCS_COP.1.1(1)-aes-ecb",
+    "type": "code",
+    "choice_type": "or",
+    "polarity": "negative",
+    "severity": 10,
+    "message": "AES-ECB mode used (Cipher.getInstance(\"AES\") defaults to ECB) — violates FCS_COP.1.1(1)",
+    "choice": [
+      ["\"AES/ECB|Cipher\\.getInstance\\(\"AES\"\\)|const-string [vp]\\d+, \"AES\""]
+    ],
+    "class": "Cryptographic Support"
+  },
+  {
+    "id": "FCS_COP.1.1(2)-weak-hash",
+    "type": "code",
+    "choice_type": "or",
+    "polarity": "negative",
+    "severity": 6,
+    "message": "Weak hash algorithm (MD5 / SHA-1) used for cryptographic hashing",
+    "choice": [
+      ["getInstance\\(\"(MD5|SHA-?1)\"|const-string [vp]\\d+, \"(MD5|SHA-1)\""]
+    ],
+    "class": "Cryptographic Support"
+  },
+  {
+    "id": "FCS_COP.1.1(4)-hmac-md5",
+    "type": "code",
+    "choice_type": "or",
+    "polarity": "negative",
+    "severity": 6,
+    "message": "HMAC-MD5 used — not an approved keyed-hash algorithm",
+    "choice": [
+      ["HmacMD5|HMAC-MD5"]
+    ],
+    "class": "Cryptographic Support"
+  },
+  {
+    "id": "FCS_HTTPS_EXT.1.1",
+    "type": "code",
+    "choice_type": "or",
+    "polarity": "positive",
+    "severity": 3,
+    "message": "HTTPS/TLS stack referenced (HTTPS protocol support)",
+    "choice": [
+      ["https://|HttpsURLConnection|javax\\.net\\.ssl|Ljavax/net/ssl/|SSLContext"]
+    ],
+    "class": "Trusted Path/Channels"
+  },
+  {
+    "id": "FTP_DIT_EXT.1.1-cleartext-http",
+    "type": "code",
+    "choice_type": "or",
+    "polarity": "negative",
+    "severity": 8,
+    "message": "Cleartext http:// URL in code — data in transit not protected",
+    "choice": [
+      ["http://"]
+    ],
+    "exclude": [
+      "schemas\\.android\\.com",
+      "www\\.w3\\.org",
+      "xmlpull\\.org",
+      "apache\\.org",
+      "example\\.(com|org|net)",
+      "localhost|127\\.0\\.0\\.1|10\\.0\\.2\\.2",
+      "ns\\.adobe\\.com",
+      "purl\\.org",
+      "xml\\.org|xmlsoap\\.org"
+    ],
+    "class": "Trusted Path/Channels"
+  },
+  {
+    "id": "FTP_DIT_EXT.1.1-tls-bypass",
+    "type": "code",
+    "choice_type": "or",
+    "polarity": "negative",
+    "severity": 12,
+    "message": "TLS validation bypass (trust-all manager / allow-all hostname verifier)",
+    "choice": [
+      ["ALLOW_ALL_HOSTNAME_VERIFIER|(?i)allowallhostnameverifier|nullhostnameverifier|trustall|insecuretrustmanager"]
+    ],
+    "class": "Trusted Path/Channels"
+  },
+  {
+    "id": "FIA_X509_EXT.2.2",
+    "type": "code",
+    "choice_type": "and",
+    "polarity": "positive",
+    "severity": 3,
+    "message": "X.509 certificate validity checking implemented (checkValidity + expiry exceptions handled)",
+    "choice": [
+      ["\\.checkValidity\\("],
+      ["CertificateExpiredException|CertificateNotYetValidException"]
+    ],
+    "class": "Identification and Authentication"
+  },
+  {
+    "id": "FDP_DEC_EXT.1.1",
+    "type": "manifest",
+    "choice_type": "or",
+    "polarity": "positive",
+    "severity": 1,
+    "message": "Access to Platform Resources is declared via manifest permissions",
+    "choice": [
+      ["android\\.permission\\.(INTERNET|CAMERA|RECORD_AUDIO|ACCESS_FINE_LOCATION|ACCESS_COARSE_LOCATION|BLUETOOTH|NFC|READ_CONTACTS|READ_CALENDAR)"]
+    ],
+    "class": "User Data Protection"
+  },
+  {
+    "id": "FDP_DAR_EXT.1.1",
+    "type": "code",
+    "manual": true,
+    "message": "Encryption Of Sensitive Application Data — verify what the app stores and how it is encrypted (manual review)",
+    "choice": [],
+    "class": "User Data Protection"
+  },
+  {
+    "id": "FMT_MEC_EXT.1.1",
+    "type": "code",
+    "manual": true,
+    "message": "Supported Configuration Mechanism — verify configuration is stored via platform mechanisms (manual review)",
+    "choice": [],
+    "class": "Security Management"
+  },
+  {
+    "id": "FPT_TUD_EXT.2.1",
+    "type": "code",
+    "manual": true,
+    "message": "Integrity for Installation and Update — verify update channel and signing (manual review)",
+    "choice": [],
+    "class": "Protection of the TSF"
+  },
+  {
+    "id": "FCS_CKM_EXT.1.1",
+    "type": "code",
+    "manual": true,
+    "message": "Cryptographic Key Generation Services — verify key generation strategy (manual review)",
+    "choice": [],
+    "class": "Cryptographic Support"
+  }
+]

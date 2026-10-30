@@ -1,0 +1,18 @@
+[
+  {
+    "pattern_id": "crypto_weak_algorithm",
+    "outcome": "true_positive"
+  },
+  {
+    "pattern_id": "hardcoded_credentials",
+    "outcome": "true_positive"
+  },
+  {
+    "pattern_id": "insecure_random",
+    "outcome": "false_positive"
+  },
+  {
+    "pattern_id": "sql_injection",
+    "outcome": "false_negative"
+  }
+]

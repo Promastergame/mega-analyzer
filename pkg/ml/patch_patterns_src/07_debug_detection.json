@@ -1,0 +1,39 @@
+[
+  {
+    "id": "DEBUG_DETECT",
+    "category": "debug_detection",
+    "description": "Detects debugging/debugger attached",
+    "method_names": [
+      "isdebuggable",
+      "isdebugging",
+      "isdebuggerattached",
+      "checkdebug",
+      "detectdebugger",
+      "isbeingdebugged",
+      "isdebugmode",
+      "antidebug"
+    ],
+    "class_patterns": [
+      "debugcheck",
+      "debugdetect",
+      "antidebug",
+      "security",
+      "protection"
+    ],
+    "required_calls": [
+      "debug;->isdebuggable",
+      "debug;->isdebuggerconnected",
+      "debug;->waitingfordebugger",
+      "applicationinfo;->flags"
+    ],
+    "string_patterns": [
+      "flag_debuggable",
+      "android.os.debug",
+      "debuggerconnected"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 12
+  }
+]

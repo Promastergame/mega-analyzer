@@ -1,0 +1,48 @@
+name: Suggestion / feature request
+description: Propose a new detector, format, report, or improvement.
+title: "[Idea]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideas are welcome! This is the project's "suggestion box". Note that
+        Mega-Analyzer is built and maintained by a single developer and does
+        **not** accept pull requests — suggestions are implemented at the
+        maintainer's discretion. A good proposal makes that decision easy.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: What can't you do today, or what's painful about the current behavior?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Your idea
+      description: Describe the detector, format, flag, or report you'd like to see.
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - New detection / rule
+        - New input format (APK/PE/ELF/other)
+        - Reporting (HTML/JSON/SARIF/...)
+        - Performance
+        - CLI / usability
+        - Documentation
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: principles
+    attributes:
+      label: Fits the project principles
+      description: Mega-Analyzer is offline-first and lightweight. Suggestions are welcome free of charge; custom work uses the separate order form. See the README "Principles" section.
+      options:
+        - label: This stays 100% offline (no external APIs, telemetry, or cloud calls)
+        - label: This does not require heavy AI/LLM dependencies or large model weights

@@ -1,0 +1,931 @@
+{
+  "schema_version": 1,
+  "name": "android_resource_rules",
+  "updated": "2026-08-25",
+  "notes": "Data-driven rules for Android resource containers: resources.arsc (ResTable chunks), AndroidManifest.xml (binary AXML) and APK-level signing artifacts. Vendor-agnostic: SDK rules are inventory-only, tamper rules are shape-based. No regex is used anywhere so the file stays free of escape sequences and is safe to hand-edit. Manifest thresholds are calibrated against a single measured clean manifest; treat them as provisional until more baselines are added.",
+  "categories": [
+    "ad_sdk",
+    "analytics",
+    "auth",
+    "crash_reporting",
+    "engine",
+    "integrity",
+    "localization",
+    "monetization",
+    "privacy",
+    "rebrand",
+    "repack",
+    "signing",
+    "support_sdk",
+    "toolchain"
+  ],
+  "targets": [
+    "resources.arsc",
+    "manifest",
+    "apk_container"
+  ],
+  "rules": [
+    {
+      "id": "SDK_APPLOVIN_MAX",
+      "target": "resources.arsc",
+      "category": "ad_sdk",
+      "label": "AppLovin MAX mediation",
+      "confidence": "high",
+      "severity": "info",
+      "any_string": [
+        "com.applovin.mediation",
+        "com.applovin.creative",
+        "com.applovin.sdk"
+      ],
+      "min_hits": 1,
+      "notes": "Mediation layer. Presence of the creative debugger UI package means a full SDK, not a stub."
+    },
+    {
+      "id": "SDK_YANDEX_MOBILE_ADS",
+      "target": "resources.arsc",
+      "category": "ad_sdk",
+      "label": "Yandex Mobile Ads",
+      "confidence": "high",
+      "severity": "info",
+      "any_string": [
+        "com.yandex.mobile.ads"
+      ],
+      "min_hits": 1,
+      "notes": "Often bundled as an AppLovin or IronSource mediation adapter for CIS traffic."
+    },
+    {
+      "id": "SDK_GOOGLE_MOBILE_ADS",
+      "target": "resources.arsc",
+      "category": "ad_sdk",
+      "label": "Google Mobile Ads / AdMob",
+      "confidence": "medium",
+      "severity": "info",
+      "any_string": [
+        "com.google.android.gms.ads"
+      ],
+      "any_resource_key": [
+        "gma_ad_activity",
+        "admob_app_id"
+      ],
+      "min_hits": 1,
+      "notes": "Resource-level only. The App ID normally lives in the manifest as a meta-data value."
+    },
+    {
+      "id": "SDK_FIREBASE_CRASHLYTICS",
+      "target": "resources.arsc",
+      "category": "crash_reporting",
+      "label": "Firebase Crashlytics",
+      "confidence": "high",
+      "severity": "info",
+      "any_string": [
+        "com.crashlytics.android.build_id",
+        "com.google.firebase.crashlytics"
+      ],
+      "min_hits": 1,
+      "notes": "The build_id resource is unique per build and is a reliable build-identity anchor."
+    },
+    {
+      "id": "ENGINE_UNITY_FROM_RESOURCES",
+      "target": "resources.arsc",
+      "category": "engine",
+      "label": "Unity engine (inferred from resources)",
+      "confidence": "high",
+      "severity": "info",
+      "any_string": [
+        "com.google.firebase.crashlytics.unity_version"
+      ],
+      "any_resource_key": [
+        "unity_version",
+        "com_google_firebase_crashlytics_unity_version"
+      ],
+      "min_hits": 1,
+      "extract": [
+        {
+          "field": "unity_version",
+          "after": "unity_version",
+          "until": "|"
+        }
+      ],
+      "notes": "Lets the engine be identified without opening a single native library. Cross-check with the native ruleset."
+    },
+    {
+      "id": "ENGINE_FLUTTER_FROM_RESOURCES",
+      "target": "resources.arsc",
+      "category": "engine",
+      "label": "Flutter (inferred from resources)",
+      "confidence": "medium",
+      "severity": "info",
+      "any_string": [
+        "io.flutter",
+        "flutter_assets",
+        "flutter_embedding"
+      ],
+      "min_hits": 1,
+      "notes": "Confirm against libflutter.so and libapp.so in the native ruleset."
+    },
+    {
+      "id": "ENGINE_REACT_NATIVE_FROM_RESOURCES",
+      "target": "resources.arsc",
+      "category": "engine",
+      "label": "React Native (inferred from resources)",
+      "confidence": "medium",
+      "severity": "info",
+      "any_string": [
+        "com.facebook.react",
+        "index.android.bundle"
+      ],
+      "min_hits": 1,
+      "notes": "Pair with libhermes.so or libjsc.so detection."
+    },
+    {
+      "id": "SDK_FIREBASE_REALTIME_DB",
+      "target": "resources.arsc",
+      "category": "analytics",
+      "label": "Firebase Realtime Database endpoint",
+      "confidence": "high",
+      "severity": "low",
+      "any_string": [
+        ".firebaseio.com"
+      ],
+      "min_hits": 1,
+      "extract": [
+        {
+          "field": "firebase_project",
+          "after": "https://",
+          "until": ".firebaseio.com"
+        }
+      ],
+      "notes": "The project host is a strong identity anchor: it survives repacking and ties a mod back to the original app."
+    },
+    {
+      "id": "CREDENTIAL_GOOGLE_OAUTH_CLIENT",
+      "target": "resources.arsc",
+      "category": "auth",
+      "label": "Google OAuth client ID shipped in resources",
+      "confidence": "high",
+      "severity": "low",
+      "any_string": [
+        ".apps.googleusercontent.com"
+      ],
+      "min_hits": 1,
+      "extract": [
+        {
+          "field": "oauth_client",
+          "until": ".apps.googleusercontent.com"
+        }
+      ],
+      "notes": "Expected for Play Games sign-in, but the client list is a build fingerprint. Multiple IDs usually mean debug plus release."
+    },
+    {
+      "id": "SDK_HELPSHIFT",
+      "target": "resources.arsc",
+      "category": "support_sdk",
+      "label": "Helpshift in-app support",
+      "confidence": "high",
+      "severity": "info",
+      "any_string": [
+        ".helpshift.com"
+      ],
+      "min_hits": 1,
+      "extract": [
+        {
+          "field": "helpshift_tenant",
+          "until": ".helpshift.com"
+        }
+      ],
+      "notes": "The tenant subdomain names the publisher and is useful for attributing an unknown build."
+    },
+    {
+      "id": "SDK_PLAY_SERVICES_BASE",
+      "target": "resources.arsc",
+      "category": "analytics",
+      "label": "Google Play services base module",
+      "confidence": "high",
+      "severity": "info",
+      "any_resource_key": [
+        "common_google_play_services_update_title",
+        "common_google_play_services_install_text",
+        "common_google_play_services_enable_text"
+      ],
+      "min_hits": 1,
+      "notes": "Ships a large localized string block. Its locale coverage is a good baseline for locale-stripping heuristics."
+    },
+    {
+      "id": "SDK_MATERIAL_COMPONENTS",
+      "target": "resources.arsc",
+      "category": "toolchain",
+      "label": "Material Components for Android",
+      "confidence": "high",
+      "severity": "info",
+      "any_string": [
+        "com.google.android.material.appbar",
+        "com.google.android.material.theme"
+      ],
+      "min_hits": 1,
+      "notes": "Indicates a standard Gradle plus AGP build even when the app itself is an engine game."
+    },
+    {
+      "id": "SDK_ANDROIDX_STARTUP",
+      "target": "resources.arsc",
+      "category": "toolchain",
+      "label": "AndroidX App Startup initializer",
+      "confidence": "medium",
+      "severity": "info",
+      "any_string": [
+        "androidx-startup"
+      ],
+      "min_hits": 1,
+      "notes": "Provider authority suffix. Its authority prefix must equal the application id; a mismatch is a rename signal."
+    },
+    {
+      "id": "CN_SDK_ERROR_STRINGS",
+      "target": "resources.arsc",
+      "category": "analytics",
+      "label": "Chinese-language SDK error strings",
+      "confidence": "medium",
+      "severity": "low",
+      "any_string": [
+        "http request pb错误",
+        "conent_type错误",
+        "网络请求失败",
+        "参数错误"
+      ],
+      "min_hits": 1,
+      "notes": "Marks a bundled CN vendor SDK. Misspelled keys such as conent_type are stable, high-signal anchors."
+    },
+    {
+      "id": "REBRAND_LOCALE_SCOPED_LABEL",
+      "target": "resources.arsc",
+      "category": "rebrand",
+      "label": "Application label diverges in a subset of locales",
+      "confidence": "high",
+      "severity": "high",
+      "signal": "label.distinct_values_across_locales",
+      "operator": "gt",
+      "threshold": 1,
+      "min_hits": 1,
+      "notes": "Resolve app_name for every locale config. Genuine builds translate the label or keep it identical; a build that keeps the original name everywhere except one or two locales is being rebranded for a specific audience while staying unremarkable elsewhere."
+    },
+    {
+      "id": "REBRAND_LABEL_VALUE_DRIFT",
+      "target": "resources.arsc",
+      "category": "rebrand",
+      "label": "Application label differs from baseline while package name is unchanged",
+      "confidence": "high",
+      "severity": "high",
+      "signal": "label.differs_from_baseline",
+      "operator": "eq",
+      "threshold": 1,
+      "requires_baseline": true,
+      "notes": "Classic soft rebrand: identical application id so updates and save data still line up, new display name so the build looks like a different product."
+    },
+    {
+      "id": "REPACK_KEYS_EQUAL_VALUES_DIFFER",
+      "target": "resources.arsc",
+      "category": "repack",
+      "label": "Identical resource key pool but different value pool",
+      "confidence": "high",
+      "severity": "high",
+      "signal": "key_pool.equals_baseline_and_value_pool_differs",
+      "operator": "eq",
+      "threshold": 1,
+      "requires_baseline": true,
+      "notes": "Same resource names, same entry counts, different string values means nothing was recompiled from sources: the table was edited in place. Strongest single repack signal available from resources.arsc alone."
+    },
+    {
+      "id": "REPACK_PACKAGE_NAME_MISMATCH_MANIFEST",
+      "target": "manifest",
+      "category": "repack",
+      "label": "Manifest package differs from ResTable package name",
+      "confidence": "high",
+      "severity": "high",
+      "signal": "manifest.package_equals_restable_package",
+      "operator": "eq",
+      "threshold": 0,
+      "notes": "The canonical package-rename detector. A rename done with a manifest editor rarely updates the ResTable package name, so the two disagree."
+    },
+    {
+      "id": "REPACK_AUTHORITY_PREFIX_MISMATCH",
+      "target": "manifest",
+      "category": "repack",
+      "label": "Provider authority prefix does not match the application id",
+      "confidence": "medium",
+      "severity": "medium",
+      "notes": "AGP derives authorities such as the startup initializer from the application id. After a rename the old prefix is usually left behind."
+    },
+    {
+      "id": "REPACK_COMPONENT_FOREIGN_PACKAGE",
+      "target": "manifest",
+      "category": "repack",
+      "label": "Declared component lives outside the application package",
+      "confidence": "low",
+      "severity": "medium",
+      "notes": "Recalibrated against a measured clean build, where this rule produced six false positives out of six matches: five were ordinary bundled SDK components (Play Billing, Play services, datatransport) and one was an R8-repackaged Application class. Do not fire on prefix mismatch alone. Skip exclude_prefixes, skip classes whose package looks machine-generated, and require corroboration: a matching foreign JNI export prefix, a foreign host string, or a foreign provider authority.",
+      "exclude_prefixes": [
+        "androidx.",
+        "android.",
+        "com.android.billingclient.",
+        "com.android.vending.",
+        "com.google.android.gms.",
+        "com.google.android.datatransport.",
+        "com.google.android.play.",
+        "com.google.firebase.",
+        "com.facebook.",
+        "com.applovin.",
+        "com.unity3d.",
+        "io.flutter.",
+        "com.yandex.",
+        "com.helpshift.",
+        "io.sentry.",
+        "com.adjust.sdk.",
+        "com.appsflyer."
+      ],
+      "requires_corroboration": true
+    },
+    {
+      "id": "REPACK_FOREIGN_HOST_BESIDE_VENDOR_HOSTS",
+      "target": "resources.arsc",
+      "category": "repack",
+      "label": "Non-vendor host string next to original vendor hosts",
+      "confidence": "medium",
+      "severity": "high",
+      "notes": "Compare the registrable domain of every host string against the domain implied by the application id. A redirect target usually sits right next to the untouched original endpoints."
+    },
+    {
+      "id": "REPACK_LOCALE_TABLE_REWRITTEN",
+      "target": "resources.arsc",
+      "category": "localization",
+      "label": "Locale value table rewritten or collapsed",
+      "confidence": "medium",
+      "severity": "medium",
+      "requires_baseline": true,
+      "notes": "Locale configs survive but their values are replaced by copies of a neighbouring locale, so translated strings disappear and duplicates appear. Typical of a table rebuilt by a third-party tool rather than aapt2."
+    },
+    {
+      "id": "REPACK_PACKAGE_ID_NONSTANDARD",
+      "target": "resources.arsc",
+      "category": "repack",
+      "label": "Non-standard ResTable package id",
+      "confidence": "medium",
+      "severity": "medium",
+      "signal": "package.id",
+      "operator": "not_in",
+      "threshold_set": [
+        1,
+        127
+      ],
+      "notes": "Application packages use 0x7f and the framework uses 0x01. Other ids mean a shared library, an overlay, or a hand-patched table."
+    },
+    {
+      "id": "SIGN_V1_SIGNATURE_STRIPPED",
+      "target": "apk_container",
+      "category": "signing",
+      "label": "APK Signing Block present but no v1 signature files",
+      "confidence": "high",
+      "severity": "medium",
+      "any_string": [
+        "APK Sig Block 42"
+      ],
+      "min_hits": 1,
+      "notes": "Legitimate for a modern minSdk 24+ build. Becomes a strong repack signal when the baseline shipped v1 files and the sample does not, which is exactly what signature-stripping patchers produce."
+    },
+    {
+      "id": "SIGN_NO_SIGNATURE_AT_ALL",
+      "target": "apk_container",
+      "category": "signing",
+      "label": "Neither APK Signing Block nor v1 signature files",
+      "confidence": "high",
+      "severity": "high",
+      "notes": "The archive cannot be installed as is. Almost always an intermediate artifact from a patch pipeline that has not been re-signed yet."
+    },
+    {
+      "id": "SIGN_DEBUG_CERTIFICATE",
+      "target": "apk_container",
+      "category": "signing",
+      "label": "Signed with the Android debug certificate",
+      "confidence": "high",
+      "severity": "high",
+      "any_string": [
+        "CN=Android Debug",
+        "Android Debug, O=Android, C=US"
+      ],
+      "min_hits": 1,
+      "notes": "The debug key is shared by every SDK install, so it provides no authorship guarantee whatsoever."
+    },
+    {
+      "id": "SIGN_AOSP_TEST_KEY",
+      "target": "apk_container",
+      "category": "signing",
+      "label": "Signed with a public AOSP test key",
+      "confidence": "high",
+      "severity": "high",
+      "any_string": [
+        "CN=Test Cert",
+        "testkey",
+        "platform.x509.pem",
+        "releasekey"
+      ],
+      "min_hits": 1,
+      "notes": "Private keys for these certificates are published in the AOSP tree, so anyone can forge an update."
+    },
+    {
+      "id": "SIGN_CERTIFICATE_DIGEST_DRIFT",
+      "target": "apk_container",
+      "category": "signing",
+      "label": "Signer certificate digest differs from baseline",
+      "confidence": "high",
+      "severity": "high",
+      "requires_baseline": true,
+      "notes": "The definitive certificate-swap check. Compare the SHA-256 of the signer certificate, never the display name, which is trivially forged."
+    },
+    {
+      "id": "SIGN_MULTIPLE_SIGNERS",
+      "target": "apk_container",
+      "category": "signing",
+      "label": "More than one signer in the signing block",
+      "confidence": "medium",
+      "severity": "medium",
+      "notes": "Valid for key rotation lineage, but also used to keep an original signer visible next to an added one."
+    },
+    {
+      "id": "AXML_DEBUGGABLE_TRUE",
+      "target": "manifest",
+      "category": "integrity",
+      "label": "Application flagged debuggable",
+      "confidence": "high",
+      "severity": "high",
+      "notes": "Allows a debugger to attach to the process on a production device. Frequently flipped on by patchers."
+    },
+    {
+      "id": "AXML_TEST_ONLY",
+      "target": "manifest",
+      "category": "integrity",
+      "label": "Application flagged testOnly",
+      "confidence": "high",
+      "severity": "medium",
+      "notes": "Set by direct Studio installs. Its presence in a distributed build means the build never went through a release pipeline."
+    },
+    {
+      "id": "AXML_CLEARTEXT_TRAFFIC_ALLOWED",
+      "target": "manifest",
+      "category": "privacy",
+      "label": "Cleartext traffic explicitly permitted",
+      "confidence": "high",
+      "severity": "medium",
+      "notes": "Combined with a redirected endpoint this is what makes plain-HTTP interception of a redirected build possible."
+    },
+    {
+      "id": "AXML_NSC_DEBUG_OVERRIDES",
+      "target": "manifest",
+      "category": "privacy",
+      "label": "Network security config with user trust anchors",
+      "confidence": "medium",
+      "severity": "high",
+      "any_string": [
+        "debug-overrides",
+        "trust-anchors",
+        "certificates src=user"
+      ],
+      "min_hits": 1,
+      "notes": "Trusting the user certificate store disables pinning and is a common preparation step for traffic capture."
+    },
+    {
+      "id": "AXML_EXTRACT_NATIVE_LIBS_TRUE",
+      "target": "manifest",
+      "category": "repack",
+      "label": "extractNativeLibs re-enabled",
+      "confidence": "low",
+      "severity": "low",
+      "notes": "Modern builds ship uncompressed and page-aligned libraries. Flipping this back on is typical when native libraries were replaced by hand."
+    },
+    {
+      "id": "AXML_BACKUP_ALLOWED",
+      "target": "manifest",
+      "category": "privacy",
+      "label": "allowBackup enabled",
+      "confidence": "high",
+      "severity": "low",
+      "notes": "Permits extraction of the private data directory over adb without root."
+    },
+    {
+      "id": "AXML_PLATFORM_BUILD_VERSION_MARKER",
+      "target": "manifest",
+      "category": "toolchain",
+      "label": "platformBuildVersionName attribute present",
+      "confidence": "high",
+      "severity": "info",
+      "any_string": [
+        "platformBuildVersionName",
+        "platformBuildVersionCode"
+      ],
+      "min_hits": 1,
+      "extract": [
+        {
+          "field": "platform_build_version",
+          "after": "platformBuildVersionName",
+          "until": "|"
+        }
+      ],
+      "notes": "Written by the resource compiler and left untouched by most manifest editors, so it records the original toolchain even after a repack."
+    },
+    {
+      "id": "AXML_DERIVED_PERMISSION_PREFIX_MISMATCH",
+      "target": "manifest",
+      "category": "repack",
+      "label": "AGP-derived permission name does not match the application id",
+      "confidence": "high",
+      "severity": "high",
+      "any_string": [
+        ".DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+      ],
+      "min_hits": 1,
+      "notes": "AGP generates this permission as applicationId plus a fixed suffix, so its prefix is a second, independent copy of the application id. A manifest editor that rewrites the package attribute almost never rewrites this string, which makes the mismatch a clean rename detector."
+    },
+    {
+      "id": "AXML_OBFUSCATED_APPLICATION_CLASS",
+      "target": "manifest",
+      "category": "toolchain",
+      "label": "Application class sits in a machine-generated package",
+      "confidence": "medium",
+      "severity": "info",
+      "notes": "R8 with repackaging moves classes into short generated packages, so the Application class legitimately lives outside the application id. Measured on a clean build as fky.pq.vxdjhbnbm.SztxrmMlumugmyetk. Treat as a build trait, never as tampering, and use it to suppress foreign-package rules."
+    },
+    {
+      "id": "AXML_PLAY_BILLING",
+      "target": "manifest",
+      "category": "monetization",
+      "label": "Google Play Billing",
+      "confidence": "high",
+      "severity": "info",
+      "any_string": [
+        "com.android.vending.BILLING",
+        "com.android.billingclient.api.ProxyBillingActivity"
+      ],
+      "min_hits": 1,
+      "notes": "In-app purchases present. Worth correlating with patch rules that target purchase verification, since this is the component such patches attack."
+    },
+    {
+      "id": "AXML_PLAY_SERVICES_COMPONENTS",
+      "target": "manifest",
+      "category": "toolchain",
+      "label": "Play services and datatransport components",
+      "confidence": "high",
+      "severity": "info",
+      "any_string": [
+        "com.google.android.gms.common.api.GoogleApiActivity",
+        "com.google.android.datatransport.runtime"
+      ],
+      "min_hits": 1,
+      "notes": "Pulled in transitively by Firebase and Play libraries. Listed explicitly so these classes can be excluded from foreign-package heuristics."
+    },
+    {
+      "id": "AXML_APP_COMPONENT_FACTORY",
+      "target": "manifest",
+      "category": "toolchain",
+      "label": "AndroidX core component factory",
+      "confidence": "high",
+      "severity": "info",
+      "any_string": [
+        "androidx.core.app.CoreComponentFactory"
+      ],
+      "min_hits": 1,
+      "notes": "Standard AGP output. Its absence in an androidx-based app suggests a rewritten manifest."
+    },
+    {
+      "id": "AXML_GLES_REQUIREMENT",
+      "target": "manifest",
+      "category": "engine",
+      "label": "OpenGL ES version requirement",
+      "confidence": "high",
+      "severity": "info",
+      "any_string": [
+        "glEsVersion"
+      ],
+      "min_hits": 1,
+      "notes": "Declared as a packed hex value: 0x20000 is ES 2.0, 0x30000 is ES 3.0. Useful for corroborating an engine guess from the native ruleset."
+    },
+    {
+      "id": "AXML_WIDE_SDK_SPAN",
+      "target": "manifest",
+      "category": "integrity",
+      "label": "Wide gap between minSdkVersion and targetSdkVersion",
+      "confidence": "medium",
+      "severity": "low",
+      "signal": "manifest.target_sdk_minus_min_sdk",
+      "operator": "gt",
+      "threshold": 12,
+      "notes": "Measured 21 to 36 on a clean build, so this is common and must stay low. It matters only as context: a low minSdk keeps weaker platform defaults such as cleartext traffic and v1-only signature acceptance reachable."
+    },
+    {
+      "id": "AXML_COMPILE_SDK_AHEAD_OF_TARGET",
+      "target": "manifest",
+      "category": "toolchain",
+      "label": "compileSdkVersion higher than targetSdkVersion",
+      "confidence": "medium",
+      "severity": "info",
+      "notes": "Normal during platform transitions. Recorded because compileSdkVersion and platformBuildVersion together pin the build toolchain even after a repack."
+    }
+  ],
+  "structural_heuristics": [
+    {
+      "id": "ARSC_STRING_POOL_DUPLICATES",
+      "target": "resources.arsc",
+      "category": "repack",
+      "label": "Duplicate entries in the global string pool",
+      "severity": "high",
+      "signal": "global_pool.duplicate_count",
+      "operator": "gt",
+      "threshold": 0,
+      "notes": "aapt2 deduplicates the value pool, so a clean release build reports exactly zero duplicates. Any duplicate means the pool was serialized by something other than aapt2."
+    },
+    {
+      "id": "ARSC_TRAILING_BYTES",
+      "target": "resources.arsc",
+      "category": "repack",
+      "label": "Data past the declared ResTable size",
+      "severity": "high",
+      "signal": "file_size_minus_restable_size",
+      "operator": "gt",
+      "threshold": 0,
+      "notes": "The root chunk size must equal the file size. Extra bytes are either an appended payload or a sloppy in-place edit."
+    },
+    {
+      "id": "ARSC_ENTRY_COUNT_SPEC_MISMATCH",
+      "target": "resources.arsc",
+      "category": "repack",
+      "label": "Type spec entry count disagrees with type chunk entry count",
+      "severity": "high",
+      "signal": "type.spec_entry_count_matches",
+      "operator": "eq",
+      "threshold": 0,
+      "notes": "Adding or removing entries without updating the matching spec chunk is a very common hand-editing mistake."
+    },
+    {
+      "id": "ARSC_LAST_PUBLIC_NONZERO",
+      "target": "resources.arsc",
+      "category": "toolchain",
+      "label": "lastPublicType or lastPublicKey is non-zero",
+      "severity": "medium",
+      "signal": "package.last_public_type_or_key",
+      "operator": "gt",
+      "threshold": 0,
+      "notes": "aapt2 writes zero in both fields. Non-zero points at the legacy aapt or a hand-built table."
+    },
+    {
+      "id": "ARSC_TYPE_STRINGS_UTF8",
+      "target": "resources.arsc",
+      "category": "toolchain",
+      "label": "Type string pool encoded as UTF-8",
+      "severity": "medium",
+      "signal": "type_pool.utf8",
+      "operator": "eq",
+      "threshold": 1,
+      "notes": "aapt2 emits UTF-16 type names while key and value pools are UTF-8. A UTF-8 type pool means the table was re-serialized."
+    },
+    {
+      "id": "ARSC_GLOBAL_POOL_SORTED",
+      "target": "resources.arsc",
+      "category": "toolchain",
+      "label": "Sorted flag set on the global string pool",
+      "severity": "low",
+      "signal": "global_pool.sorted",
+      "operator": "eq",
+      "threshold": 1,
+      "notes": "Release builds leave the value pool unsorted. The sorted flag indicates a rebuild by another writer."
+    },
+    {
+      "id": "ARSC_MULTIPLE_PACKAGES",
+      "target": "resources.arsc",
+      "category": "repack",
+      "label": "More than one package chunk",
+      "severity": "medium",
+      "signal": "package_count",
+      "operator": "gt",
+      "threshold": 1,
+      "notes": "Normal for shared libraries and overlays, unusual for an application. Merged tables show up this way."
+    },
+    {
+      "id": "ARSC_SHARED_LIBRARY_CHUNK",
+      "target": "resources.arsc",
+      "category": "toolchain",
+      "label": "Shared library reference chunk present",
+      "severity": "info",
+      "signal": "library_chunk_count",
+      "operator": "gt",
+      "threshold": 0,
+      "notes": "Records dynamic package id remapping. Record the referenced package names as part of the inventory."
+    },
+    {
+      "id": "ARSC_LOCALE_COVERAGE_COLLAPSED",
+      "target": "resources.arsc",
+      "category": "localization",
+      "label": "Almost no locale-qualified configs despite many string entries",
+      "severity": "low",
+      "signal": "locale_count",
+      "operator": "lt",
+      "threshold": 2,
+      "notes": "Low severity on purpose. Engine games legitimately keep translations in their own asset bundles, so this is context, not a verdict."
+    },
+    {
+      "id": "ARSC_PATH_SHORTENING",
+      "target": "resources.arsc",
+      "category": "toolchain",
+      "label": "Resource file paths flattened to short names",
+      "severity": "info",
+      "signal": "res_paths.flat_ratio",
+      "operator": "gt",
+      "threshold": 0.9,
+      "notes": "Produced by the AGP resource path shortening optimization. Useful as a build-identity trait, not as a tamper signal."
+    },
+    {
+      "id": "ARSC_SPARSE_OR_COMPACT_ENTRIES",
+      "target": "resources.arsc",
+      "category": "toolchain",
+      "label": "Sparse or 16-bit offset entry encoding in use",
+      "severity": "info",
+      "signal": "type.sparse_or_offset16_count",
+      "operator": "gt",
+      "threshold": 0,
+      "notes": "Modern aapt2 space optimizations. Their absence in a build whose baseline used them suggests a downgrade through an older tool."
+    },
+    {
+      "id": "ARSC_TYPE_ID_GAP_PLACEHOLDER",
+      "target": "resources.arsc",
+      "category": "toolchain",
+      "label": "Placeholder name for an unused type id",
+      "severity": "info",
+      "signal": "type_pool.placeholder_count",
+      "operator": "gt",
+      "threshold": 0,
+      "notes": "aapt2 fills gaps in the type id space with a synthetic name. Expected in real builds and worth whitelisting so it never counts as an anomaly."
+    },
+    {
+      "id": "AXML_TRAILING_BYTES",
+      "target": "manifest",
+      "category": "repack",
+      "label": "Data past the declared AXML size",
+      "severity": "high",
+      "signal": "axml.file_size_minus_declared_size",
+      "operator": "gt",
+      "threshold": 0,
+      "notes": "Root chunk size must equal the file size. Measured exactly 0 on a clean build."
+    },
+    {
+      "id": "AXML_POOL_DUPLICATES",
+      "target": "manifest",
+      "category": "toolchain",
+      "label": "Duplicate entries in the AXML string pool",
+      "severity": "low",
+      "signal": "axml.pool.duplicate_count",
+      "operator": "gt",
+      "threshold": 1,
+      "notes": "Threshold is 1, not 0: a clean measured manifest already carries one duplicate because raw attribute values and element names share the pool. This is why the resources.arsc duplicate rule cannot be reused verbatim here."
+    },
+    {
+      "id": "AXML_POOL_NOT_UTF8",
+      "target": "manifest",
+      "category": "toolchain",
+      "label": "AXML string pool is not UTF-8",
+      "severity": "medium",
+      "signal": "axml.pool.utf8",
+      "operator": "eq",
+      "threshold": 0,
+      "notes": "aapt2 writes a UTF-8 pool for manifests. UTF-16 indicates a different writer."
+    },
+    {
+      "id": "AXML_RESOURCE_MAP_MISSING",
+      "target": "manifest",
+      "category": "repack",
+      "label": "No resource map chunk despite framework attributes",
+      "severity": "medium",
+      "signal": "axml.resource_map_entries",
+      "operator": "eq",
+      "threshold": 0,
+      "notes": "The 0x0180 chunk maps attribute indices to framework resource ids. Measured 25 entries on a clean build. Some rebuild tools drop it, which still installs but loses the mapping."
+    },
+    {
+      "id": "AXML_EXTRA_NAMESPACES",
+      "target": "manifest",
+      "category": "repack",
+      "label": "More namespace declarations than expected",
+      "severity": "low",
+      "signal": "axml.namespace_count",
+      "operator": "gt",
+      "threshold": 1,
+      "notes": "A plain app manifest declares only the android namespace. Extra ones appear when tooling merges in distribution or overlay attributes."
+    }
+  ],
+  "baselines": [
+    {
+      "id": "observed_clean_agp_release",
+      "description": "Standard AGP release build with an ad stack. Measured sample, used to calibrate thresholds.",
+      "package_name": "com.playgendary.tom",
+      "label": "Tomb of the Mask",
+      "arsc_size": 2025472,
+      "global_pool_count": 18391,
+      "global_pool_duplicates": 0,
+      "key_pool_count": 6715,
+      "locale_count": 96,
+      "types": 20,
+      "package_id": 127,
+      "trailing_bytes": 0,
+      "flat_res_paths": 0,
+      "res_paths": 2075
+    },
+    {
+      "id": "observed_clean_engine_game",
+      "description": "Engine game that keeps localization outside Android resources. Explains why locale collapse must stay low severity.",
+      "package_name": "com.supercell.brawlstars",
+      "label": "Brawl Stars",
+      "arsc_size": 512048,
+      "global_pool_count": 927,
+      "global_pool_duplicates": 0,
+      "key_pool_count": 5009,
+      "locale_count": 0,
+      "types": 17,
+      "package_id": 127,
+      "trailing_bytes": 0,
+      "flat_res_paths": 0,
+      "res_paths": 622
+    },
+    {
+      "id": "observed_clean_path_shortened",
+      "description": "Reference build for the repack sample below. Extracted from the original APK container.",
+      "package_name": "smellymoo.sand",
+      "label": "Sand : Box",
+      "arsc_size": 714348,
+      "global_pool_count": 8219,
+      "global_pool_duplicates": 0,
+      "key_pool_count": 2281,
+      "locale_count": 85,
+      "types": 17,
+      "package_id": 127,
+      "trailing_bytes": 0,
+      "flat_res_paths": 607,
+      "res_paths": 640
+    },
+    {
+      "id": "observed_repack_locale_rebrand",
+      "description": "Confirmed repack of the previous baseline. Same key pool, edited value pool, label changed for one locale only.",
+      "package_name": "smellymoo.sand",
+      "label": "Sand : Box",
+      "arsc_size": 713588,
+      "global_pool_count": 8219,
+      "global_pool_duplicates": 47,
+      "key_pool_count": 2281,
+      "locale_count": 85,
+      "types": 17,
+      "package_id": 127,
+      "trailing_bytes": 0,
+      "flat_res_paths": 607,
+      "res_paths": 640,
+      "fired_rules": [
+        "ARSC_STRING_POOL_DUPLICATES",
+        "REPACK_KEYS_EQUAL_VALUES_DIFFER",
+        "REBRAND_LOCALE_SCOPED_LABEL",
+        "REPACK_LOCALE_TABLE_REWRITTEN"
+      ]
+    },
+    {
+      "id": "observed_clean_manifest_r8",
+      "target": "manifest",
+      "description": "Clean R8 release manifest from the original APK container of the repack case study. Sole source for the manifest thresholds above.",
+      "package_name": "smellymoo.sand",
+      "axml_size": 8808,
+      "declared_size": 8808,
+      "trailing_bytes": 0,
+      "pool_count": 103,
+      "pool_utf8": true,
+      "pool_sorted": false,
+      "pool_duplicates": 1,
+      "resource_map_entries": 25,
+      "namespace_count": 1,
+      "version_code": 21192,
+      "version_name": "21.192 Rattlesnake",
+      "min_sdk": 21,
+      "target_sdk": 36,
+      "compile_sdk": 36,
+      "platform_build_version_name": "16",
+      "platform_build_version_code": 36,
+      "allow_backup": true,
+      "extract_native_libs": true,
+      "debuggable": false,
+      "test_only": false,
+      "application_class": "fky.pq.vxdjhbnbm.SztxrmMlumugmyetk",
+      "components": {
+        "activity": 12,
+        "service": 2,
+        "receiver": 2,
+        "provider": 1
+      },
+      "permission_count": 4,
+      "authorities": [
+        "smellymoo.sand.androidx-startup"
+      ],
+      "foreign_prefix_component_classes": 6,
+      "rules_recalibrated_by_this_baseline": [
+        "REPACK_COMPONENT_FOREIGN_PACKAGE"
+      ]
+    }
+  ]
+}

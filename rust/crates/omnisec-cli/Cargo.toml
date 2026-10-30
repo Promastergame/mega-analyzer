@@ -1,0 +1,29 @@
+[package]
+name = "omnisec-cli"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec — universal binary analysis & exploit platform CLI."
+
+[[bin]]
+name = "omnisec"
+path = "src/main.rs"
+
+[dependencies]
+omnisec-log = { path = "../omnisec-log" }
+omnisec-json = { path = "../omnisec-json" }
+omnisec-core.workspace = true
+omnisec-loader.workspace = true
+omnisec-loader-pe.workspace = true
+omnisec-loader-elf.workspace = true
+omnisec-ir.workspace = true
+omnisec-disasm.workspace = true
+omnisec-scan-native.workspace = true
+omnisec-hdc.workspace = true
+omnisec-debugger.workspace = true
+
+
+[lints]
+workspace = true

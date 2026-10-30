@@ -1,0 +1,14 @@
+[package]
+name = "omnisec-graph"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Zero-dependency directed graphs + algorithms for OmniSec (replaces petgraph)."
+
+[dependencies]
+omnisec-json = { path = "../omnisec-json" }
+
+[lints]
+workspace = true

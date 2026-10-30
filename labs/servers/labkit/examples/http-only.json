@@ -1,0 +1,15 @@
+{
+  "log_level": "debug",
+  "servers": [
+    {
+      "name": "web",
+      "kind": "http",
+      "addr": "127.0.0.1:8080",
+      "http": {
+        "routes": [
+          {"path": "/", "status": 200, "body": "labkit http server\n"}
+        ]
+      }
+    }
+  ]
+}

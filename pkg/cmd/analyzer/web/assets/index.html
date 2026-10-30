@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mega-Analyzer</title>
+<meta name="color-scheme" content="light dark">
+<script>
+// Apply the saved appearance before the first paint. No remote assets.
+(function(){try{var t=localStorage.getItem('ma-appearance');if(t==='light'||t==='dark')document.documentElement.dataset.theme=t;}catch(e){}})();
+</script>
+<link rel="stylesheet" href="/static/app.css">
+<link rel="stylesheet" href="/static/workspace.css">
+</head>
+<body>
+<a class="skip-link" href="#toolTitle">Skip to analysis</a>
+<div class="layout">
+
+  <!-- click-away backdrop for the mobile drawer -->
+  <div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="side" id="sidebar" aria-label="Analysis tools">
+    <div class="brand">
+      <div class="logo"><img class="lg-mark" width="24" height="24" alt="" aria-hidden="true" src="data:image/png;base64,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"/></div>
+      <div class="brand-t"><b>Mega-Analyzer</b><span>Security workbench</span></div>
+      <button class="drawer-close icon-btn" type="button" onclick="closeMenu()" aria-label="Close menu"><svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    </div>
+    <button class="new-btn" type="button" onclick="resetAll()">
+      <svg width="14" height="14" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg> <span class="new-btn-label">New Analysis</span>
+    </button>
+    <button class="new-btn" id="workspaceOpen" type="button" title="Мой компьютер" aria-label="Мой компьютер"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="13" rx="2"/><path d="M8 21h8M12 16v5"/></svg> <span class="new-btn-label">Мой компьютер</span></button>
+    <nav class="nav" id="nav" aria-label="Tools"></nav>
+    <div class="side-foot">
+      <div class="maker"><span class="maker-mark" aria-hidden="true">P</span><span>By Promaster<small class="foot-v">v1.0.0-beta.10 · Bundle fix 2</small></span></div>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main" id="mainContent">
+    <header class="workspace-bar">
+      <div class="workspace-location">
+        <button class="menu-btn icon-btn" id="menuBtn" type="button" onclick="toggleMenu()" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <svg class="workspace-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16"/></svg>
+        <span class="workspace-name">Workspace</span><span class="breadcrumb-divider" aria-hidden="true">/</span><span id="toolCrumb">Static analysis</span>
+      </div>
+      <span style="display:flex;gap:8px;flex-shrink:0"><button class="appearance-btn lang-btn" id="langBtn" type="button" onclick="cycleLang()" aria-label="Interface language"><span id="langLabel">EN</span></button>
+      <button class="appearance-btn" id="appearanceBtn" type="button" onclick="cycleAppearance()" aria-label="Appearance: system. Switch to light.">
+        <svg viewBox="0 0 24 24" aria-hidden="true" id="appearanceIcon"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span id="appearanceLabel">System</span>
+      </button></span>
+    </header>
+    <div class="wrap">
+
+      <div class="head">
+        <div class="eyebrow" id="toolCategory">Analyze</div>
+        <h1 id="toolTitle" tabindex="-1">Full Static Analysis</h1>
+        <p id="toolSub">Deep security scan — rules, ML, MobSF modules and reports.</p>
+      </div>
+
+      <!-- primary drop -->
+      <div id="dz1wrap">
+        <div class="slbl" id="dz1lbl">Target file <span class="section-note" data-i18n="dzSample">Start with a sample</span></div>
+        <div class="dz-shell">
+          <div class="dz" id="dz" role="button" tabindex="0" data-i18n-aria="dzChoose" aria-label="Choose target file" aria-describedby="fileLimit dzErr" onclick="document.getElementById('fi').click()">
+            <svg class="dz-ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M12 3v13"/><path d="M7.5 7.5 12 3l4.5 4.5"/></svg>
+            <div class="dz-t" data-i18n="dzChoose">Choose a file to analyze</div>
+            <div class="dz-s" data-i18n="dzDrag">Drag it here, or browse your files.</div>
+            <div class="dz-fmts" id="fmts"></div>
+            <span class="dz-action" aria-hidden="true"><span data-i18n="dzBrowse">Browse files</span> <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+            <input type="file" id="fi" class="fi" data-i18n-aria="dzTarget" aria-label="Target file" onclick="event.stopPropagation()">
+          </div>
+        </div>
+        <div class="dz-limit" id="fileLimit"><span data-i18n="dzFormats">Supported formats listed above</span><span data-i18n="dzMax">Maximum 512 MB</span></div>
+        <div class="dz-err" id="dzErr" role="alert"></div>
+        <div class="fpill" id="fpill">
+          <svg class="pi" width="15" height="15" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          <span class="pname" id="pname"></span><span class="psize" id="psize"></span>
+          <button type="button" class="prm" onclick="clearFile(1)" aria-label="Remove target file"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+      </div>
+
+      <!-- second drop (version-diff) -->
+      <div id="dz2wrap" style="display:none">
+        <div class="slbl" data-i18n="dzNewLbl">New build (compare against)</div>
+        <div class="dz-shell">
+          <div class="dz" id="dz2" role="button" tabindex="0" data-i18n-aria="dzNew" aria-label="Choose new build" aria-describedby="dzErr2" onclick="document.getElementById('fi2').click()">
+            <svg class="dz-ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M12 3v13"/><path d="M7.5 7.5 12 3l4.5 4.5"/></svg>
+            <div class="dz-t" data-i18n="dzNew">Drop the new build</div>
+            <div class="dz-s" data-i18n="dzNewSub">the updated APK / DEX to diff against</div>
+            <span class="dz-action" aria-hidden="true"><span data-i18n="dzBrowse">Browse files</span> <svg viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></svg></span>
+            <input type="file" id="fi2" class="fi" data-i18n-aria="dzNewLbl" aria-label="New build" onclick="event.stopPropagation()">
+          </div>
+        </div>
+        <div class="dz-err" id="dzErr2" role="alert"></div>
+        <div class="fpill" id="fpill2">
+          <svg class="pi" width="15" height="15" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+          <span class="pname" id="pname2"></span><span class="psize" id="psize2"></span>
+          <button type="button" class="prm" onclick="clearFile(2)" aria-label="Remove new build"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+        </div>
+      </div>
+
+      <!-- Server Scan: URL + authorization -->
+      <div id="urlRow" style="display:none">
+        <div class="slbl" data-i18n="targetUrl">Target URL</div>
+        <div class="sc sc-full">
+          <div class="outc">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18"/><path d="M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></svg>
+            <span class="out-l">URL</span>
+            <input class="out-i" id="scanUrl" data-i18n-aria="targetUrl" aria-label="Target URL" type="text" spellcheck="false" placeholder="https://your-server.example" oninput="refreshBtn()">
+          </div>
+          <div class="div"></div>
+          <label class="tr"><span class="tsw"><input type="checkbox" id="ownChk" onchange="refreshBtn()"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="authLbl">I am authorised to scan this target</span><span class="tr-desc" data-i18n="authDesc">Required — only scan servers you own or have permission to test</span></span></label>
+          <label class="tr"><span class="tsw"><input type="checkbox" id="labChk"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="labLbl">Lab Mode</span><span class="tr-desc" data-i18n="labDesc">Destructive lab-only features (OAST, request smuggling)</span></span></label>
+        </div>
+      </div>
+
+      <!-- MITM: proxy settings -->
+      <div id="connRow" style="display:none">
+        <div class="slbl" data-i18n="proxyLbl">Proxy settings</div>
+        <div class="sc sc-full">
+          <div class="outc">
+            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            <span class="out-l" data-i18n="listenLbl">Listen&nbsp;port</span>
+            <input class="out-i" id="mitmPort" data-i18n-aria="listenLbl" aria-label="Listen port" type="text" spellcheck="false" placeholder="9339" value="9339">
+          </div>
+          <div class="div"></div>
+          <div class="outc">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M5 12l4-4M5 12l4 4M19 12l-4-4M19 12l-4 4"/></svg>
+            <span class="out-l" data-i18n="realLbl">Real&nbsp;server</span>
+            <input class="out-i" id="mitmUp" aria-label="Real server address" type="text" spellcheck="false" placeholder="host:port of the real server to forward to — e.g. game.example.com:9339" oninput="refreshBtn()">
+          </div>
+        </div>
+      </div>
+
+      <!-- Dynamic analysis: supported controls only; unavailable capabilities are explicit. -->
+      <div id="envRow" style="display:none; width:100%;">
+        <div class="sbx-cfg-grid">
+          <!-- Column 1: Analysis parameters -->
+          <div class="sc">
+            <div class="sc-hdr"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg><span class="sc-hdr-t">Analysis parameters</span></div>
+            <div class="sc-body" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 14px;">
+              <!-- No product time cap. Zero means no observation deadline. -->
+              <div class="sbx-duration-control">
+                <label class="seg-lbl" for="sbxDurationMode" data-i18n="sessionDuration">Session duration</label>
+                <select id="sbxDurationMode" onchange="syncSandboxDuration()" aria-describedby="sbxDurationHint">
+                  <option value="manual" data-i18n="untilStopped">Until stopped</option>
+                  <option value="timed" data-i18n="optionalTimer">With a timer</option>
+                </select>
+                <div class="sbx-duration-input" id="sbxDurationFields" hidden>
+                  <label for="sbx-r" data-i18n="durationSeconds">Seconds</label>
+                  <input type="number" id="sbx-r" min="5" step="1" value="3600" inputmode="numeric" oninput="syncSandboxDuration()" aria-describedby="sbxDurationHint">
+                </div>
+                <div class="pi2-desc" id="sbxDurationHint" data-i18n="durationManualHint">No automatic time limit. Use Stop to end observation; native execution also ends when the sample exits. Resource limits still apply.</div>
+              </div>
+
+              <!-- CPU + RAM caps: per-process limits for the sample only -->
+              <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                <div>
+                  <div class="seg-lbl" style="margin-bottom:6px">CPU cap · sample only</div>
+                  <div class="rr"><input type="range" class="rng" id="sbxcpu-r" aria-label="CPU cores" min="1" max="8" step="1" value="2" oninput="syncR('sbxcpu')"><div class="rval" id="sbxcpu-d">2</div></div>
+                  <div class="pi2-desc" style="margin-top:6px">The sample may use N cores max. Your Windows is not changed.</div>
+                </div>
+                <div>
+                  <div class="seg-lbl" style="margin-bottom:6px">RAM cap · sample only</div>
+                  <div class="rr"><input type="range" class="rng" id="sbxram-r" aria-label="RAM cap" min="128" max="8192" step="128" value="512" oninput="syncR('sbxram')"><div class="rval" id="sbxram-d">512 MB</div></div>
+                  <div class="pi2-desc" style="margin-top:6px">The sample is killed past N MB. Your RAM is not changed.</div>
+                </div>
+              </div>
+
+              <div class="sbx-capability-note" id="sbxLimitsNote"></div>
+              <details class="sbx-advanced"><summary><span>Execution, network &amp; capture</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary><div class="sbx-advanced-body">
+              <div>
+                <div class="seg-lbl" style="margin-bottom:6px">Launch arguments</div>
+                <input class="out-i" id="sbxCmdArgs" aria-label="Launch arguments" placeholder="args passed to the sample on launch">
+              </div>
+
+              <div class="div"></div>
+
+              <!-- Post-run options (Android target only) -->
+              <div class="sbx-capability-note" id="sbxAndroidOnlyNote" style="display:none">Android-only options — select an Android device or AVD as the target to enable them.</div>
+              <label class="tr" style="padding:0;"><span class="tsw"><input type="checkbox" id="sbxUninstall"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl">Uninstall after analysis</span><span class="tr-desc">Remove the app from device when run finishes</span></span></label>
+              <label class="tr" style="padding:0;"><span class="tsw"><input type="checkbox" id="sbxCapture"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl">Capture network traffic</span><span class="tr-desc">Runs tcpdump on the device. Requires root or an emulator image that ships it; the run reports if it is missing rather than writing an empty capture.</span></span></label>
+              <label class="tr" style="padding:0;"><span class="tsw"><input type="checkbox" id="sbxMITM" disabled><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl">HTTPS interception (mitmproxy)</span><span class="tr-desc">Unavailable in this UI until selected-device setup, CA trust and proxy restoration are verified. No HTTPS decryption is claimed.</span></span></label>
+
+              <div class="div"></div>
+
+              <!-- Instrumentation. Spawn and script are nested because neither
+                   means anything until instrumentation itself is on, and a flat
+                   list of three checkboxes hides that dependency. -->
+              <label class="tr" style="padding:0;"><span class="tsw"><input type="checkbox" id="sbxFrida" onchange="toggleSbxFridaOpts()"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl">Frida instrumentation</span><span class="tr-desc">Records dynamic code loading, exec, crypto, outbound connections and identifier access &rarr; frida.log</span></span></label>
+              <div id="sbxFridaOpts" style="display:none; flex-direction:column; gap:8px; padding-left:14px; margin-top:2px;">
+                <label class="tr" style="padding:0;"><span class="tsw"><input type="checkbox" id="sbxFridaSpawn" disabled><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl">Startup hooks (unavailable)</span><span class="tr-desc">Disabled: the existing respawn path first launches the app uninstrumented and cannot guarantee capture of its first startup.</span></span></label>
+                <div>
+                  <div class="seg-lbl" style="margin-bottom:6px">Custom script</div>
+                  <input class="out-i" id="sbxFridaScript" aria-label="Custom Frida script" type="text" spellcheck="false" placeholder="path to a .js file &mdash; empty uses the built-in hook set">
+                </div>
+              </div>
+
+              <div class="div"></div>
+
+              <!-- Network Options -->
+              <label class="tr" style="padding:0;"><span class="tsw"><input type="checkbox" id="netChk" onchange="syncNetToggle(this)"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl">Allow network access</span><span class="tr-desc" id="sbxNetworkHelp">Network access is never implicitly enabled.</span></span></label>
+
+              <!-- Sub-Network Options -->
+              <div id="sbxNetSubOpts" style="display:none; flex-direction:column; gap:8px; padding-left:14px; margin-top:2px;">
+                <label class="tr" style="padding:0;"><span class="tsw"><input type="checkbox" id="netMitm" disabled><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl">Route via built-in intercept proxy</span><span class="tr-desc">Unavailable: port forwarding alone does not route app traffic through a proxy.</span></span></label>
+                <label class="tr" style="padding:0;"><span class="tsw"><input type="checkbox" id="netFake" disabled><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl">Fake Net</span><span class="tr-desc">Unavailable: no backend implementation</span></span></label>
+                <div style="margin-top:4px;">
+                  <div class="seg-lbl" style="margin-bottom:4px">Route internet traffic through</div>
+                  <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <label class="tr" style="padding:0;"><span class="tsw"><input type="checkbox" id="netTor" disabled><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl">Route via TOR</span><span class="tr-desc">Unavailable</span></span></label>
+                    <label class="tr" style="padding:0;"><span class="tsw"><input type="checkbox" id="netRes" disabled><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl">Residential IP</span><span class="tr-desc">Unavailable</span></span></label>
+                  </div>
+                </div>
+              </div>
+              </div></details>
+            </div>
+          </div>
+
+          <!-- Column 2: Target Environment -->
+          <div class="sc">
+            <div class="sc-hdr"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg><span class="sc-hdr-t">Target Environment</span></div>
+            <div class="sc-body" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 14px;">
+              <!-- OS / target picker (populated from /api/env, gated by uploaded file type) -->
+              <div style="position:relative;">
+                <div class="seg-lbl" style="margin-bottom:6px">Operating system / target</div>
+                <button type="button" class="os-pick" id="osPickBtn" aria-expanded="false" aria-controls="osMenu" onclick="toggleOsMenu(event)">
+                  <span class="os-pick-ico" id="osPickIco"></span>
+                  <span class="os-pick-name" id="osPickName">Detecting environments…</span>
+                  <span class="os-pick-badge" id="osPickBadge" style="display:none"></span>
+                  <svg class="os-pick-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                </button>
+                <div class="os-menu" id="osMenu" style="display:none"></div>
+              </div>
+              <div class="os-note" id="osNote" style="display:none" role="status"></div>
+              <div class="sbx-discovery"><span id="envDiscoveryStatus" role="status">Checking environments…</span><button type="button" class="sbx-secondary-button" onclick="refreshEnvironments(true)">Refresh devices</button></div>
+
+              <section id="vmwarePanel" aria-label="Управление VMware" style="display:none; flex-direction:column; gap:12px; min-width:0; overflow-wrap:anywhere; font-size:14px; border:1px solid var(--line2); border-radius:8px; padding:12px;">
+                <strong>VMware · запуск в гостевой Windows</strong>
+                <p style="margin:0; font-size:14px;">Анализатор включит выбранную ВМ, передаст файл через VMware Tools и сохранит отчёт на основном ПК. После сеанса гостевая Windows будет выключена.</p>
+                <button id="vmwareInspect" type="button" class="sbx-secondary-button" style="white-space:normal; border:1px solid var(--input-line);" onclick="vmwareAction('inspect')">Проверить настройки и снимки</button>
+                <button id="vmwarePrepare" type="button" class="sbx-secondary-button" style="white-space:normal; border:1px solid var(--input-line);" onclick="vmwareAction('prepare')">Подготовить выключенную ВМ</button>
+                <p style="margin:0; font-size:13px;">Подготовка отключает сеть, общие папки, буфер обмена, перетаскивание и USB. Исходный VMX сохраняется рядом с ВМ.</p>
+                <div id="vmwareStatus" role="status" aria-live="polite">Выберите проверку. Она не запускает Windows и не передаёт файлы.</div>
+                <details id="vmwareAudit">
+                  <summary id="vmwareAuditSummary">Проверка конфигурации</summary>
+                  <ul id="vmwareChecks" style="margin:8px 0 0; padding-left:20px; font-size:14px;"></ul>
+                </details>
+                <label for="vmwareDesktop">Где открыть приложение</label>
+                <select class="out-i" id="vmwareDesktop" aria-describedby="vmwareDesktopHelp">
+                  <option value="interactive" selected>Рабочий стол гостевой Windows (по умолчанию)</option>
+                  <option value="background">Фоновая сессия</option>
+                </select>
+                <p id="vmwareDesktopHelp" style="font-size:14px;">Для видимого запуска после включения ВМ откройте Screen и войдите на рабочий стол под указанной ниже учётной записью. Ожидание входа — до 90 секунд; затем запуск отменяется. Файл передаётся через VMware Tools; общие папки и буфер обмена остаются выключенными.</p>
+                <label for="vmwareUser">Пользователь гостевой Windows</label>
+                <input class="out-i" id="vmwareUser" type="text" autocomplete="off" spellcheck="false" placeholder="Имя учётной записи в гостевой Windows" oninput="vmwareCredentialsChanged()" required>
+                <label for="vmwarePassword">Пароль гостевой Windows</label>
+                <input class="out-i" id="vmwarePassword" type="password" autocomplete="off" placeholder="Пароль этой учётной записи, не PIN-код" oninput="vmwareCredentialsChanged()" required>
+                <button id="vmwareLoadCredentials" type="button" class="sbx-secondary-button" style="white-space:normal; border:1px solid var(--input-line);" onclick="document.getElementById('vmwareCredentialFile').click()">Загрузить логин и пароль из файла…</button>
+                <input id="vmwareCredentialFile" type="file" accept=".json,application/json" hidden onchange="importVMwareCredentials(this.files[0])">
+                <small id="vmwareCredentialStatus" role="status" aria-live="polite" style="font-size:13px;"></small>
+                <small style="font-size:13px;">Имя и пароль должны относиться к одной учётной записи гостевой Windows. VMware не принимает пустой пароль. Можно загрузить файл guest-login.json, созданный при настройке тестовой учётки. Данные используются только для текущего запуска; в госте нужны VMware Tools.</small>
+                <div id="vmwareSnapshots" style="display:none; flex-direction:column; gap:8px;">
+                  <label for="vmwareSnapshot">Подтверждённый снимок выключенной ВМ</label>
+                  <select class="out-i" style="min-width:0; width:100%;" id="vmwareSnapshot" aria-label="Снимок для восстановления" aria-describedby="vmwareSnapshotName"></select>
+                  <output id="vmwareSnapshotName" style="font:14px/1.5 var(--mono); overflow-wrap:anywhere;"></output>
+                  <button id="vmwareCreate" type="button" class="sbx-secondary-button" style="white-space:normal; border:1px solid var(--input-line);" onclick="vmwareAction('create-baseline')" disabled>Создать исходный снимок</button>
+                  <button id="vmwareRestore" type="button" class="sbx-secondary-button" style="white-space:normal; border:1px solid var(--input-line);" onclick="vmwareAction('restore-baseline')" disabled>Восстановить выбранный снимок…</button>
+                  <small style="font-size:14px;">Операции разрешены только при выключенной ВМ. Восстановление удалит изменения после снимка. Снимок не является защитой основного ПК.</small>
+                </div>
+              </section>
+
+              <!-- Windows / native host options -->
+              <div id="sbxWinConfigOpts" style="display:none; flex-direction:column; gap:12px;">
+                <div class="sbx-native-notice" id="sbxNativeNotice">Native Windows execution runs on the analyzer host, NOT in a VM. Filesystem access is not isolated; firewall rules cover the launched executable, not its descendants. User-mode limits cannot contain kernel exploits or drivers — a crashing sample can bluescreen this PC. Never use your everyday PC for unknown samples.</div>
+                <div>
+                  <div class="seg-lbl" style="margin-bottom:6px">Monitoring depth</div>
+                  <div class="pseg">
+                    <button type="button" class="pbtn on" id="db-basic" data-p="basic" onclick="selDepth(this)">basic</button>
+                    <button type="button" class="pbtn" disabled title="API/WFP collectors are not implemented" id="db-trace" data-p="trace" onclick="selDepth(this)">trace</button>
+                    <button type="button" class="pbtn" disabled title="Not implemented; synthetic telemetry is disabled" id="db-forensic" data-p="forensic" onclick="selDepth(this)">forensic</button>
+                    <button type="button" class="pbtn" disabled title="Not implemented; synthetic telemetry is disabled" id="db-paranoid" data-p="paranoid" onclick="selDepth(this)">paranoid</button>
+                  </div>
+                  <div class="pi2-desc" style="margin-top:6px">Basic: observed processes, sockets, workspace / autorun differences. Trace, kernel capture, time-warp and VSS rollback are unavailable; no generated evidence is used.</div>
+                </div>
+              </div>
+
+              <!-- Android device options -->
+              <div id="sbxAndConfigOpts" style="display:none; flex-direction:column; gap:12px;">
+                <div>
+                  <div class="seg-lbl" style="margin-bottom:6px">Device / AVD</div>
+                  <div class="sbx-capability-note" id="androidTargetDetail">Choose a device in the target picker above.</div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                  <div>
+                    <div class="seg-lbl" style="margin-bottom:6px">Screen resolution</div>
+                    <select class="out-i" style="width:100%;" id="sbxResolution" aria-label="Screen resolution">
+                      <option value="">Device default</option>
+                      <option value="720p">720p (HD)</option>
+                      <option value="1080p">1080p (Full HD)</option>
+                      <option value="1440p">1440p (QHD)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div class="seg-lbl" style="margin-bottom:6px">Orientation</div>
+                    <div class="pseg" id="sbxOriSeg">
+                      <button type="button" class="pbtn on" data-ori="" onclick="selOri(this)">default</button>
+                      <button type="button" class="pbtn" data-ori="portrait" onclick="selOri(this)">portrait</button>
+                      <button type="button" class="pbtn" data-ori="landscape" onclick="selOri(this)">landscape</button>
+                    </div>
+                  </div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                  <div>
+                    <div class="seg-lbl" style="margin-bottom:6px">Locale</div>
+                    <select class="out-i" style="width:100%;" id="sbxLocale" aria-label="Device language">
+                      <option value="">Device default</option>
+                      <option value="en-US">English (en-US)</option>
+                      <option value="ru-RU">Русский (ru-RU)</option>
+                      <option value="de-DE">Deutsch (de-DE)</option>
+                      <option value="zh-CN">中文 (zh-CN)</option>
+                      <option value="ja-JP">日本語 (ja-JP)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <div class="seg-lbl" style="margin-bottom:6px">Timezone</div>
+                    <select class="out-i" style="width:100%;" id="sbxTimezone" aria-label="Device timezone">
+                      <option value="">Device default</option>
+                      <option value="UTC">UTC</option>
+                      <option value="Asia/Omsk">Asia/Omsk</option>
+                      <option value="Europe/Moscow">Europe/Moscow</option>
+                      <option value="Europe/London">Europe/London</option>
+                      <option value="America/New_York">America/New_York</option>
+                      <option value="Asia/Shanghai">Asia/Shanghai</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- mode info -->
+      <div class="minfo" id="minfo">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9"/><path d="M12 8h.01M11 12h1v4h1"/></svg>
+        <span id="minfo-t"></span>
+      </div>
+
+      <div class="sc sc-full" id="decodeSettings" style="display:none">
+        <div class="sc-hdr"><span class="sc-hdr-t" data-i18n="decodeOptions">Decoded project</span></div>
+        <label class="tr"><span class="tsw"><input type="checkbox" id="decodeJavaView"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="javaView">Java pseudocode view</span><span class="tr-desc" data-i18n="nativeJavaViewD">Add readable Java pseudocode alongside Smali; for inspection only</span></span></label>
+        <label class="tr"><span class="tsw"><input type="checkbox" id="decodeCopyOriginal" checked><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="copyOriginal">Copy original files</span><span class="tr-desc" data-i18n="copyOriginalD">Include original META-INF / unknown files in decoded output</span></span></label>
+      </div>
+
+      <div class="sc sc-full" id="buildSettings" style="display:none">
+        <div class="sc-hdr"><span class="sc-hdr-t" data-i18n="buildOptions">APK packaging</span></div>
+        <div class="outc"><label class="out-l" for="buildCompression" data-i18n="buildCompression">Compression</label><select class="out-i" id="buildCompression"><option value="fast" data-i18n="compressionFast">Fast</option><option value="balanced" selected data-i18n="compressionBalanced">Balanced</option><option value="best" data-i18n="compressionBest">Smallest file</option></select></div>
+        <label class="tr"><span class="tsw"><input type="checkbox" id="buildNoSign"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="buildUnsigned">Skip signing</span><span class="tr-desc" data-i18n="buildUnsignedD">Create an unsigned APK for a separate signing step; it cannot be installed directly</span></span></label>
+      </div>
+
+      <!-- profiles (full only) -->
+      <div id="profiles">
+        <div class="slbl" id="profileLabel"><span data-i18n="profilesLbl">Analysis profile</span> <span class="section-note" data-i18n="depthNote">Depth &amp; estimated time</span></div>
+        <div class="prof-row" role="group" aria-labelledby="profileLabel">
+          <button type="button" class="pcard" data-v="quick" onclick="selProfile(this)" aria-pressed="false">
+            <span class="p-ico"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 10-12h-7z"/></svg></span>
+            <span class="p-name" data-i18n="profQuick">Quick</span><span class="p-time">~30s</span><span class="p-desc" data-i18n="profQuickD">Critical patterns only</span>
+          </button>
+          <button type="button" class="pcard on" data-v="balanced" onclick="selProfile(this)" aria-pressed="true">
+            <span class="p-ico"><svg viewBox="0 0 24 24"><path d="M4 16a8 8 0 0 1 16 0"/><path d="M12 16l4-4"/><circle cx="12" cy="16" r="1.1"/></svg></span>
+            <span class="p-name" data-i18n="profBal">Balanced</span><span class="p-time">~2 min</span><span class="p-desc" data-i18n="profBalD">Recommended default</span>
+          </button>
+          <button type="button" class="pcard" data-v="deep" onclick="selProfile(this)" aria-pressed="false">
+            <span class="p-ico"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/><path d="M11 8v6M8 11h6"/></svg></span>
+            <span class="p-name" data-i18n="profDeep">Deep</span><span class="p-time">~5 min</span><span class="p-desc" data-i18n="profDeepD">Call graph + full pass</span>
+          </button>
+          <button type="button" class="pcard" data-v="paranoid" onclick="selProfile(this)" aria-pressed="false">
+            <span class="p-ico"><svg viewBox="0 0 24 24"><path d="M12 3l7.5 2.7v5.6c0 4.6-3.2 7.5-7.5 8.7-4.3-1.2-7.5-4.1-7.5-8.7V5.7z"/><path d="M9 12l2 2 4-4"/></svg></span>
+            <span class="p-name" data-i18n="profPar">Paranoid</span><span class="p-time">~10 min+</span><span class="p-desc" data-i18n="profParD">Maximum depth</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- settings grid (full only) -->
+      <details class="advanced-settings" id="settingsGrid">
+        <summary class="settings-summary"><span class="summary-icon"><svg viewBox="0 0 24 24"><path d="M4 7h9m4 0h3M4 17h3m4 0h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></span><span class="summary-title"><span data-i18n="modulesT">Modules &amp; output</span><span class="summary-sub" data-i18n="modulesS">Engines, MobSF, insights and export options</span></span><span class="summary-value" id="moduleSummary">Defaults</span><svg class="disclosure-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>
+        <div class="sg">
+        <div class="sc">
+          <div class="sc-hdr"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2 2M17.8 17.8l2 2M2 12h3M19 12h3M4.2 19.8l2-2M17.8 6.2l2-2"/></svg><span class="sc-hdr-t" data-i18n="enginesT">Analysis Engines</span></div>
+          <div class="sc-body">
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-callgraph"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="mCallgraph">Call Graph</span><span class="tr-desc" data-i18n="mCallgraphD">Method call tree for deeper detection</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-correlations"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="mCorr">Cross-file Correlations</span><span class="tr-desc" data-i18n="mCorrD">Patterns spanning multiple files</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-deep-scan"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="mDeep">Deep Bytecode Scan</span><span class="tr-desc" data-i18n="mDeepD">Instruction-level analysis pass</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-medium-all"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="mBundle">Medium Bundle</span><span class="tr-desc" data-i18n="mBundleD">Play Store, SBOM, certs, perms, NIAP</span></span></label>
+          </div>
+        </div>
+
+        <div class="sc">
+          <div class="sc-hdr"><svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg><span class="sc-hdr-t" data-i18n="mobsfT">MobSF Suite</span></div>
+          <div class="sc-body">
+                        <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-sast-rules"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl">SAST Rules <span class="tbg" id="sastCount"></span></span><span class="tr-desc" data-i18n="mSastD">CWE / OWASP / MASVS findings</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-trackers"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl">Trackers <span class="tbg2" id="trackerCount"></span></span><span class="tr-desc" data-i18n="mTrackD">Exodus Privacy database</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-nsc-audit"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="mNsc">NSC Audit</span><span class="tr-desc">network_security_config.xml</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-manifest-audit"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="mManifest">Manifest Audit</span><span class="tr-desc" data-i18n="mManifestD">Exported components, debuggable</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-apkid"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl">APKiD</span><span class="tr-desc" data-i18n="mApkidD">Packer / obfuscator fingerprint</span></span></label>
+          </div>
+        </div>
+
+        <div class="sc">
+          <div class="sc-hdr"><svg viewBox="0 0 24 24"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg><span class="sc-hdr-t" data-i18n="insT">Insight Modules</span></div>
+          <div class="sc-body">
+                        <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-jni-bridge"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="mJni">JNI Bridge</span><span class="tr-desc" data-i18n="mJniD">Java / DEX to native mapping</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-privacy"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="mPriv">Privacy Score</span><span class="tr-desc" data-i18n="mPrivD">Sources / sinks, tracker SDKs</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-graph-explorer"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="mGraph">Graph Explorer</span><span class="tr-desc" data-i18n="mGraphD">Interactive dependency graph</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-ml-patch"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="mPatch">ML Smali Patcher</span><span class="tr-desc" data-i18n="mPatchD">Auto patch-point candidates</span></span></label>
+          </div>
+        </div>
+
+        <div class="sc">
+          <div class="sc-hdr"><span class="sc-hdr-t" data-i18n="bundleT">JS / Hermes bundles</span></div>
+          <div class="sc-body">
+            <label class="tr"><span class="tri"><span class="tr-lbl" data-i18n="bundleBudget">Hermes export budget</span><select id="bundleBudget"><option value="large" data-i18n="budgetLarge">Large: 100k functions / 512 MiB text</option><option value="compact" data-i18n="budgetCompact">Compact: 5k functions / 64 MiB text</option></select></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-bundle-export" checked><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="bundleExport">Export bundle code / disassembly</span><span class="tr-desc" data-i18n="bundleExportD">Text JS → deobfuscated.js; Hermes → disassembly + metadata, NOT original JS</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-bundle-patches"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="bundlePatches">JS patch candidates (dry-run)</span><span class="tr-desc" data-i18n="bundlePatchesD">Download Markdown + JSON; Hermes scan-only, original never modified</span></span></label>
+          </div>
+        </div>
+
+        <div class="sc">
+          <div class="sc-hdr"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h8"/></svg><span class="sc-hdr-t" data-i18n="outT">Output Options</span></div>
+          <div class="sc-body">
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-save-decoded"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="saveDecoded">Save decoded APK / DEX</span><span class="tr-desc" data-i18n="saveDecodedD">Write Smali + decoded resources to decoded/ alongside reports; APK/DEX input only</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-java-view"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="javaView">Java pseudocode view</span><span class="tr-desc" data-i18n="javaViewD">Requires Save decoded APK or Decode mode; not original Java source</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-no-resources"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="noResources">Skip resource decoding</span><span class="tr-desc" data-i18n="noResourcesD">For decoded output only; analysis is unchanged</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-copy-original"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="copyOriginal">Copy original APK metadata</span><span class="tr-desc" data-i18n="copyOriginalD">Include original META-INF / unknown files in decoded output</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-sarif"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="mSarif">SARIF Output</span><span class="tr-desc" data-i18n="mSarifD">For GitHub / GitLab scanning</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-artifacts"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="mArt">Artifacts Panel</span><span class="tr-desc" data-i18n="mArtD">Extract images / models / .so</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-fp-strict"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="mFp">FP Strict Mode</span><span class="tr-desc" data-i18n="mFpD">Confirmed app / SDK risks only</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-no-image-blur"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="mBlur">No Image Blur</span><span class="tr-desc" data-i18n="mBlurD">Disable blur on sensitive images</span></span></label>
+            <label class="tr"><span class="tsw"><input type="checkbox" class="fg" data-f="-gamemode"><span class="ttrack"></span></span><span class="tri"><span class="tr-lbl" data-i18n="mGame">Game Mode</span><span class="tr-desc" data-i18n="mGameD">XP, threat scoring, ranks</span></span></label>
+          </div>
+        </div>
+        </div>
+      </details>
+
+      <!-- tuning (full + machine-code + firmware) -->
+      <details class="advanced-settings" id="tuning">
+        <summary class="settings-summary"><span class="summary-icon"><svg viewBox="0 0 24 24"><path d="M4 13h4l3-8 4 14 3-6h2"/></svg></span><span class="summary-title"><span data-i18n="repT">Report &amp; performance</span><span class="summary-sub" data-i18n="repS">Format, workers and execution limits</span></span><span class="summary-value" id="tuningSummary">Default report</span><svg class="disclosure-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>
+        <div class="tuning-body">
+        <div class="seg-wrap">
+          <div class="seg-lbl" data-i18n="repFmt">Report Format</div>
+          <div class="seg" role="group" aria-label="Report format">
+            <div class="seg-ind" id="segInd"></div>
+            <button class="sbtn" data-v="" onclick="selSeg(this)" type="button" aria-pressed="false">auto</button>
+            <button class="sbtn" data-v="short" onclick="selSeg(this)" type="button" aria-pressed="false">short</button>
+            <button class="sbtn on" data-v="default" onclick="selSeg(this)" type="button" aria-pressed="true">default</button>
+            <button class="sbtn" data-v="full" onclick="selSeg(this)" type="button" aria-pressed="false">full</button>
+            <button class="sbtn" data-v="all" onclick="selSeg(this)" type="button" aria-pressed="false">all</button>
+          </div>
+        </div>
+        <div class="div"></div>
+        <div class="pg">
+          <div class="pi2">
+            <div class="pi2-lbl" data-i18n="workers">Workers</div>
+            <div class="rr"><input type="range" class="rng" id="w-r" aria-label="Workers" min="0" max="16" value="0" oninput="syncR('w')"><div class="rval" id="w-d">auto</div></div>
+            <div class="pi2-desc" data-i18n="workersD">0 = auto (CPU cores)</div>
+          </div>
+          <div class="pi2">
+            <div class="pi2-lbl" data-i18n="timeout">Timeout</div>
+            <div class="rr"><input type="range" class="rng" id="t-r" aria-label="Timeout" min="0" max="3600" step="30" value="300" oninput="syncR('t')"><div class="rval" id="t-d">300 s</div></div>
+            <div class="pi2-desc" data-i18n="timeoutD">0 = no limit</div>
+          </div>
+          <div class="pi2" id="fpWrap">
+            <div class="pi2-lbl" data-i18n="fpMin">FP Min Score</div>
+            <div class="rr"><input type="range" class="rng" id="fp-r" aria-label="Minimum false-positive score" min="-1" max="100" value="-1" oninput="syncR('fp')"><div class="rval" id="fp-d">auto</div></div>
+            <div class="pi2-desc" data-i18n="fpMinD">-1 = profile default</div>
+          </div>
+        </div>
+        </div>
+      </details>
+
+      <!-- output dir (always) -->
+      <details class="advanced-settings" id="outRow">
+        <summary class="settings-summary"><span class="summary-icon"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v10H3z"/></svg></span><span class="summary-title"><span data-i18n="saveT">Save results</span><span class="summary-sub" data-i18n="saveS">Each scan gets its own persistent folder</span></span><span class="summary-value mono" id="outputSummary">Workspace / Scans</span><svg class="disclosure-chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></summary>
+        <div class="output-body">
+        <div class="outc">
+          <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <span class="out-l" data-i18n="resName">Result name</span>
+          <input class="out-i" id="outname" aria-label="Result name" type="text" spellcheck="false" data-i18n-ph="resNamePh" placeholder="e.g. myapp-v1 (display name; scans never overwrite each other)">
+        </div>
+        <div class="outc" style="margin-top:6px">
+          <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <span class="out-l" data-i18n="wsFolder">Workspace folder</span>
+          <input class="out-i" id="outdir" aria-label="Workspace folder" type="text" spellcheck="false" data-i18n-ph="wsFolderPh" placeholder="Scans (default) — or a relative folder such as Projects/MyMod">
+        </div>
+        </div>
+      </details>
+
+      <!-- The primary action summarises the current selection without covering controls. -->
+      <div class="run-bar" id="runBar">
+        <div class="run-context"><span class="run-indicator" aria-hidden="true"></span><div class="run-copy"><div class="run-title" id="runTitle">No file selected</div><div class="run-note" id="runNote" aria-live="polite">Choose a target file to begin.</div></div></div>
+        <label class="sbx-consent"><input type="checkbox" id="sbxConsent" onchange="refreshBtn()"><span id="sbxConsentText" data-i18n="consent">I am using a disposable analysis host / device. I understand that execution is real, is not a VM-isolated sandbox, and a malicious sample can crash this machine (including BSOD).</span></label>
+        <label class="sbx-net-toggle" title="Same as Allow network access in the settings below"><span class="tsw"><input type="checkbox" id="sbxNetToggle" onchange="syncNetToggle(this)"><span class="ttrack"></span></span><span><span data-i18n="internet">Internet:</span> <b id="sbxNetToggleState">off</b></span></label>
+        <button class="scan-btn" id="sbtn" type="button" disabled onclick="primaryAction()" aria-describedby="runNote">
+        <svg width="15" height="15" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <span id="sbtn-t">Analyze</span>
+        </button>
+      </div>
+
+      <!-- progress -->
+      <div class="prog" id="prog">
+        <div class="ph"><h3 id="pt" role="status">Working…</h3><div class="spin" id="ps"></div></div>
+        <div class="pb-wrap"><div class="pb" id="pb"></div></div>
+        <div class="log" id="log" role="log" aria-label="Analysis log" tabindex="0"></div>
+      </div>
+
+      <!-- Live Sandbox Detonation Dashboard -->
+      <div class="sbx-dash" id="liveSbxDash" data-phase="setup" style="display:none">
+        <div class="sbx-workspace-toolbar"><div class="sbx-workspace-title"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M3 11h4l2-3 3 6 2-3h7M8 21h8M12 17v4"/></svg><h1>Dynamic analysis</h1><span class="sbx-session-state" id="sbxSessionState">New session</span></div><button class="sbx-secondary-button" id="sbxNewSession" type="button" onclick="sbxNewAnalysis()"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>New analysis</button></div>
+        <div class="sbx-vm-panel">
+            <div class="sbx-panel-title sbx-viewer-toolbar"><span class="sbx-viewer-kind" id="sbxViewerKind">Environment</span><span class="sbx-target-caption" id="sbxOsName">No target selected</span><span class="sbx-view-seg" id="sbxViewSeg" role="group" aria-label="Viewport view"><button type="button" class="sbx-view-btn on" id="sbxViewOutputBtn" onclick="switchSbxView('output')">Output</button><button type="button" class="sbx-view-btn" id="sbxViewScreenBtn" onclick="switchSbxView('screen')">Screen</button></span><button class="sbx-icon-button" id="sbxFullscreenBtn" type="button" onclick="toggleSandboxFullscreen()" aria-label="Expand environment view" title="Expand environment view"><svg viewBox="0 0 24 24"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button></div>
+            <div class="sbx-vm-viewport" id="sbxViewport">
+              <section class="sbx-run-error" id="sbxFailurePanel" role="alert" hidden>
+                <div class="sbx-run-error-inner"><span class="sbx-error-kicker">EXECUTION ERROR · NOT A DETECTION</span>
+                <h2 id="sbxFailureTitle">Analysis failed</h2><p id="sbxFailureMessage"></p>
+                <div class="sbx-error-guidance" id="sbxFailureHelp"></div>
+                <div class="sbx-error-actions"><button type="button" class="sbx-secondary-button" id="sbxReviewSettings" onclick="sbxReturnToMenu()">Review settings</button><button type="button" class="sbx-secondary-button" onclick="downloadSandboxDiagnostics()">Export diagnostics</button></div>
+                <details class="sbx-error-raw"><summary>Original engine output</summary><pre id="sbxFailureRaw"></pre></details>
+                </div>
+              </section>
+              <!-- Native / VM console: shows the real captured output + live event feed -->
+              <div class="sbx-console" id="sbxConsole" style="display:none">
+                <div class="sbx-console-bar">
+                  <span class="sbx-console-ico" id="sbxConsoleIco"></span>
+                  <span class="sbx-console-title" id="sbxConsoleTitle">console</span>
+                  <span class="sbx-console-live"><span class="sbx-live-dot"></span><span id="sbxConsoleState">waiting</span></span>
+                </div>
+                <div class="sbx-console-body" id="sbxConsoleBody"></div>
+              </div>
+
+              <div class="sbx-vmware-screen" id="sbxVMwareScreen" style="display:none">
+                <div class="sbx-vmware-frame">
+                  <div id="vmwareConsole" class="sbx-vmware-console" hidden></div>
+                  <img id="vmwareScreenImage" alt="VMware guest screen" hidden>
+                  <div class="sbx-stream-placeholder" id="vmwareScreenPlaceholder">
+                    <strong data-i18n="vmwareScreenWaiting">Waiting for the VMware screen</strong>
+                    <span data-i18n="vmwareScreenHelp">Click the guest screen to use the mouse and keyboard. Switching to Output releases control.</span>
+                  </div>
+                </div>
+                <div class="sbx-vmware-console-bar"><div class="sbx-vmware-screen-status" id="vmwareScreenStatus" role="status"></div><button type="button" class="keyb" id="vmwareCtrlAltDel" onclick="vmwareSendCtrlAltDel()" disabled>Ctrl+Alt+Del</button></div>
+              </div>
+
+              <!-- Android stream container -->
+              <div id="sbxAndroidStream" style="display:none; width:100%; height:100%; flex-direction:column; position:relative; background:var(--console);">
+                <!-- Main stream area -->
+                <div style="flex:1; position:relative; overflow:hidden; padding:10px; display:flex; align-items:center; justify-content:center;">
+                  <div class="sbx-stream-placeholder" id="sbxStreamPlaceholder"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M11 18h2"/></svg><strong id="sbxStreamPlaceholderTitle">Waiting for the device screen</strong><span id="sbxStreamPlaceholderNote">The connected Android device will appear here when frames arrive.</span></div>
+                  <!-- Actual streamed device frames only. -->
+                  <div class="live-bezel" id="liveBezel">
+                    <img class="phone-screen" id="liveScreen" alt="device screen" style="display:none; max-width:100%;  object-fit:contain; cursor:crosshair;">
+                    <canvas class="phone-screen" id="liveCanvas" style="max-width:100%;  object-fit:contain; cursor:crosshair;"></canvas>
+                  </div>
+                </div>
+                
+                <!-- Sleek control bar at the bottom of the stream -->
+                <div class="stream-controls">
+                  <!-- Left: Android Nav -->
+                  <div style="display:flex; gap:10px;">
+                    <button class="navb" title="Back" onclick="liveKey('KEYCODE_BACK')"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></button>
+                    <button class="navb" title="Home" onclick="liveKey('KEYCODE_HOME')"><span class="ci"></span></button>
+                    <button class="navb" title="Recents" onclick="liveKey('KEYCODE_APP_SWITCH')"><span class="sq"></span></button>
+                  </div>
+                  
+                  <!-- Center: Hardware keys -->
+                  <div style="display:flex; gap:6px;">
+                    <button class="keyb" onclick="liveKey('KEYCODE_VOLUME_DOWN')">Vol -</button>
+                    <button class="keyb" onclick="liveKey('KEYCODE_VOLUME_UP')">Vol +</button>
+                  </div>
+                  
+                  <!-- Right: Stream Controls -->
+                  <div style="display:flex; gap:8px; align-items:center;">
+                    <button class="keyb" onclick="fallbackMjpeg()" title="Switch to screenshot mode (fixes black screen)">Screencap</button>
+                  </div>
+                </div>
+
+                <div id="liveAudioStatus2" style="position:absolute;bottom:60px;left:50%;transform:translateX(-50%);z-index:10;font-size:10px;color:#bcd;background:rgba(0,0,0,.5);padding:2px 8px;border-radius:5px;display:none"></div>
+
+                <!-- Locked / sleeping screen overlay -->
+                <div id="sbxLockOverlay" style="display:none;position:absolute;inset:0;z-index:9;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:rgba(10,10,16,.82);backdrop-filter:blur(3px);text-align:center;padding:20px">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#aab" stroke-width="1.6"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+                  <div style="color:#dde;font-size:14px;font-weight:600">Device is locked</div>
+                  <div style="color:#99a;font-size:12px;max-width:240px">Unlock the phone screen to see the live stream.</div>
+                </div>
+              </div>
+
+              <!-- Idle placeholder shown before a run starts -->
+              <div class="sbx-vm-idle" id="sbxVmIdle">
+                <div class="sbx-intake-heading"><span class="sbx-intake-kicker">NEW SESSION</span><h2 id="sbxIntakeTitle">Prepare an analysis.</h2><p id="sbxIntakeHint">Upload a sample and configure its execution environment.</p></div>
+                <div id="sbxIntakeSlot"></div>
+                <div class="sbx-capabilities" id="sbxIntakeTargetHint">Waiting for host detection.</div>
+              </div>
+            </div>
+            <div class="sbx-resize-handle" id="sbxResizeHandle" title="Drag to resize panels · double-click to reset" onmousedown="sbxResizeStart(event)" ondblclick="sbxResetRows()"><span></span></div>
+          </div>
+        <aside class="sbx-setup-panel" id="sbxSetupPanel" aria-label="Session setup"><div class="sbx-setup-heading"><h2>Session setup</h2><span>Configure before execution</span></div><div class="sbx-config-scroll" id="sbxConfigSlot"></div><div id="sbxRunSlot"></div></aside>
+        <aside class="sbx-monitor" id="sbxMonitor" aria-label="Session and process inspector"><div class="sbx-topbar">
+          <div class="sbx-meta">
+            <div class="sbx-os-ico" id="sbxOsIco">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M3 5.5 10.5 4.4v7.1H3zM10.5 12.5v7.1L3 18.5v-6zM11.8 4.2 21 3v8.5h-9.2zM21 12.5V21l-9.2-1.3v-7.2z"/></svg>
+            </div>
+            <div class="sbx-file-info">
+              <div class="sbx-fn" id="sbxFileName">No sample selected</div>
+              <div class="sbx-md5" id="sbxMD5">MD5: —</div>
+              <div class="sbx-tags" id="sbxTags">
+                <span class="sbx-tag evasion" id="tagEvasion" style="display:none">Evasion</span>
+                <span class="sbx-tag injection" id="tagInjection" style="display:none">Injection</span>
+                <span class="sbx-tag network" id="tagNetwork" style="display:none">Network</span>
+              </div>
+            </div>
+          </div>
+          <div class="sbx-timer-panel">
+            <div class="sbx-timer" id="sbxTimer">01<span>:</span>00</div>
+            <div class="sbx-timer-btns">
+              <span class="sbx-time-label" id="sbxTimeLabel">time left</span>
+              <button class="sbx-tbtn stop-btn sbx-stop-btn" id="sbxStopBtn" type="button" onclick="sbxStop()" disabled>Stop</button>
+            </div>
+          </div>
+          <div class="sbx-perf-panel" id="sbxPerfPanel" style="visibility:hidden">
+            <div class="sbx-perf-bar">
+              <div class="sbx-perf-lbl">CPU <span id="sbxCpuVal">—</span></div>
+              <div class="sbx-bar-bg"><div class="sbx-bar-fill" id="sbxCpuFill" style="width:0%"></div></div>
+            </div>
+            <div class="sbx-perf-bar">
+              <div class="sbx-perf-lbl">RAM <span id="sbxRamVal">—</span></div>
+              <div class="sbx-bar-bg"><div class="sbx-bar-fill" id="sbxRamFill" style="width:0%"></div></div>
+            </div>
+            <div class="sbx-perf-host">host</div>
+          </div>
+        </div><div class="sbx-proc-panel">
+            <div class="sbx-panel-title">Processes <span id="sbxProcCount">0</span></div>
+            <div class="sbx-proc-filter">
+              <input type="text" class="sbx-proc-input" id="sbxProcInput" aria-label="Filter processes" placeholder="Filter by process or PID" oninput="filterSbxProcs()">
+            </div>
+            <label class="sbx-flag-filter"><input type="checkbox" id="sbxFlaggedOnly" onchange="filterSbxProcs()">Only flagged processes</label>
+            <div class="sbx-proc-tree" id="liveProcessTree" aria-label="Process tree">
+              <!-- Dynamically populated process tree -->
+            </div>
+            <div class="sbx-process-detail" id="sbxProcessDetail" hidden><div class="sbx-detail-label"><span>Selected process</span><button type="button" class="sbx-detail-close" onclick="deselectSandboxProcess()" aria-label="Clear process selection">×</button></div><div id="sbxSelectedProcess"></div><code id="sbxSelectedCommand"></code></div>
+            <!-- Engine activity feed: install / launch / capture status lines so
+                 the user can see what the sandbox is actually doing. -->
+            <div class="sbx-engine-feed" id="sbxEngineFeed">
+              <div class="sbx-engine-feed-hdr">Engine activity</div>
+              <div class="sbx-engine-feed-body" id="sbxEngineFeedBody"></div>
+            </div>
+          </div></aside>
+        <div class="sbx-net-tabs">
+          <div class="sbx-tab-btn-row" role="tablist" aria-label="Captured activity">
+            <button class="sbx-tab-btn" data-sbxtab="activity" onclick="switchSbxTab('activity')"><span class="sbx-tab-label" data-i18n="activityTitle">Activity</span> <span id="sbxActivityCount">0</span></button>
+            <button class="sbx-tab-btn active" data-sbxtab="http" onclick="switchSbxTab('http')">HTTP Requests <span id="sbxHttpCount">0</span></button>
+            <button class="sbx-tab-btn" data-sbxtab="conn" onclick="switchSbxTab('conn')">Connections <span id="sbxConnCount">0</span></button>
+            <button class="sbx-tab-btn" data-sbxtab="dns" onclick="switchSbxTab('dns')">DNS Requests <span id="sbxDnsCount">0</span></button>
+            <button class="sbx-tab-btn" data-sbxtab="threats" onclick="switchSbxTab('threats')">Threats <span id="sbxThreatCount">0</span></button>
+            <button class="sbx-tab-btn" data-sbxtab="frida" onclick="switchSbxTab('frida')" id="fridaTabBtn" style="color:var(--vio2)">Frida REPL</button>
+            <button class="sbx-tab-btn" data-sbxtab="report" onclick="switchSbxTab('report')" id="sbxReportTab" disabled>Report</button>
+          </div>
+          <div class="sbx-event-toolbar"><label class="sbx-event-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg><input type="search" id="sbxEventFilter" placeholder="Filter captured events" aria-label="Filter captured events" oninput="filterSandboxRows()"></label><span class="sbx-event-caption" id="sbxEventCaption">Waiting for a session</span></div>
+          <div class="sbx-tab-panes">
+            <div class="sbx-tab-pane" id="sbxtp-activity">
+              <div class="sbx-activity-controls">
+                <label><span data-i18n="activityCategory">Category</span><select id="sbxActivityCategory" onchange="filterSandboxRows()"><option value="" data-i18n="activityAll">All</option><option value="file" data-i18n="activityFiles">Files</option><option value="directory" data-i18n="activityFolders">Folders</option><option value="process" data-i18n="activityProcesses">Processes</option><option value="network" data-i18n="activityNetwork">Network</option><option value="session" data-i18n="activitySession">Session</option><option value="coverage" data-i18n="activityCoverage">Coverage</option></select></label>
+                <button class="sbx-secondary-button" id="sbxActivityPause" type="button" onclick="toggleActivityPause()" data-i18n="activityPause">Pause view</button>
+                <span id="sbxActivityNote" role="status" data-i18n="activityPreview">Latest 1,000 observations. Full journal: activity.jsonl in the session folder, up to 64 MiB.</span>
+              </div>
+              <div id="sbxtbl-activity"><div class="tempty" data-i18n="activityEmpty">Real observations appear here during analysis.</div></div>
+            </div>
+            <div class="sbx-tab-pane active" id="sbxtp-http">
+              <div id="sbxtbl-http"></div>
+            </div>
+            <div class="sbx-tab-pane" id="sbxtp-conn">
+              <div id="sbxtbl-conn"></div>
+            </div>
+            <div class="sbx-tab-pane" id="sbxtp-dns">
+              <div id="sbxtbl-dns"></div>
+            </div>
+            <div class="sbx-tab-pane" id="sbxtp-threats">
+              <div id="sbxtbl-threats"></div>
+            </div>
+            <div class="sbx-tab-pane" id="sbxtp-frida">
+              <div class="frida-panel">
+                <div class="frida-toolbar">
+                  <span class="frida-status" id="fridaStatus">frida-server not started</span>
+                  <button class="frida-btn" id="fridaStartBtn" onclick="fridaStartServer()">Start Server</button>
+                  <select id="fridaProc" aria-label="Frida process" class="frida-select"><option value="">— select process —</option></select>
+                  <button class="frida-btn" onclick="fridaRefreshProcs()">Refresh</button>
+                  <button class="frida-btn frida-attach" id="fridaAttachBtn" onclick="fridaAttach()">Attach</button>
+                  <button class="frida-btn" onclick="fridaDetach()" id="fridaDetachBtn" style="display:none">Detach</button>
+                  <button class="frida-btn" id="fridaRepackBtn" onclick="fridaRepackDialog()" title="Inject Frida Gadget into APK — no root needed">Repack APK</button>
+                </div>
+                <div class="frida-term"><div class="frida-output" id="fridaOutput"></div></div>
+                <div class="frida-input-row">
+                  <span class="frida-prompt">&gt;&gt;</span>
+                  <input class="frida-input" id="fridaInput" aria-label="Frida command" type="text" placeholder="Type Frida JS and press Enter…" onkeydown="fridaKey(event)" autocomplete="off" spellcheck="false">
+                  <button class="frida-btn" onclick="fridaSend()">Send</button>
+                </div>
+              </div>
+            </div>
+          <div class="sbx-tab-pane" id="sbxtp-report"><!-- The existing results view is docked here only in sandbox mode. --></div>
+          </div>
+        </div>
+        <div class="sbx-statusbar" role="status"><span class="sbx-status-message" id="sbxStatusMessage">Select a sample to prepare an analysis.</span><div class="sbx-alert-banner" id="sbxAlertBanner" style="display:none">
+          <span>Alert</span>
+          <div id="sbxAlertText"></div>
+        </div><span class="sbx-network-state" id="sbxNetworkState">Network blocked</span></div>
+      </div>
+
+      <!-- results -->
+      <div class="res" id="res">
+        <div class="rh">
+          <h3>Results</h3>
+          <div class="chips" id="chips"></div>
+          <a class="dl-btn" id="openbtn" href="#" target="_blank" rel="noopener" style="display:none">
+            <svg width="13" height="13" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><path d="M15 3h6v6"/><path d="M10 14L21 3"/></svg>
+            Open Report
+          </a>
+          <a class="dl-btn" id="dlbtn" href="#" target="_blank" rel="noopener" style="display:none">
+            <svg width="13" height="13" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+            Download
+          </a>
+        </div>
+        <div id="fw"></div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<dialog class="ws-dialog" id="workspaceDialog" aria-labelledby="wsTitle">
+  <header class="ws-titlebar">
+    <span class="ws-computer" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="13" rx="2"/><path d="M8 21h8M12 16v5M7 7h5"/></svg></span>
+    <div class="ws-title"><h2 id="wsTitle">Мой компьютер</h2><p>Результаты анализа. Всё под рукой.</p></div>
+    <span class="ws-local"><span></span>Локальное хранилище</span>
+    <button class="ws-button ws-icon-button" id="wsExpand" type="button" aria-label="Развернуть окно" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5m13-5h5v5M3 16v5h5m13-5v5h-5"/></svg></button>
+    <button class="ws-button ws-icon-button" id="workspaceClose" type="button" aria-label="Закрыть мой компьютер"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
+  </header>
+  <div class="ws-toolbar">
+    <button class="ws-button ws-icon-button" id="wsUp" type="button" aria-label="На уровень выше" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 7-7 7 7M12 5v15"/></svg></button>
+    <nav class="ws-crumbs" id="wsCrumbs" aria-label="Путь в хранилище"></nav>
+    <button class="ws-button" id="wsAllScans" type="button" aria-label="Все сканы" title="Перейти ко всем отчётам и сканам"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg><span id="wsAllScansLabel">Все сканы</span></button>
+    <button class="ws-button ws-icon-button" id="wsRefresh" type="button" aria-label="Обновить папку"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6"/></svg></button>
+    <button class="ws-button" id="wsNewFolder" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5h6l2 2h10v13H3V7ZM12 11v6m-3-3h6"/></svg>Новая папка</button>
+    <button class="ws-button" id="wsUseFolder" type="button" disabled>Сохранять сюда</button>
+  </div>
+  <form class="ws-folder-form" id="wsFolderForm" hidden>
+    <label for="wsFolderName">Имя папки</label><input id="wsFolderName" autocomplete="off" maxlength="120" required placeholder="Например, Мои проекты">
+    <button class="ws-button ws-primary" type="submit">Создать</button><button class="ws-button" id="wsFolderCancel" type="button">Отмена</button>
+    <span id="wsFolderError" role="alert"></span>
+  </form>
+  <div class="ws-body">
+    <section class="ws-files" aria-label="Файлы и папки">
+      <div class="ws-files-head"><h3>Файлы <span id="wsCount">0</span></h3><div class="ws-sort" id="wsSort"><button type="button" class="ws-sort-btn" id="wsSortBtn" aria-haspopup="listbox" aria-expanded="false"><span id="wsSortLabel">По имени</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button><div class="ws-sort-menu" id="wsSortMenu" role="listbox" aria-label="Сортировка загруженных файлов" hidden><button type="button" role="option" data-value="name" aria-selected="true">По имени</button><button type="button" role="option" data-value="date" aria-selected="false">Сначала новые</button><button type="button" role="option" data-value="size" aria-selected="false">По размеру</button></div></div></div>
+      <label class="ws-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="wsSearch" type="search" placeholder="Найти в этой папке…" aria-label="Поиск среди загруженных файлов"></label>
+      <div class="ws-filters" role="group" aria-label="Тип файла"><button type="button" data-ws-filter="all" aria-pressed="true">Все файлы</button><button type="button" data-ws-filter="md" aria-pressed="false">.md</button><button type="button" data-ws-filter="json" aria-pressed="false">.json</button></div>
+      <div class="ws-file-scroll"><div class="ws-entries" id="wsEntries"></div><button class="ws-button ws-more" id="wsMore" type="button" hidden>Загрузить ещё</button></div>
+    </section>
+    <section class="ws-preview" id="wsPreview" aria-label="Просмотр файла"></section>
+  </div>
+  <footer class="ws-footer"><span class="ws-status" id="wsStatus" role="status" aria-live="polite">Загрузка…</span><span class="ws-footer-hint">MD · JSON · TXT · HTML</span></footer>
+</dialog>
+<script src="/static/app.js" defer></script>
+<script src="/static/workspace-preview.js" defer></script>
+<script src="/static/workspace.js" defer></script>
+</body>
+</html>

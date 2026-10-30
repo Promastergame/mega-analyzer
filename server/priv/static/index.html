@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniSec // Interactive Malware Debugger & Sandbox</title>
+  <!-- Google Fonts Outfit and Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    /* Styling System with Custom HSL Palette & Neon Cyber Accents */
+    :root {
+      --bg-darker: #050609;
+      --bg-dark: #0a0b12;
+      --bg-card: rgba(15, 17, 28, 0.7);
+      --border-glow: rgba(0, 242, 254, 0.15);
+      --border-card: rgba(255, 255, 255, 0.06);
+      
+      --cyan: #00f2fe;
+      --cyan-glow: rgba(0, 242, 254, 0.4);
+      --purple: #8a2be2;
+      --purple-glow: rgba(138, 43, 226, 0.4);
+      --emerald: #10b981;
+      --emerald-glow: rgba(16, 185, 129, 0.4);
+      --red: #f43f5e;
+      --red-glow: rgba(244, 63, 94, 0.4);
+      --amber: #f59e0b;
+      --gray-muted: #8e95a5;
+      --text-main: #f3f4f6;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-darker);
+      background-image: 
+        radial-gradient(at 10% 10%, rgba(138, 43, 226, 0.1) 0px, transparent 50%),
+        radial-gradient(at 90% 90%, rgba(0, 242, 254, 0.1) 0px, transparent 50%);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    h1, h2, h3, h4, .brand-font {
+      font-family: 'Outfit', sans-serif;
+      letter-spacing: -0.02em;
+    }
+
+    /* Glassmorphic Utilities */
+    .glass-panel {
+      background: var(--bg-card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border-card);
+      border-radius: 12px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .glass-panel:hover {
+      border-color: var(--border-glow);
+      box-shadow: 0 8px 32px 0 rgba(0, 242, 254, 0.05);
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    /* Top Header */
+    header {
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-card);
+      background: rgba(5, 6, 9, 0.85);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-glow {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--cyan);
+      box-shadow: 0 0 10px var(--cyan);
+      animation: pulse 2s infinite alternate;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.7; }
+      100% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 16px var(--cyan); }
+    }
+
+    .brand-name {
+      font-size: 1.25rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-tag {
+      font-size: 0.7rem;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-card);
+      padding: 2px 8px;
+      border-radius: 4px;
+      color: var(--gray-muted);
+      margin-left: 8px;
+    }
+
+    .vm-stats {
+      display: flex;
+      gap: 20px;
+      font-size: 0.8rem;
+    }
+
+    .stat-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-card);
+    }
+
+    .stat-badge svg {
+      width: 14px;
+      height: 14px;
+      color: var(--cyan);
+    }
+
+    .badge-val {
+      font-family: 'Fira Code', monospace;
+      color: var(--cyan);
+      font-weight: 600;
+    }
+
+    /* Main Content Layout */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 320px 1fr 340px;
+      gap: 20px;
+      padding: 20px;
+      flex: 1;
+      height: calc(100vh - 75px);
+      min-height: 600px;
+    }
+
+    /* Left Sidebar: Session Control & Register Viewer */
+    .sidebar-left {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+    }
+
+    /* Right Sidebar: Timeline & Static Scanner Triggers */
+    .sidebar-right {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+    }
+
+    /* Center Section: CFG Workspace */
+    .workspace-center {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-width: 0; /* Prevents flex items from overflowing */
+    }
+
+    .panel-header {
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border-card);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-title svg {
+      width: 16px;
+      height: 16px;
+      color: var(--cyan);
+    }
+
+    .panel-body {
+      padding: 18px;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    /* Controls Panel styles */
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--gray-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+    }
+
+    .input-field {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-card);
+      padding: 10px 12px;
+      border-radius: 6px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.85rem;
+      transition: border-color 0.2s;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--cyan);
+      box-shadow: 0 0 10px rgba(0, 242, 254, 0.1);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(0, 242, 254, 0.2);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0, 242, 254, 0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      border: 1px solid var(--border-card);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-danger {
+      background: rgba(244, 63, 94, 0.1);
+      color: var(--red);
+      border: 1px solid rgba(244, 63, 94, 0.2);
+    }
+
+    .btn-danger:hover {
+      background: rgba(244, 63, 94, 0.2);
+      border-color: var(--red);
+    }
+
+    /* Register Viewer */
+    .register-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      font-family: 'Fira Code', monospace;
+    }
+
+    .register-card {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-card);
+      border-radius: 6px;
+      padding: 8px 12px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .reg-name {
+      font-size: 0.7rem;
+      color: var(--gray-muted);
+      text-transform: uppercase;
+    }
+
+    .reg-val {
+      font-size: 0.85rem;
+      color: var(--cyan);
+      word-break: break-all;
+      transition: color 0.1s ease, text-shadow 0.1s ease;
+    }
+
+    .reg-changed {
+      color: #fff;
+      text-shadow: 0 0 8px var(--cyan);
+      animation: flash 0.8s ease-out;
+    }
+
+    @keyframes flash {
+      0% { color: #fff; background: rgba(0, 242, 254, 0.25); }
+      100% { color: var(--cyan); background: transparent; }
+    }
+
+    .flag-pills {
+      display: flex;
+      gap: 6px;
+      margin-top: 12px;
+      flex-wrap: wrap;
+    }
+
+    .flag-pill {
+      flex: 1;
+      min-width: 55px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border-card);
+      border-radius: 4px;
+      padding: 4px 6px;
+      text-align: center;
+      cursor: pointer;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      user-select: none;
+      transition: all 0.2s;
+    }
+
+    .flag-pill.active {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: var(--emerald);
+      color: var(--emerald);
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.2);
+    }
+
+    .flag-pill.inactive {
+      background: rgba(244, 63, 94, 0.15);
+      border-color: var(--red);
+      color: var(--red);
+      box-shadow: 0 0 6px rgba(244, 63, 94, 0.2);
+    }
+
+    /* Environmental Spoofing Card */
+    .spoof-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .spoof-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-card);
+      padding: 8px 12px;
+      border-radius: 6px;
+    }
+
+    .spoof-label {
+      font-size: 0.8rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .spoof-label svg {
+      width: 14px;
+      height: 14px;
+      color: var(--gray-muted);
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 36px;
+      height: 20px;
+    }
+
+    .switch input { 
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.1);
+      transition: .3s;
+      border-radius: 20px;
+      border: 1px solid var(--border-card);
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 12px;
+      width: 12px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #fff;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--cyan);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(16px);
+    }
+
+    .spoof-value-indicator {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: var(--emerald);
+      font-weight: 600;
+    }
+
+    /* Central Interactive CFG Workspace */
+    .cfg-viewport {
+      flex: 1;
+      position: relative;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 12px;
+      border: 1px solid var(--border-card);
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .cfg-canvas-container {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      cursor: grab;
+      overflow: auto;
+    }
+
+    .cfg-grid-overlay {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background-image: 
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+
+    /* CFG Interactive Basic Blocks */
+    .cfg-graph {
+      position: relative;
+      width: 2000px;
+      height: 2000px;
+      transform-origin: 0 0;
+      transition: transform 0.1s ease-out;
+    }
+
+    .cfg-node {
+      position: absolute;
+      width: 280px;
+      background: rgba(13, 15, 27, 0.95);
+      border: 1.5px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 10px 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      font-size: 0.75rem;
+      cursor: pointer;
+      user-select: none;
+      z-index: 10;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .cfg-node:hover {
+      border-color: var(--cyan);
+      box-shadow: 0 0 15px rgba(0, 242, 254, 0.15);
+    }
+
+    .cfg-node.active-rip {
+      border-color: var(--purple);
+      box-shadow: 0 0 20px rgba(138, 43, 226, 0.3);
+    }
+
+    .cfg-node.active-rip::before {
+      content: "";
+      position: absolute;
+      top: -6px;
+      left: 10px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--purple);
+      box-shadow: 0 0 8px var(--purple);
+    }
+
+    .node-header {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      color: var(--cyan);
+      margin-bottom: 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .node-instructions {
+      font-family: 'Fira Code', monospace;
+      color: #d1d5db;
+      line-height: 1.4;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .insn-line {
+      display: flex;
+      justify-content: space-between;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+
+    .insn-line:hover {
+      background: rgba(255,255,255,0.04);
+    }
+
+    .insn-line.active-insn {
+      background: rgba(138, 43, 226, 0.15);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .insn-addr {
+      color: var(--gray-muted);
+      margin-right: 8px;
+    }
+
+    /* SVG connections canvas overlay */
+    .cfg-svg-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* What-If Floating Modal Panel */
+    .whatif-floating-panel {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      width: calc(100% - 40px);
+      max-width: 480px;
+      background: rgba(9, 10, 15, 0.95);
+      border: 1px solid var(--border-glow);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+      z-index: 50;
+      border-radius: 8px;
+      overflow: hidden;
+      transform: translateY(120%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .whatif-floating-panel.open {
+      transform: translateY(0);
+    }
+
+    .whatif-header {
+      padding: 10px 16px;
+      background: rgba(0, 242, 254, 0.08);
+      border-bottom: 1px solid var(--border-card);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .whatif-header-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--cyan);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .whatif-close-btn {
+      background: transparent;
+      border: none;
+      color: var(--gray-muted);
+      cursor: pointer;
+    }
+
+    .whatif-close-btn:hover {
+      color: #fff;
+    }
+
+    .whatif-body {
+      padding: 14px 16px;
+    }
+
+    /* Interactive Timeline (Time Travel) */
+    .timeline-container {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+      max-height: 250px;
+      padding-right: 4px;
+    }
+
+    .timeline-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid var(--border-card);
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .timeline-item:hover {
+      border-color: var(--purple);
+      background: rgba(138, 43, 226, 0.05);
+    }
+
+    .timeline-item.active {
+      border-color: var(--cyan);
+      background: rgba(0, 242, 254, 0.05);
+    }
+
+    .tick-indicator {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.7rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 6px;
+      border-radius: 4px;
+      color: var(--gray-muted);
+    }
+
+    .timeline-item.active .tick-indicator {
+      background: rgba(0, 242, 254, 0.15);
+      color: var(--cyan);
+    }
+
+    .tick-details {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .tick-insn {
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .tick-addr {
+      font-size: 0.7rem;
+      color: var(--gray-muted);
+    }
+
+    /* Explainable Scanner Cards */
+    .scanner-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .scanner-card {
+      background: rgba(244, 63, 94, 0.03);
+      border: 1px solid rgba(244, 63, 94, 0.15);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .scanner-card.success-sec {
+      background: rgba(16, 185, 129, 0.03);
+      border-color: rgba(16, 185, 129, 0.15);
+    }
+
+    .scanner-card-header {
+      padding: 10px 14px;
+      background: rgba(244, 63, 94, 0.08);
+      border-bottom: 1px solid rgba(244, 63, 94, 0.15);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--red);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .scanner-card.success-sec .scanner-card-header {
+      background: rgba(16, 185, 129, 0.08);
+      border-color: rgba(16, 185, 129, 0.15);
+      color: var(--emerald);
+    }
+
+    .scanner-card-body {
+      padding: 12px 14px;
+    }
+
+    .scanner-expl {
+      font-size: 0.78rem;
+      color: #d1d5db;
+      line-height: 1.4;
+      margin-bottom: 10px;
+    }
+
+    .remediation-box {
+      background: #020204;
+      border: 1px solid var(--border-card);
+      border-radius: 4px;
+      padding: 8px 12px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.72rem;
+      color: var(--emerald);
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+
+    /* Toast system */
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 1000;
+    }
+
+    .toast {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border-card);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 6px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      font-size: 0.85rem;
+      transform: translateX(120%);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .toast-success { border-color: var(--emerald); }
+    .toast-error { border-color: var(--red); }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header with VM Status Indicators -->
+  <header>
+    <div class="logo-container">
+      <div class="logo-glow"></div>
+      <div class="brand-name">OmniSec // Sandbox Engine</div>
+      <div class="brand-tag">v0.2.0</div>
+    </div>
+    
+    <div class="vm-stats">
+      <div class="stat-badge">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path></svg>
+        <span>VM Core Temp:</span>
+        <span class="badge-val" id="cpu-temp-display">45.0 °C</span>
+      </div>
+      <div class="stat-badge">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span>Time-Skip Multiplier:</span>
+        <span class="badge-val" id="time-skip-multiplier">1000x</span>
+      </div>
+      <div class="stat-badge">
+        <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+        <span>Access Policy:</span>
+        <span class="badge-val" id="auth-status" style="color: var(--emerald);">Open Mode</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Dashboard Main Grid -->
+  <div class="dashboard-grid">
+    
+    <!-- Left Column: Session Controls & Register Viewer -->
+    <div class="sidebar-left">
+      
+      <!-- Session Config Panel -->
+      <div class="glass-panel" style="display: flex; flex-direction: column;">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+            <span>Session Control</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="form-group">
+            <label class="form-label">Binary Upload Path</label>
+            <input type="text" id="binary-path" class="input-field" value="uploads/target_malware.exe">
+          </div>
+          <div class="form-group">
+            <label class="form-label">API Bearer Key</label>
+            <input type="password" id="auth-token" class="input-field" placeholder="Enter key (leave empty if open mode)">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Disassembly Syntax</label>
+            <select id="flavor-select" class="input-field" style="background: rgba(0,0,0,0.5); cursor: pointer;">
+              <option value="intel">Intel Syntax (Recommended)</option>
+              <option value="att">AT&T Syntax</option>
+            </select>
+          </div>
+          <div class="btn-row">
+            <button id="btn-start" class="btn btn-primary">
+              <svg style="width: 14px; height: 14px;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+              Start Session
+            </button>
+            <button id="btn-stop" class="btn btn-danger" disabled>
+              <svg style="width: 14px; height: 14px;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>
+              Terminate
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- CPU Register status viewer -->
+      <div class="glass-panel" style="display: flex; flex-direction: column; flex: 1;">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <span>Registers & Flags</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="register-grid" id="register-viewer">
+            <!-- Filled dynamically by JavaScript -->
+            <div class="register-card"><span class="reg-name">rax</span><span class="reg-val" id="reg-rax">0x0000000000000000</span></div>
+            <div class="register-card"><span class="reg-name">rbx</span><span class="reg-val" id="reg-rbx">0x0000000000000000</span></div>
+            <div class="register-card"><span class="reg-name">rcx</span><span class="reg-val" id="reg-rcx">0x0000000000000000</span></div>
+            <div class="register-card"><span class="reg-name">rdx</span><span class="reg-val" id="reg-rdx">0x0000000000000000</span></div>
+            <div class="register-card"><span class="reg-name">rsi</span><span class="reg-val" id="reg-rsi">0x0000000000000000</span></div>
+            <div class="register-card"><span class="reg-name">rdi</span><span class="reg-val" id="reg-rdi">0x0000000000000000</span></div>
+            <div class="register-card"><span class="reg-name">rsp</span><span class="reg-val" id="reg-rsp">0x0000000000000000</span></div>
+            <div class="register-card"><span class="reg-name">rbp</span><span class="reg-val" id="reg-rbp">0x0000000000000000</span></div>
+            <div class="register-card" style="grid-column: span 2;"><span class="reg-name">rip</span><span class="reg-val" id="reg-rip" style="color: var(--purple);">0x0000000000000000</span></div>
+          </div>
+          
+          <div class="flag-pills" id="flag-viewer">
+            <!-- CPU conditional jump flags -->
+            <div class="flag-pill inactive" id="flag-zf" onclick="toggleFlag('ZF')">ZF: 0</div>
+            <div class="flag-pill inactive" id="flag-cf" onclick="toggleFlag('CF')">CF: 0</div>
+            <div class="flag-pill inactive" id="flag-sf" onclick="toggleFlag('SF')">SF: 0</div>
+            <div class="flag-pill inactive" id="flag-of" onclick="toggleFlag('OF')">OF: 0</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Center Column: Dynamic CFG visualizer -->
+    <div class="workspace-center">
+      
+      <!-- Top Action Toolbar -->
+      <div class="glass-panel" style="padding: 10px 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="font-size: 0.85rem; font-weight: 600; color: var(--gray-muted);">
+          Active Address Block: <span id="current-block-addr" style="color: #fff; font-family: 'Fira Code', monospace;">0x0000000000000000</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button id="btn-reverse-step" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" disabled>
+            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.334 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z"></path></svg>
+            Rev Step
+          </button>
+          <button id="btn-step" class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" disabled>
+            <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 5l7 7-7 7M5 5l7 7-7 7"></path></svg>
+            Step
+          </button>
+          <button id="btn-continue" class="btn btn-primary" style="padding: 6px 16px; font-size: 0.8rem;" disabled>
+            <svg style="width: 12px; height: 12px;" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path></svg>
+            Continue
+          </button>
+        </div>
+      </div>
+
+      <!-- Main CFG Viewport -->
+      <div class="cfg-viewport">
+        <div class="cfg-grid-overlay"></div>
+        <div class="cfg-canvas-container" id="canvas-container">
+          <div class="cfg-graph" id="cfg-graph-view">
+            <!-- SVG overlay for connectors -->
+            <svg class="cfg-svg-overlay" id="cfg-svg-connections"></svg>
+            
+            <!-- Nodes loaded dynamically -->
+            <div id="cfg-nodes-container"></div>
+          </div>
+        </div>
+        
+        <!-- What-If Branch forcing overlay slider card -->
+        <div class="whatif-floating-panel" id="whatif-panel">
+          <div class="whatif-header">
+            <div class="whatif-header-title">
+              <svg style="width: 14px; height: 14px;" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.334 4z"></path></svg>
+              <span>What-If // Condition Engine</span>
+            </div>
+            <button class="whatif-close-btn" onclick="closeWhatIf()">
+              <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+          </div>
+          <div class="whatif-body">
+            <p style="font-size: 0.8rem; margin-bottom: 12px; color: var(--gray-muted);">
+              You clicked a conditional branch jump at <span id="whatif-addr" style="color:#fff; font-family: monospace;">0x0000000000000000</span>. 
+              Force-toggle CPU flags below to alter instruction evaluation and inspect hidden execution branches.
+            </p>
+            <div class="btn-row">
+              <button class="btn btn-secondary" onclick="forceFlagState('ZF', 1)">Force ZF = 1 (Jump Taken)</button>
+              <button class="btn btn-secondary" onclick="forceFlagState('ZF', 0)">Force ZF = 0 (Fallthrough)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Timeline & Anti-Evasion / Explainable Scanner -->
+    <div class="sidebar-right">
+      
+      <!-- Anti-Evasion / Hardware Spoofing Panel -->
+      <div class="glass-panel">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <span>Hardware Evasion Spoofing</span>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="spoof-controls">
+            <div class="spoof-row">
+              <span class="spoof-label">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Time-Skipping (RDTSC)
+              </span>
+              <span class="spoof-value-indicator">ACTIVE</span>
+            </div>
+            <div class="spoof-row">
+              <span class="spoof-label">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"></path></svg>
+                Periphery Mouse Noise
+              </span>
+              <label class="switch">
+                <input type="checkbox" id="spoof-mouse-check" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <div class="spoof-row">
+              <span class="spoof-label">
+                <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.68 18.106A9.04 9.04 0 013 12c0-4.478 3.26-8.2 7.543-8.89m4.914 1.448A9.06 9.06 0 0117 12c0 2.926-1.39 5.528-3.543 7.19M12 10v2m0 4h.01"></path></svg>
+                Gaussian Temp Jitter
+              </span>
+              <label class="switch">
+                <input type="checkbox" id="spoof-temp-check" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Time Travel Execution Timeline -->
+      <div class="glass-panel" style="display: flex; flex-direction: column; min-height: 200px;">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span>Time-Travel Timeline</span>
+          </div>
+        </div>
+        <div class="panel-body" style="overflow-y: auto;">
+          <div class="timeline-container" id="timeline-flow">
+            <div style="font-size: 0.8rem; color: var(--gray-muted); text-align: center; margin-top: 20px;">
+              Timeline will populate once step execution begins.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Explainable Pattern Matches -->
+      <div class="glass-panel" style="display: flex; flex-direction: column; flex: 1;">
+        <div class="panel-header">
+          <div class="panel-title">
+            <svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+            <span>Smart Scanner Alerts</span>
+          </div>
+        </div>
+        <div class="panel-body" style="overflow-y: auto;">
+          <div class="scanner-list" id="pattern-alerts">
+            <!-- Simulated explainable scanner alerts -->
+            <div class="scanner-card">
+              <div class="scanner-card-header">
+                <span>PATTERN: command_injection_shell</span>
+                <span class="stat-badge" style="background: rgba(244,63,94,0.2); border: none; padding: 2px 6px; font-size: 0.65rem; color: var(--red);">HIGH RISK</span>
+              </div>
+              <div class="scanner-card-body">
+                <div class="scanner-expl">
+                  A System execution API invocation was detected. Command parameters are concatenated directly as raw strings, making the process highly vulnerable to shell parameter injection attacks.
+                </div>
+                <div class="remediation-box"># Safe Elixir Remediation Code:
+System.cmd("binzap", ["analyze", "--file", path])</div>
+              </div>
+            </div>
+            
+            <div class="scanner-card success-sec" style="margin-top: 10px;">
+              <div class="scanner-card-header">
+                <span>MUTEX PREVENT PANIC ENFORCED</span>
+                <span class="stat-badge" style="background: rgba(16,185,129,0.2); border: none; padding: 2px 6px; font-size: 0.65rem; color: var(--emerald);">PROTECTED</span>
+              </div>
+              <div class="scanner-card-body">
+                <div class="scanner-expl" style="margin-bottom:0;">
+                  Rust NIF Mutex is protected via a safe `lock_sessions()` wrapper. Panicking and poisoned mutexes are intercepted cleanly, yielding graceful NifResult errors rather than crashing the Erlang VM.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Toast system -->
+  <div class="toast-container" id="toast-wrapper"></div>
+
+  <!-- Javascript logic for WebSockets, API calls, dynamic graphing, and environmental noise simulation -->
+  <script>
+    // State storage
+    let activeSessionId = null;
+    let ripAddress = 0x0;
+    let traceIndex = 0;
+    let registersState = {};
+    let flagsState = { ZF: 0, CF: 0, SF: 0, OF: 0 };
+    let tempValue = 45.0;
+
+    // Environmental Spoofing Loop (Gaussian live CPU temperature micro-noise)
+    setInterval(() => {
+      if (document.getElementById('spoof-temp-check').checked) {
+        // Standard normal distribution approximation
+        const u1 = Math.random() || 0.0001;
+        const u2 = Math.random() || 0.0001;
+        const randStdNormal = Math.sqrt(-2.0 * Math.log(u1)) * Math.cos(2.0 * Math.PI * u2);
+        const noise = randStdNormal * 0.12; // Standard deviation of 0.12 °C
+        
+        tempValue = 45.0 + noise;
+        document.getElementById('cpu-temp-display').textContent = tempValue.toFixed(2) + ' °C';
+      }
+    }, 1200);
+
+    // Toast alerts helper
+    function showToast(message, isSuccess = true) {
+      const container = document.getElementById('toast-wrapper');
+      const toast = document.createElement('div');
+      toast.className = `toast ${isSuccess ? 'toast-success' : 'toast-error'}`;
+      toast.innerHTML = `
+        <svg style="width: 16px; height: 16px; color: ${isSuccess ? 'var(--emerald)' : 'var(--red)'}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="${isSuccess ? 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' : 'M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'}"></path></svg>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.add('show'), 50);
+      setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 400);
+      }, 3500);
+    }
+
+    // Toggle conditional register flags visually & push back to server
+    function toggleFlag(flagName) {
+      if (!activeSessionId) {
+        showToast("No active debugger session to modify flags.", false);
+        return;
+      }
+      const current = flagsState[flagName];
+      const nextVal = current === 1 ? 0 : 1;
+      forceFlagState(flagName, nextVal);
+    }
+
+    // Push Flag patching to backend REST
+    async function forceFlagState(flagName, value) {
+      if (!activeSessionId) return;
+      try {
+        const token = document.getElementById('auth-token').value;
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch('/api/v1/debug/flag', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({
+            session_id: activeSessionId,
+            flag: flagName,
+            value: value
+          })
+        });
+        const data = await res.json();
+        if (data.ok) {
+          showToast(`Successfully forced CPU flag ${flagName} to ${value}!`, true);
+          closeWhatIf();
+          updateRegistersAndFlags();
+          fetchCFG();
+        } else {
+          showToast(`Authorization failed: ${data.error || 'Admin privileges required.'}`, false);
+        }
+      } catch (err) {
+        showToast("Error communicating with flag controller: " + err, false);
+      }
+    }
+
+    function openWhatIf(addr) {
+      document.getElementById('whatif-addr').textContent = addr;
+      document.getElementById('whatif-panel').classList.add('open');
+    }
+
+    function closeWhatIf() {
+      document.getElementById('whatif-panel').classList.remove('open');
+    }
+
+    // Session Lifecycle API Calls
+    document.getElementById('btn-start').addEventListener('click', async () => {
+      const binaryPath = document.getElementById('binary-path').value;
+      const flavor = document.getElementById('flavor-select').value;
+      const token = document.getElementById('auth-token').value;
+      
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        document.getElementById('auth-status').textContent = 'Authenticated Mode';
+        document.getElementById('auth-status').style.color = 'var(--purple)';
+      } else {
+        document.getElementById('auth-status').textContent = 'Open Mode';
+        document.getElementById('auth-status').style.color = 'var(--emerald)';
+      }
+
+      try {
+        showToast("Initializing OmniSec Micro-Emulation Engine...", true);
+        const res = await fetch('/api/v1/debug/start', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ file_path: binaryPath, flavor: flavor })
+        });
+        
+        const data = await res.json();
+        if (data.ok && data.result) {
+          activeSessionId = data.result.session_id;
+          ripAddress = data.result.entry_point || 0x1000;
+          
+          showToast(`Session successfully initialized (ID: ${activeSessionId})`, true);
+          document.getElementById('btn-start').disabled = true;
+          document.getElementById('btn-stop').disabled = false;
+          document.getElementById('btn-step').disabled = false;
+          document.getElementById('btn-continue').disabled = false;
+          document.getElementById('btn-reverse-step').disabled = false;
+          
+          updateRegistersAndFlags();
+          fetchCFG();
+        } else {
+          showToast(`Start failed: ${data.error || 'Invalid upload location'}`, false);
+        }
+      } catch (err) {
+        showToast(`Emulation initialization crashed: ${err}`, false);
+      }
+    });
+
+    document.getElementById('btn-stop').addEventListener('click', async () => {
+      if (!activeSessionId) return;
+      try {
+        const token = document.getElementById('auth-token').value;
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        await fetch('/api/v1/debug/stop', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ session_id: activeSessionId })
+        });
+
+        showToast("Emulation session terminated.", true);
+        resetDashboard();
+      } catch (err) {
+        showToast("Failed to stop session: " + err, false);
+      }
+    });
+
+    function resetDashboard() {
+      activeSessionId = null;
+      document.getElementById('btn-start').disabled = false;
+      document.getElementById('btn-stop').disabled = true;
+      document.getElementById('btn-step').disabled = true;
+      document.getElementById('btn-continue').disabled = true;
+      document.getElementById('btn-reverse-step').disabled = true;
+      
+      document.getElementById('cfg-nodes-container').innerHTML = '';
+      const svg = document.getElementById('cfg-svg-connections');
+      svg.innerHTML = '';
+      
+      document.getElementById('timeline-flow').innerHTML = `
+        <div style="font-size: 0.8rem; color: var(--gray-muted); text-align: center; margin-top: 20px;">
+          Timeline will populate once step execution begins.
+        </div>
+      `;
+    }
+
+    // Step / Continue Commands
+    document.getElementById('btn-step').addEventListener('click', () => triggerExecutionStep('/api/v1/debug/step', 'Step Forward'));
+    document.getElementById('btn-reverse-step').addEventListener('click', () => triggerExecutionStep('/api/v1/debug/reverse_step', 'Reverse Step'));
+
+    document.getElementById('btn-continue').addEventListener('click', async () => {
+      if (!activeSessionId) return;
+      showToast("Continuing execution...", true);
+      triggerExecutionStep('/api/v1/debug/continue', 'Execution Continued');
+    });
+
+    async function triggerExecutionStep(endpoint, actionName) {
+      if (!activeSessionId) return;
+      try {
+        const token = document.getElementById('auth-token').value;
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ session_id: activeSessionId })
+        });
+        const data = await res.json();
+        
+        if (data.ok && data.result) {
+          ripAddress = data.result.rip;
+          showToast(`${actionName} succeeded. RIP: ${formatHex(ripAddress)}`, true);
+          
+          // Update timeline
+          appendTimelineItem(ripAddress, data.result.instruction || "NOP", data.result.stop_reason);
+          updateRegistersAndFlags();
+          fetchCFG();
+        } else {
+          showToast(`Execution stopped: ${data.error || 'Breakpoint encountered'}`, false);
+        }
+      } catch (err) {
+        showToast("Execution command error: " + err, false);
+      }
+    }
+
+    // Timeline flow builder
+    function appendTimelineItem(addr, instruction, stopReason) {
+      const container = document.getElementById('timeline-flow');
+      // Clear placeholder if first item
+      if (container.querySelector('div[style*="text-align: center"]')) {
+        container.innerHTML = '';
+      }
+      
+      traceIndex += 1;
+      const item = document.createElement('div');
+      item.className = 'timeline-item active';
+      
+      // Remove active class from previous siblings
+      container.querySelectorAll('.timeline-item').forEach(el => el.classList.remove('active'));
+      
+      item.innerHTML = `
+        <div class="tick-indicator">TICK #${traceIndex}</div>
+        <div class="tick-details">
+          <span class="tick-insn">${instruction}</span>
+          <span class="tick-addr">RIP: ${formatHex(addr)} ${stopReason ? `[Stop: ${stopReason}]` : ''}</span>
+        </div>
+      `;
+      container.appendChild(item);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // Fetch Registers and CPU flags state
+    async function updateRegistersAndFlags() {
+      if (!activeSessionId) return;
+      try {
+        const token = document.getElementById('auth-token').value;
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch(`/api/v1/debug/registers?session_id=${activeSessionId}`, {
+          method: 'GET',
+          headers: headers
+        });
+        const data = await res.json();
+        if (data.ok && data.result) {
+          const regs = data.result;
+          
+          // Display registers and highlight change
+          updateRegisterValue('rax', regs.rax);
+          updateRegisterValue('rbx', regs.rbx);
+          updateRegisterValue('rcx', regs.rcx);
+          updateRegisterValue('rdx', regs.rdx);
+          updateRegisterValue('rsi', regs.rsi);
+          updateRegisterValue('rdi', regs.rdi);
+          updateRegisterValue('rsp', regs.rsp);
+          updateRegisterValue('rbp', regs.rbp);
+          updateRegisterValue('rip', regs.rip);
+
+          // Update Flag pills
+          updateFlagPill('zf', regs.flags.zf);
+          updateFlagPill('cf', regs.flags.cf);
+          updateFlagPill('sf', regs.flags.sf);
+          updateFlagPill('of', regs.flags.of);
+
+          flagsState.ZF = regs.flags.zf ? 1 : 0;
+          flagsState.CF = regs.flags.cf ? 1 : 0;
+          flagsState.SF = regs.flags.sf ? 1 : 0;
+          flagsState.OF = regs.flags.of ? 1 : 0;
+        }
+      } catch (err) {
+        console.error("Registers fetch error:", err);
+      }
+    }
+
+    function updateRegisterValue(name, val) {
+      const el = document.getElementById(`reg-${name}`);
+      const formatted = typeof val === 'number' ? formatHex(val) : String(val);
+      if (registersState[name] !== undefined && registersState[name] !== formatted) {
+        el.className = 'reg-val reg-changed';
+        // Remove animation class after a while to allow triggering again
+        setTimeout(() => el.className = 'reg-val', 800);
+      }
+      el.textContent = formatted;
+      registersState[name] = formatted;
+    }
+
+    function updateFlagPill(name, active) {
+      const el = document.getElementById(`flag-${name}`);
+      el.className = `flag-pill ${active ? 'active' : 'inactive'}`;
+      el.textContent = `${name.toUpperCase()}: ${active ? 1 : 0}`;
+    }
+
+    // Interactive CFG Block Layout & Neon SVG Line Connector Engine
+    async function fetchCFG() {
+      if (!activeSessionId) return;
+      try {
+        const token = document.getElementById('auth-token').value;
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const res = await fetch(`/api/v1/debug/cfg?session_id=${activeSessionId}&address=${ripAddress}&count=30`, {
+          method: 'GET',
+          headers: headers
+        });
+        const data = await res.json();
+        if (data.ok && data.result) {
+          renderCFG(data.result);
+        }
+      } catch (err) {
+        console.error("CFG fetch failed: " + err);
+      }
+    }
+
+    function renderCFG(cfg) {
+      const container = document.getElementById('cfg-nodes-container');
+      const svg = document.getElementById('cfg-svg-connections');
+      container.innerHTML = '';
+      svg.innerHTML = '';
+
+      if (!cfg.nodes || cfg.nodes.length === 0) return;
+
+      // Layout coordinates calculator (linear tree layout)
+      const nodeMap = {};
+      const paddingX = 80;
+      const paddingY = 160;
+      let startX = 350;
+      let startY = 50;
+
+      // Group nodes by hierarchy levels to compute dynamic positions
+      cfg.nodes.forEach((node, index) => {
+        // Calculate coordinates
+        const x = startX + (index % 2 === 0 ? -120 : 120) * (index > 0 ? 1 : 0);
+        const y = startY + index * paddingY;
+        
+        nodeMap[node.id] = { node, x, y };
+
+        // Create HTML block card
+        const card = document.createElement('div');
+        card.id = `cfg-node-${node.id}`;
+        card.className = 'cfg-node';
+        
+        // Highlight active block if RIP falls inside this block range
+        const ripVal = parseInt(registersState['rip'] || "0x0", 16);
+        const blockStart = parseInt(node.start_address, 16);
+        const blockEnd = parseInt(node.end_address, 16);
+        
+        const isCurrentBlock = (ripVal >= blockStart && ripVal <= blockEnd);
+        if (isCurrentBlock) {
+          card.classList.add('active-rip');
+          document.getElementById('current-block-addr').textContent = node.start_address;
+        }
+
+        card.style.left = `${x}px`;
+        card.style.top = `${y}px`;
+        
+        // Populate node assembly listings
+        let insnsHTML = '';
+        node.instructions.forEach(insn => {
+          const insnAddrInt = parseInt(insn.address, 16);
+          const isActiveInsn = (insnAddrInt === ripVal);
+          
+          let actionOnClick = '';
+          const isJump = insn.text.match(/^(j|call|ret)/i);
+          if (isJump) {
+            actionOnClick = `onclick="event.stopPropagation(); openWhatIf('${insn.address}')"`;
+          }
+
+          insnsHTML += `
+            <div class="insn-line ${isActiveInsn ? 'active-insn' : ''}" ${actionOnClick} style="${isJump ? 'cursor: pointer; font-weight: 500;' : ''}">
+              <span class="insn-addr">${formatHexShort(insnAddrInt)}</span>
+              <span>${insn.text}</span>
+            </div>
+          `;
+        });
+
+        card.innerHTML = `
+          <div class="node-header">
+            <span>BLOCK #${node.id}</span>
+            <span style="font-family: monospace; font-size: 0.65rem;">${formatHexShort(blockStart)}</span>
+          </div>
+          <div class="node-instructions">${insnsHTML}</div>
+        `;
+        
+        container.appendChild(card);
+      });
+
+      // Draw SVG Connection edges with arrow markers
+      const marker = document.createElementNS('http://www.w3.org/2000/svg', 'marker');
+      marker.setAttribute('id', 'arrow');
+      marker.setAttribute('viewBox', '0 0 10 10');
+      marker.setAttribute('refX', '6');
+      marker.setAttribute('refY', '5');
+      marker.setAttribute('markerWidth', '6');
+      marker.setAttribute('markerHeight', '6');
+      marker.setAttribute('orient', 'auto-start-reverse');
+      marker.innerHTML = '<path d="M 0 0 L 10 5 L 0 10 z" fill="rgba(0, 242, 254, 0.6)"/>';
+      svg.appendChild(marker);
+
+      cfg.edges.forEach(edge => {
+        const src = nodeMap[edge.source];
+        const dest = nodeMap[edge.target];
+        if (!src || !dest) return;
+
+        // Draw bezier connection lines
+        const x1 = src.x + 140; // center offset
+        const y1 = src.y + 70;  // bottom offset
+        const x2 = dest.x + 140;
+        const y2 = dest.y;
+
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const cx1 = x1;
+        const cy1 = y1 + 50;
+        const cx2 = x2;
+        const cy2 = y2 - 50;
+
+        path.setAttribute('d', `M ${x1} ${y1} C ${cx1} ${cy1}, ${cx2} ${cy2}, ${x2} ${y2}`);
+        
+        let strokeColor = 'rgba(255, 255, 255, 0.15)';
+        if (edge.type === 'conditional_taken') {
+          strokeColor = 'rgba(244, 63, 94, 0.6)'; // red for branch taken
+        } else if (edge.type === 'conditional_fallthrough') {
+          strokeColor = 'rgba(16, 185, 129, 0.6)'; // green for branch not taken
+        } else if (edge.type === 'call') {
+          strokeColor = 'rgba(0, 242, 254, 0.6)'; // cyan for calls
+        }
+        
+        path.setAttribute('stroke', strokeColor);
+        path.setAttribute('stroke-width', '1.5');
+        path.setAttribute('fill', 'none');
+        path.setAttribute('marker-end', 'url(#arrow)');
+        svg.appendChild(path);
+      });
+    }
+
+    // Formatting helpers
+    function formatHex(num) {
+      if (typeof num === 'string') return num;
+      return '0x' + num.toString(16).padStart(16, '0');
+    }
+
+    function formatHexShort(num) {
+      return num.toString(16).toUpperCase();
+    }
+  </script>
+</body>
+</html>

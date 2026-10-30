@@ -1,0 +1,19 @@
+[package]
+name = "omnisec-ml-inference"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "High-performance ML inference engine for the OmniSec analyzer pipeline"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+omnisec-json = { path = "../omnisec-json" }
+omnisec-core.workspace = true
+omnisec-hdc.workspace = true
+
+[lints]
+workspace = true

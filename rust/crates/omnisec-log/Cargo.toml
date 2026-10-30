@@ -1,0 +1,11 @@
+[package]
+name = "omnisec-log"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Zero-dependency stderr logger for OmniSec (replaces tracing)."
+
+[lints]
+workspace = true

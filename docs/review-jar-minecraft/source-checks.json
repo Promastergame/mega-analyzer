@@ -1,0 +1,73 @@
+{
+  "checks": [
+    {
+      "file": "pkg/internal/apkloader/extractor.go",
+      "lexical_delimiters": "pass",
+      "import_reference_check": "pass"
+    },
+    {
+      "file": "pkg/internal/jarloader/analyzer.go",
+      "lexical_delimiters": "pass",
+      "import_reference_check": "pass"
+    },
+    {
+      "file": "pkg/internal/jarloader/archive_integrity.go",
+      "lexical_delimiters": "pass",
+      "import_reference_check": "pass"
+    },
+    {
+      "file": "pkg/internal/jarloader/class_structure.go",
+      "lexical_delimiters": "pass",
+      "import_reference_check": "pass"
+    },
+    {
+      "file": "pkg/internal/jarloader/classfile.go",
+      "lexical_delimiters": "pass",
+      "import_reference_check": "pass"
+    },
+    {
+      "file": "pkg/internal/jarloader/jarloader_test.go",
+      "lexical_delimiters": "pass",
+      "import_reference_check": "pass"
+    },
+    {
+      "file": "pkg/internal/jarloader/precision_regression_test.go",
+      "lexical_delimiters": "pass",
+      "import_reference_check": "pass"
+    },
+    {
+      "file": "pkg/internal/jarloader/vulndeps.go",
+      "lexical_delimiters": "pass",
+      "import_reference_check": "pass"
+    },
+    {
+      "file": "pkg/minecraft/analyzer.go",
+      "lexical_delimiters": "pass",
+      "import_reference_check": "pass"
+    },
+    {
+      "file": "pkg/minecraft/commands.go",
+      "lexical_delimiters": "pass",
+      "import_reference_check": "pass"
+    },
+    {
+      "file": "pkg/minecraft/inspect.go",
+      "lexical_delimiters": "pass",
+      "import_reference_check": "pass"
+    },
+    {
+      "file": "pkg/minecraft/metadata.go",
+      "lexical_delimiters": "pass",
+      "import_reference_check": "pass"
+    },
+    {
+      "file": "pkg/minecraft/precision_regression_test.go",
+      "lexical_delimiters": "pass",
+      "import_reference_check": "pass"
+    }
+  ],
+  "go_compilation": "NOT RUN: Go and gofmt unavailable",
+  "warning": "Lexical checks are not a Go parser or type checker.",
+  "new_regression_test_functions": 31,
+  "new_fuzz_targets": 1
+}

@@ -1,0 +1,279 @@
+[
+  {
+    "id": "EMULATOR_DETECT",
+    "category": "emulator_detection",
+    "description": "Detects Android emulator",
+    "method_names": [
+      "isemulator",
+      "detectemulator",
+      "checkemulator",
+      "isrunningonemu",
+      "isrunonemu",
+      "isvirtualdevice",
+      "issimulator",
+      "isemulatorenvironment"
+    ],
+    "class_patterns": [
+      "emulator",
+      "emucheck",
+      "devicecheck",
+      "environment",
+      "antiemulator"
+    ],
+    "required_calls": [
+      "build;->fingerprint",
+      "build;->model",
+      "build;->manufacturer",
+      "build;->hardware",
+      "build;->product",
+      "build;->brand",
+      "telephonymanager",
+      "sensormanager"
+    ],
+    "string_patterns": [
+      "generic",
+      "unknown",
+      "sdk",
+      "google_sdk",
+      "goldfish",
+      "ranchu",
+      "andy",
+      "ttvm_hdragon",
+      "genymotion",
+      "vbox86",
+      "nox",
+      "bluestacks",
+      "15555215554"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1,
+    "min_match_score": 12
+  },
+  {
+    "id": "ANTI_VM_DETECT",
+    "category": "emulator_detection",
+    "description": "Detects virtual machine/sandbox environment",
+    "method_names": [
+      "isvirtualmachine",
+      "isvm",
+      "issandbox",
+      "detectvm",
+      "checkvm",
+      "isvbox",
+      "isqemu",
+      "detectvirtualenvironment",
+      "isvmos",
+      "iscloudemulator"
+    ],
+    "class_patterns": [
+      "vmdetect",
+      "sandbox",
+      "virtual",
+      "antivm",
+      "environment"
+    ],
+    "required_calls": [
+      "build;->hardware",
+      "build;->model",
+      "build;->fingerprint",
+      "build;->manufacturer",
+      "file;->exists",
+      "runtime;->exec"
+    ],
+    "string_patterns": [
+      "vbox",
+      "virtualbox",
+      "vmware",
+      "qemu",
+      "genymotion",
+      "nox",
+      "bluestacks",
+      "memu",
+      "ldplayer",
+      "gameloop",
+      "mumu",
+      "/dev/vboxguest",
+      "/dev/vboxuser",
+      "vmos",
+      "x86",
+      "goldfish"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1,
+    "min_match_score": 12
+  },
+  {
+    "id": "APP_CLONE_DETECT",
+    "category": "emulator_detection",
+    "description": "Dual-space / parallel space / clone app detection",
+    "method_names": [
+      "iscloneapp",
+      "isparallelspace",
+      "isdualspace",
+      "checkcloneapp",
+      "detectclone",
+      "isrunninginclone",
+      "isworkprofile",
+      "ismultiuser",
+      "issecondaryuser",
+      "checkparallelspace"
+    ],
+    "class_patterns": [
+      "clonedetect",
+      "parallelspace",
+      "dualspace",
+      "multiuser",
+      "workprofile",
+      "cloneapp"
+    ],
+    "required_calls": [
+      "usermanager;->getusers",
+      "usermanager;->getuserid",
+      "packagemanager;->getinstalledpackages",
+      "createpackagecontextasuser"
+    ],
+    "string_patterns": [
+      "com.lbe.parallel",
+      "com.ludashi.dualspace",
+      "com.excelliance.dualaid",
+      "parallel_space",
+      "virtualapp",
+      "work_profile",
+      "clone_app",
+      "multi_space"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1.0,
+    "min_match_score": 12
+  },
+  {
+    "id": "DEVICE_FARM_DETECT",
+    "category": "emulator_detection",
+    "description": "Device farm / UIAutomator / cloud test automation detection",
+    "method_names": [
+      "isautomation",
+      "detectautomation",
+      "isuiautomationenabled",
+      "istestenvironment",
+      "checkdevicefarm",
+      "isinstrumentationenabled",
+      "isuitesting",
+      "checkautomation",
+      "isrobotrunning"
+    ],
+    "class_patterns": [
+      "uiautomation",
+      "instrumentationregistry",
+      "testfarm",
+      "devicefarm",
+      "automationdetect",
+      "uitestchecker"
+    ],
+    "required_calls": [
+      "instrumentationregistry;->getinstrumentation",
+      "activitymanager;->isruningintest",
+      "systemproperties;->get"
+    ],
+    "string_patterns": [
+      "uiautomator",
+      "espresso",
+      "robotium",
+      "appium",
+      "monkeyrunner",
+      "testlab",
+      "firebase_test_lab",
+      "automated_testing",
+      "ui_testing",
+      "automation_id"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 10
+  },
+  {
+    "id": "SPEED_HACK_DETECT",
+    "category": "emulator_detection",
+    "description": "Game speed-hack / frame-time manipulation detection",
+    "method_names": [
+      "detectspeedhack",
+      "checkgamespeed",
+      "isspeedhackactive",
+      "verifyframetime",
+      "checktimedrif",
+      "istimenormal",
+      "checkclockdrift",
+      "detecttimescale",
+      "verifyenginespeeed"
+    ],
+    "class_patterns": [
+      "speedhackdetector",
+      "gamespeed",
+      "frametimer",
+      "antispeedhack",
+      "clockchecker",
+      "speeddetect"
+    ],
+    "required_calls": [
+      "system;->nanotime",
+      "systemclock;->elapsedrealtime",
+      "systemclock;->uptimemillis",
+      "choreographer;->getlastframetime"
+    ],
+    "string_patterns": [
+      "speed_hack",
+      "game_speed",
+      "speedhack",
+      "timescale",
+      "speed_multiplier",
+      "clock_drift",
+      "frame_time_anomaly"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.9,
+    "min_match_score": 10
+  },
+  {
+    "id": "MULTI_USER_CHECK",
+    "category": "emulator_detection",
+    "description": "Multi-user / work-profile secondary user detection",
+    "method_names": [
+      "ismultiuser",
+      "issecondaryuser",
+      "checkworkprofile",
+      "isworkprofile",
+      "ismanagedprofile",
+      "detectmultiuser",
+      "getuserbadge",
+      "checkprofiletype"
+    ],
+    "class_patterns": [
+      "usermanager",
+      "profilemanager",
+      "workprofile",
+      "multiusercheck",
+      "usercheck"
+    ],
+    "required_calls": [
+      "usermanager;->ismanageprofile",
+      "usermanager;->issystemuser",
+      "usermanager;->getuserid"
+    ],
+    "string_patterns": [
+      "work_profile",
+      "secondary_user",
+      "managed_profile",
+      "user_id",
+      "profile_owner",
+      "multi_user"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.8,
+    "min_match_score": 10
+  }
+]

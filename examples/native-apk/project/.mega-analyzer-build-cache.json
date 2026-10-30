@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "entries": {
+    "smali": {
+      "hash": "9e0591409d9a39b1e052ee682a2b947d798188f6fb03910b014d9c2b45ccfc75",
+      "dexPath": "classes.dex",
+      "tool": "native"
+    }
+  }
+}

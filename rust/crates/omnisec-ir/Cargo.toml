@@ -1,0 +1,17 @@
+[package]
+name = "omnisec-ir"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniIR — universal intermediate representation for native ISAs and managed bytecodes."
+
+[dependencies]
+omnisec-json = { path = "../omnisec-json" }
+omnisec-core.workspace = true
+
+[dev-dependencies]
+
+[lints]
+workspace = true

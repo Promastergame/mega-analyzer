@@ -1,0 +1,17 @@
+[package]
+name = "omnisec-callgraph"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec inter-procedural call graph: callees, callers, SCCs, transitive closure."
+
+[dependencies]
+omnisec-json = { path = "../omnisec-json" }
+omnisec-core.workspace = true
+omnisec-ir.workspace = true
+omnisec-cfg.workspace = true
+
+[lints]
+workspace = true

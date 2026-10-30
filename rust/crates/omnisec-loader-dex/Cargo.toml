@@ -1,0 +1,20 @@
+[package]
+name = "omnisec-loader-dex"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec DEX loader — high-performance Android DEX parser with MUTF-8 support."
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+omnisec-json = { path = "../omnisec-json" }
+omnisec-core.workspace = true
+
+[dev-dependencies]
+
+[lints]
+workspace = true

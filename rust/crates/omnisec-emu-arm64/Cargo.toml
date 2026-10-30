@@ -1,0 +1,20 @@
+[package]
+name = "omnisec-emu-arm64"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec ARM64 micro-emulator for shellcode and mobile binary analysis."
+
+[dependencies]
+omnisec-emu-x86 = { workspace = true }
+omnisec-json = { path = "../omnisec-json" }
+omnisec-core.workspace = true
+omnisec-arm64-decode.workspace = true
+omnisec-net-obfs = { path = "../omnisec-net-obfs" }
+
+[dev-dependencies]
+
+[lints]
+workspace = true

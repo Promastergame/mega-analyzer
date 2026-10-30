@@ -1,0 +1,112 @@
+{
+  "name": "piracy_dex_rules",
+  "source": "omnisec/mega-analyzer DEX license & piracy taxonomy",
+  "rules": [
+    {
+      "id": "dex_signature_spoof_proxy",
+      "title": "PackageManager signature proxy / fake signature",
+      "severity": "critical",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "getPackageInfo\\(",
+        "GET_SIGNATURES|signingInfo|apkContentsSigners|signatures"
+      ],
+      "not_patterns": [],
+      "cwe": "CWE-347",
+      "owasp_mobile": "M8: Code Tampering",
+      "masvs": "MSTG-RESILIENCE-3",
+      "ref": "Signature verification hooked via PackageManager proxy (attachBaseContext/initProxy)."
+    },
+    {
+      "id": "dex_signature_killer_asset",
+      "title": "Embedded signature killer / origin APK asset",
+      "severity": "critical",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "SignatureKiller",
+        "assets/SignatureKiller",
+        "origin\\.apk",
+        "val\\$fakeSignature"
+      ],
+      "cwe": "CWE-347",
+      "owasp_mobile": "M8: Code Tampering",
+      "masvs": "MSTG-RESILIENCE-3",
+      "ref": "Known repack/signature-spoof toolkit markers."
+    },
+    {
+      "id": "dex_lvl_license_bypass",
+      "title": "Google LVL license check neutralized (always allow)",
+      "severity": "critical",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "ILicensingService|LicenseChecker|Policy;",
+        "allow\\(|dontAllow\\(|LICENSED"
+      ],
+      "cwe": "CWE-693",
+      "owasp_mobile": "M8: Code Tampering",
+      "masvs": "MSTG-RESILIENCE-4",
+      "ref": "LVL callback forced to allow / deny path removed."
+    },
+    {
+      "id": "dex_hidden_api_bypass",
+      "title": "Hidden API restriction bypass",
+      "severity": "high",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "HiddenApiBypass",
+        "setHiddenApiExemptions",
+        "dalvik/system/VMRuntime"
+      ],
+      "cwe": "CWE-693",
+      "owasp_mobile": "M8: Code Tampering",
+      "masvs": "MSTG-RESILIENCE-2",
+      "ref": "Reflective access to greylisted/blacklisted framework APIs."
+    },
+    {
+      "id": "dex_dynamic_code_load",
+      "title": "Dynamic DEX/class loading",
+      "severity": "high",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "DexClassLoader",
+        "InMemoryDexClassLoader",
+        "PathClassLoader",
+        "loadDex\\("
+      ],
+      "cwe": "CWE-494",
+      "owasp_mobile": "M7: Client Code Quality",
+      "masvs": "MSTG-CODE-9",
+      "ref": "Payload delivered/executed via runtime class loading."
+    },
+    {
+      "id": "dex_native_license_bridge",
+      "title": "Native (JNI) license/protection bridge",
+      "severity": "medium",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "loadLibrary\\(|System;->load",
+        "nativeCheckLicense|checkLicenseNative|nativeVerify|nativeSign"
+      ],
+      "cwe": "CWE-693",
+      "owasp_mobile": "M8: Code Tampering",
+      "masvs": "MSTG-RESILIENCE-4",
+      "ref": "License/signature logic pushed into a .so to resist static analysis."
+    },
+    {
+      "id": "dex_integrity_verifier_tamper",
+      "title": "Play Integrity / signature verifier tampering",
+      "severity": "high",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "GoogleSignatureVerifier",
+        "INAPP_DATA_SIGNATURE",
+        "IntegrityManager|PlayIntegrity",
+        "getCertificateFingerprint"
+      ],
+      "cwe": "CWE-354",
+      "owasp_mobile": "M8: Code Tampering",
+      "masvs": "MSTG-RESILIENCE-3",
+      "ref": "Integrity/verifier references adjacent to repack markers."
+    }
+  ]
+}

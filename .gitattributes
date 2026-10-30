@@ -1,0 +1,8 @@
+# Enforce LF everywhere: silences "LF will be replaced by CRLF" warnings
+# on Windows clones with core.autocrlf=true. Binary detection stays automatic.
+* text=auto eol=lf
+
+# Web UI assets are asserted byte-wise by Go tests (which look for \n) and
+# must stay LF in the worktree regardless of core.autocrlf.
+pkg/cmd/analyzer/web/** text eol=lf
+pkg/api/web/** text eol=lf

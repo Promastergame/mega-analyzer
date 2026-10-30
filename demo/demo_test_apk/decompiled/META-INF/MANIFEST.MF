@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+
+Name: AndroidManifest.xml
+SHA-256-Digest: jJvCB80T82FKQZ4B89pKU52V/7EXPnKbVlgouJvfyjY=
+
+Name: classes.dex
+SHA-256-Digest: MawdG0Rcx32+WFIQRi7UbE5kH8SDDgEbvo39CTQ0Vnc=
+
+Name: index.android.bundle
+SHA-256-Digest: lYuUBgnLPPuGZN80YB0NMexthh1S1i8OSAZfQ99I4uY=
+
+Name: pseudo_ad.svg
+SHA-256-Digest: kkRPeEp4/IRcPAGlp/kR769DIBIDPyoItHLtWvLNdkY=
+
+Name: resources.arsc
+SHA-256-Digest: 2ayiLOlZ3Ke2elPwfJoHfoaaNowQlhVhfQD4VIwJyVA=
+

@@ -1,0 +1,5 @@
+{
+  "schema": 1,
+  "description": "Core builds use the in-process Go toolchain. No external tool binaries are bundled.",
+  "tools": []
+}

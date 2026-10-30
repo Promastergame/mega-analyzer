@@ -1,0 +1,42 @@
+{
+  "name": "Pixel 9-api-36",
+  "model": "Pixel 9",
+  "brand": "google",
+  "manufacturer": "Google",
+  "device": "tokay",
+  "product": "tokay",
+  "android_version": "16",
+  "api_level": 36,
+  "abi": "arm64-v8a",
+  "build_id": "BP1A.240401.725",
+  "fingerprint": "google/tokay/tokay:16/BP1A.240401.725/029717:user/release-keys",
+  "security_patch": "2024-05-01",
+  "locale": "en-US",
+  "timezone": "UTC",
+  "resolution": "1080x2400",
+  "density": 420,
+  "network": {
+    "mac_address": "DC:D9:AE:E9:33:FB",
+    "wifi_ssid": "ASUS_F0FC",
+    "imei": "352609102349992",
+    "serial": "BF7F88C29"
+  },
+  "battery": {
+    "level": 71,
+    "status": "discharging",
+    "temperature": 279,
+    "health": "good",
+    "plugged": "none"
+  },
+  "sensor": {
+    "enabled": true,
+    "accelerometer": true,
+    "gyroscope": true
+  },
+  "operator": {
+    "name": "T-Mobile",
+    "numeric": "310260",
+    "mcc": "310",
+    "mnc": "260"
+  }
+}

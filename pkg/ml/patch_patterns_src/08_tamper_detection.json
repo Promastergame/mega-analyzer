@@ -1,0 +1,499 @@
+[
+  {
+    "id": "TAMPER_DETECT",
+    "category": "tamper_detection",
+    "description": "Detects APK tampering/modification",
+    "method_names": [
+      "istampered",
+      "checktamper",
+      "detecttamper",
+      "ismodified",
+      "isapkmodified",
+      "checkintegrity",
+      "verifyapk",
+      "isoriginal",
+      "isaltered"
+    ],
+    "class_patterns": [
+      "tamper",
+      "integrity",
+      "apkcheck",
+      "selfcheck",
+      "antimod"
+    ],
+    "required_calls": [
+      "packagemanager;->getpackageinfo",
+      "zipfile",
+      "crc32",
+      "messagedigest",
+      "checkselfpermission"
+    ],
+    "string_patterns": [
+      "classes.dex",
+      "androidmanifest.xml",
+      "meta-inf",
+      "sha-256",
+      "sha-1",
+      "md5"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 1,
+    "min_match_score": 15
+  },
+  {
+    "id": "REFLECTION_INVOKE",
+    "category": "tamper_detection",
+    "description": "Detects reflection-based method invocation (Method.invoke)",
+    "method_names": [
+      "invoke",
+      "invokenative",
+      "invokemethod",
+      "callmethod",
+      "executereflection"
+    ],
+    "class_patterns": [
+      "reflect",
+      "reflection",
+      "method",
+      "invoke"
+    ],
+    "required_calls": [
+      "method;->invoke",
+      "class;->getmethod",
+      "class;->getdeclaredmethod",
+      "method;->setaccessible"
+    ],
+    "string_patterns": [
+      "java.lang.reflect.method",
+      "invoke"
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 0.9,
+    "min_match_score": 15
+  },
+  {
+    "id": "CLASS_FORNAME",
+    "category": "tamper_detection",
+    "description": "Detects dynamic class loading (Class.forName)",
+    "method_names": [
+      "loadclass",
+      "findclass",
+      "defineclass",
+      "forname",
+      "getclass"
+    ],
+    "class_patterns": [
+      "classloader",
+      "loader",
+      "dynamic"
+    ],
+    "required_calls": [
+      "class;->forname",
+      "classloader;->loadclass",
+      "classloader;->findclass"
+    ],
+    "string_patterns": [
+      "java.lang.class",
+      "classloader"
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 0.9,
+    "min_match_score": 15
+  },
+  {
+    "id": "REFLECTION_FIELD",
+    "category": "tamper_detection",
+    "description": "Detects reflection-based field access (Field.get/set)",
+    "method_names": [
+      "getfield",
+      "setfield",
+      "accessfield",
+      "modifyfield",
+      "readfield"
+    ],
+    "class_patterns": [
+      "reflect",
+      "field",
+      "accessor"
+    ],
+    "required_calls": [
+      "field;->get",
+      "field;->set",
+      "class;->getfield",
+      "class;->getdeclaredfield",
+      "field;->setaccessible"
+    ],
+    "string_patterns": [
+      "java.lang.reflect.field",
+      "field"
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 0.9,
+    "min_match_score": 15
+  },
+  {
+    "id": "PROXY_INVOKE",
+    "category": "tamper_detection",
+    "description": "Detects dynamic proxy creation (Proxy.newProxyInstance)",
+    "method_names": [
+      "newproxyinstance",
+      "createproxy",
+      "proxyinvoke",
+      "invocationhandler"
+    ],
+    "class_patterns": [
+      "proxy",
+      "invocationhandler",
+      "dynamic"
+    ],
+    "required_calls": [
+      "proxy;->newproxyinstance",
+      "invocationhandler;->invoke"
+    ],
+    "string_patterns": [
+      "java.lang.reflect.proxy",
+      "invocationhandler"
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 0.9,
+    "min_match_score": 15
+  },
+  {
+    "id": "DEX_CLASS_LOADER",
+    "category": "tamper_detection",
+    "description": "Detects dynamic DEX loading (DexClassLoader)",
+    "method_names": [
+      "loaddex",
+      "loadclassfromdex",
+      "dexloader",
+      "dynamicload",
+      "loadplugin"
+    ],
+    "class_patterns": [
+      "dexclassloader",
+      "classloader",
+      "dynamicload",
+      "plugin",
+      "hotfix"
+    ],
+    "required_calls": [
+      "dexclassloader;-><init>",
+      "dexclassloader;->loadclass",
+      "pathclassloader;-><init>"
+    ],
+    "string_patterns": [
+      "dalvik.system.dexclassloader",
+      "dalvik.system.pathclassloader",
+      ".dex",
+      ".jar",
+      "optimizeddirectory"
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 1,
+    "min_match_score": 15
+  },
+  {
+    "id": "INMEMORY_DEX_LOADER",
+    "category": "tamper_detection",
+    "description": "Detects in-memory DEX loading (InMemoryDexClassLoader)",
+    "method_names": [
+      "loadinmemorydex",
+      "loadfrommemory",
+      "memoryclassloader"
+    ],
+    "class_patterns": [
+      "inmemorydexclassloader",
+      "memoryloader"
+    ],
+    "required_calls": [
+      "inmemorydexclassloader;-><init>",
+      "bytebuffer"
+    ],
+    "string_patterns": [
+      "dalvik.system.inmemorydexclassloader",
+      "bytebuffer"
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 1,
+    "min_match_score": 15
+  },
+  {
+    "id": "NATIVE_LOAD",
+    "category": "tamper_detection",
+    "description": "Detects suspicious native library loading",
+    "method_names": [
+      "loadlibrary",
+      "load",
+      "loadnative",
+      "system.load",
+      "system.loadlibrary"
+    ],
+    "class_patterns": [
+      "nativeloader",
+      "jniloader",
+      "library"
+    ],
+    "required_calls": [
+      "system;->loadlibrary",
+      "system;->load",
+      "runtime;->loadlibrary"
+    ],
+    "string_patterns": [
+      ".so",
+      "lib/",
+      "jni/",
+      "native"
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 0.8,
+    "min_match_score": 12
+  },
+  {
+    "id": "PREFS_SECURITY_CHECK",
+    "category": "tamper_detection",
+    "description": "SharedPreferences integrity/tampering check",
+    "method_names": [
+      "validatepreferences",
+      "checkprefsintegrity",
+      "isprefsmodified",
+      "verifypreferences",
+      "checkstoredvalue",
+      "validatestored"
+    ],
+    "class_patterns": [
+      "prefs",
+      "preferences",
+      "secureprefs",
+      "encryptedprefs",
+      "securestorage"
+    ],
+    "required_calls": [
+      "sharedpreferences;->getstring",
+      "sharedpreferences;->getboolean",
+      "messagedigest;->digest",
+      "encryptedsharedpreferences"
+    ],
+    "string_patterns": [
+      "checksum",
+      "hash",
+      "hmac",
+      "integrity",
+      "pref_hash",
+      "stored_hash",
+      "validation_key"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 0.9,
+    "min_match_score": 15
+  },
+  {
+    "id": "WEBVIEW_JS_BRIDGE",
+    "category": "tamper_detection",
+    "description": "WebView JavaScript bridge (JS→Native interface)",
+    "method_names": [
+      "addjavascriptinterface",
+      "evaluatejavascript",
+      "onreceivevalue",
+      "postmessage",
+      "shouldoverrideurlloading",
+      "shouldinterceptrequest"
+    ],
+    "class_patterns": [
+      "webview",
+      "jsbridge",
+      "javascript",
+      "webinterface",
+      "bridgehandler"
+    ],
+    "required_calls": [
+      "webview;->addjavascriptinterface",
+      "webview;->evaluatejavascript",
+      "webview;->loaddatawithbaseurl"
+    ],
+    "string_patterns": [
+      "javascript:",
+      "JavascriptInterface",
+      "@JavascriptInterface",
+      "jsbridge",
+      "postMessage",
+      "window."
+    ],
+    "return_type": "",
+    "patch_type": "return_void",
+    "weight": 0.8,
+    "min_match_score": 15
+  },
+  {
+    "id": "BIOMETRIC_AUTH_BYPASS",
+    "category": "tamper_detection",
+    "description": "BiometricPrompt / FingerprintManager authentication gate",
+    "method_names": [
+      "onauthenticationsucceeded",
+      "onauthenticationerror",
+      "onauthenticationfailed",
+      "checkbiometric",
+      "canauthenticate",
+      "showauthprompt",
+      "isbiometricavailable",
+      "biometriccheck",
+      "authenticatebiometric",
+      "verifybiometric"
+    ],
+    "class_patterns": [
+      "biometricprompt",
+      "fingerprintmanager",
+      "biometricmanager",
+      "biometrichelper",
+      "authgate",
+      "fingerprintauth"
+    ],
+    "required_calls": [
+      "biometricprompt;->authenticate",
+      "fingerprintmanager;->authenticate",
+      "biometricmanager;->canadauthenticate"
+    ],
+    "string_patterns": [
+      "biometric",
+      "fingerprint",
+      "face_auth",
+      "biometric_gate",
+      "biometric_required"
+    ],
+    "return_type": "V",
+    "patch_type": "return_void",
+    "weight": 1.1,
+    "min_match_score": 12
+  },
+  {
+    "id": "DEVICE_BINDING_CHECK",
+    "category": "tamper_detection",
+    "description": "Device ID / IMEI / Android ID hardware binding check",
+    "method_names": [
+      "checkdevicebinding",
+      "validatedeviceid",
+      "isdevicebound",
+      "verifydevice",
+      "getdevicehash",
+      "isbounddevice",
+      "checkimei",
+      "verifyandroidid",
+      "isregistereddevice",
+      "validatehardwareid"
+    ],
+    "class_patterns": [
+      "devicebinding",
+      "hardwareid",
+      "devicecheck",
+      "devicevalidat",
+      "imeicheck",
+      "androididcheck"
+    ],
+    "required_calls": [
+      "telephonymanager;->getdeviceid",
+      "telephonymanager;->getimei",
+      "settings$secure;->getstring",
+      "telephonymanager;->getsubscriberid"
+    ],
+    "string_patterns": [
+      "android_id",
+      "device_id",
+      "imei",
+      "hardware_id",
+      "bound_device",
+      "device_fingerprint"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.2,
+    "min_match_score": 15
+  },
+  {
+    "id": "SCREEN_OVERLAY_DETECT",
+    "category": "tamper_detection",
+    "description": "Screen overlay / canDrawOverlays / SYSTEM_ALERT_WINDOW detection",
+    "method_names": [
+      "isoverlaydeteced",
+      "checkoverlay",
+      "detectoverlay",
+      "isoverlayactive",
+      "hasoverlaypermission",
+      "checkdrawoverlays",
+      "isalertwindowpermission",
+      "canshowoverlays",
+      "overlaycheck"
+    ],
+    "class_patterns": [
+      "overlaydetect",
+      "overlaycheck",
+      "windowsecurity",
+      "screenprotect",
+      "drawoverlays"
+    ],
+    "required_calls": [
+      "settings;->candrawoverlays",
+      "windowmanager$layoutparams;->type",
+      "view;->getwindowvisibleregion"
+    ],
+    "string_patterns": [
+      "candrawoverlays",
+      "type_application_overlay",
+      "system_alert_window",
+      "overlay_detected",
+      "draw_over_other_apps",
+      "overlay_attack"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.8,
+    "min_match_score": 10
+  },
+  {
+    "id": "SCREEN_CAPTURE_DETECT",
+    "category": "tamper_detection",
+    "description": "Screen recording/screenshot prevention",
+    "method_names": [
+      "isscreenrecording",
+      "isscreencapture",
+      "detectscreenrecord",
+      "preventscreenshot",
+      "setflagsecure",
+      "issecureflag",
+      "detectoverlay",
+      "isoverlaydetected"
+    ],
+    "class_patterns": [
+      "screenshot",
+      "screenrecord",
+      "capture",
+      "overlay",
+      "secure",
+      "screensecurity"
+    ],
+    "required_calls": [
+      "window;->setflags",
+      "window;->addflags",
+      "windowmanager;->getdefaultdisplay",
+      "mediaprojection"
+    ],
+    "string_patterns": [
+      "FLAG_SECURE",
+      "screen_capture",
+      "screen_recording",
+      "mediaprojection",
+      "overlay_detected"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_false",
+    "weight": 0.7,
+    "min_match_score": 12
+  }
+]

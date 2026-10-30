@@ -1,0 +1,579 @@
+{
+  "name": "android_apis",
+  "source": "MobSF v4.4.6",
+  "rules": [
+    {
+      "id": "api_native_code",
+      "title": "Loading Native Code (Shared Library)",
+      "severity": "info",
+      "pattern_type": "regex",
+      "pattern": "System\\.loadLibrary\\(|System\\.load\\("
+    },
+    {
+      "id": "api_get_system_service",
+      "title": "Get System Service",
+      "severity": "info",
+      "pattern_type": "regex",
+      "pattern": "getSystemService"
+    },
+    {
+      "id": "api_get_running_app_processes",
+      "title": "Get Running App Processes",
+      "severity": "info",
+      "pattern_type": "regex",
+      "pattern": "getRunningAppProcesses\\("
+    },
+    {
+      "id": "api_dexloading",
+      "title": "Dynamic Class and Dexloading",
+      "severity": "info",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "dalvik\\.system\\.DexClassLoader",
+        "java\\.security\\.ClassLoader",
+        "java\\.net\\.URLClassLoader",
+        "java\\.security\\.SecureClassLoader",
+        "\\.loadClass\\(",
+        "PathClassLoader\\(",
+        "DexClassLoader\\(",
+        "InMemoryDexClassLoader\\("
+      ]
+    },
+    {
+      "id": "api_java_reflection",
+      "title": "Java Reflection",
+      "severity": "info",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "java\\.lang\\.reflect\\.Method",
+        "java\\.lang\\.reflect\\.Field",
+        "Class\\.forName"
+      ]
+    },
+    {
+      "id": "api_crypto",
+      "title": "Crypto",
+      "severity": "info",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "javax\\.crypto",
+        "kalium\\.crypto",
+        "bouncycastle\\.crypto",
+        "EncryptedFile\\.FileEncryptionScheme",
+        "MessageDigest\\.getInstance\\(",
+        "Signature\\.getInstance\\(",
+        "Cipher\\.getInstance\\("
+      ]
+    },
+    {
+      "id": "api_start_activity",
+      "title": "Starting Activity",
+      "severity": "info",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "startActivity\\(",
+        "startActivityForResult\\("
+      ]
+    },
+    {
+      "id": "api_start_service",
+      "title": "Starting Service",
+      "severity": "info",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "startService\\(",
+        "bindService\\("
+      ]
+    },
+    {
+      "id": "api_send_broadcast",
+      "title": "Sending Broadcast",
+      "severity": "info",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "sendBroadcast\\(",
+        "sendOrderedBroadcast\\(",
+        "sendStickyBroadcast\\("
+      ]
+    },
+    {
+      "id": "api_local_file_io",
+      "title": "Local File I/O Operations",
+      "severity": "info",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "OpenFileOutput",
+        "OpenFileInput",
+        "openFileInput",
+        "openFileOutput",
+        "getSharedPreferences",
+        "SharedPreferences\\.Editor",
+        "getCacheDir",
+        "getExternalStorageState",
+        "openOrCreateDatabase",
+        "new File\\(",
+        "import java\\.io\\.",
+        "import java\\.nio\\.file",
+        "import java\\.util\\.Scanner"
+      ]
+    },
+    {
+      "id": "api_ipc",
+      "title": "Inter Process Communication",
+      "severity": "info",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "IRemoteService\\.Stub",
+        "IBinder",
+        "Intent"
+      ]
+    },
+    {
+      "id": "api_web",
+      "title": "HTTP Requests, Connections and Sessions",
+      "severity": "info",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "http\\.client\\.HttpClient",
+        "net\\.http\\.AndroidHttpClient",
+        "http\\.impl\\.client\\.AbstractHttpClient"
+      ]
+    },
+    {
+      "id": "api_http_connection",
+      "title": "HTTP Connection",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "HttpURLConnection|org\\.apache\\.http",
+        "openConnection|connect|HttpRequest"
+      ]
+    },
+    {
+      "id": "api_dex_manipulate",
+      "title": "Load and Manipulate Dex Files",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "dalvik\\.system\\.PathClassLoader|dalvik\\.system\\.DexFile|dalvik\\.system\\.DexPathList",
+        "loadDex|loadClass|DexClassLoader|loadDexFile"
+      ]
+    },
+    {
+      "id": "api_content_provider",
+      "title": "Content Provider",
+      "severity": "info",
+      "pattern_type": "regex",
+      "pattern": "android\\.content\\.ContentProvider"
+    },
+    {
+      "id": "api_obfuscation",
+      "title": "Obfuscation",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "utils\\.AESObfuscator",
+        "getObfuscator"
+      ]
+    },
+    {
+      "id": "api_os_command",
+      "title": "Execute OS Command",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "\\.exec\\(",
+        "getRuntime\\("
+      ]
+    },
+    {
+      "id": "api_kill_process",
+      "title": "Kill Process",
+      "severity": "info",
+      "pattern_type": "regex_or",
+      "patterns": [
+        "Process\\.killProcess\\(",
+        "\\.killBackgroundProcesses\\("
+      ]
+    },
+    {
+      "id": "api_keystore",
+      "title": "Android Keystore",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "security\\.KeyStore",
+        "Keystore\\.getInstance\\("
+      ]
+    },
+    {
+      "id": "api_tcp_server",
+      "title": "TCP Server Socket",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "ServerSocket",
+        "net\\.ServerSocket"
+      ]
+    },
+    {
+      "id": "api_tcp",
+      "title": "TCP Socket",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "Socket",
+        "net\\.Socket"
+      ]
+    },
+    {
+      "id": "api_udp_datagram",
+      "title": "UDP Datagram Packet",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "DatagramPacket",
+        "net\\.DatagramPacket"
+      ]
+    },
+    {
+      "id": "api_udp_datagram_socket",
+      "title": "UDP Datagram Socket",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "DatagramSocket",
+        "net\\.DatagramSocket"
+      ]
+    },
+    {
+      "id": "api_webview",
+      "title": "WebView JavaScript Interface",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "addJavascriptInterface",
+        "WebView",
+        "android\\.webkit"
+      ]
+    },
+    {
+      "id": "api_webview_get",
+      "title": "WebView GET Request",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "WebView",
+        "loadData",
+        "android\\.webkit"
+      ]
+    },
+    {
+      "id": "api_webview_post",
+      "title": "WebView POST Request",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "WebView",
+        "postUrl",
+        "android\\.webkit"
+      ]
+    },
+    {
+      "id": "api_notifications",
+      "title": "Android Notifications",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "app\\.NotificationManager",
+        "notify"
+      ]
+    },
+    {
+      "id": "api_get_cell",
+      "title": "Get Cell Information",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "telephony\\.TelephonyManager",
+        "getAllCellInfo"
+      ]
+    },
+    {
+      "id": "api_get_location",
+      "title": "Get Cell Location",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "telephony\\.TelephonyManager",
+        "getCellLocation"
+      ]
+    },
+    {
+      "id": "api_get_subscriber",
+      "title": "Get Subscriber ID",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "telephony\\.TelephonyManager",
+        "getSubscriberId"
+      ]
+    },
+    {
+      "id": "api_get_device",
+      "title": "Get Device ID, IMEI,MEID/ESN etc",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "telephony\\.TelephonyManager",
+        "getDeviceId",
+        "getImei\\(",
+        "getMeid\\("
+      ]
+    },
+    {
+      "id": "api_get_soft",
+      "title": "Get Software Version, IMEI/SV etc",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "telephony\\.TelephonyManager",
+        "getDeviceSoftwareVersion"
+      ]
+    },
+    {
+      "id": "api_get_sim_serial",
+      "title": "Get SIM Serial Number",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "telephony\\.TelephonyManager",
+        "getSimSerialNumber"
+      ]
+    },
+    {
+      "id": "api_get_sim_provider",
+      "title": "Get SIM Provider Details",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "telephony\\.TelephonyManager",
+        "getSimOperator"
+      ]
+    },
+    {
+      "id": "api_get_sim_operator",
+      "title": "Get SIM Operator Name",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "telephony\\.TelephonyManager",
+        "getSimOperatorName"
+      ]
+    },
+    {
+      "id": "api_get_phone",
+      "title": "Get Phone Number",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "telephony\\.TelephonyManager",
+        "getLine1Number"
+      ]
+    },
+    {
+      "id": "api_sms_call",
+      "title": "Query Database of SMS, Contacts etc",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "content\\.ContentResolver",
+        "query"
+      ]
+    },
+    {
+      "id": "api_hide_app_icon",
+      "title": "Hide application icon",
+      "severity": "info",
+      "pattern_type": "regex_and",
+      "patterns": [
+        "\\.setComponentEnabledSetting\\(",
+        "COMPONENT_ENABLED_STATE_DISABLED"
+      ]
+    },
+    {
+      "id": "api_send_sms",
+      "title": "Send SMS",
+      "severity": "info",
+      "pattern_type": "regex_and_or",
+      "first": "telephony\\.SmsManager",
+      "second": [
+        "sendMultipartTextMessage",
+        "sendTextMessage",
+        "vnd\\.android-dir\\/mms-sms"
+      ]
+    },
+    {
+      "id": "api_url",
+      "title": "URL Connection to file/http/https/ftp/jar",
+      "severity": "info",
+      "pattern_type": "regex_and_or",
+      "first": "net\\.URLConnection",
+      "second": [
+        "openConnection",
+        "connect",
+        "openStream"
+      ]
+    },
+    {
+      "id": "api_jar_url",
+      "title": "JAR URL Connection",
+      "severity": "info",
+      "pattern_type": "regex_and_or",
+      "first": "net\\.JarURLConnection",
+      "second": [
+        "JarURLConnection",
+        "jar:"
+      ]
+    },
+    {
+      "id": "api_https_connection",
+      "title": "HTTPS Connection",
+      "severity": "info",
+      "pattern_type": "regex_and_or",
+      "first": "javax\\.net\\.ssl\\.HttpsURLConnection",
+      "second": [
+        "HttpsURLConnection",
+        "connect"
+      ]
+    },
+    {
+      "id": "api_clipboard",
+      "title": "Set or Read Clipboard data",
+      "severity": "info",
+      "pattern_type": "regex_and_or",
+      "first": "content\\.ClipboardManager",
+      "second": [
+        "CLIPBOARD_SERVICE",
+        "ClipboardManager"
+      ]
+    },
+    {
+      "id": "api_base64_encode",
+      "title": "Base64 Encode",
+      "severity": "info",
+      "pattern_type": "regex_and_or",
+      "first": "android\\.util\\.Base64",
+      "second": [
+        "\\.encodeToString",
+        "\\.encode"
+      ]
+    },
+    {
+      "id": "api_base64_decode",
+      "title": "Base64 Decode",
+      "severity": "info",
+      "pattern_type": "regex_and_or",
+      "first": "android\\.util\\.Base64",
+      "second": [
+        "\\.decodeToString",
+        "\\.decode"
+      ]
+    },
+    {
+      "id": "api_message_digest",
+      "title": "Message Digest",
+      "severity": "info",
+      "pattern_type": "regex_and_or",
+      "first": "java\\.security\\.MessageDigest",
+      "second": [
+        "MessageDigestSpi",
+        "MessageDigest"
+      ]
+    },
+    {
+      "id": "api_gps",
+      "title": "GPS Location",
+      "severity": "info",
+      "pattern_type": "regex_and_or",
+      "first": "android\\.location",
+      "second": [
+        "getLastKnownLocation\\(",
+        "requestLocationUpdates\\(",
+        "getLatitude\\(",
+        "getLongitude\\("
+      ]
+    },
+    {
+      "id": "api_installed",
+      "title": "Get Installed Applications",
+      "severity": "info",
+      "pattern_type": "regex_and_or",
+      "first": "getPackageManager\\(",
+      "second": [
+        "queryIntentActivities\\(",
+        "getInstalledApplications\\(",
+        "getInstalledPackages\\("
+      ]
+    },
+    {
+      "id": "api_get_wifi",
+      "title": "Get WiFi Details",
+      "severity": "info",
+      "pattern_type": "regex_and_or",
+      "first": "wifi\\.WifiManager",
+      "second": [
+        "getConnectionInfo\\(",
+        "getSSID\\(",
+        "getConfiguredNetworks\\(",
+        "getNetworkId\\(",
+        "getIpAddress\\(",
+        "getMacAddress\\("
+      ]
+    },
+    {
+      "id": "api_get_network",
+      "title": "Get Network Interface information",
+      "severity": "info",
+      "pattern_type": "regex_and_or",
+      "first": "NetworkInterface",
+      "second": [
+        "getNetworkInterfaces\\(",
+        "getInetAddresses\\(",
+        "getHostAddress\\("
+      ]
+    },
+    {
+      "id": "api_get_advertising",
+      "title": "Get Android Advertising ID",
+      "severity": "info",
+      "pattern_type": "regex_and_or",
+      "first": "AdvertisingIdClient",
+      "second": [
+        "getAdvertisingIdInfo\\(",
+        "getAdvertisingId\\("
+      ]
+    },
+    {
+      "id": "api_certificate_handling",
+      "title": "Certificate Handling",
+      "severity": "info",
+      "pattern_type": "regex",
+      "pattern": "\\.SSLSocketFactory"
+    },
+    {
+      "id": "api_javascript_interface_methods",
+      "title": "JavaScript Interface Methods",
+      "severity": "info",
+      "pattern_type": "regex",
+      "pattern": "\\@JavascriptInterface|\\@android\\.webkit\\.JavascriptInterface"
+    },
+    {
+      "id": "api_passkeys",
+      "title": "Passkeys",
+      "severity": "info",
+      "pattern_type": "regex",
+      "pattern": "CredentialManager\\.create\\(|GetPublicKeyCredentialOption\\(|\\.getAuthenticationResponseJson\\(|CreatePublicKeyCredentialRequest\\("
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "DYNAMIC_LOAD": {
+    "precision": 1,
+    "recall": 1
+  },
+  "WEBVIEW_REMOTE_JS": {
+    "precision": 1,
+    "recall": 1
+  },
+  "cleartext_traffic": {
+    "precision": 1,
+    "recall": 1
+  },
+  "command_injection": {
+    "precision": 1,
+    "recall": 1
+  },
+  "deep_link_vuln": {
+    "precision": 1,
+    "recall": 1
+  },
+  "dlopen_obfuscation": {
+    "precision": 1,
+    "recall": 1
+  },
+  "dynamic_class_loading": {
+    "precision": 1,
+    "recall": 1
+  },
+  "dynamic_code_loading": {
+    "precision": 1,
+    "recall": 1
+  },
+  "exported_component": {
+    "precision": 1,
+    "recall": 1
+  },
+  "hardcoded_secret": {
+    "precision": 1,
+    "recall": 1
+  },
+  "insecure_backup": {
+    "precision": 1,
+    "recall": 1
+  },
+  "insecure_storage": {
+    "precision": 1,
+    "recall": 1
+  },
+  "insecure_tls": {
+    "precision": 1,
+    "recall": 1
+  },
+  "intent_redirection": {
+    "precision": 1,
+    "recall": 1
+  },
+  "log_data_exposure": {
+    "precision": 1,
+    "recall": 1
+  },
+  "path_traversal": {
+    "precision": 1,
+    "recall": 1
+  },
+  "pending_intent_vuln": {
+    "precision": 1,
+    "recall": 1
+  },
+  "sql_injection": {
+    "precision": 1,
+    "recall": 1
+  },
+  "strand_hogg": {
+    "precision": 1,
+    "recall": 1
+  },
+  "weak_crypto": {
+    "precision": 1,
+    "recall": 1
+  },
+  "webview_file_access": {
+    "precision": 1,
+    "recall": 1
+  },
+  "webview_injection": {
+    "precision": 1,
+    "recall": 1
+  },
+  "webview_js_bridge": {
+    "precision": 1,
+    "recall": 1
+  },
+  "zip_slip": {
+    "precision": 1,
+    "recall": 1
+  }
+}

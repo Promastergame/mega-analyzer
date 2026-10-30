@@ -1,0 +1,20 @@
+[package]
+name = "omnisec-pdg"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Program Dependence Graph (PDG) construction for OmniSec"
+
+[dependencies]
+omnisec-graph = { path = "../omnisec-graph" }
+omnisec-core.workspace = true
+omnisec-cfg.workspace = true
+omnisec-ir.workspace = true
+omnisec-dataflow.workspace = true
+omnisec-hdc.workspace = true
+
+
+[lints]
+workspace = true

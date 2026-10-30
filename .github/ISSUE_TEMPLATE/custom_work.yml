@@ -1,0 +1,41 @@
+name: Заказать доработку / Custom development
+description: Платная функция, интеграция или утилита / Request paid custom work.
+title: "[Custom]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Опишите задачу для платной разработки. Автор оценит возможность выполнения;
+        объём, стоимость и срок согласуются в переписке до начала работы.
+        Это публичное обращение: достаточно общего описания без конфиденциальных
+        файлов, персональных данных и ключей доступа.
+
+        Describe a task for paid development. The author will assess feasibility;
+        scope, price and schedule are agreed in writing before work starts.
+        This is a public inquiry: share a brief description without confidential
+        files, personal data or credentials.
+  - type: textarea
+    id: task
+    attributes:
+      label: Задача / Task
+      description: Что нужно сделать и какую проблему это решает? / What needs to be built, and what problem does it solve?
+      placeholder: Новая функция, интеграция, автоматизация или отдельная утилита / A feature, integration, automation or standalone utility.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-result
+    attributes:
+      label: Ожидаемый результат / Expected result
+      description: Как вы поймёте, что задача выполнена? / How will you know the work is complete?
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Окружение / Environment
+      description: ОС, версия Mega-Analyzer или система для интеграции, если применимо. / OS, Mega-Analyzer version or integration target, if relevant.
+  - type: input
+    id: budget-and-deadline
+    attributes:
+      label: Бюджет и срок / Budget and deadline
+      description: Если уже определены; поле необязательное. / Optional, if you have them in mind.

@@ -1,0 +1,1357 @@
+{
+  "ml_negative_database": {
+    "metadata": {
+      "version": "1.0.0",
+      "description": "Synthetic NON-secrets -- placeholders, junk, docs examples, UUIDs, hashes, code refs",
+      "total_records": 269,
+      "warning": "ALL values here are NEGATIVES -- not real secrets"
+    },
+    "negatives": [
+      {
+        "id": "neg_001",
+        "value": "your_api_key",
+        "reason": "placeholder word"
+      },
+      {
+        "id": "neg_002",
+        "value": "YOUR_API_KEY_HERE",
+        "reason": "placeholder word"
+      },
+      {
+        "id": "neg_003",
+        "value": "INSERT_API_KEY",
+        "reason": "placeholder word"
+      },
+      {
+        "id": "neg_004",
+        "value": "<API_KEY>",
+        "reason": "template bracket"
+      },
+      {
+        "id": "neg_005",
+        "value": "${API_KEY}",
+        "reason": "env variable template"
+      },
+      {
+        "id": "neg_006",
+        "value": "{{API_KEY}}",
+        "reason": "mustache template"
+      },
+      {
+        "id": "neg_007",
+        "value": "%API_KEY%",
+        "reason": "windows env template"
+      },
+      {
+        "id": "neg_008",
+        "value": "__API_KEY__",
+        "reason": "dunder placeholder"
+      },
+      {
+        "id": "neg_009",
+        "value": "REPLACE_ME",
+        "reason": "placeholder word"
+      },
+      {
+        "id": "neg_010",
+        "value": "CHANGEME",
+        "reason": "placeholder word"
+      },
+      {
+        "id": "neg_011",
+        "value": "changeme",
+        "reason": "placeholder word lowercase"
+      },
+      {
+        "id": "neg_012",
+        "value": "ENTER_YOUR_KEY",
+        "reason": "placeholder word"
+      },
+      {
+        "id": "neg_013",
+        "value": "add_your_key_here",
+        "reason": "placeholder word"
+      },
+      {
+        "id": "neg_014",
+        "value": "your-secret-here",
+        "reason": "placeholder word"
+      },
+      {
+        "id": "neg_015",
+        "value": "<YOUR_TOKEN>",
+        "reason": "template bracket"
+      },
+      {
+        "id": "neg_016",
+        "value": "[YOUR_SECRET_KEY]",
+        "reason": "template bracket"
+      },
+      {
+        "id": "neg_017",
+        "value": "PASTE_TOKEN_HERE",
+        "reason": "placeholder word"
+      },
+      {
+        "id": "neg_018",
+        "value": "sk-xxxx",
+        "reason": "partial placeholder"
+      },
+      {
+        "id": "neg_019",
+        "value": "token_goes_here",
+        "reason": "placeholder word"
+      },
+      {
+        "id": "neg_020",
+        "value": "MY_SECRET_KEY",
+        "reason": "placeholder word"
+      },
+      {
+        "id": "neg_021",
+        "value": "xxxxxxxxxxxxxxxxxxxx",
+        "reason": "all same char x"
+      },
+      {
+        "id": "neg_022",
+        "value": "XXXXXXXXXXXXXXXXXXXX",
+        "reason": "all same char X"
+      },
+      {
+        "id": "neg_023",
+        "value": "00000000000000000000",
+        "reason": "all zeros"
+      },
+      {
+        "id": "neg_024",
+        "value": "11111111111111111111",
+        "reason": "all ones"
+      },
+      {
+        "id": "neg_025",
+        "value": "aaaaaaaaaaaaaaaaaaaa",
+        "reason": "all same char a"
+      },
+      {
+        "id": "neg_026",
+        "value": "AAAAAAAAAAAAAAAAAAAAAA",
+        "reason": "all same char A"
+      },
+      {
+        "id": "neg_027",
+        "value": "????????????????????????????????",
+        "reason": "all question marks"
+      },
+      {
+        "id": "neg_028",
+        "value": "********************************",
+        "reason": "all asterisks"
+      },
+      {
+        "id": "neg_029",
+        "value": "-----------------------------",
+        "reason": "all dashes"
+      },
+      {
+        "id": "neg_030",
+        "value": "#####################",
+        "reason": "all hashes"
+      },
+      {
+        "id": "neg_031",
+        "value": "abcdefghijklmnopqrstuvwxyz",
+        "reason": "sequential alphabet"
+      },
+      {
+        "id": "neg_032",
+        "value": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "reason": "sequential alphabet upper"
+      },
+      {
+        "id": "neg_033",
+        "value": "1234567890",
+        "reason": "sequential digits"
+      },
+      {
+        "id": "neg_034",
+        "value": "12345678901234567890",
+        "reason": "repeated sequential digits"
+      },
+      {
+        "id": "neg_035",
+        "value": "0987654321",
+        "reason": "reverse sequential digits"
+      },
+      {
+        "id": "neg_036",
+        "value": "abcdefg1234567",
+        "reason": "trivial pattern"
+      },
+      {
+        "id": "neg_037",
+        "value": "aabbccddee112233",
+        "reason": "doubled char pattern"
+      },
+      {
+        "id": "neg_038",
+        "value": "xoxb-xxxx-xxxx-xxxx",
+        "reason": "slack token template"
+      },
+      {
+        "id": "neg_039",
+        "value": "sk-000000000000000000000",
+        "reason": "all zeros with prefix"
+      },
+      {
+        "id": "neg_040",
+        "value": "AKIAXXXXXXXXXXXXXXXX",
+        "reason": "AWS template all X"
+      },
+      {
+        "id": "neg_041",
+        "value": "AKIAIOSFODNN7EXAMPLE",
+        "reason": "AWS official docs example"
+      },
+      {
+        "id": "neg_042",
+        "value": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY",
+        "reason": "AWS official docs example"
+      },
+      {
+        "id": "neg_043",
+        "value": "sk-proj-example",
+        "reason": "OpenAI docs placeholder"
+      },
+      {
+        "id": "neg_044",
+        "value": "ghp_EXAMPLE1234567890",
+        "reason": "GitHub docs example"
+      },
+      {
+        "id": "neg_045",
+        "value": "glpat-EXAMPLE_TOKEN",
+        "reason": "GitLab docs example"
+      },
+      {
+        "id": "neg_046",
+        "value": "xoxb-EXAMPLE-TOKEN",
+        "reason": "Slack docs example"
+      },
+      {
+        "id": "neg_047",
+        "value": "AIzaSyEXAMPLE",
+        "reason": "Google API docs example"
+      },
+      {
+        "id": "neg_048",
+        "value": "sk-ant-EXAMPLE",
+        "reason": "Anthropic docs example"
+      },
+      {
+        "id": "neg_049",
+        "value": "ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "reason": "Twilio docs example"
+      },
+      {
+        "id": "neg_050",
+        "value": "SG.EXAMPLE.EXAMPLE",
+        "reason": "SendGrid docs example"
+      },
+      {
+        "id": "neg_051",
+        "value": "npm_EXAMPLE1234567890",
+        "reason": "npm docs example"
+      },
+      {
+        "id": "neg_052",
+        "value": "pypi-EXAMPLETOKEN",
+        "reason": "PyPI docs example"
+      },
+      {
+        "id": "neg_053",
+        "value": "dckr_pat_EXAMPLE",
+        "reason": "Docker docs example"
+      },
+      {
+        "id": "neg_054",
+        "value": "hf_EXAMPLE1234",
+        "reason": "HuggingFace docs example"
+      },
+      {
+        "id": "neg_055",
+        "value": "pk_test_EXAMPLE1234",
+        "reason": "Stripe test docs example"
+      },
+      {
+        "id": "neg_056",
+        "value": "whsec_EXAMPLE",
+        "reason": "Stripe webhook docs example"
+      },
+      {
+        "id": "neg_057",
+        "value": "key-EXAMPLE1234567890",
+        "reason": "Mailgun docs example"
+      },
+      {
+        "id": "neg_058",
+        "value": "hvs.EXAMPLETOKEN",
+        "reason": "Vault docs example"
+      },
+      {
+        "id": "neg_059",
+        "value": "pcsk_EXAMPLE",
+        "reason": "Pinecone docs example"
+      },
+      {
+        "id": "neg_060",
+        "value": "ATATT3xFfGF0EXAMPLE",
+        "reason": "Atlassian docs example"
+      },
+      {
+        "id": "neg_061",
+        "value": "test",
+        "reason": "too short / generic"
+      },
+      {
+        "id": "neg_062",
+        "value": "key",
+        "reason": "too short / generic"
+      },
+      {
+        "id": "neg_063",
+        "value": "abc",
+        "reason": "too short"
+      },
+      {
+        "id": "neg_064",
+        "value": "123",
+        "reason": "too short / numeric"
+      },
+      {
+        "id": "neg_065",
+        "value": "pass",
+        "reason": "too short / generic"
+      },
+      {
+        "id": "neg_066",
+        "value": "token",
+        "reason": "too short / generic"
+      },
+      {
+        "id": "neg_067",
+        "value": "secret",
+        "reason": "too short / generic"
+      },
+      {
+        "id": "neg_068",
+        "value": "password",
+        "reason": "too short / generic"
+      },
+      {
+        "id": "neg_069",
+        "value": "null",
+        "reason": "null string"
+      },
+      {
+        "id": "neg_070",
+        "value": "undefined",
+        "reason": "js undefined string"
+      },
+      {
+        "id": "neg_071",
+        "value": "none",
+        "reason": "none string"
+      },
+      {
+        "id": "neg_072",
+        "value": "false",
+        "reason": "boolean string"
+      },
+      {
+        "id": "neg_073",
+        "value": "true",
+        "reason": "boolean string"
+      },
+      {
+        "id": "neg_074",
+        "value": "empty",
+        "reason": "empty descriptor"
+      },
+      {
+        "id": "neg_075",
+        "value": "",
+        "reason": "empty string"
+      },
+      {
+        "id": "neg_076",
+        "value": " ",
+        "reason": "whitespace only"
+      },
+      {
+        "id": "neg_077",
+        "value": "n/a",
+        "reason": "not applicable marker"
+      },
+      {
+        "id": "neg_078",
+        "value": "N/A",
+        "reason": "not applicable marker"
+      },
+      {
+        "id": "neg_079",
+        "value": "TBD",
+        "reason": "to be defined marker"
+      },
+      {
+        "id": "neg_080",
+        "value": "TODO",
+        "reason": "todo marker"
+      },
+      {
+        "id": "neg_081",
+        "value": "password123",
+        "reason": "common weak password"
+      },
+      {
+        "id": "neg_082",
+        "value": "admin",
+        "reason": "common default cred"
+      },
+      {
+        "id": "neg_083",
+        "value": "admin123",
+        "reason": "common default cred"
+      },
+      {
+        "id": "neg_084",
+        "value": "root",
+        "reason": "common default cred"
+      },
+      {
+        "id": "neg_085",
+        "value": "qwerty",
+        "reason": "common weak password"
+      },
+      {
+        "id": "neg_086",
+        "value": "letmein",
+        "reason": "common weak password"
+      },
+      {
+        "id": "neg_087",
+        "value": "welcome1",
+        "reason": "common weak password"
+      },
+      {
+        "id": "neg_088",
+        "value": "test123",
+        "reason": "generic test value"
+      },
+      {
+        "id": "neg_089",
+        "value": "testkey",
+        "reason": "generic test value"
+      },
+      {
+        "id": "neg_090",
+        "value": "dummykey",
+        "reason": "generic dummy value"
+      },
+      {
+        "id": "neg_091",
+        "value": "faketoken",
+        "reason": "generic fake value"
+      },
+      {
+        "id": "neg_092",
+        "value": "samplekey",
+        "reason": "generic sample value"
+      },
+      {
+        "id": "neg_093",
+        "value": "demo_key_12345",
+        "reason": "generic demo value"
+      },
+      {
+        "id": "neg_094",
+        "value": "dev_token_placeholder",
+        "reason": "generic dev value"
+      },
+      {
+        "id": "neg_095",
+        "value": "local_dev_only",
+        "reason": "generic local value"
+      },
+      {
+        "id": "neg_096",
+        "value": "do_not_use_in_prod",
+        "reason": "non-prod marker"
+      },
+      {
+        "id": "neg_097",
+        "value": "debug_mode_key",
+        "reason": "debug marker"
+      },
+      {
+        "id": "neg_098",
+        "value": "mock_api_key_for_tests",
+        "reason": "mock/test marker"
+      },
+      {
+        "id": "neg_099",
+        "value": "stub_secret_value",
+        "reason": "stub marker"
+      },
+      {
+        "id": "neg_100",
+        "value": "fake_secret_do_not_use",
+        "reason": "fake marker"
+      },
+      {
+        "id": "neg_101",
+        "value": "sk_live_",
+        "reason": "empty after valid prefix"
+      },
+      {
+        "id": "neg_102",
+        "value": "ghp_",
+        "reason": "empty after valid prefix"
+      },
+      {
+        "id": "neg_103",
+        "value": "AKIA",
+        "reason": "only prefix, no body"
+      },
+      {
+        "id": "neg_104",
+        "value": "Bearer ",
+        "reason": "only auth scheme"
+      },
+      {
+        "id": "neg_105",
+        "value": "Basic dXNlcjpwYXNz",
+        "reason": "basic auth with trivial cred"
+      },
+      {
+        "id": "neg_106",
+        "value": "token=",
+        "reason": "key=value with no value"
+      },
+      {
+        "id": "neg_107",
+        "value": "api_key=null",
+        "reason": "null assignment"
+      },
+      {
+        "id": "neg_108",
+        "value": "secret=undefined",
+        "reason": "undefined assignment"
+      },
+      {
+        "id": "neg_109",
+        "value": "key=changeme",
+        "reason": "placeholder assignment"
+      },
+      {
+        "id": "neg_110",
+        "value": "ACCESS_KEY_ID=EXAMPLE",
+        "reason": "env var with placeholder"
+      },
+      {
+        "id": "neg_111",
+        "value": "5f4dcc3b5aa765d61d8327deb882cf99",
+        "reason": "MD5 of 'password'"
+      },
+      {
+        "id": "neg_112",
+        "value": "e10adc3949ba59abbe56e057f20f883e",
+        "reason": "MD5 of '123456'"
+      },
+      {
+        "id": "neg_113",
+        "value": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+        "reason": "SHA1 of empty string"
+      },
+      {
+        "id": "neg_114",
+        "value": "aabbccddeeff00112233445566778899",
+        "reason": "incrementing hex bytes"
+      },
+      {
+        "id": "neg_115",
+        "value": "deadbeefdeadbeefdeadbeefdeadbeef",
+        "reason": "known magic hex value"
+      },
+      {
+        "id": "neg_116",
+        "value": "cafebabecafebabecafebabecafebabe",
+        "reason": "known magic hex value"
+      },
+      {
+        "id": "neg_117",
+        "value": "00000000000000000000000000000000",
+        "reason": "all zero UUID-like"
+      },
+      {
+        "id": "neg_118",
+        "value": "ffffffffffffffffffffffffffffffff",
+        "reason": "all-F hex"
+      },
+      {
+        "id": "neg_119",
+        "value": "lorem_ipsum_dolor_sit_amet_key",
+        "reason": "lorem ipsum placeholder"
+      },
+      {
+        "id": "neg_120",
+        "value": "foo_bar_baz_qux_secret_1234",
+        "reason": "foo/bar/baz test names"
+      },
+      {
+        "id": "lls_001",
+        "value": "my-api-key-service-description",
+        "reason": "looks like key but docs text"
+      },
+      {
+        "id": "lls_002",
+        "value": "openai-api-key-configuration",
+        "reason": "config field name, not value"
+      },
+      {
+        "id": "lls_003",
+        "value": "secret-management-best-practices",
+        "reason": "article title with 'secret'"
+      },
+      {
+        "id": "lls_004",
+        "value": "how-to-rotate-your-access-token",
+        "reason": "docs URL slug"
+      },
+      {
+        "id": "lls_005",
+        "value": "api-key-not-found",
+        "reason": "error message text"
+      },
+      {
+        "id": "lls_006",
+        "value": "invalid_api_key",
+        "reason": "error code string"
+      },
+      {
+        "id": "lls_007",
+        "value": "api_key_expired",
+        "reason": "error code string"
+      },
+      {
+        "id": "lls_008",
+        "value": "missing_secret_key",
+        "reason": "error code string"
+      },
+      {
+        "id": "lls_009",
+        "value": "secret_key_too_short",
+        "reason": "validation message"
+      },
+      {
+        "id": "lls_010",
+        "value": "token_validation_failed",
+        "reason": "error message text"
+      },
+      {
+        "id": "lls_011",
+        "value": "aws-access-key-id",
+        "reason": "field name, not key value"
+      },
+      {
+        "id": "lls_012",
+        "value": "github_personal_access_token",
+        "reason": "env variable name"
+      },
+      {
+        "id": "lls_013",
+        "value": "STRIPE_SECRET_KEY",
+        "reason": "env variable name, not value"
+      },
+      {
+        "id": "lls_014",
+        "value": "OPENAI_API_KEY",
+        "reason": "env variable name, not value"
+      },
+      {
+        "id": "lls_015",
+        "value": "ANTHROPIC_API_KEY",
+        "reason": "env variable name, not value"
+      },
+      {
+        "id": "lls_016",
+        "value": "DATABASE_SECRET",
+        "reason": "env variable name, not value"
+      },
+      {
+        "id": "lls_017",
+        "value": "JWT_SECRET",
+        "reason": "env variable name, not value"
+      },
+      {
+        "id": "lls_018",
+        "value": "FIREBASE_API_KEY",
+        "reason": "env variable name, not value"
+      },
+      {
+        "id": "lls_019",
+        "value": "DISCORD_BOT_TOKEN",
+        "reason": "env variable name, not value"
+      },
+      {
+        "id": "lls_020",
+        "value": "TELEGRAM_BOT_TOKEN",
+        "reason": "env variable name, not value"
+      },
+      {
+        "id": "lls_021",
+        "value": "api_key_field",
+        "reason": "json field name"
+      },
+      {
+        "id": "lls_022",
+        "value": "secret_key_column",
+        "reason": "database column name"
+      },
+      {
+        "id": "lls_023",
+        "value": "auth_token_header",
+        "reason": "http header name description"
+      },
+      {
+        "id": "lls_024",
+        "value": "bearer_token_required",
+        "reason": "auth requirement description"
+      },
+      {
+        "id": "lls_025",
+        "value": "store-api-key-in-vault",
+        "reason": "instruction text"
+      },
+      {
+        "id": "lls_026",
+        "value": "never-hardcode-secrets",
+        "reason": "security advice text"
+      },
+      {
+        "id": "lls_027",
+        "value": "rotate-tokens-every-90-days",
+        "reason": "policy text"
+      },
+      {
+        "id": "lls_028",
+        "value": "key-rotation-policy-v2",
+        "reason": "document title"
+      },
+      {
+        "id": "lls_029",
+        "value": "secret-scanning-enabled",
+        "reason": "feature flag name"
+      },
+      {
+        "id": "lls_030",
+        "value": "token-refresh-interval-3600",
+        "reason": "config parameter name"
+      },
+      {
+        "id": "lls_031",
+        "value": "private-key-infrastructure",
+        "reason": "PKI term, not a key"
+      },
+      {
+        "id": "lls_032",
+        "value": "public-key-cryptography-standards",
+        "reason": "crypto topic name"
+      },
+      {
+        "id": "lls_033",
+        "value": "api-gateway-key-management",
+        "reason": "service feature name"
+      },
+      {
+        "id": "lls_034",
+        "value": "secret-store-integration-guide",
+        "reason": "docs title"
+      },
+      {
+        "id": "lls_035",
+        "value": "aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+        "reason": "alphabet sequence, not entropy"
+      },
+      {
+        "id": "lls_036",
+        "value": "sk-description-of-the-service-here",
+        "reason": "slug with sk- prefix but text"
+      },
+      {
+        "id": "lls_037",
+        "value": "sk-learn",
+        "reason": "scikit-learn library name"
+      },
+      {
+        "id": "lls_038",
+        "value": "sk-build",
+        "reason": "package name with sk- prefix"
+      },
+      {
+        "id": "lls_039",
+        "value": "api-key-management-service",
+        "reason": "service name text"
+      },
+      {
+        "id": "lls_040",
+        "value": "token-bucket-rate-limiter",
+        "reason": "algorithm name with 'token'"
+      },
+      {
+        "id": "uid_001",
+        "value": "550e8400-e29b-41d4-a716-446655440000",
+        "reason": "UUID v1 example"
+      },
+      {
+        "id": "uid_002",
+        "value": "6ba7b810-9dad-11d1-80b4-00c04fd430c8",
+        "reason": "UUID v1 real"
+      },
+      {
+        "id": "uid_003",
+        "value": "6ba7b811-9dad-11d1-80b4-00c04fd430c8",
+        "reason": "UUID v1 real"
+      },
+      {
+        "id": "uid_004",
+        "value": "123e4567-e89b-12d3-a456-426614174000",
+        "reason": "UUID v4 example from RFC"
+      },
+      {
+        "id": "uid_005",
+        "value": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+        "reason": "UUID v4 random"
+      },
+      {
+        "id": "uid_006",
+        "value": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+        "reason": "UUID v4 random"
+      },
+      {
+        "id": "uid_007",
+        "value": "550e8400-e29b-41d4-a716-446655440001",
+        "reason": "UUID v4 random"
+      },
+      {
+        "id": "uid_008",
+        "value": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+        "reason": "UUID v4 random"
+      },
+      {
+        "id": "uid_009",
+        "value": "01ARZ3NDEKTSV4RRFFQ69G5FAV",
+        "reason": "ULID identifier"
+      },
+      {
+        "id": "uid_010",
+        "value": "01BX5ZZKBKACTAV9WEVGEMMVS0",
+        "reason": "ULID identifier"
+      },
+      {
+        "id": "uid_011",
+        "value": "01HXYZ1234ABCDEF5678GHIJ90",
+        "reason": "ULID identifier"
+      },
+      {
+        "id": "uid_012",
+        "value": "cjld2cyuq0000t3rmniod1foy",
+        "reason": "CUID identifier"
+      },
+      {
+        "id": "uid_013",
+        "value": "cjld2cjxh0000qzrmn831i7rn",
+        "reason": "CUID identifier"
+      },
+      {
+        "id": "uid_014",
+        "value": "clh3x8v9t0000ml08fxjb2k9z",
+        "reason": "CUID2 identifier"
+      },
+      {
+        "id": "uid_015",
+        "value": "507f1f77bcf86cd799439011",
+        "reason": "MongoDB ObjectID"
+      },
+      {
+        "id": "uid_016",
+        "value": "507f191e810c19729de860ea",
+        "reason": "MongoDB ObjectID"
+      },
+      {
+        "id": "uid_017",
+        "value": "64f5a7b43c6d7e8f9a0b1c2d",
+        "reason": "MongoDB ObjectID"
+      },
+      {
+        "id": "uid_018",
+        "value": "SN-2024-MB-001-XR7T",
+        "reason": "product serial number"
+      },
+      {
+        "id": "uid_019",
+        "value": "IMZ-889-2025-UNIT-0042",
+        "reason": "device serial number"
+      },
+      {
+        "id": "uid_020",
+        "value": "TXN-20250601-000293847",
+        "reason": "transaction ID"
+      },
+      {
+        "id": "uid_021",
+        "value": "ORD-7f3a9b2c1d4e5f6a",
+        "reason": "order identifier"
+      },
+      {
+        "id": "uid_022",
+        "value": "REQ-2025-06-ab3cd4ef",
+        "reason": "request trace ID"
+      },
+      {
+        "id": "uid_023",
+        "value": "usr_01J3KM7NQPXVWZRA4T5YBH6C8D",
+        "reason": "prefixed user ID"
+      },
+      {
+        "id": "uid_024",
+        "value": "sess_9f2a1b3c4d5e6f7a8b9c0d1e",
+        "reason": "session ID"
+      },
+      {
+        "id": "uid_025",
+        "value": "evt_1OaBC2LkdIwHu7ixmkd3WXYZ",
+        "reason": "Stripe-style event ID"
+      },
+      {
+        "id": "uid_026",
+        "value": "msg_aBcDeFgH1234567890iJkLmN",
+        "reason": "message identifier"
+      },
+      {
+        "id": "uid_027",
+        "value": "job_01HXYZ9876FEDC5432BAIJ10",
+        "reason": "background job ID"
+      },
+      {
+        "id": "uid_028",
+        "value": "pipe_7a8b9c0d1e2f3a4b5c6d7e8f",
+        "reason": "pipeline run ID"
+      },
+      {
+        "id": "uid_029",
+        "value": "run_20250601_143022_abc123def",
+        "reason": "ML run identifier"
+      },
+      {
+        "id": "uid_030",
+        "value": "exp_v2_baseline_bert_20250512",
+        "reason": "experiment identifier"
+      },
+      {
+        "id": "hsh_001",
+        "value": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "reason": "SHA-256 of 'test'"
+      },
+      {
+        "id": "hsh_002",
+        "value": "a94a8fe5ccb19ba61c4c0873d391e987982fbbd3",
+        "reason": "SHA-1 of 'test'"
+      },
+      {
+        "id": "hsh_003",
+        "value": "098f6bcd4621d373cade4e832627b4f6",
+        "reason": "MD5 of 'test'"
+      },
+      {
+        "id": "hsh_004",
+        "value": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "reason": "SHA-256 of empty string"
+      },
+      {
+        "id": "hsh_005",
+        "value": "ba7816bf8f01cfea414140de5dae2ec73b00361bbef0469f492c5754179e6f5",
+        "reason": "SHA-256 of 'abc'"
+      },
+      {
+        "id": "hsh_006",
+        "value": "cf83e1357eefb8bdf1542850d66d8007d620e4050b5715dc83f4a921d36ce9ce47d0d13c5d85f2b0ff8318d2877eec2f63b931bd47417a81a538327af927da3e",
+        "reason": "SHA-512 of empty string"
+      },
+      {
+        "id": "hsh_007",
+        "value": "d8e8fca2dc0f896fd7cb4cb0031ba249",
+        "reason": "MD5 checksum of a file"
+      },
+      {
+        "id": "hsh_008",
+        "value": "f1d2d2f924e986ac86fdf7b36c94bcdf32beec15",
+        "reason": "SHA-1 file checksum"
+      },
+      {
+        "id": "hsh_009",
+        "value": "b94f6f125c79e3a5ffaa826f584c10d52ada669e6762051b826b55776d05a8d7",
+        "reason": "SHA-256 file checksum"
+      },
+      {
+        "id": "hsh_010",
+        "value": "sha256:9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+        "reason": "Docker image digest format"
+      },
+      {
+        "id": "hsh_011",
+        "value": "sha256:a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3",
+        "reason": "Docker layer digest"
+      },
+      {
+        "id": "hsh_012",
+        "value": "md5-kAla/JILmriS+UkFpMHwUQ==",
+        "reason": "S3 ETag MD5 base64"
+      },
+      {
+        "id": "hsh_013",
+        "value": "1:iKjKvEQ+5+6mPFd5h3LD8Q==:3lHf9oAb7cD2eF1gH4iJ5k==",
+        "reason": "bcrypt-style hash"
+      },
+      {
+        "id": "hsh_014",
+        "value": "$2b$12$KIXg3bKr3PmC7V.1gJzX3uJ5R5K5R5K5R5K5R5K5R5K5R5K5R5K5R",
+        "reason": "bcrypt password hash"
+      },
+      {
+        "id": "hsh_015",
+        "value": "$argon2id$v=19$m=65536,t=2,p=1$c29tZXNhbHQ$RdescudvJCsgt3ub+b+dWQ",
+        "reason": "Argon2 password hash"
+      },
+      {
+        "id": "hsh_016",
+        "value": "v1:aaaaaaaaaaaaaaaa:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "reason": "Fernet-style token structure"
+      },
+      {
+        "id": "hsh_017",
+        "value": "1220f1d2d2f924e986ac86fdf7b36c94bcdf32beec153d3071f432aa4c8b99e6b",
+        "reason": "IPFS CIDv1 multihash"
+      },
+      {
+        "id": "hsh_018",
+        "value": "QmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o",
+        "reason": "IPFS CIDv0 hash"
+      },
+      {
+        "id": "hsh_019",
+        "value": "zQmT78zSuBmuS4z925WZfrqQ1qHaJ56DQaTfyMUF7F8ff5o",
+        "reason": "IPFS CIDv1 base58"
+      },
+      {
+        "id": "hsh_020",
+        "value": "integrity:sha384-oqVuAfXRKap7fdgcCY5uykM6+R9GqQ8K/uxL2",
+        "reason": "SRI integrity attribute"
+      },
+      {
+        "id": "hsh_021",
+        "value": "etag: \"33a64df551425fcc55e4d42a148795d9f25f89d4\"",
+        "reason": "HTTP ETag header value"
+      },
+      {
+        "id": "hsh_022",
+        "value": "pgp-fingerprint: 4096R/0x12AB34CD56EF7890",
+        "reason": "PGP key fingerprint"
+      },
+      {
+        "id": "hsh_023",
+        "value": "SHA1:nThbg6kXUpJWGl7E1IGOCspRomTxdCARLviKw6E5SY8",
+        "reason": "SSH public key fingerprint"
+      },
+      {
+        "id": "hsh_024",
+        "value": "MD5:16:27:ac:a5:76:28:2d:36:63:1b:56:4d:eb:df:a6:48",
+        "reason": "SSH MD5 fingerprint"
+      },
+      {
+        "id": "hsh_025",
+        "value": "model-weights-sha256: 7c9e6679742540de944be07fc1f90ae71234abcd",
+        "reason": "ML model weight checksum"
+      },
+      {
+        "id": "hsh_026",
+        "value": "dataset-hash: 4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b",
+        "reason": "dataset integrity hash"
+      },
+      {
+        "id": "hsh_027",
+        "value": "commit: 2fd4e1c67a2d28fced849ee1bb76e7391b93eb12",
+        "reason": "git commit SHA"
+      },
+      {
+        "id": "hsh_028",
+        "value": "tree: 4b825dc642cb6eb9a060e54bf8d69288fbee4904",
+        "reason": "git tree SHA"
+      },
+      {
+        "id": "hsh_029",
+        "value": "blob: 83baae61804e65cc73a7201a7252750c76066a30",
+        "reason": "git blob SHA"
+      },
+      {
+        "id": "hsh_030",
+        "value": "cc:01:23:45:67:89:ab:cd:ef:01:23:45:67:89:ab:cd:ef:01:23:45",
+        "reason": "X.509 cert serial hex"
+      },
+      {
+        "id": "cod_001",
+        "value": "const apiKey = process.env.API_KEY",
+        "reason": "JS env reference, not value"
+      },
+      {
+        "id": "cod_002",
+        "value": "const secret = process.env.SECRET_KEY ?? ''",
+        "reason": "JS env with fallback"
+      },
+      {
+        "id": "cod_003",
+        "value": "import { API_KEY } from './config'",
+        "reason": "JS import statement"
+      },
+      {
+        "id": "cod_004",
+        "value": "Authorization: `Bearer ${token}`",
+        "reason": "JS template literal header"
+      },
+      {
+        "id": "cod_005",
+        "value": "headers: { 'X-API-Key': process.env.API_KEY }",
+        "reason": "JS fetch headers object"
+      },
+      {
+        "id": "cod_006",
+        "value": "if (!process.env.OPENAI_KEY) throw new Error()",
+        "reason": "JS validation code"
+      },
+      {
+        "id": "cod_007",
+        "value": "export const TOKEN = process.env.NEXT_PUBLIC_TOKEN",
+        "reason": "Next.js public env"
+      },
+      {
+        "id": "cod_008",
+        "value": "const client = new OpenAI({ apiKey: key })",
+        "reason": "SDK initialization code"
+      },
+      {
+        "id": "cod_009",
+        "value": "anthropic = Anthropic(api_key=os.environ['KEY'])",
+        "reason": "Python SDK init"
+      },
+      {
+        "id": "cod_010",
+        "value": "os.environ.get('SECRET_KEY', 'fallback')",
+        "reason": "Python env access"
+      },
+      {
+        "id": "cod_011",
+        "value": "import os; key = os.getenv('API_KEY')",
+        "reason": "Python env reference"
+      },
+      {
+        "id": "cod_012",
+        "value": "from dotenv import load_dotenv; load_dotenv()",
+        "reason": "Python dotenv loader"
+      },
+      {
+        "id": "cod_013",
+        "value": "SECRET_KEY = config('DJANGO_SECRET', default='')",
+        "reason": "Django decouple pattern"
+      },
+      {
+        "id": "cod_014",
+        "value": "boto3.client('s3', aws_access_key_id=key)",
+        "reason": "Python boto3 init"
+      },
+      {
+        "id": "cod_015",
+        "value": "keyring.get_password('service', 'username')",
+        "reason": "Python keyring lookup"
+      },
+      {
+        "id": "cod_016",
+        "value": "export API_KEY=$(cat /run/secrets/api_key)",
+        "reason": "shell secret from file"
+      },
+      {
+        "id": "cod_017",
+        "value": "API_KEY=${API_KEY:?'API_KEY is not set'}",
+        "reason": "bash required env check"
+      },
+      {
+        "id": "cod_018",
+        "value": "echo $SECRET_KEY | docker secret create mykey -",
+        "reason": "docker secret create cmd"
+      },
+      {
+        "id": "cod_019",
+        "value": "kubectl create secret generic my-secret --from-literal=key=$KEY",
+        "reason": "k8s secret creation cmd"
+      },
+      {
+        "id": "cod_020",
+        "value": "vault kv get secret/myapp/api_key",
+        "reason": "vault CLI command"
+      },
+      {
+        "id": "cod_021",
+        "value": "API_KEY=<your_key_here>",
+        "reason": ".env template line"
+      },
+      {
+        "id": "cod_022",
+        "value": "# API_KEY=your_key_goes_here",
+        "reason": ".env commented example"
+      },
+      {
+        "id": "cod_023",
+        "value": "SECRET_KEY=os.environ.get('SECRET_KEY')",
+        "reason": "settings.py pattern"
+      },
+      {
+        "id": "cod_024",
+        "value": "api_key: ${SECRET_API_KEY}",
+        "reason": "YAML env substitution"
+      },
+      {
+        "id": "cod_025",
+        "value": "token = \"{{ vault('secret/token') }}\"",
+        "reason": "YAML vault template"
+      },
+      {
+        "id": "cod_026",
+        "value": "[secrets]\napi_key = %(API_KEY)s",
+        "reason": "INI config pattern"
+      },
+      {
+        "id": "cod_027",
+        "value": "secret_key = ENV[\"SECRET_KEY\"]",
+        "reason": "Ruby ENV access"
+      },
+      {
+        "id": "cod_028",
+        "value": "apiKey: process.env['REACT_APP_KEY']",
+        "reason": "React env reference"
+      },
+      {
+        "id": "cod_029",
+        "value": "VITE_API_KEY=${VITE_API_KEY}",
+        "reason": "Vite env variable"
+      },
+      {
+        "id": "cod_030",
+        "value": "spring.datasource.password=${DB_PASS}",
+        "reason": "Spring Boot config"
+      },
+      {
+        "id": "cod_031",
+        "value": "- name: API_KEY\n  valueFrom:\n    secretKeyRef:\n      name: my-secret\n      key: api-key",
+        "reason": "k8s pod env from secret"
+      },
+      {
+        "id": "cod_032",
+        "value": "${{ secrets.API_KEY }}",
+        "reason": "GitHub Actions secret ref"
+      },
+      {
+        "id": "cod_033",
+        "value": "${{ secrets.DOCKER_PASSWORD }}",
+        "reason": "GitHub Actions secret ref"
+      },
+      {
+        "id": "cod_034",
+        "value": "${env.SECRET_TOKEN}",
+        "reason": "GitLab CI variable ref"
+      },
+      {
+        "id": "cod_035",
+        "value": "$(SECRET_KEY)",
+        "reason": "Makefile variable ref"
+      },
+      {
+        "id": "cod_036",
+        "value": "tf_var_api_key = var.api_key",
+        "reason": "Terraform variable ref"
+      },
+      {
+        "id": "cod_037",
+        "value": "data.aws_secretsmanager_secret_version.key.secret_string",
+        "reason": "Terraform AWS SM ref"
+      },
+      {
+        "id": "cod_038",
+        "value": "azurekeyvault:https://vault.azure.net/secrets/key",
+        "reason": "Azure KV reference string"
+      },
+      {
+        "id": "cod_039",
+        "value": "arn:aws:secretsmanager:us-east-1:123456789012:secret:mykey-AbCdEf",
+        "reason": "AWS Secrets Manager ARN"
+      },
+      {
+        "id": "cod_040",
+        "value": "projects/my-project/secrets/my-secret/versions/latest",
+        "reason": "GCP Secret Manager path"
+      },
+      {
+        "id": "cod_041",
+        "value": "// TODO: move API_KEY to environment variable",
+        "reason": "code comment with 'key'"
+      },
+      {
+        "id": "cod_042",
+        "value": "# Never commit your secret key to git",
+        "reason": "security comment"
+      },
+      {
+        "id": "cod_044",
+        "value": "-- store credentials in vault, not here",
+        "reason": "SQL comment"
+      },
+      {
+        "id": "cod_045",
+        "value": "<!-- api-key goes in server config, not HTML -->",
+        "reason": "HTML comment"
+      },
+      {
+        "id": "cod_046",
+        "value": "[WARN] API_KEY not set, using default",
+        "reason": "log line about key"
+      },
+      {
+        "id": "cod_047",
+        "value": "[ERROR] Invalid or missing secret_key",
+        "reason": "log error message"
+      },
+      {
+        "id": "cod_048",
+        "value": "api_key=***REDACTED***",
+        "reason": "redacted log value"
+      },
+      {
+        "id": "cod_049",
+        "value": "token=[FILTERED]",
+        "reason": "filtered log value"
+      },
+      {
+        "id": "cod_050",
+        "value": "Authorization: Bearer sk-***",
+        "reason": "partially masked header log"
+      }
+    ]
+  }
+}

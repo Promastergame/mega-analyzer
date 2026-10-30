@@ -1,0 +1,50 @@
+{
+  "category": "context_downgrades",
+  "version": "1.0",
+  "description": "Default benign-context rules. They NEVER suppress findings: every entry below uses downgrades only (severity drops one step, score halves, the finding stays visible). Rationale: class and permission context is spoofable — a malicious app can embed a password-manager package name or declare a device-admin permission — so a full hide would let malware silence its own detections. A downgrade keeps the signal while cutting the false-positive noise from legitimate apps.",
+  "rules": [
+    {
+      "id": "ctx-password-manager",
+      "name": "Password manager autofill (accessibility + overlay by design)",
+      "description": "Password managers drive overlay windows and accessibility APIs for OS-level autofill. Their a11y API footprint overlaps the banking-overlay patterns.",
+      "category": "context",
+      "severity": "info",
+      "score": 0,
+      "enabled": true,
+      "kind": "context",
+      "logic": "or",
+      "conditions": [
+        { "type": "class", "value": "bitwarden" },
+        { "type": "class", "value": "onepassword" },
+        { "type": "class", "value": "dashlane" },
+        { "type": "class", "value": "lastpass" },
+        { "type": "class", "value": "keepass" },
+        { "type": "class", "value": "enpass" }
+      ],
+      "downgrades": [
+        "bank_overlay_a11y_modern",
+        "bank_cred_a11y_keylog",
+        "bank_2fa_a11y_totp_reader"
+      ],
+      "reason": "Password managers legitimately combine accessibility services with overlay windows for autofill; their API footprint matches the a11y-overlay banking patterns. Package-name context is spoofable, so findings are downgraded (kept visible), never suppressed."
+    },
+    {
+      "id": "ctx-device-admin-mdm",
+      "name": "Device-admin / MDM agent (management APIs by design)",
+      "description": "Enterprise MDM agents hold BIND_DEVICE_ADMIN and legitimately use accessibility, overlay and network APIs for device management.",
+      "category": "context",
+      "severity": "info",
+      "score": 0,
+      "enabled": true,
+      "kind": "context",
+      "conditions": [
+        { "type": "permission", "value": "android.permission.BIND_DEVICE_ADMIN" }
+      ],
+      "downgrades": [
+        "bank_overlay_classic",
+        "bank_overlay_a11y_modern"
+      ],
+      "reason": "MDM agents are device administrators by design and combine overlay, accessibility and INTERNET for management. Permission context is declarable by any app, so findings are downgraded (kept visible), never suppressed."
+    }
+  ]
+}

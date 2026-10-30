@@ -1,0 +1,57 @@
+// Dependency-free UI logic smoke test, including actual preview renderers.
+const fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),assert=require('node:assert/strict');
+const {createDOM,Element,required}=require('./ui-test-dom.cjs');
+const asset=name=>fs.readFileSync(path.join(__dirname,'../pkg/cmd/analyzer/web/assets',name),'utf8');
+const {document,ids,extras}=createDOM(asset('index.html'));
+const code=asset('workspace.js');
+for(const m of code.matchAll(/byId\("([^"]+)"\)/g))required(ids,m[1]);
+for(const selector of ['.ws-title p','.ws-files','.ws-files-head h3','.ws-filters','.ws-local'])extras[selector]=new Element();
+extras['.ws-files-head h3'].appendChild(document.createTextNode('Files'));
+extras['label[for="wsFolderName"]']=new Element('label');
+const submit=new Element('button');submit.type='submit';ids.wsFolderForm.appendChild(submit);extras['#wsFolderForm [type="submit"]']=submit;
+for(const value of ['name','date','size']){const e=new Element('button');e.dataset.value=value;ids.wsSortMenu.appendChild(e);}
+ids.wsSortMenu.hidden=true;ids.workspaceDialog.appendChild(ids.wsSortMenu);
+const date='2026-09-20T12:00:00Z';
+const dir=(p,name)=>({name,path:p,directory:true,modified:date,size:0});
+const file=(p,name)=>({name,path:p,directory:false,modified:date,size:12});
+const entries=[file('Scans/report.html','report.html'),file('Scans/data.json','data.json'),file('Scans/unsafe.txt','<img onerror=alert(1)>')];
+const listings={'':{entries:[dir('Scans','Scans')]},Scans:{entries},Other:{entries:[file('Other/new.txt','new.txt')]}};
+const contents={'Scans/report.html':'<script>top.location="https://evil.invalid"</script><b>report</b>','Scans/data.json':'{"ok":true}','Scans/unsafe.txt':'<img src=x onerror=alert(1)>','Other/new.txt':'new contents'};
+const calls=[],listeners={};let deferred=null;
+const context={document,URL,AbortController,Event:class{constructor(type){this.type=type;}},setTimeout,clearTimeout,navigator:{},window:{uiLang:'en',addEventListener:(k,fn)=>listeners[k]=fn,matchMedia:()=>({matches:false})},fetch:async(uri,opts)=>{
+  calls.push({uri,opts});const u=new URL(uri,'http://localhost');
+  if(u.pathname.endsWith('/mkdir'))return {ok:true,json:async()=>({path:JSON.parse(opts.body).path})};
+  if(u.pathname.endsWith('/file'))return {ok:true,text:async()=>contents[u.searchParams.get('path')]};
+  const p=u.searchParams.get('path')||'';
+  if(deferred&&p===deferred.path)return new Promise(resolve=>{deferred.resolve=resolve;});
+  if(!listings[p])return {ok:false,status:404,text:async()=>JSON.stringify({message:'not found'})};
+  const offset=+u.searchParams.get('offset');const all=listings[p].entries;
+  return {ok:true,json:async()=>({path:p,entries:all.slice(offset),has_more:false,next_offset:all.length,scan:listings[p].scan||null})};
+}};
+vm.createContext(context);vm.runInContext(asset('workspace-preview.js'),context);vm.runInContext(code,context);
+const tick=()=>new Promise(r=>setImmediate(r));
+const click=async el=>{assert.ok(el);el.dispatchEvent({type:'click'});await tick();};
+const card=name=>ids.wsEntries.querySelectorAll('.ws-entry').find(e=>e.textContent.includes(name));
+(async()=>{
+ await click(ids.workspaceOpen);assert.equal(ids.workspaceDialog.open,true);assert.ok(card('Scans'));
+ await click(card('Scans'));assert.equal(ids.wsEntries.children.length,3);assert.equal(ids.wsUseFolder.disabled,false);
+ const unsafe=card('<img');assert.equal(unsafe.querySelector('strong').textContent,'<img onerror=alert(1)>');assert.equal(unsafe.querySelector('img'),null);
+ await click(card('report.html'));const frame=ids.wsPreview.querySelector('iframe');assert.ok(frame);assert.equal(frame.attributes.sandbox,'');assert.match(frame.srcdoc,/default-src &#39;none&#39;/);
+ await click(card('data.json'));assert.equal(card('data.json').attributes['aria-pressed'],'true');assert.equal(card('report.html').attributes['aria-pressed'],'false');
+ const source=ids.wsPreview.querySelectorAll('button').find(e=>e.textContent==='Source');await click(source);assert.equal(ids.wsPreview.querySelector('pre').textContent,'{"ok":true}');
+ assert.equal(ids.wsPreview.querySelector('a').href,'/api/workspace/file?path=Scans%2Fdata.json');
+ ids.wsSearch.value='unsafe';ids.wsSearch.dispatchEvent(new context.Event('input'));assert.match(ids.wsEntries.textContent,/Nothing found/);
+ ids.wsSearch.value='img';ids.wsSearch.dispatchEvent(new context.Event('input'));assert.ok(card('<img'));
+ await click(ids.wsExpand);assert.equal(ids.workspaceDialog.classList.contains('ws-expanded'),true);
+ await click(ids.wsUseFolder);assert.equal(ids.outdir.value,'Scans');assert.equal(ids.workspaceDialog.open,false);
+ await click(ids.workspaceOpen);await click(ids.wsNewFolder);ids.wsFolderName.value='Моды';ids.wsFolderForm.dispatchEvent({type:'submit'});await tick();
+ assert.ok(calls.some(c=>c.opts?.method==='POST'&&JSON.parse(c.opts.body).path==='Scans/Моды'));
+ const count=calls.length;await click(ids.wsNewFolder);ids.wsFolderName.value='../bad';ids.wsFolderForm.dispatchEvent({type:'submit'});await tick();assert.equal(calls.length,count);
+ deferred={path:'Scans'};await click(ids.wsRefresh);
+ listeners['mega:scan-created']({detail:{path:'Other'}});await tick();assert.ok(card('new.txt'));
+ const late=deferred;deferred=null;late.resolve({ok:true,json:async()=>({entries,has_more:false,next_offset:entries.length})});await tick();assert.ok(card('new.txt'));assert.equal(card('data.json'),undefined);
+ ids.workspaceDialog.close();listings.Other.scan={name:'new scan',status:'completed'};await click(ids.workspaceOpen);assert.match(ids.wsStatus.textContent,/new scan.*Completed/);assert.equal(ids.wsUseFolder.disabled,true);
+ listeners['mega:scan-created']({detail:{path:'gone'}});await tick();assert.match(ids.wsStatus.textContent,/not found/);
+ ids.workspaceDialog.close();
+ console.log('PASS: current workspace DOM, safe previews, selection, search, folder creation, stale response, saved result reopening.');
+})().catch(e=>{console.error(e);process.exitCode=1;});

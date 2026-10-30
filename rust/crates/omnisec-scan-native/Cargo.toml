@@ -1,0 +1,29 @@
+[package]
+name = "omnisec-scan-native"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "OmniSec native (ELF / .so) security scanner — hardening posture, dangerous APIs, malware indicators."
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+omnisec-json = { path = "../omnisec-json" }
+omnisec-core.workspace = true
+omnisec-loader.workspace = true
+omnisec-loader-elf.workspace = true
+omnisec-loader-pe.workspace = true
+omnisec-ir.workspace = true
+omnisec-disasm.workspace = true
+omnisec-cfg.workspace = true
+omnisec-pdg.workspace = true
+omnisec-hdc.workspace = true
+omnisec-analysis-symbolic.workspace = true
+
+[dev-dependencies]
+
+[lints]
+workspace = true

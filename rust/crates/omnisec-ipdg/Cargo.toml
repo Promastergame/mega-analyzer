@@ -1,0 +1,30 @@
+[package]
+name = "omnisec-ipdg"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+description = "Inter-Process Dependency Graph (IPDG) for cross-boundary taint tracking"
+
+[lints]
+workspace = true
+
+[dependencies]
+omnisec-hdc = { workspace = true }
+omnisec-pdg = { workspace = true }
+omnisec-ir = { workspace = true }
+omnisec-core = { workspace = true }
+omnisec-json = { path = "../omnisec-json" }
+omnisec-collections = { path = "../omnisec-collections" }
+omnisec-graph = { path = "../omnisec-graph" }
+
+# Graph algorithms
+
+# Data structures
+
+# Serialization
+
+# Error handling
+
+[dev-dependencies]

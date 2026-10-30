@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bit Arena — Mega-Analyzer demo game</title>
+    <style>
+      :root {
+        --bg: #090616;
+        --panel: rgba(24, 17, 48, 0.72);
+        --border: rgba(139, 92, 246, 0.28);
+        --primary: #8b5cf6;
+        --accent: #d946ef;
+        --gold: #fbbf24;
+        --text: #e9e7f5;
+        --muted: #9d95c7;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(1000px 600px at 15% -10%, rgba(139, 92, 246, 0.22), transparent),
+          radial-gradient(800px 500px at 90% 110%, rgba(217, 70, 239, 0.18), transparent),
+          var(--bg);
+        color: var(--text);
+        font-family: "Plus Jakarta Sans", system-ui, -apple-system, Segoe UI, sans-serif;
+        padding: 24px;
+      }
+      h1 {
+        font-family: "Outfit", system-ui, sans-serif;
+        font-size: 26px;
+        margin: 0 0 2px;
+        letter-spacing: -0.4px;
+      }
+      h1 span { color: var(--accent); }
+      .sub { color: var(--muted); font-size: 13px; margin-bottom: 18px; }
+      .wrap { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 18px; max-width: 1720px; margin: 0 auto; }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        backdrop-filter: blur(16px);
+      }
+      canvas { width: 100%; height: auto; display: block; border-radius: 12px; background: #0d0922; }
+      label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.9px; color: var(--muted); margin: 12px 0 5px; }
+      input {
+        width: 100%;
+        padding: 9px 11px;
+        border-radius: 9px;
+        border: 1px solid var(--border);
+        background: rgba(9, 6, 22, 0.6);
+        color: var(--text);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 13px;
+      }
+      button {
+        margin-top: 14px;
+        width: 100%;
+        padding: 11px;
+        border: 0;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--primary), var(--accent));
+        color: #fff;
+        font-weight: 700;
+        font-size: 14px;
+        cursor: pointer;
+      }
+      button:disabled { opacity: 0.5; cursor: default; }
+      .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; letter-spacing: 1px; }
+      .badge.free { background: rgba(34, 211, 238, 0.16); color: #67e8f9; }
+      .badge.premium { background: rgba(251, 191, 36, 0.18); color: var(--gold); }
+      .kv { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; padding: 5px 0; border-bottom: 1px dashed rgba(139, 92, 246, 0.16); }
+      .kv span:last-child { color: var(--muted); font-family: ui-monospace, Menlo, monospace; word-break: break-all; text-align: right; }
+      ul { list-style: none; margin: 0; padding: 0; }
+      .row { display: flex; align-items: center; gap: 8px; padding: 5px 0; font-size: 13px; }
+      .row.me { font-weight: 800; }
+      .dot { width: 9px; height: 9px; border-radius: 50%; flex: 0 0 auto; }
+      .nm { flex: 0 0 96px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      .bar { flex: 1; height: 6px; border-radius: 4px; background: rgba(139, 92, 246, 0.16); overflow: hidden; }
+      .bar i { display: block; height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); }
+      #log { margin-top: 8px; max-height: 190px; overflow: auto; font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; color: var(--muted); }
+      #log div { padding: 2px 0; border-bottom: 1px solid rgba(139, 92, 246, 0.08); }
+      .hint { font-size: 12px; color: var(--muted); margin-top: 10px; line-height: 1.5; }
+      code { color: var(--gold); font-size: 11.5px; }
+      @media (max-width: 1000px) { .wrap { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <h1>Bit <span>Arena</span></h1>
+    <div class="sub">Authoritative Elixir/OTP game server — the reference target for the Mega-Analyzer private-server toolkit.</div>
+
+    <div class="wrap">
+      <div class="card">
+        <canvas id="arena" width="1280" height="720"></canvas>
+        <div class="hint">Move with <code>WASD</code> or the arrow keys. Grab coins, first to the target score wins. The server owns every position — your client only sends a direction.</div>
+      </div>
+
+      <div>
+        <div class="card">
+          <label for="session">Session server (entitlements)</label>
+          <input id="session" spellcheck="false" />
+          <label for="account">Account</label>
+          <input id="account" spellcheck="false" />
+          <button id="play">play</button>
+          <div class="hint">
+            Honest server → <code>free</code>. Point this at the private server
+            (<code>http://localhost:9340</code>) and the very same build turns
+            <code>premium</code>.
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 14px">
+          <div class="kv"><span>tier</span><span id="tier" class="badge free">—</span></div>
+          <div class="kv"><span>token from</span><span id="source">—</span></div>
+          <div class="kv"><span>perks</span><span id="perks">—</span></div>
+          <div class="kv"><span>match</span><span id="matchv">—</span></div>
+          <div class="kv"><span>server tick</span><span id="tickv">0</span></div>
+        </div>
+
+        <div class="card" style="margin-top: 14px">
+          <label style="margin-top: 0">Scores</label>
+          <ul id="scores"></ul>
+        </div>
+
+        <div class="card" style="margin-top: 14px">
+          <label style="margin-top: 0">Client log</label>
+          <div id="log"></div>
+        </div>
+      </div>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,108 @@
+[
+  {
+    "id": "LICENSE_BOOL_CHECK",
+    "category": "license_check",
+    "description": "Boolean license validation method",
+    "method_names": [
+      "islicensed",
+      "checklicense",
+      "validatelicense",
+      "licensecheck",
+      "isregistered",
+      "checkregistration",
+      "isactivated",
+      "verifyregistration",
+      "haslicense"
+    ],
+    "class_patterns": [
+      "license",
+      "licensing",
+      "licensecheck",
+      "licensevalidat",
+      "registration"
+    ],
+    "required_calls": [
+      "checklicense",
+      "getpackageinfo",
+      "validatelicense"
+    ],
+    "string_patterns": null,
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1,
+    "min_match_score": 15
+  },
+  {
+    "id": "LVL_ALLOW",
+    "category": "license_check",
+    "description": "Google LVL license callback (allow/dontAllow)",
+    "method_names": [
+      "allow",
+      "dontallow",
+      "applicationerror",
+      "verify",
+      "handleresponse"
+    ],
+    "class_patterns": [
+      "licensechecker",
+      "licensevalidator",
+      "licensecheckcallback",
+      "servermanaged",
+      "apsforcheckcallback"
+    ],
+    "required_calls": [
+      "checklicense",
+      "licensecheckcallback",
+      "iinlicensingservice"
+    ],
+    "string_patterns": [
+      "com.android.vending.licensing",
+      "licensing.iinlicensingservice"
+    ],
+    "return_type": "V",
+    "patch_type": "return_void",
+    "weight": 1.2,
+    "min_match_score": 12
+  },
+  {
+    "id": "OBFUSC_LICENSE_KEY",
+    "category": "license_check",
+    "description": "Obfuscated / encrypted license key validation",
+    "method_names": [
+      "verifylicensekey",
+      "checklicensekey",
+      "validatelicensekey",
+      "decryptlicense",
+      "checkserialnumber",
+      "verifyserial",
+      "checkactivationcode",
+      "validateactivation"
+    ],
+    "class_patterns": [
+      "licensekey",
+      "serialcheck",
+      "activationcheck",
+      "licensevalidat",
+      "keyvalidat",
+      "obfusclicense"
+    ],
+    "required_calls": [
+      "cipher;->dofinal",
+      "messagedigest;->digest",
+      "base64;->decode",
+      "secretkeyspec"
+    ],
+    "string_patterns": [
+      "license_key",
+      "serial_number",
+      "activation_code",
+      "license_hash",
+      "key_salt",
+      "product_key"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.2,
+    "min_match_score": 15
+  }
+]

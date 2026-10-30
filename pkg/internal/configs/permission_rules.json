@@ -1,0 +1,1239 @@
+{
+  "category": "permission_rules",
+  "version": "3.0",
+  "description": "Comprehensive Android permission risk assessment. Covers all dangerous (runtime) permissions, signature-level permissions, and special permissions. Each rule assesses the standalone risk of a single permission. Combination risks are handled by malware_indicators rules. Scoring: 5-15 normal, 20-35 moderate, 35-50 high privacy, 45-60 critical security.",
+  "rules": [
+
+
+    {
+      "id": "perm_read_sms",
+      "name": "READ_SMS — Read All Messages",
+      "description": "Can read all SMS/MMS messages on device including banking OTPs, 2FA codes, and private conversations. Top permission abused by banking trojans for 2FA bypass.",
+      "category": "privacy",
+      "severity": "high",
+      "score": 40,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.READ_SMS" }],
+      "references": ["MITRE ATT&CK Mobile: T1636.004", "CWE-359"],
+      "tags": ["sms", "privacy", "dangerous_permission", "2fa_risk"]
+    },
+    {
+      "id": "perm_receive_sms",
+      "name": "RECEIVE_SMS — Intercept Incoming SMS",
+      "description": "Can intercept incoming SMS in real-time before user sees them. Primary technique for stealing OTPs and 2FA codes. Can abort broadcast to hide messages from user.",
+      "category": "security",
+      "severity": "high",
+      "score": 45,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.RECEIVE_SMS" }],
+      "references": ["MITRE ATT&CK Mobile: T1412", "CWE-927"],
+      "tags": ["sms", "security", "dangerous_permission", "2fa_theft"]
+    },
+    {
+      "id": "perm_send_sms",
+      "name": "SEND_SMS — Send SMS Messages",
+      "description": "Can send SMS messages silently, potentially to premium-rate numbers incurring charges, or to spread malware via SMS links to contacts.",
+      "category": "security",
+      "severity": "high",
+      "score": 45,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.SEND_SMS" }],
+      "references": ["MITRE ATT&CK Mobile: T1582.001", "CWE-927"],
+      "tags": ["sms", "security", "dangerous_permission", "premium_sms", "toll_fraud"]
+    },
+    {
+      "id": "perm_receive_mms",
+      "name": "RECEIVE_MMS — Intercept MMS Messages",
+      "description": "Can intercept incoming MMS messages including photos and attachments.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 30,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.RECEIVE_MMS" }],
+      "references": ["CWE-359"],
+      "tags": ["sms", "mms", "privacy", "dangerous_permission"]
+    },
+    {
+      "id": "perm_receive_wap_push",
+      "name": "RECEIVE_WAP_PUSH — WAP Push Messages",
+      "description": "Can receive WAP push messages. Abused by Joker/Harly malware families for automatic premium service subscription fraud.",
+      "category": "security",
+      "severity": "high",
+      "score": 40,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.RECEIVE_WAP_PUSH" }],
+      "references": ["MITRE ATT&CK Mobile: T1582.001", "Joker malware family"],
+      "tags": ["sms", "wap", "security", "dangerous_permission", "toll_fraud"]
+    },
+
+
+    {
+      "id": "perm_read_phone_state",
+      "name": "READ_PHONE_STATE — Phone Identity & State",
+      "description": "Can read phone number, IMEI, IMSI, SIM serial, carrier info, and active call state. Used for device fingerprinting and call monitoring.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 30,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.READ_PHONE_STATE" }],
+      "references": ["MITRE ATT&CK Mobile: T1422", "CWE-359"],
+      "tags": ["phone", "privacy", "dangerous_permission", "fingerprinting"]
+    },
+    {
+      "id": "perm_read_phone_numbers",
+      "name": "READ_PHONE_NUMBERS — Read Phone Numbers",
+      "description": "Can read the device's phone number(s). Used for victim identification and account association.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 25,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.READ_PHONE_NUMBERS" }],
+      "references": ["CWE-359"],
+      "tags": ["phone", "privacy", "dangerous_permission"]
+    },
+    {
+      "id": "perm_call_phone",
+      "name": "CALL_PHONE — Make Phone Calls",
+      "description": "Can initiate phone calls without user interaction. Can be used to call premium-rate numbers, USSD codes for money transfer, or to redirect calls to attacker.",
+      "category": "security",
+      "severity": "high",
+      "score": 40,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.CALL_PHONE" }],
+      "references": ["MITRE ATT&CK Mobile: T1582", "CWE-927"],
+      "tags": ["phone", "security", "dangerous_permission", "toll_fraud"]
+    },
+    {
+      "id": "perm_read_call_log",
+      "name": "READ_CALL_LOG — Read Call History",
+      "description": "Can read complete call history including numbers, timestamps, duration. Used for surveillance and social engineering reconnaissance.",
+      "category": "privacy",
+      "severity": "high",
+      "score": 38,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.READ_CALL_LOG" }],
+      "references": ["MITRE ATT&CK Mobile: T1636.002", "CWE-359"],
+      "tags": ["phone", "privacy", "dangerous_permission", "surveillance"]
+    },
+    {
+      "id": "perm_write_call_log",
+      "name": "WRITE_CALL_LOG — Modify Call History",
+      "description": "Can modify or delete call history entries. Used by malware to hide evidence of premium-rate calls or USSD transactions.",
+      "category": "security",
+      "severity": "high",
+      "score": 42,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.WRITE_CALL_LOG" }],
+      "references": ["MITRE ATT&CK Mobile: T1636.002"],
+      "tags": ["phone", "security", "dangerous_permission", "evidence_tampering"]
+    },
+    {
+      "id": "perm_process_outgoing_calls",
+      "name": "PROCESS_OUTGOING_CALLS — Intercept Outgoing Calls",
+      "description": "Can intercept, monitor, and redirect outgoing calls. Banking trojans use this to redirect calls to bank support to attacker's number.",
+      "category": "security",
+      "severity": "high",
+      "score": 45,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.PROCESS_OUTGOING_CALLS" }],
+      "references": ["MITRE ATT&CK Mobile: T1616"],
+      "tags": ["phone", "security", "dangerous_permission", "call_hijack"]
+    },
+    {
+      "id": "perm_answer_phone_calls",
+      "name": "ANSWER_PHONE_CALLS — Answer Calls Programmatically",
+      "description": "Can answer incoming phone calls without user interaction. Can be used to silently answer and record calls.",
+      "category": "security",
+      "severity": "medium",
+      "score": 30,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.ANSWER_PHONE_CALLS" }],
+      "references": ["MITRE ATT&CK Mobile: T1429"],
+      "tags": ["phone", "security", "dangerous_permission"]
+    },
+    {
+      "id": "perm_add_voicemail",
+      "name": "ADD_VOICEMAIL — Add Voicemail Messages",
+      "description": "Can add voicemail messages to inbox. Could be used for social engineering by leaving fake voicemails.",
+      "category": "privacy",
+      "severity": "low",
+      "score": 15,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "com.android.voicemail.permission.ADD_VOICEMAIL" }],
+      "references": [],
+      "tags": ["phone", "privacy", "dangerous_permission"]
+    },
+    {
+      "id": "perm_use_sip",
+      "name": "USE_SIP — SIP Calling",
+      "description": "Can make/receive SIP calls. Could be used to bypass carrier billing controls.",
+      "category": "privacy",
+      "severity": "low",
+      "score": 15,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.USE_SIP" }],
+      "references": [],
+      "tags": ["phone", "privacy", "dangerous_permission"]
+    },
+
+
+    {
+      "id": "perm_read_contacts",
+      "name": "READ_CONTACTS — Read Contact List",
+      "description": "Can read entire contacts database including names, numbers, emails, photos, and linked accounts. Used for targeted phishing, spam campaigns, and social graph mapping.",
+      "category": "privacy",
+      "severity": "high",
+      "score": 38,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.READ_CONTACTS" }],
+      "references": ["MITRE ATT&CK Mobile: T1636.003", "CWE-359"],
+      "tags": ["contacts", "privacy", "dangerous_permission", "data_theft"]
+    },
+    {
+      "id": "perm_write_contacts",
+      "name": "WRITE_CONTACTS — Modify/Delete Contacts",
+      "description": "Can add, modify, or delete contacts. Could inject malicious contact entries or destroy contact data.",
+      "category": "privacy",
+      "severity": "high",
+      "score": 40,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.WRITE_CONTACTS" }],
+      "references": ["CWE-359"],
+      "tags": ["contacts", "privacy", "dangerous_permission", "data_tampering"]
+    },
+    {
+      "id": "perm_get_accounts",
+      "name": "GET_ACCOUNTS — List Device Accounts",
+      "description": "Can enumerate all accounts (Google, email, social media) on device. Used for victim profiling, targeted attacks, and account takeover preparation.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 28,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.GET_ACCOUNTS" }],
+      "references": ["MITRE ATT&CK Mobile: T1437", "CWE-359"],
+      "tags": ["accounts", "privacy", "dangerous_permission", "recon"]
+    },
+
+
+    {
+      "id": "perm_read_calendar",
+      "name": "READ_CALENDAR — Read Calendar Events",
+      "description": "Can read calendar events including meeting details, locations, attendees, and notes. Privacy risk for corporate espionage and personal surveillance.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 25,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.READ_CALENDAR" }],
+      "references": ["CWE-359"],
+      "tags": ["calendar", "privacy", "dangerous_permission"]
+    },
+    {
+      "id": "perm_write_calendar",
+      "name": "WRITE_CALENDAR — Modify Calendar",
+      "description": "Can add, modify, or delete calendar events. Could inject fake meeting invites with phishing links or delete important reminders.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 28,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.WRITE_CALENDAR" }],
+      "references": ["CWE-359"],
+      "tags": ["calendar", "privacy", "dangerous_permission"]
+    },
+
+
+    {
+      "id": "perm_camera",
+      "name": "CAMERA — Camera Access",
+      "description": "Can access front and rear cameras to take photos and record video. Used by spyware for silent surveillance, and by stalkerware to monitor victim's environment.",
+      "category": "privacy",
+      "severity": "high",
+      "score": 42,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.CAMERA" }],
+      "references": ["MITRE ATT&CK Mobile: T1512", "CWE-359"],
+      "tags": ["camera", "privacy", "dangerous_permission", "surveillance"]
+    },
+
+
+    {
+      "id": "perm_record_audio",
+      "name": "RECORD_AUDIO — Microphone Access",
+      "description": "Can record ambient audio and phone calls. Used by spyware for wiretapping, meeting recording, and environment monitoring.",
+      "category": "privacy",
+      "severity": "high",
+      "score": 45,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.RECORD_AUDIO" }],
+      "references": ["MITRE ATT&CK Mobile: T1429", "CWE-359"],
+      "tags": ["microphone", "privacy", "dangerous_permission", "surveillance", "wiretap"]
+    },
+
+
+    {
+      "id": "perm_access_fine_location",
+      "name": "ACCESS_FINE_LOCATION — Precise GPS Location",
+      "description": "Can get precise GPS location (within ~3 meters). Used for stalking, movement tracking, and location-based targeting.",
+      "category": "privacy",
+      "severity": "high",
+      "score": 40,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.ACCESS_FINE_LOCATION" }],
+      "references": ["MITRE ATT&CK Mobile: T1430", "CWE-359"],
+      "tags": ["location", "privacy", "dangerous_permission", "tracking"]
+    },
+    {
+      "id": "perm_access_coarse_location",
+      "name": "ACCESS_COARSE_LOCATION — Approximate Location",
+      "description": "Can get approximate location via cell towers and WiFi (~100m accuracy). Less precise but still enables area-level tracking.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 25,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.ACCESS_COARSE_LOCATION" }],
+      "references": ["MITRE ATT&CK Mobile: T1430"],
+      "tags": ["location", "privacy", "dangerous_permission"]
+    },
+    {
+      "id": "perm_access_background_location",
+      "name": "ACCESS_BACKGROUND_LOCATION — Background Location Tracking",
+      "description": "Can track location continuously in background even when app is not visible. Enables 24/7 movement surveillance without user awareness.",
+      "category": "privacy",
+      "severity": "critical",
+      "score": 50,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.ACCESS_BACKGROUND_LOCATION" }],
+      "references": ["MITRE ATT&CK Mobile: T1430"],
+      "tags": ["location", "privacy", "dangerous_permission", "stalkerware", "background"]
+    },
+
+
+    {
+      "id": "perm_read_external_storage",
+      "name": "READ_EXTERNAL_STORAGE — Read Files",
+      "description": "Can read all files on shared/external storage including photos, downloads, documents. Enables data exfiltration of personal files.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 28,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.READ_EXTERNAL_STORAGE" }],
+      "references": ["MITRE ATT&CK Mobile: T1533", "CWE-922"],
+      "tags": ["storage", "privacy", "dangerous_permission"]
+    },
+    {
+      "id": "perm_write_external_storage",
+      "name": "WRITE_EXTERNAL_STORAGE — Write/Delete Files",
+      "description": "Can create, modify, and delete files on shared storage. Used by ransomware to encrypt files, by droppers to write payloads, and to plant evidence.",
+      "category": "security",
+      "severity": "medium",
+      "score": 30,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.WRITE_EXTERNAL_STORAGE" }],
+      "references": ["MITRE ATT&CK Mobile: T1471", "CWE-922"],
+      "tags": ["storage", "security", "dangerous_permission", "ransomware_risk"]
+    },
+    {
+      "id": "perm_manage_external_storage",
+      "name": "MANAGE_EXTERNAL_STORAGE — Full File System Access",
+      "description": "Has unrestricted access to ALL files on device (Android 11+). Can read any app's files, databases, and shared data. Extremely powerful for data theft.",
+      "category": "security",
+      "severity": "critical",
+      "score": 55,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.MANAGE_EXTERNAL_STORAGE" }],
+      "references": ["MITRE ATT&CK Mobile: T1533", "CWE-922"],
+      "tags": ["storage", "security", "special_permission", "full_access"]
+    },
+    {
+      "id": "perm_read_media_images",
+      "name": "READ_MEDIA_IMAGES — Read Photos (Android 13+)",
+      "description": "Can read all photos and images on device. Privacy risk from photo exfiltration.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 25,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.READ_MEDIA_IMAGES" }],
+      "references": ["CWE-359"],
+      "tags": ["storage", "media", "privacy", "dangerous_permission"]
+    },
+    {
+      "id": "perm_read_media_video",
+      "name": "READ_MEDIA_VIDEO — Read Videos (Android 13+)",
+      "description": "Can read all videos on device. Privacy risk from video exfiltration.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 25,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.READ_MEDIA_VIDEO" }],
+      "references": ["CWE-359"],
+      "tags": ["storage", "media", "privacy", "dangerous_permission"]
+    },
+    {
+      "id": "perm_read_media_audio",
+      "name": "READ_MEDIA_AUDIO — Read Audio Files (Android 13+)",
+      "description": "Can read all audio files on device including voice recordings and music.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 22,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.READ_MEDIA_AUDIO" }],
+      "references": ["CWE-359"],
+      "tags": ["storage", "media", "privacy", "dangerous_permission"]
+    },
+
+
+    {
+      "id": "perm_body_sensors",
+      "name": "BODY_SENSORS — Body/Health Sensors",
+      "description": "Can access body sensors like heart rate monitor. Sensitive health data that can reveal medical conditions and activity patterns.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 28,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.BODY_SENSORS" }],
+      "references": ["CWE-359"],
+      "tags": ["sensors", "health", "privacy", "dangerous_permission"]
+    },
+    {
+      "id": "perm_body_sensors_background",
+      "name": "BODY_SENSORS_BACKGROUND — Background Health Monitoring",
+      "description": "Can read body sensor data continuously in background. Enables covert health surveillance.",
+      "category": "privacy",
+      "severity": "high",
+      "score": 35,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.BODY_SENSORS_BACKGROUND" }],
+      "references": ["CWE-359"],
+      "tags": ["sensors", "health", "privacy", "dangerous_permission", "background"]
+    },
+    {
+      "id": "perm_activity_recognition",
+      "name": "ACTIVITY_RECOGNITION — Physical Activity Detection",
+      "description": "Can detect user's physical activity (walking, running, driving, cycling). Used for behavioral profiling.",
+      "category": "privacy",
+      "severity": "low",
+      "score": 15,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.ACTIVITY_RECOGNITION" }],
+      "references": ["CWE-359"],
+      "tags": ["sensors", "privacy", "dangerous_permission"]
+    },
+
+
+    {
+      "id": "perm_bluetooth_connect",
+      "name": "BLUETOOTH_CONNECT — Bluetooth Device Access",
+      "description": "Can connect to paired Bluetooth devices. Could potentially access data from connected devices or inject commands.",
+      "category": "privacy",
+      "severity": "low",
+      "score": 15,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.BLUETOOTH_CONNECT" }],
+      "references": [],
+      "tags": ["bluetooth", "privacy", "dangerous_permission"]
+    },
+    {
+      "id": "perm_bluetooth_scan",
+      "name": "BLUETOOTH_SCAN — Bluetooth Scanning",
+      "description": "Can discover nearby Bluetooth devices. Used for proximity tracking and device fingerprinting.",
+      "category": "privacy",
+      "severity": "low",
+      "score": 12,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.BLUETOOTH_SCAN" }],
+      "references": ["MITRE ATT&CK Mobile: T1422"],
+      "tags": ["bluetooth", "privacy", "dangerous_permission", "scanning"]
+    },
+    {
+      "id": "perm_bluetooth_advertise",
+      "name": "BLUETOOTH_ADVERTISE — Bluetooth Advertising",
+      "description": "Can make device visible and advertise via Bluetooth. Low risk alone but unusual for non-BLE apps.",
+      "category": "privacy",
+      "severity": "low",
+      "score": 10,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.BLUETOOTH_ADVERTISE" }],
+      "references": [],
+      "tags": ["bluetooth", "privacy", "dangerous_permission"]
+    },
+    {
+      "id": "perm_nearby_wifi_devices",
+      "name": "NEARBY_WIFI_DEVICES — WiFi Device Discovery",
+      "description": "Can discover nearby WiFi devices (Android 13+). Can be used for location approximation without location permission.",
+      "category": "privacy",
+      "severity": "low",
+      "score": 15,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.NEARBY_WIFI_DEVICES" }],
+      "references": ["MITRE ATT&CK Mobile: T1422"],
+      "tags": ["wifi", "privacy", "dangerous_permission"]
+    },
+
+
+    {
+      "id": "perm_internet",
+      "name": "INTERNET — Network Access",
+      "description": "Can access the internet. Required for virtually all malware for C2 communication and data exfiltration. Low risk alone but enables all network-based attacks.",
+      "category": "network",
+      "severity": "info",
+      "score": 5,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.INTERNET" }],
+      "references": [],
+      "tags": ["network", "normal_permission", "ubiquitous"]
+    },
+    {
+      "id": "perm_access_network_state",
+      "name": "ACCESS_NETWORK_STATE — Network State Info",
+      "description": "Can check network connectivity type and status. Used by malware to optimize data exfiltration timing.",
+      "category": "network",
+      "severity": "info",
+      "score": 3,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.ACCESS_NETWORK_STATE" }],
+      "references": [],
+      "tags": ["network", "normal_permission"]
+    },
+    {
+      "id": "perm_access_wifi_state",
+      "name": "ACCESS_WIFI_STATE — WiFi Network Info",
+      "description": "Can read WiFi connection details including SSID, BSSID, signal strength. Used for location tracking via WiFi fingerprinting.",
+      "category": "privacy",
+      "severity": "low",
+      "score": 10,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.ACCESS_WIFI_STATE" }],
+      "references": ["MITRE ATT&CK Mobile: T1422"],
+      "tags": ["wifi", "privacy", "normal_permission", "fingerprinting"]
+    },
+    {
+      "id": "perm_change_wifi_state",
+      "name": "CHANGE_WIFI_STATE — Modify WiFi Settings",
+      "description": "Can enable/disable WiFi, connect to networks, and scan. Could connect device to rogue access point for MITM attacks.",
+      "category": "security",
+      "severity": "medium",
+      "score": 22,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.CHANGE_WIFI_STATE" }],
+      "references": ["MITRE ATT&CK Mobile: T1557"],
+      "tags": ["wifi", "security", "normal_permission", "mitm_risk"]
+    },
+    {
+      "id": "perm_change_network_state",
+      "name": "CHANGE_NETWORK_STATE — Modify Network Settings",
+      "description": "Can change network connectivity state. Could manipulate connectivity to force traffic through attacker-controlled channels.",
+      "category": "security",
+      "severity": "medium",
+      "score": 20,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.CHANGE_NETWORK_STATE" }],
+      "references": ["MITRE ATT&CK Mobile: T1557"],
+      "tags": ["network", "security", "normal_permission"]
+    },
+    {
+      "id": "perm_nfc",
+      "name": "NFC — Near Field Communication",
+      "description": "Can use NFC for reading/writing tags and card emulation. Could be used for NFC relay attacks on contactless payments.",
+      "category": "security",
+      "severity": "low",
+      "score": 15,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.NFC" }],
+      "references": [],
+      "tags": ["nfc", "security", "normal_permission"]
+    },
+
+
+    {
+      "id": "perm_bind_accessibility_service",
+      "name": "BIND_ACCESSIBILITY_SERVICE — Accessibility Control",
+      "description": "THE most dangerous Android permission. Can read all screen content, intercept all input, perform clicks and gestures, overlay content. Used by 90%+ of banking trojans for credential theft, automated transfers, and 2FA bypass. The #1 vector for mobile malware.",
+      "category": "security",
+      "severity": "critical",
+      "score": 60,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" }],
+      "references": ["MITRE ATT&CK Mobile: T1626.001", "MITRE ATT&CK Mobile: T1417.002", "OWASP MASTG: MSTG-PLATFORM-1"],
+      "tags": ["accessibility", "security", "signature_permission", "banking_trojan", "critical_risk"]
+    },
+    {
+      "id": "perm_system_alert_window",
+      "name": "SYSTEM_ALERT_WINDOW — Draw Over Other Apps",
+      "description": "Can draw overlay windows on top of all other apps. Primary technique for displaying fake login screens in banking overlay attacks. Second most abused permission after accessibility.",
+      "category": "security",
+      "severity": "critical",
+      "score": 52,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.SYSTEM_ALERT_WINDOW" }],
+      "references": ["MITRE ATT&CK Mobile: T1417.002"],
+      "tags": ["overlay", "security", "special_permission", "banking_trojan"]
+    },
+    {
+      "id": "perm_bind_device_admin",
+      "name": "BIND_DEVICE_ADMIN — Device Administrator",
+      "description": "Can become device administrator with power to enforce password policies, lock screen, wipe device, prevent uninstallation. Used by ransomware to lock device and demand ransom.",
+      "category": "security",
+      "severity": "critical",
+      "score": 55,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.BIND_DEVICE_ADMIN" }],
+      "references": ["MITRE ATT&CK Mobile: T1401"],
+      "tags": ["device_admin", "security", "signature_permission", "ransomware"]
+    },
+    {
+      "id": "perm_bind_notification_listener",
+      "name": "BIND_NOTIFICATION_LISTENER_SERVICE — Read All Notifications",
+      "description": "Can read, dismiss, and interact with ALL notifications from ALL apps. Captures banking OTPs, 2FA push notifications, email previews, and chat messages.",
+      "category": "security",
+      "severity": "critical",
+      "score": 50,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" }],
+      "references": ["MITRE ATT&CK Mobile: T1517"],
+      "tags": ["notification", "security", "signature_permission", "otp_theft"]
+    },
+    {
+      "id": "perm_bind_vpn_service",
+      "name": "BIND_VPN_SERVICE — VPN Service",
+      "description": "Can create a VPN tunnel routing ALL device traffic through the app. Enables complete traffic interception, DNS hijacking, and MITM attacks.",
+      "category": "security",
+      "severity": "high",
+      "score": 48,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.BIND_VPN_SERVICE" }],
+      "references": ["MITRE ATT&CK Mobile: T1557"],
+      "tags": ["vpn", "security", "signature_permission", "mitm"]
+    },
+    {
+      "id": "perm_request_install_packages",
+      "name": "REQUEST_INSTALL_PACKAGES — Install Other Apps",
+      "description": "Can prompt installation of additional APKs. Used by droppers to install the actual malware payload. Enables multi-stage infection.",
+      "category": "security",
+      "severity": "high",
+      "score": 45,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.REQUEST_INSTALL_PACKAGES" }],
+      "references": ["MITRE ATT&CK Mobile: T1476"],
+      "tags": ["packages", "security", "special_permission", "dropper"]
+    },
+    {
+      "id": "perm_request_delete_packages",
+      "name": "REQUEST_DELETE_PACKAGES — Uninstall Other Apps",
+      "description": "Can prompt removal of other apps. Could be used to uninstall security apps or competing malware.",
+      "category": "security",
+      "severity": "medium",
+      "score": 30,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.REQUEST_DELETE_PACKAGES" }],
+      "references": ["MITRE ATT&CK Mobile: T1629.002"],
+      "tags": ["packages", "security", "normal_permission"]
+    },
+    {
+      "id": "perm_query_all_packages",
+      "name": "QUERY_ALL_PACKAGES — See All Installed Apps",
+      "description": "Can enumerate ALL installed applications. Used by banking trojans to identify target banking apps for overlay attacks.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 28,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.QUERY_ALL_PACKAGES" }],
+      "references": ["MITRE ATT&CK Mobile: T1418"],
+      "tags": ["packages", "privacy", "normal_permission", "recon"]
+    },
+    {
+      "id": "perm_package_usage_stats",
+      "name": "PACKAGE_USAGE_STATS — App Usage Statistics",
+      "description": "Can see which apps are used, when, and for how long. Used to detect when banking apps are opened to trigger overlay injection.",
+      "category": "privacy",
+      "severity": "high",
+      "score": 40,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.PACKAGE_USAGE_STATS" }],
+      "references": ["MITRE ATT&CK Mobile: T1418"],
+      "tags": ["packages", "privacy", "special_permission", "banking_trojan"]
+    },
+    {
+      "id": "perm_write_settings",
+      "name": "WRITE_SETTINGS — Modify System Settings",
+      "description": "Can modify global system settings including display brightness, volume, timezone, and security settings.",
+      "category": "security",
+      "severity": "medium",
+      "score": 30,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.WRITE_SETTINGS" }],
+      "references": [],
+      "tags": ["system", "security", "special_permission"]
+    },
+    {
+      "id": "perm_write_secure_settings",
+      "name": "WRITE_SECURE_SETTINGS — Modify Secure Settings",
+      "description": "Can modify secure system settings. Extremely powerful — can enable/disable ADB, change lock screen settings, modify accessibility settings.",
+      "category": "security",
+      "severity": "critical",
+      "score": 58,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.WRITE_SECURE_SETTINGS" }],
+      "references": [],
+      "tags": ["system", "security", "signature_permission", "privilege_escalation"]
+    },
+    {
+      "id": "perm_disable_keyguard",
+      "name": "DISABLE_KEYGUARD — Disable Lock Screen",
+      "description": "Can disable the device lock screen. Used by ransomware to show overlay lock screens and by trojans to access device without user's PIN.",
+      "category": "security",
+      "severity": "high",
+      "score": 40,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.DISABLE_KEYGUARD" }],
+      "references": ["MITRE ATT&CK Mobile: T1447"],
+      "tags": ["system", "security", "normal_permission", "ransomware"]
+    },
+    {
+      "id": "perm_wake_lock",
+      "name": "WAKE_LOCK — Prevent Device Sleep",
+      "description": "Can keep device CPU/screen awake. Used by miners for continuous CPU usage and by spyware for uninterrupted surveillance.",
+      "category": "security",
+      "severity": "low",
+      "score": 10,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.WAKE_LOCK" }],
+      "references": [],
+      "tags": ["system", "security", "normal_permission"]
+    },
+    {
+      "id": "perm_request_ignore_battery_optimizations",
+      "name": "REQUEST_IGNORE_BATTERY_OPTIMIZATIONS — Battery Whitelist",
+      "description": "Requests exemption from battery optimization (Doze mode). Ensures background processes are not killed — critical for persistent malware operation.",
+      "category": "security",
+      "severity": "medium",
+      "score": 22,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" }],
+      "references": ["MITRE ATT&CK Mobile: T1398"],
+      "tags": ["system", "security", "special_permission", "persistence"]
+    },
+    {
+      "id": "perm_foreground_service",
+      "name": "FOREGROUND_SERVICE — Foreground Service",
+      "description": "Can run persistent foreground services. Essential for continuous background operation including surveillance, location tracking, and C2 communication.",
+      "category": "security",
+      "severity": "low",
+      "score": 12,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.FOREGROUND_SERVICE" }],
+      "references": ["MITRE ATT&CK Mobile: T1398"],
+      "tags": ["system", "security", "normal_permission", "persistence"]
+    },
+    {
+      "id": "perm_foreground_service_camera",
+      "name": "FOREGROUND_SERVICE_CAMERA — Background Camera Use",
+      "description": "Can use camera from foreground service (Android 14+). Enables continuous camera surveillance in background.",
+      "category": "privacy",
+      "severity": "high",
+      "score": 38,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.FOREGROUND_SERVICE_CAMERA" }],
+      "references": ["MITRE ATT&CK Mobile: T1512"],
+      "tags": ["camera", "privacy", "normal_permission", "surveillance"]
+    },
+    {
+      "id": "perm_foreground_service_microphone",
+      "name": "FOREGROUND_SERVICE_MICROPHONE — Background Mic Use",
+      "description": "Can use microphone from foreground service (Android 14+). Enables continuous audio recording in background.",
+      "category": "privacy",
+      "severity": "high",
+      "score": 38,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.FOREGROUND_SERVICE_MICROPHONE" }],
+      "references": ["MITRE ATT&CK Mobile: T1429"],
+      "tags": ["microphone", "privacy", "normal_permission", "surveillance"]
+    },
+    {
+      "id": "perm_foreground_service_location",
+      "name": "FOREGROUND_SERVICE_LOCATION — Background Location",
+      "description": "Can access location from foreground service (Android 14+). Enables continuous location tracking.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 28,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.FOREGROUND_SERVICE_LOCATION" }],
+      "references": ["MITRE ATT&CK Mobile: T1430"],
+      "tags": ["location", "privacy", "normal_permission", "tracking"]
+    },
+    {
+      "id": "perm_receive_boot_completed",
+      "name": "RECEIVE_BOOT_COMPLETED — Auto-Start on Boot",
+      "description": "App automatically starts when device boots. Core persistence mechanism — ensures malware survives device restarts. Alone it's common, but combined with dangerous permissions it's a red flag.",
+      "category": "security",
+      "severity": "medium",
+      "score": 20,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.RECEIVE_BOOT_COMPLETED" }],
+      "references": ["MITRE ATT&CK Mobile: T1398"],
+      "tags": ["system", "security", "normal_permission", "persistence", "boot"]
+    },
+    {
+      "id": "perm_schedule_exact_alarm",
+      "name": "SCHEDULE_EXACT_ALARM — Exact Alarms",
+      "description": "Can schedule exact-time alarms (Android 12+). Used by malware for timed payload delivery and periodic C2 check-ins.",
+      "category": "security",
+      "severity": "low",
+      "score": 12,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.SCHEDULE_EXACT_ALARM" }],
+      "references": ["MITRE ATT&CK Mobile: T1398"],
+      "tags": ["system", "security", "special_permission"]
+    },
+    {
+      "id": "perm_use_exact_alarm",
+      "name": "USE_EXACT_ALARM — Use Exact Alarms",
+      "description": "Can use exact alarms without user approval (Android 13+). Enables precise timing for malicious task scheduling.",
+      "category": "security",
+      "severity": "low",
+      "score": 10,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.USE_EXACT_ALARM" }],
+      "references": [],
+      "tags": ["system", "security", "normal_permission"]
+    },
+
+
+    {
+      "id": "perm_post_notifications",
+      "name": "POST_NOTIFICATIONS — Show Notifications",
+      "description": "Can display notifications (Android 13+). Could be used for phishing via fake banking notifications or social engineering.",
+      "category": "privacy",
+      "severity": "low",
+      "score": 10,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.POST_NOTIFICATIONS" }],
+      "references": [],
+      "tags": ["notification", "privacy", "dangerous_permission"]
+    },
+
+
+    {
+      "id": "perm_use_biometric",
+      "name": "USE_BIOMETRIC — Biometric Authentication",
+      "description": "Can use fingerprint, face, or iris sensors. Generally legitimate for security, but could be part of a fake biometric prompt phishing attack.",
+      "category": "security",
+      "severity": "low",
+      "score": 8,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.USE_BIOMETRIC" }],
+      "references": [],
+      "tags": ["biometric", "security", "normal_permission"]
+    },
+    {
+      "id": "perm_use_fingerprint",
+      "name": "USE_FINGERPRINT — Fingerprint (Deprecated)",
+      "description": "Legacy fingerprint permission. Replaced by USE_BIOMETRIC in API 28+.",
+      "category": "security",
+      "severity": "low",
+      "score": 8,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.USE_FINGERPRINT" }],
+      "references": [],
+      "tags": ["biometric", "security", "normal_permission", "deprecated"]
+    },
+
+
+    {
+      "id": "perm_vibrate",
+      "name": "VIBRATE — Control Vibration",
+      "description": "Can control device vibration. Very low risk, common in most apps.",
+      "category": "privacy",
+      "severity": "info",
+      "score": 1,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.VIBRATE" }],
+      "references": [],
+      "tags": ["hardware", "normal_permission"]
+    },
+    {
+      "id": "perm_flashlight",
+      "name": "FLASHLIGHT — Control Flashlight",
+      "description": "Can control device flashlight. Very low risk.",
+      "category": "privacy",
+      "severity": "info",
+      "score": 1,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.FLASHLIGHT" }],
+      "references": [],
+      "tags": ["hardware", "normal_permission"]
+    },
+
+
+    {
+      "id": "perm_read_profile",
+      "name": "READ_PROFILE — Read User Profile (Deprecated)",
+      "description": "Legacy permission to read user profile data including name and contact info.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 22,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.READ_PROFILE" }],
+      "references": ["CWE-359"],
+      "tags": ["privacy", "dangerous_permission", "deprecated"]
+    },
+    {
+      "id": "perm_read_social_stream",
+      "name": "READ_SOCIAL_STREAM — Read Social Stream (Deprecated)",
+      "description": "Legacy permission to read social media stream data from contacts provider.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 20,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.READ_SOCIAL_STREAM" }],
+      "references": ["CWE-359"],
+      "tags": ["privacy", "dangerous_permission", "deprecated"]
+    },
+
+
+    {
+      "id": "perm_install_shortcut",
+      "name": "INSTALL_SHORTCUT — Create Home Screen Shortcuts",
+      "description": "Can create home screen shortcuts. Could place deceptive shortcuts mimicking banking or system apps for phishing.",
+      "category": "security",
+      "severity": "low",
+      "score": 12,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "com.android.launcher.permission.INSTALL_SHORTCUT" }],
+      "references": [],
+      "tags": ["ui", "security", "normal_permission"]
+    },
+    {
+      "id": "perm_set_wallpaper",
+      "name": "SET_WALLPAPER — Change Wallpaper",
+      "description": "Can change device wallpaper. Used by ransomware to display ransom demands as wallpaper.",
+      "category": "security",
+      "severity": "low",
+      "score": 8,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.SET_WALLPAPER" }],
+      "references": ["MITRE ATT&CK Mobile: T1471"],
+      "tags": ["ui", "security", "normal_permission", "ransomware"]
+    },
+    {
+      "id": "perm_expand_status_bar",
+      "name": "EXPAND_STATUS_BAR — Control Status Bar",
+      "description": "Can expand or collapse status bar. Used by overlay malware to prevent user from accessing quick settings.",
+      "category": "security",
+      "severity": "low",
+      "score": 10,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.EXPAND_STATUS_BAR" }],
+      "references": [],
+      "tags": ["ui", "security", "normal_permission"]
+    },
+
+
+    {
+      "id": "perm_capture_audio_output",
+      "name": "CAPTURE_AUDIO_OUTPUT — System Audio Capture",
+      "description": "Can capture audio output from all apps. System-level permission — enables recording of phone calls, media playback, and app audio.",
+      "category": "security",
+      "severity": "critical",
+      "score": 55,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.CAPTURE_AUDIO_OUTPUT" }],
+      "references": ["MITRE ATT&CK Mobile: T1429"],
+      "tags": ["audio", "security", "system_permission", "surveillance"]
+    },
+    {
+      "id": "perm_capture_video_output",
+      "name": "CAPTURE_VIDEO_OUTPUT — System Video Capture",
+      "description": "Can capture video output from all apps. System-level permission — enables screen recording of all activities including banking sessions.",
+      "category": "security",
+      "severity": "critical",
+      "score": 55,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.CAPTURE_VIDEO_OUTPUT" }],
+      "references": ["MITRE ATT&CK Mobile: T1513"],
+      "tags": ["video", "security", "system_permission", "surveillance"]
+    },
+    {
+      "id": "perm_read_frame_buffer",
+      "name": "READ_FRAME_BUFFER — Read Screen Buffer",
+      "description": "Can read raw screen frame buffer. System-level permission — enables pixel-level screen capture without MediaProjection.",
+      "category": "security",
+      "severity": "critical",
+      "score": 55,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.READ_FRAME_BUFFER" }],
+      "references": ["MITRE ATT&CK Mobile: T1513"],
+      "tags": ["screen", "security", "system_permission", "surveillance"]
+    },
+    {
+      "id": "perm_read_logs",
+      "name": "READ_LOGS — Read System Logs",
+      "description": "Can read system log output. Logs may contain sensitive data, tokens, URLs, and error messages with internal paths.",
+      "category": "security",
+      "severity": "high",
+      "score": 40,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.READ_LOGS" }],
+      "references": ["CWE-532"],
+      "tags": ["system", "security", "system_permission", "data_leak"]
+    },
+    {
+      "id": "perm_dump",
+      "name": "DUMP — Dump System State",
+      "description": "Can dump system service state. Provides deep insight into running processes, services, and system state.",
+      "category": "security",
+      "severity": "high",
+      "score": 42,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.DUMP" }],
+      "references": [],
+      "tags": ["system", "security", "system_permission"]
+    },
+    {
+      "id": "perm_get_tasks",
+      "name": "GET_TASKS — Get Running Tasks (Deprecated)",
+      "description": "Legacy permission to get list of running tasks. Still found in old malware targeting pre-Lollipop devices. Used to detect foreground banking app.",
+      "category": "privacy",
+      "severity": "medium",
+      "score": 25,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.GET_TASKS" }],
+      "references": ["MITRE ATT&CK Mobile: T1418"],
+      "tags": ["system", "privacy", "deprecated", "banking_trojan"]
+    },
+    {
+      "id": "perm_reorder_tasks",
+      "name": "REORDER_TASKS — Reorder Running Tasks",
+      "description": "Can bring tasks to front or push to background. Used by overlay malware to push legitimate app behind fake login screen.",
+      "category": "security",
+      "severity": "medium",
+      "score": 25,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.REORDER_TASKS" }],
+      "references": [],
+      "tags": ["system", "security", "normal_permission", "overlay"]
+    },
+    {
+      "id": "perm_kill_background_processes",
+      "name": "KILL_BACKGROUND_PROCESSES — Kill Other Apps",
+      "description": "Can kill background processes of other apps. Could be used to kill security/antivirus apps.",
+      "category": "security",
+      "severity": "medium",
+      "score": 22,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.KILL_BACKGROUND_PROCESSES" }],
+      "references": ["MITRE ATT&CK Mobile: T1629.002"],
+      "tags": ["system", "security", "normal_permission"]
+    },
+    {
+      "id": "perm_system_overlay_window",
+      "name": "INTERNAL_SYSTEM_WINDOW — Internal System Window",
+      "description": "Can create internal system-level windows. Signature-level permission — if present in non-system app, indicates system-level exploit or platform signing key compromise.",
+      "category": "security",
+      "severity": "critical",
+      "score": 60,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.INTERNAL_SYSTEM_WINDOW" }],
+      "references": [],
+      "tags": ["system", "security", "signature_permission", "exploit"]
+    },
+    {
+      "id": "perm_install_packages",
+      "name": "INSTALL_PACKAGES — Silent App Install",
+      "description": "Can install apps without user prompt. Signature/system permission — if present in non-system app, indicates system-level compromise or platform signing key leak.",
+      "category": "security",
+      "severity": "critical",
+      "score": 60,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.INSTALL_PACKAGES" }],
+      "references": ["MITRE ATT&CK Mobile: T1476"],
+      "tags": ["system", "security", "signature_permission", "dropper"]
+    },
+    {
+      "id": "perm_delete_packages",
+      "name": "DELETE_PACKAGES — Silent App Remove",
+      "description": "Can uninstall apps without user confirmation. Signature/system permission — could be used to silently remove security apps.",
+      "category": "security",
+      "severity": "critical",
+      "score": 55,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.DELETE_PACKAGES" }],
+      "references": ["MITRE ATT&CK Mobile: T1629.002"],
+      "tags": ["system", "security", "signature_permission"]
+    },
+    {
+      "id": "perm_mount_unmount_filesystems",
+      "name": "MOUNT_UNMOUNT_FILESYSTEMS — Mount Filesystems",
+      "description": "Can mount and unmount filesystems. Could be used to access additional storage or mount encrypted partitions.",
+      "category": "security",
+      "severity": "medium",
+      "score": 25,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.MOUNT_UNMOUNT_FILESYSTEMS" }],
+      "references": [],
+      "tags": ["system", "security", "system_permission"]
+    },
+    {
+      "id": "perm_receive_user_present",
+      "name": "USER_PRESENT — Detect Screen Unlock",
+      "description": "Notified when user unlocks device. Used by malware to trigger overlay injection at the exact moment user starts using device.",
+      "category": "security",
+      "severity": "low",
+      "score": 12,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.intent.action.USER_PRESENT" }],
+      "references": [],
+      "tags": ["system", "security", "normal_permission", "trigger"]
+    },
+
+
+    {
+      "id": "perm_sms_financial_transactions",
+      "name": "SMS_FINANCIAL_TRANSACTIONS — Financial SMS",
+      "description": "Can read SMS for financial transaction verification. Restricted permission — very suspicious if found outside banking apps.",
+      "category": "security",
+      "severity": "critical",
+      "score": 55,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.SMS_FINANCIAL_TRANSACTIONS" }],
+      "references": ["MITRE ATT&CK Mobile: T1412"],
+      "tags": ["sms", "security", "restricted_permission", "financial"]
+    },
+    {
+      "id": "perm_manage_ongoing_calls",
+      "name": "MANAGE_ONGOING_CALLS — Control Active Calls",
+      "description": "Can manage ongoing calls including redirecting, muting, ending. Could hijack bank support calls.",
+      "category": "security",
+      "severity": "high",
+      "score": 40,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.MANAGE_ONGOING_CALLS" }],
+      "references": ["MITRE ATT&CK Mobile: T1616"],
+      "tags": ["phone", "security", "restricted_permission"]
+    },
+    {
+      "id": "perm_loader_usage_stats",
+      "name": "LOADER_USAGE_STATS — Content Loader Stats",
+      "description": "Can access content loader usage statistics. Provides insight into data loading patterns of other apps.",
+      "category": "privacy",
+      "severity": "low",
+      "score": 12,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.LOADER_USAGE_STATS" }],
+      "references": [],
+      "tags": ["system", "privacy", "system_permission"]
+    },
+    {
+      "id": "perm_access_notifications",
+      "name": "ACCESS_NOTIFICATIONS — Legacy Notification Access",
+      "description": "Legacy permission for notification access. Replaced by BIND_NOTIFICATION_LISTENER_SERVICE.",
+      "category": "security",
+      "severity": "high",
+      "score": 42,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.ACCESS_NOTIFICATIONS" }],
+      "references": ["MITRE ATT&CK Mobile: T1517"],
+      "tags": ["notification", "security", "system_permission", "deprecated"]
+    },
+    {
+      "id": "perm_change_configuration",
+      "name": "CHANGE_CONFIGURATION — Change System Config",
+      "description": "Can change system configuration like locale and font size. Could be used to change device language to confuse user during attack.",
+      "category": "security",
+      "severity": "low",
+      "score": 10,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.CHANGE_CONFIGURATION" }],
+      "references": [],
+      "tags": ["system", "security", "signature_permission"]
+    },
+
+
+    {
+      "id": "perm_samsung_knox",
+      "name": "Samsung KNOX Permissions",
+      "description": "Requests Samsung KNOX enterprise permissions. If not a legitimate MDM/enterprise app, this is suspicious.",
+      "category": "security",
+      "severity": "high",
+      "score": 40,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "com.samsung.android.knox" }],
+      "references": [],
+      "tags": ["vendor", "security", "samsung", "enterprise"]
+    },
+    {
+      "id": "perm_xiaomi_background",
+      "name": "Xiaomi Background Start",
+      "description": "Requests Xiaomi-specific background start permission. Enables persistent background execution on MIUI devices.",
+      "category": "security",
+      "severity": "medium",
+      "score": 20,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "com.miui.permission.BACKGROUND_START_ACTIVITY" }],
+      "references": [],
+      "tags": ["vendor", "security", "xiaomi", "persistence"]
+    },
+    {
+      "id": "perm_huawei_autostart",
+      "name": "Huawei Auto-Start",
+      "description": "Requests Huawei-specific autostart permission. Enables persistence on Huawei/EMUI devices.",
+      "category": "security",
+      "severity": "medium",
+      "score": 18,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "com.huawei.permission.AUTOSTART" }],
+      "references": [],
+      "tags": ["vendor", "security", "huawei", "persistence"]
+    },
+    {
+      "id": "perm_oppo_autostart",
+      "name": "OPPO/Realme Auto-Start",
+      "description": "Requests OPPO-specific autostart permission.",
+      "category": "security",
+      "severity": "medium",
+      "score": 18,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "com.coloros.permission.AUTOSTART" }],
+      "references": [],
+      "tags": ["vendor", "security", "oppo", "persistence"]
+    },
+
+
+    {
+      "id": "perm_unknown_dangerous",
+      "name": "Unknown Custom Permission (Dangerous Pattern)",
+      "description": "Non-standard permission with dangerous-sounding name. Custom permissions with names containing 'admin', 'root', 'system', or 'install' are suspicious.",
+      "category": "security",
+      "severity": "medium",
+      "score": 25,
+      "enabled": true,
+      "conditions": [
+        { "type": "pattern", "value": "android.permission.WRITE_APN_SETTINGS" }
+      ],
+      "references": [],
+      "tags": ["system", "security", "apn", "network_config"]
+    },
+    {
+      "id": "perm_bind_telecom_service",
+      "name": "BIND_TELECOM_CONNECTION_SERVICE — Telecom Service",
+      "description": "Can act as a telephony connection service. Enables call management and potentially call interception at system level.",
+      "category": "security",
+      "severity": "high",
+      "score": 40,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.BIND_TELECOM_CONNECTION_SERVICE" }],
+      "references": ["MITRE ATT&CK Mobile: T1616"],
+      "tags": ["phone", "security", "signature_permission"]
+    },
+    {
+      "id": "perm_read_privileged_phone_state",
+      "name": "READ_PRIVILEGED_PHONE_STATE — Privileged Phone Info",
+      "description": "Can read privileged phone state including IMEI on Android 10+. System/signature permission — very suspicious in non-system apps.",
+      "category": "security",
+      "severity": "high",
+      "score": 45,
+      "enabled": true,
+      "conditions": [{ "type": "permission", "value": "android.permission.READ_PRIVILEGED_PHONE_STATE" }],
+      "references": ["CWE-359"],
+      "tags": ["phone", "security", "system_permission", "fingerprinting"]
+    }
+  ]
+}

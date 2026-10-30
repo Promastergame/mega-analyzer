@@ -1,0 +1,60 @@
+# pkg/internal/resources/custom_keywords.txt
+# Custom keyword/IOC list — one entry per line (case-insensitive).
+# Lines starting with # are comments.
+# Optional format: tag:keyword (tag has no spaces or slashes)
+#
+# Hooking frameworks
+hooking:frida
+hooking:xposed
+hooking:substrate
+hooking:cydia
+#
+# Root detection indicators
+root:magisk
+root:superuser
+root:su binary
+root:test-keys
+root:/system/xbin/su
+#
+# Dynamic code loading
+dynamic:DexClassLoader
+dynamic:InMemoryDexClassLoader
+dynamic:dalvik.system.DexFile
+dynamic:PathClassLoader
+#
+# Command execution
+exec:Runtime.exec
+exec:ProcessBuilder
+exec:/system/bin/sh
+exec:cmd.exe
+exec:powershell
+#
+# WebView security
+webview:loadUrl(
+webview:addJavascriptInterface
+webview:evaluateJavascript
+webview:setWebViewClient
+#
+# Device info harvesting
+device:TelephonyManager
+device:getDeviceId
+device:getSubscriberId
+device:getImei
+device:getLine1Number
+#
+# SMS abuse
+sms:SmsManager
+sms:sendTextMessage
+#
+# Crypto
+crypto:Cipher.getInstance
+crypto:SecretKeySpec
+#
+# Accessibility abuse
+a11y:AccessibilityService
+admin:DeviceAdminReceiver
+#
+# Obfuscation / reflection
+obfuscation:Base64.decode
+reflection:reflect.Method
+reflection:setAccessible

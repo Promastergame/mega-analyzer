@@ -1,0 +1,1086 @@
+{
+  "ml_training_database": {
+    "metadata": {
+      "version": "3.2.0",
+      "created": "2025-01-15",
+      "last_updated": "2026-06-01",
+      "description": "ML Training Dataset - Synthetic API Credentials (Non-functional)",
+      "total_records": 33,
+      "warning": "SYNTHETIC DATA ONLY — All credentials are fake and non-functional"
+    },
+    "services": {
+      "aws": {
+        "service_name": "Amazon Web Services",
+        "credentials": [
+          {
+            "id": "aws_001",
+            "access_key_id": "AKIAIOSFODNN7EXAMPLE1",
+            "secret_access_key": "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY1",
+            "session_token": "FwoGZXIvYXdzEJr//////////wEaDKU3pqAbCdEfGhIjKl",
+            "region": "us-east-1",
+            "account_id": "123456789012",
+            "iam_user": "ml-service-user-prod",
+            "iam_role_arn": "arn:aws:iam::123456789012:role/MLServiceRole",
+            "mfa_serial": "arn:aws:iam::123456789012:mfa/ml-service-user-prod",
+            "created_at": "2025-02-10T08:32:11Z",
+            "expires_at": "2026-02-10T08:32:11Z",
+            "permissions": [
+              "S3FullAccess",
+              "EC2ReadOnly",
+              "SageMakerFullAccess"
+            ],
+            "tags": {
+              "env": "prod",
+              "team": "ml-infra"
+            },
+            "last_used": "2026-05-30T14:22:00Z"
+          },
+          {
+            "id": "aws_002",
+            "access_key_id": "AKIAI44QH8DHBEXAMPLE2",
+            "secret_access_key": "je7MtGbClwBF/2Zp9Utk/h3yCo8nvbEXAMPLEKEY2",
+            "session_token": "FwoGZXIvYXdzEJr//////////wEaDZyXwVuTsRqPoNmLk",
+            "region": "eu-west-1",
+            "account_id": "987654321098",
+            "iam_user": "ml-service-user-dev",
+            "iam_role_arn": "arn:aws:iam::987654321098:role/MLDevRole",
+            "mfa_serial": "arn:aws:iam::987654321098:mfa/ml-service-user-dev",
+            "created_at": "2025-03-22T14:17:45Z",
+            "expires_at": "2026-03-22T14:17:45Z",
+            "permissions": [
+              "S3ReadOnly",
+              "LambdaFullAccess"
+            ],
+            "tags": {
+              "env": "dev",
+              "team": "data-science"
+            },
+            "last_used": "2026-05-28T09:10:00Z"
+          }
+        ]
+      },
+      "github": {
+        "service_name": "GitHub",
+        "credentials": [
+          {
+            "id": "gh_001",
+            "token_type": "personal_access_token",
+            "token": "ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456Ex",
+            "username": "ml-bot-service",
+            "scopes": [
+              "repo",
+              "workflow",
+              "read:org",
+              "write:packages"
+            ],
+            "org": "ml-research-org",
+            "repo_visibility": "private",
+            "2fa_enabled": true,
+            "created_at": "2025-01-05T10:00:00Z",
+            "expires_at": "2026-01-05T10:00:00Z",
+            "last_used": "2026-06-01T08:00:00Z",
+            "note": "ML pipeline automation bot"
+          },
+          {
+            "id": "gh_002",
+            "token_type": "fine_grained_token",
+            "token": "github_pat_11ABCDEFG0123456789_ABCDEFGHIJKLMNOPabcdefghijklmnop01234567",
+            "username": "data-pipeline-bot",
+            "scopes": [
+              "contents:read",
+              "actions:write",
+              "pull_requests:write"
+            ],
+            "org": "data-science-team",
+            "installation_id": "44812930",
+            "2fa_enabled": true,
+            "created_at": "2025-04-18T09:22:33Z",
+            "expires_at": "2026-04-18T09:22:33Z",
+            "last_used": "2026-05-29T11:00:00Z",
+            "note": "Fine-grained token for CI/CD"
+          }
+        ]
+      },
+      "openai_chatgpt": {
+        "service_name": "OpenAI / ChatGPT",
+        "credentials": [
+          {
+            "id": "oai_001",
+            "api_key": "sk-proj-aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890ABCDEFexample",
+            "organization_id": "org-aBcDeFgHiJkLmNoPqRsTuV",
+            "project_id": "proj_aBcDeFgHiJkLmNoPqRsT",
+            "model_access": [
+              "gpt-4o",
+              "gpt-4o-mini",
+              "o1",
+              "o3",
+              "o4-mini",
+              "dall-e-3",
+              "whisper-1"
+            ],
+            "rate_limit_tier": "tier-5",
+            "monthly_limit_usd": 1000,
+            "created_at": "2025-05-01T00:00:00Z",
+            "expires_at": null,
+            "usage_this_month_usd": 347.82,
+            "preferred_model": "gpt-4o"
+          },
+          {
+            "id": "oai_002",
+            "api_key": "sk-proj-XyZaBcDeFgHiJkLmNoPqRsTuVwXy0987654321ZYXWVUTexample",
+            "organization_id": "org-XyZaBcDeFgHiJkLmNoPqRs",
+            "project_id": "proj_XyZaBcDeFgHiJkLmNoP",
+            "model_access": [
+              "gpt-4o-mini",
+              "o4-mini",
+              "gpt-3.5-turbo"
+            ],
+            "rate_limit_tier": "tier-3",
+            "monthly_limit_usd": 200,
+            "created_at": "2025-06-15T00:00:00Z",
+            "expires_at": null,
+            "usage_this_month_usd": 89.4,
+            "preferred_model": "gpt-4o-mini"
+          }
+        ]
+      },
+      "anthropic": {
+        "service_name": "Anthropic Claude",
+        "credentials": [
+          {
+            "id": "ant_001",
+            "api_key": "sk-ant-api03-aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890ABCDEFGHIJKLMNOexample-AAAA",
+            "organization": "ml-research-team",
+            "model_access": [
+              "claude-opus-4-5",
+              "claude-sonnet-4-5",
+              "claude-3-7-sonnet-20250219",
+              "claude-3-5-sonnet-20241022",
+              "claude-3-5-haiku-20241022"
+            ],
+            "rate_limit_tier": "scale",
+            "monthly_limit_usd": 2000,
+            "max_tokens_per_request": 200000,
+            "beta_features": [
+              "extended-thinking",
+              "files-api"
+            ],
+            "created_at": "2025-03-01T00:00:00Z",
+            "usage_this_month_usd": 815.2
+          },
+          {
+            "id": "ant_002",
+            "api_key": "sk-ant-api03-ZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZYXWVUTSRQPONMexample-BBBB",
+            "organization": "data-science-team",
+            "model_access": [
+              "claude-sonnet-4-5",
+              "claude-3-5-sonnet-20241022",
+              "claude-3-5-haiku-20241022"
+            ],
+            "rate_limit_tier": "build",
+            "monthly_limit_usd": 400,
+            "max_tokens_per_request": 100000,
+            "beta_features": [
+              "files-api"
+            ],
+            "created_at": "2025-06-10T00:00:00Z",
+            "usage_this_month_usd": 122.6
+          }
+        ]
+      },
+      "gemini": {
+        "service_name": "Google Gemini AI",
+        "credentials": [
+          {
+            "id": "gem_001",
+            "api_key": "AIzaSyAbCdEfGhIjKlMnOpQrStUvWxYz-GeMiNi1",
+            "project_id": "gemini-ml-prod-112233",
+            "model_access": [
+              "gemini-2.5-pro",
+              "gemini-2.5-flash",
+              "gemini-2.0-flash",
+              "gemini-1.5-pro",
+              "gemini-pro-vision"
+            ],
+            "quota_project": "gemini-ml-prod-112233",
+            "rate_limit": "2000 RPM",
+            "grounding_enabled": true,
+            "code_execution_enabled": true,
+            "created_at": "2025-05-20T10:00:00Z",
+            "region": "us-central1"
+          },
+          {
+            "id": "gem_002",
+            "api_key": "AIzaSyZyXwVuTsRqPoNmLkJiHgFedcba-GeMiNi2",
+            "project_id": "gemini-ml-dev-445566",
+            "model_access": [
+              "gemini-2.5-flash",
+              "gemini-2.0-flash"
+            ],
+            "quota_project": "gemini-ml-dev-445566",
+            "rate_limit": "60 RPM",
+            "grounding_enabled": false,
+            "code_execution_enabled": true,
+            "created_at": "2025-06-01T10:00:00Z",
+            "region": "europe-west1"
+          }
+        ]
+      },
+      "telegram": {
+        "service_name": "Telegram Bot API",
+        "credentials": [
+          {
+            "id": "tg_001",
+            "bot_token": "7123456789:AAFabCdEfGhIjKlMnOpQrStUvWxYz-ExAmPl",
+            "bot_username": "@ml_pipeline_bot",
+            "bot_id": 7123456789,
+            "webhook_url": "https://api.ml-research.io/telegram/webhook",
+            "webhook_secret": "wh_sec_aBcDeFgHiJkLmNoPqRsTuVwXyZ123456",
+            "allowed_updates": [
+              "message",
+              "callback_query",
+              "inline_query"
+            ],
+            "created_at": "2025-03-10T12:00:00Z",
+            "permissions": [
+              "send_messages",
+              "read_messages",
+              "manage_groups"
+            ],
+            "max_connections": 100
+          },
+          {
+            "id": "tg_002",
+            "bot_token": "6987654321:BBGhIjKlMnOpQrStUvWxYzAbCdEfG-SaMpLe",
+            "bot_username": "@data_notifier_bot",
+            "bot_id": 6987654321,
+            "webhook_url": "https://api.ml-research.io/telegram/notify",
+            "webhook_secret": "wh_sec_ZyXwVuTsRqPoNmLkJiHgFedc987654",
+            "allowed_updates": [
+              "message"
+            ],
+            "created_at": "2025-04-25T15:30:00Z",
+            "permissions": [
+              "send_messages",
+              "send_documents"
+            ],
+            "max_connections": 40
+          }
+        ]
+      },
+      "discord": {
+        "service_name": "Discord",
+        "credentials": [
+          {
+            "id": "dc_001",
+            "bot_token": "MTA1MjM0NTY3ODkwMTIzNDU2.GhIjKl.aBcDeFgHiJkLmNoPqRsTuVwXyZ1234Example",
+            "client_id": "1051234567890123456",
+            "client_secret": "aBcDeFgHiJkLmNoPqRsTuVwXy",
+            "public_key": "aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890abcdef1234567890abcdef123456",
+            "guild_id": "9876543210987654321",
+            "webhook_url": "https://discord.com/api/webhooks/1051234567890/aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+            "application_id": "1051234567890123456",
+            "permissions": 8,
+            "intents": 513,
+            "created_at": "2025-02-20T18:45:00Z"
+          },
+          {
+            "id": "dc_002",
+            "bot_token": "MTIzNDU2Nzg5MDEyMzQ1Njc4.XyZaBc.ZyXwVuTsRqPoNmLkJiHgFedcba9876Example",
+            "client_id": "1234567890123456789",
+            "client_secret": "ZyXwVuTsRqPoNmLkJiHgFedcba",
+            "public_key": "ZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxwvuts9876543210zyxwvuts98",
+            "guild_id": "1122334455667788990",
+            "webhook_url": "https://discord.com/api/webhooks/1234567890/ZyXwVuTsRqPoNmLkJiHgFedcba",
+            "application_id": "1234567890123456789",
+            "permissions": 2048,
+            "intents": 32767,
+            "created_at": "2025-05-11T09:15:00Z"
+          }
+        ]
+      },
+      "slack": {
+        "service_name": "Slack",
+        "credentials": [
+          {
+            "id": "slk_001",
+            "bot_token": "xoxb-1234567890123-1234567890123-aBcDeFgHiJkLmNoPqRsTuVwX",
+            "user_token": "xoxp-1234567890123-1234567890123-1234567890123-aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+            "app_token": "xapp-1-A01EXAMPLE23-1234567890123-aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890",
+            "refresh_token": "xoxe-1-aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890",
+            "signing_secret": "aBcDeFgHiJkLmNoPqRsTuVwX",
+            "workspace": "ml-research-workspace",
+            "team_id": "T01ABCDEF23",
+            "app_id": "A01EXAMPLE23",
+            "bot_user_id": "U01BOTEXAMPLE",
+            "created_at": "2025-02-28T11:00:00Z"
+          },
+          {
+            "id": "slk_002",
+            "bot_token": "xoxb-9876543210987-9876543210987-ZyXwVuTsRqPoNmLkJiHgFedcb",
+            "user_token": "xoxp-9876543210987-9876543210987-9876543210987-ZyXwVuTsRqPoNmLkJiHgFedcba",
+            "app_token": "xapp-1-B02EXAMPLE98-9876543210987-ZyXwVuTsRqPoNmLkJiHgFedcba9876543210",
+            "refresh_token": "xoxe-1-ZyXwVuTsRqPoNmLkJiHgFedcba9876543210",
+            "signing_secret": "ZyXwVuTsRqPoNmLkJiHgFedcb",
+            "workspace": "data-team-workspace",
+            "team_id": "T09ZYXWVU98",
+            "app_id": "A09EXAMPLE98",
+            "bot_user_id": "U09BOTEXAMPLE",
+            "created_at": "2025-04-10T13:00:00Z"
+          }
+        ]
+      },
+      "gitlab": {
+        "service_name": "GitLab",
+        "credentials": [
+          {
+            "id": "gl_001",
+            "personal_access_token": "glpat-aBcDeFgHiJkLmNoPqRsTuV",
+            "username": "ml-ci-bot",
+            "group_access_token": "glgat-ZyXwVuTsRqPoNmLkJiHgFe",
+            "deploy_token": "gldt-aBcDeFgHiJkLmNoPqRsT",
+            "project_id": 42813756,
+            "runner_token": "glrt-aBcDeFgHiJkLmNoPqRsTuVwXyZ12345",
+            "runner_id": 88340192,
+            "scopes": [
+              "api",
+              "read_repository",
+              "write_repository",
+              "read_registry",
+              "write_registry"
+            ],
+            "created_at": "2025-02-14T16:00:00Z",
+            "expires_at": "2026-02-14T16:00:00Z"
+          },
+          {
+            "id": "gl_002",
+            "personal_access_token": "glpat-ZyXwVuTsRqPoNmLkJiHgFe",
+            "username": "data-deploy-bot",
+            "group_access_token": "glgat-aBcDeFgHiJkLmNoPqRsTuVw",
+            "deploy_token": "gldt-ZyXwVuTsRqPoNmLkJiHgFe",
+            "project_id": 39274618,
+            "runner_token": "glrt-ZyXwVuTsRqPoNmLkJiHgFedcba98765",
+            "runner_id": 77291034,
+            "scopes": [
+              "read_api",
+              "read_repository"
+            ],
+            "created_at": "2025-04-01T08:00:00Z",
+            "expires_at": "2026-04-01T08:00:00Z"
+          }
+        ]
+      },
+      "google_gcp": {
+        "service_name": "Google Cloud Platform",
+        "credentials": [
+          {
+            "id": "gcp_001",
+            "type": "service_account",
+            "project_id": "ml-project-prod-123456",
+            "private_key_id": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
+            "private_key": "-----BEGIN RSA PRIVATE KEY-----\n[SYNTHETIC — NOT REAL]\n-----END RSA PRIVATE KEY-----\n",
+            "client_email": "ml-service@ml-project-prod-123456.iam.gserviceaccount.com",
+            "client_id": "112345678901234567890",
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "api_key": "AIzaSyAbCdEfGhIjKlMnOpQrStUvWxYz1234567",
+            "universe_domain": "googleapis.com",
+            "created_at": "2025-01-30T09:00:00Z"
+          },
+          {
+            "id": "gcp_002",
+            "type": "service_account",
+            "project_id": "ml-project-dev-654321",
+            "private_key_id": "b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3",
+            "private_key": "-----BEGIN RSA PRIVATE KEY-----\n[SYNTHETIC — NOT REAL]\n-----END RSA PRIVATE KEY-----\n",
+            "client_email": "ml-dev-service@ml-project-dev-654321.iam.gserviceaccount.com",
+            "client_id": "987654321098765432109",
+            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+            "token_uri": "https://oauth2.googleapis.com/token",
+            "api_key": "AIzaSyZyXwVuTsRqPoNmLkJiHgFedcba9876543",
+            "universe_domain": "googleapis.com",
+            "created_at": "2025-03-12T14:00:00Z"
+          }
+        ]
+      },
+      "azure": {
+        "service_name": "Microsoft Azure",
+        "credentials": [
+          {
+            "id": "az_001",
+            "tenant_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "client_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+            "client_secret": "aBc8Q~dEfGhIjKlMnOpQrStUvWxYz.1234567-AB",
+            "subscription_id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+            "resource_group": "ml-resources-prod",
+            "storage_account_key": "aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890aBcDeFgHiJkLmNoPqRsTuVwXyZ12==",
+            "storage_connection_string": "DefaultEndpointsProtocol=https;AccountName=mlstorageprod;AccountKey=aBcDeFgH==;EndpointSuffix=core.windows.net",
+            "openai_endpoint": "https://ml-openai-prod.openai.azure.com/",
+            "openai_api_key": "aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890abcd",
+            "keyvault_url": "https://ml-keyvault-prod.vault.azure.net/",
+            "product_key": "NKJFK-GPHP7-G8C3J-P6JXR-HQRJR",
+            "license_type": "Azure Enterprise",
+            "created_at": "2025-01-20T07:00:00Z"
+          },
+          {
+            "id": "az_002",
+            "tenant_id": "z9y8x7w6-v5u4-3210-zyxw-vu9876543210",
+            "client_id": "y8x7w6v5-u4t3-2109-yxwv-u98765432109",
+            "client_secret": "XyZ9R~wVuTsRqPoNmLkJiHg.9876543-XY",
+            "subscription_id": "x7w6v5u4-t3s2-1098-xwvu-t98765432109",
+            "resource_group": "ml-resources-dev",
+            "storage_account_key": "ZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZyXwVuTsRqPoNmLkJiHgFedcba98==",
+            "storage_connection_string": "DefaultEndpointsProtocol=https;AccountName=mlstoragedev;AccountKey=ZyXwVuTs==;EndpointSuffix=core.windows.net",
+            "openai_endpoint": "https://ml-openai-dev.openai.azure.com/",
+            "openai_api_key": "ZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxw",
+            "keyvault_url": "https://ml-keyvault-dev.vault.azure.net/",
+            "product_key": "VK7JG-NPHTM-C97JM-9MPGT-3V66T",
+            "license_type": "Azure Dev/Test",
+            "created_at": "2025-03-05T11:30:00Z"
+          }
+        ]
+      },
+      "docker": {
+        "service_name": "Docker Hub / Docker Registry",
+        "credentials": [
+          {
+            "id": "dkr_001",
+            "registry": "registry-1.docker.io",
+            "username": "ml-research-bot",
+            "access_token": "dckr_pat_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890ABCDEF",
+            "organization": "mlresearchorg",
+            "email": "bot@ml-research.io",
+            "token_scope": "repo:admin",
+            "registry_url": "https://registry-1.docker.io/v2/",
+            "default_namespace": "mlresearchorg",
+            "created_at": "2025-02-11T10:00:00Z",
+            "expires_at": "2026-02-11T10:00:00Z",
+            "images_quota": "unlimited"
+          },
+          {
+            "id": "dkr_002",
+            "registry": "ghcr.io",
+            "username": "data-pipeline-bot",
+            "access_token": "ghcr_pat_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZYXWVUTS",
+            "organization": "data-science-team",
+            "email": "pipeline@data-science.io",
+            "token_scope": "repo:write",
+            "registry_url": "https://ghcr.io/v2/",
+            "default_namespace": "data-science-team",
+            "created_at": "2025-04-03T14:00:00Z",
+            "expires_at": "2026-04-03T14:00:00Z",
+            "images_quota": 50
+          }
+        ]
+      },
+      "firebase": {
+        "service_name": "Google Firebase",
+        "credentials": [
+          {
+            "id": "fb_001",
+            "api_key": "AIzaSyAbCdEfGhIjKlMnOpQrStUvWxYz-FiReBaSe1",
+            "auth_domain": "ml-app-prod-12345.firebaseapp.com",
+            "project_id": "ml-app-prod-12345",
+            "storage_bucket": "ml-app-prod-12345.appspot.com",
+            "messaging_sender_id": "123456789012",
+            "app_id": "1:123456789012:web:abcdef1234567890abcdef",
+            "measurement_id": "G-ABCDEF1234",
+            "database_url": "https://ml-app-prod-12345-default-rtdb.firebaseio.com",
+            "service_account_key": "firebase-adminsdk-abcde@ml-app-prod-12345.iam.gserviceaccount.com",
+            "web_push_certificate": "BAbCdEfGhIjKlMnOpQrStUvWxYz1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZabc",
+            "created_at": "2025-01-25T08:00:00Z"
+          },
+          {
+            "id": "fb_002",
+            "api_key": "AIzaSyZyXwVuTsRqPoNmLkJiHgFedcba-FiReBaSe2",
+            "auth_domain": "ml-app-dev-54321.firebaseapp.com",
+            "project_id": "ml-app-dev-54321",
+            "storage_bucket": "ml-app-dev-54321.appspot.com",
+            "messaging_sender_id": "987654321098",
+            "app_id": "1:987654321098:web:fedcba0987654321fedcba",
+            "measurement_id": "G-FEDCBA9876",
+            "database_url": "https://ml-app-dev-54321-default-rtdb.firebaseio.com",
+            "service_account_key": "firebase-adminsdk-zyxwv@ml-app-dev-54321.iam.gserviceaccount.com",
+            "web_push_certificate": "BZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZYXWVUTSRQPONMLKJIHGFEDCBAzyx",
+            "created_at": "2025-03-18T08:00:00Z"
+          }
+        ]
+      },
+      "twilio": {
+        "service_name": "Twilio",
+        "credentials": [
+          {
+            "id": "twl_001",
+            "account_sid": "ACabcdef1234567890abcdef1234567890",
+            "auth_token": "aBcDeFgHiJkLmNoPqRsTuVwXyZ123456",
+            "api_key_sid": "SKabcdef1234567890abcdef12345678",
+            "api_key_secret": "aBcDeFgHiJkLmNoPqRsTuVwX",
+            "phone_number": "+15551234567",
+            "messaging_service_sid": "MGabcdef1234567890abcdef12345678",
+            "verify_service_sid": "VAabcdef1234567890abcdef12345678",
+            "conversations_sid": "ISabcdef1234567890abcdef12345678",
+            "created_at": "2025-02-05T10:00:00Z",
+            "region": "us1"
+          },
+          {
+            "id": "twl_002",
+            "account_sid": "ACfedcba0987654321fedcba0987654321",
+            "auth_token": "ZyXwVuTsRqPoNmLkJiHgFedcba987654",
+            "api_key_sid": "SKfedcba0987654321fedcba09876543",
+            "api_key_secret": "ZyXwVuTsRqPoNmLkJiHgFedcb",
+            "phone_number": "+15559876543",
+            "messaging_service_sid": "MGfedcba0987654321fedcba09876543",
+            "verify_service_sid": "VAfedcba0987654321fedcba09876543",
+            "conversations_sid": "ISfedcba0987654321fedcba09876543",
+            "created_at": "2025-05-15T10:00:00Z",
+            "region": "ie1"
+          }
+        ]
+      },
+      "npm_pypi": {
+        "service_name": "npm / PyPI Package Registry",
+        "credentials": [
+          {
+            "id": "npm_001",
+            "registry": "npm",
+            "token_type": "automation",
+            "token": "npm_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890ABCDexample",
+            "username": "ml-publisher",
+            "email": "ml-publisher@example.com",
+            "scopes": [
+              "read",
+              "publish"
+            ],
+            "package_scope": "@ml-research",
+            "registry_url": "https://registry.npmjs.org/",
+            "cidr_whitelist": [
+              "203.0.113.0/24"
+            ],
+            "created_at": "2025-01-10T00:00:00Z"
+          },
+          {
+            "id": "pypi_001",
+            "registry": "PyPI",
+            "token_type": "api_token",
+            "token": "pypi-AgEIcHlwaS5vcmcCJAbCdEfGhIjKlMnOpQrStUvWxYz1234567890ABCDEFGHIJKLexample",
+            "username": "ml-python-publisher",
+            "email": "ml-pypi@example.com",
+            "scopes": [
+              "upload"
+            ],
+            "trusted_publisher": true,
+            "registry_url": "https://upload.pypi.org/legacy/",
+            "project_urls": [
+              "https://pypi.org/project/ml-research-tools/"
+            ],
+            "created_at": "2025-02-22T00:00:00Z"
+          }
+        ]
+      },
+      "sendgrid_mailgun": {
+        "service_name": "SendGrid / Mailgun",
+        "credentials": [
+          {
+            "id": "sg_001",
+            "provider": "SendGrid",
+            "api_key": "SG.aBcDeFgHiJkLmNoPqRsTuVwX.ZyXwVuTsRqPoNmLkJiHgFedcba9876543210Example",
+            "from_email": "noreply@ml-research.io",
+            "from_name": "ML Research Team",
+            "template_id": "d-aBcDeFgHiJkLmNoPqRsTuVw",
+            "ip_pool": "transactional",
+            "daily_limit": 100000,
+            "webhook_public_key": "MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEaBcDeFgHiJkLmNoPqRsTuVwXyZ",
+            "created_at": "2025-03-01T00:00:00Z"
+          },
+          {
+            "id": "mg_001",
+            "provider": "Mailgun",
+            "api_key": "key-aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890abcdef",
+            "domain": "mg.ml-research.io",
+            "webhook_signing_key": "aBcDeFgHiJkLmNoPqRsTuVwX-YzAb",
+            "smtp_login": "postmaster@mg.ml-research.io",
+            "smtp_password": "aBcDeFgH1234567890-IjKlMnOp",
+            "smtp_host": "smtp.mailgun.org",
+            "smtp_port": 587,
+            "eu_region": false,
+            "created_at": "2025-04-07T00:00:00Z"
+          }
+        ]
+      },
+      "jwt": {
+        "service_name": "JWT / OAuth2 Tokens",
+        "credentials": [
+          {
+            "id": "jwt_001",
+            "type": "jwt_rs256",
+            "access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImFiY2RlZjEyMzQ1NiJ9.eyJzdWIiOiJ1c3JfbWxib3QwMDEiLCJpc3MiOiJodHRwczovL2F1dGgubWwtcmVzZWFyY2guaW8iLCJhdWQiOiJodHRwczovL2FwaS5tbC1yZXNlYXJjaC5pbyIsImV4cCI6MTc4MDAwMDAwMCwiaWF0IjoxNzQ4NDY0MDAwLCJzY29wZXMiOlsicmVhZDptb2RlbHMiLCJ3cml0ZTpkYXRhc2V0cyJdfQ.ABCDEFGHIJKLMNOPabcdefghijklmnop1234567890",
+            "refresh_token": "rt_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890abcdefghijklmnop",
+            "token_type": "Bearer",
+            "issuer": "https://auth.ml-research.io",
+            "audience": "https://api.ml-research.io",
+            "subject": "usr_mlbot001",
+            "scopes": [
+              "read:models",
+              "write:datasets",
+              "admin:users"
+            ],
+            "issued_at": "2026-05-28T00:00:00Z",
+            "expires_at": "2026-06-28T00:00:00Z",
+            "algorithm": "RS256",
+            "key_id": "abcdef123456"
+          },
+          {
+            "id": "jwt_002",
+            "type": "jwt_hs256",
+            "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfZGF0YWJvdDAwMiIsImlzcyI6Imh0dHBzOi8vYXV0aC5kYXRhLXNjaWVuY2UuaW8iLCJhdWQiOiJodHRwczovL2FwaS5kYXRhLXNjaWVuY2UuaW8iLCJleHAiOjE3ODAwMDAwMDAsImlhdCI6MTc0ODQ2NDAwMH0.ZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxwvu",
+            "refresh_token": "rt_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxwvutsrqponmlk",
+            "token_type": "Bearer",
+            "issuer": "https://auth.data-science.io",
+            "audience": "https://api.data-science.io",
+            "subject": "usr_databot002",
+            "scopes": [
+              "read:models",
+              "read:datasets"
+            ],
+            "issued_at": "2026-05-28T00:00:00Z",
+            "expires_at": "2026-06-28T00:00:00Z",
+            "algorithm": "HS256",
+            "signing_secret": "jwt_sec_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890"
+          }
+        ]
+      },
+      "pinecone": {
+        "service_name": "Pinecone Vector Database",
+        "credentials": [
+          {
+            "id": "pc_001",
+            "api_key": "pcsk_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890ABCDEFexample",
+            "environment": "us-east-1-aws",
+            "project_id": "prj-aBcDeFgHiJkLmNoPqRsTuV",
+            "index_name": "ml-embeddings-prod",
+            "index_host": "ml-embeddings-prod-aBcDeF.svc.us-east-1-aws.pinecone.io",
+            "dimension": 1536,
+            "metric": "cosine",
+            "pod_type": "p2.x1",
+            "replicas": 2,
+            "shards": 1,
+            "created_at": "2025-04-10T09:00:00Z"
+          },
+          {
+            "id": "pc_002",
+            "api_key": "pcsk_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZYXWVUTexample",
+            "environment": "eu-west1-gcp",
+            "project_id": "prj-ZyXwVuTsRqPoNmLkJiHgFe",
+            "index_name": "ml-embeddings-dev",
+            "index_host": "ml-embeddings-dev-ZyXwVu.svc.eu-west1-gcp.pinecone.io",
+            "dimension": 3072,
+            "metric": "dotproduct",
+            "pod_type": "s1.x1",
+            "replicas": 1,
+            "shards": 1,
+            "created_at": "2025-05-22T09:00:00Z"
+          }
+        ]
+      },
+      "supabase": {
+        "service_name": "Supabase",
+        "credentials": [
+          {
+            "id": "sup_001",
+            "project_url": "https://abcdefghijklmnop.supabase.co",
+            "anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwicHJvamVjdF9pZCI6ImFiY2RlZmdoaWprbG1ub3AiLCJpYXQiOjE3NDg0NjQwMDB9.aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890",
+            "service_role_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJwcm9qZWN0X2lkIjoiYWJjZGVmZ2hpamtsbW5vcCIsImlhdCI6MTc0ODQ2NDAwMH0.ZyXwVuTsRqPoNmLkJiHgFedcba9876543210",
+            "database_url": "postgresql://postgres:aBcDeFgH1234@db.abcdefghijklmnop.supabase.co:5432/postgres",
+            "project_id": "abcdefghijklmnop",
+            "region": "us-east-1",
+            "db_password": "aBcDeFgHiJkLmNoP1234567!",
+            "storage_bucket": "ml-models-prod",
+            "created_at": "2025-03-14T12:00:00Z"
+          },
+          {
+            "id": "sup_002",
+            "project_url": "https://zyxwvutsrqponmlk.supabase.co",
+            "anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwicHJvamVjdF9pZCI6Inp5eHd2dXRzcnFwb25tbGsiLCJpYXQiOjE3NDg0NjQwMDB9.ZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxw",
+            "service_role_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJwcm9qZWN0X2lkIjoienlYd1Z1VHNScVBvTm1MayIsImlhdCI6MTc0ODQ2NDAwMH0.aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890abcd",
+            "database_url": "postgresql://postgres:ZyXwVuTs9876@db.zyxwvutsrqponmlk.supabase.co:5432/postgres",
+            "project_id": "zyxwvutsrqponmlk",
+            "region": "eu-central-1",
+            "db_password": "ZyXwVuTsRqPoNmLk9876543!",
+            "storage_bucket": "ml-models-dev",
+            "created_at": "2025-05-07T12:00:00Z"
+          }
+        ]
+      },
+      "cloudflare": {
+        "service_name": "Cloudflare",
+        "credentials": [
+          {
+            "id": "cf_001",
+            "api_token": "aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890abcdef",
+            "api_key": "1234567890abcdef1234567890abcdef12345",
+            "email": "admin@ml-research.io",
+            "account_id": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4",
+            "zone_id": "b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5",
+            "workers_subdomain": "ml-research.workers.dev",
+            "kv_namespace_id": "c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6",
+            "d1_database_id": "d4e5f6a1-b2c3-d4e5-f6a1-b2c3d4e5f6a1",
+            "r2_bucket": "ml-assets-prod",
+            "tunnel_token": "eyJhIjoiYWJjZGVmZ2hpamtsbW5vcCIsInQiOiJhMWIyYzNkNC1lNWY2LTc4OTAtYWJjZC1lZjEyMzQ1Njc4OTAiLCJzIjoiYUJjRGVGZ0hpSmtMbU5vUHFSc1R1VndYeVoxMjM0NTY3ODkwIn0=",
+            "created_at": "2025-02-18T15:00:00Z"
+          },
+          {
+            "id": "cf_002",
+            "api_token": "ZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxwvu",
+            "api_key": "fedcba9876543210fedcba9876543210fedcb",
+            "email": "devops@data-science.io",
+            "account_id": "z9y8x7w6v5u4z9y8x7w6v5u4z9y8x7w6",
+            "zone_id": "y8x7w6v5u4z9y8x7w6v5u4z9y8x7w6v5",
+            "workers_subdomain": "data-science.workers.dev",
+            "kv_namespace_id": "x7w6v5u4z9y8x7w6v5u4z9y8x7w6v5u4",
+            "d1_database_id": "w6v5u4z9-y8x7-w6v5-u4z9-y8x7w6v5u4z9",
+            "r2_bucket": "ml-assets-dev",
+            "tunnel_token": "eyJhIjoienlYd1Z1VHNScVBvTm1MayIsInQiOiJ6OXk4eDd3Ni12NXU0LTMyMTAtelh5dy12dTk4NzY1NDMyMTAiLCJzIjoiWnlYd1Z1VHNScVBvTm1Ma0ppSGdGZWRjYmE5ODc2NTQzMjEwIn0=",
+            "created_at": "2025-04-30T15:00:00Z"
+          }
+        ]
+      },
+      "mongodb_atlas": {
+        "service_name": "MongoDB Atlas",
+        "credentials": [
+          {
+            "id": "mdb_001",
+            "connection_string": "mongodb+srv://ml-service-user:aBcDeFgH1234@cluster0.abcde.mongodb.net/?retryWrites=true&w=majority&appName=MLClusterProd",
+            "username": "ml-service-user",
+            "password": "aBcDeFgHiJkLmNoP1234567!",
+            "cluster_name": "MLClusterProd",
+            "project_id": "aBcDeFgHiJkLmNoPqRsT",
+            "org_id": "ZyXwVuTsRqPoNmLkJiHg",
+            "public_key": "abcdefgh",
+            "private_key": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "database": "ml_production",
+            "vector_search_index": "ml_embeddings_index",
+            "region": "US_EAST_1",
+            "tier": "M30",
+            "created_at": "2025-01-28T10:00:00Z"
+          }
+        ]
+      },
+      "huggingface": {
+        "service_name": "Hugging Face",
+        "credentials": [
+          {
+            "id": "hf_001",
+            "token_type": "write",
+            "access_token": "hf_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567Example",
+            "username": "ml-research-bot",
+            "organization": "ml-research-org",
+            "model_repos": [
+              "ml-research-org/custom-bert-v2",
+              "ml-research-org/fine-tuned-llama3"
+            ],
+            "inference_endpoint_url": "https://api-inference.huggingface.co/models/ml-research-org/custom-bert-v2",
+            "spaces_access": true,
+            "dataset_access": true,
+            "pro_subscription": true,
+            "created_at": "2025-01-18T00:00:00Z"
+          },
+          {
+            "id": "hf_002",
+            "token_type": "read",
+            "access_token": "hf_ZyXwVuTsRqPoNmLkJiHgFedcba9876543Example",
+            "username": "ml-inference-bot",
+            "organization": "data-science-team",
+            "model_repos": [
+              "data-science-team/sentiment-model-v3"
+            ],
+            "inference_endpoint_url": "https://api-inference.huggingface.co/models/data-science-team/sentiment-model-v3",
+            "spaces_access": false,
+            "dataset_access": true,
+            "pro_subscription": false,
+            "created_at": "2025-05-09T00:00:00Z"
+          }
+        ]
+      },
+      "stripe": {
+        "service_name": "Stripe Payments",
+        "credentials": [
+          {
+            "id": "str_001",
+            "publishable_key": "pk_live_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890abcdefghijklmn",
+            "secret_key": "sk_live_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890abcdefghijklmno",
+            "webhook_secret": "whsec_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890Example",
+            "account_id": "acct_1AbCdEfGhIjKlMnOp",
+            "restricted_key": "rk_live_aBcDeFgHiJkLmNoPqRsTuVwXy",
+            "idempotency_key_prefix": "ml_prod_",
+            "mode": "live",
+            "created_at": "2025-02-01T00:00:00Z"
+          },
+          {
+            "id": "str_002",
+            "publishable_key": "pk_test_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210fedcbazyx",
+            "secret_key": "sk_test_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210fedcbazyxwv",
+            "webhook_secret": "whsec_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210Example",
+            "account_id": "acct_9ZyXwVuTsRqPoNmLk",
+            "restricted_key": "rk_test_ZyXwVuTsRqPoNmLkJiHgFedcb",
+            "idempotency_key_prefix": "ml_test_",
+            "mode": "test",
+            "created_at": "2025-03-15T00:00:00Z"
+          }
+        ]
+      },
+      "vercel": {
+        "service_name": "Vercel",
+        "credentials": [
+          {
+            "id": "vcl_001",
+            "token": "aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890abcde",
+            "team_id": "team_aBcDeFgHiJkLmNoPqRsTuV",
+            "project_id": "prj_aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+            "org_id": "org_aBcDeFgHiJkLmNoPqRs",
+            "deploy_hook": "https://api.vercel.com/v1/integrations/deploy/prj_aBcDe/FgHiJkLmNoPqRsTuVwXyZ",
+            "edge_config_id": "ecfg_aBcDeFgHiJkLmNoPqR",
+            "domain": "ml-research.vercel.app",
+            "protection_bypass_secret": "aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890",
+            "created_at": "2025-04-20T00:00:00Z"
+          },
+          {
+            "id": "vcl_002",
+            "token": "ZyXwVuTsRqPoNmLkJiHgFedcba9876543210zyxwv",
+            "team_id": "team_ZyXwVuTsRqPoNmLkJiHgFedcb",
+            "project_id": "prj_ZyXwVuTsRqPoNmLkJiHgFedcba",
+            "org_id": "org_ZyXwVuTsRqPoNmLkJi",
+            "deploy_hook": "https://api.vercel.com/v1/integrations/deploy/prj_ZyXwV/uTsRqPoNmLkJiHgFedcba",
+            "edge_config_id": "ecfg_ZyXwVuTsRqPoNmLkJi",
+            "domain": "data-science.vercel.app",
+            "protection_bypass_secret": "ZyXwVuTsRqPoNmLkJiHgFedcba9876543210",
+            "created_at": "2025-06-05T00:00:00Z"
+          }
+        ]
+      },
+      "cohere": {
+        "service_name": "Cohere AI",
+        "credentials": [
+          {
+            "id": "coh_001",
+            "api_key": "aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890ABCDEFexample",
+            "client_name": "ml-research-prod",
+            "model_access": [
+              "command-r-plus-08-2024",
+              "command-r-08-2024",
+              "embed-v4.0",
+              "rerank-v3.5"
+            ],
+            "rate_limit": "10000 RPM",
+            "monthly_limit_usd": 500,
+            "trial_key": false,
+            "created_at": "2025-04-15T00:00:00Z",
+            "usage_this_month_usd": 211.4
+          },
+          {
+            "id": "coh_002",
+            "api_key": "ZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZYXWVUTexample",
+            "client_name": "ml-research-dev",
+            "model_access": [
+              "command-r-08-2024",
+              "embed-v4.0"
+            ],
+            "rate_limit": "1000 RPM",
+            "monthly_limit_usd": 100,
+            "trial_key": false,
+            "created_at": "2025-05-30T00:00:00Z",
+            "usage_this_month_usd": 38.7
+          }
+        ]
+      },
+      "mistral": {
+        "service_name": "Mistral AI",
+        "credentials": [
+          {
+            "id": "mst_001",
+            "api_key": "aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890ABCDEFGexample",
+            "workspace_id": "wsp_aBcDeFgHiJkLmNoPqRs",
+            "model_access": [
+              "mistral-large-latest",
+              "mistral-small-latest",
+              "codestral-latest",
+              "mistral-embed"
+            ],
+            "rate_limit": "5000 RPM",
+            "monthly_limit_usd": 300,
+            "created_at": "2025-03-20T00:00:00Z",
+            "region": "eu-west",
+            "usage_this_month_usd": 95.3
+          },
+          {
+            "id": "mst_002",
+            "api_key": "ZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZYXWVUTSexample",
+            "workspace_id": "wsp_ZyXwVuTsRqPoNmLkJi",
+            "model_access": [
+              "mistral-small-latest",
+              "codestral-latest"
+            ],
+            "rate_limit": "1000 RPM",
+            "monthly_limit_usd": 50,
+            "created_at": "2025-06-08T00:00:00Z",
+            "region": "us-east",
+            "usage_this_month_usd": 12.8
+          }
+        ]
+      },
+      "hashicorp_vault": {
+        "service_name": "HashiCorp Vault",
+        "credentials": [
+          {
+            "id": "hcv_001",
+            "vault_addr": "https://vault.ml-research.io:8200",
+            "vault_token": "hvs.aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890ABCDEFexample",
+            "role_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "secret_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+            "namespace": "ml-research",
+            "auth_method": "approle",
+            "policies": [
+              "ml-read",
+              "ml-write",
+              "kv-admin"
+            ],
+            "lease_duration": "768h",
+            "renewable": true,
+            "created_at": "2025-02-25T09:00:00Z",
+            "expires_at": "2026-02-25T09:00:00Z"
+          },
+          {
+            "id": "hcv_002",
+            "vault_addr": "https://vault.data-science.io:8200",
+            "vault_token": "hvs.ZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZYXWVUTSexample",
+            "role_id": "z9y8x7w6-v5u4-3210-zyxw-vu9876543210",
+            "secret_id": "y8x7w6v5-u4t3-2109-yxwv-u98765432109",
+            "namespace": "data-science",
+            "auth_method": "kubernetes",
+            "policies": [
+              "ds-read",
+              "kv-reader"
+            ],
+            "lease_duration": "24h",
+            "renewable": true,
+            "created_at": "2025-05-03T09:00:00Z",
+            "expires_at": "2026-05-03T09:00:00Z"
+          }
+        ]
+      },
+      "atlassian": {
+        "service_name": "Atlassian (Jira / Confluence)",
+        "credentials": [
+          {
+            "id": "atl_001",
+            "api_token": "ATATT3xFfGF0aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890ABCDEFGHIJKLMNOPexample",
+            "email": "ml-bot@ml-research.io",
+            "base_url": "https://ml-research.atlassian.net",
+            "cloud_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "oauth_access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.atlassian_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234",
+            "oauth_refresh_token": "atort_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890",
+            "scopes": [
+              "read:jira-work",
+              "write:jira-work",
+              "read:confluence-content.all"
+            ],
+            "jira_project_key": "ML",
+            "confluence_space_key": "MLRES",
+            "created_at": "2025-03-08T11:00:00Z",
+            "expires_at": "2026-03-08T11:00:00Z"
+          },
+          {
+            "id": "atl_002",
+            "api_token": "ATATT3xFfGF0ZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZYXWVUTSRQPONMexample",
+            "email": "ds-bot@data-science.io",
+            "base_url": "https://data-science-team.atlassian.net",
+            "cloud_id": "z9y8x7w6-v5u4-3210-zyxw-vu9876543210",
+            "oauth_access_token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.atlassian_ZyXwVuTsRqPoNmLkJiHgFedcba9876",
+            "oauth_refresh_token": "atort_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210",
+            "scopes": [
+              "read:jira-work",
+              "write:jira-work"
+            ],
+            "jira_project_key": "DS",
+            "confluence_space_key": "DATASCI",
+            "created_at": "2025-05-17T11:00:00Z",
+            "expires_at": "2026-05-17T11:00:00Z"
+          }
+        ]
+      },
+      "databricks": {
+        "service_name": "Databricks",
+        "credentials": [
+          {
+            "id": "dbx_001",
+            "host": "https://adb-1234567890123456.7.azuredatabricks.net",
+            "token": "dapi-aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890ABCDEF",
+            "cluster_id": "0123-456789-abcde123",
+            "workspace_id": "1234567890123456",
+            "sp_client_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "sp_client_secret": "aBcDeFgH~iJkLmNoPqRsTuVwXyZ.1234567",
+            "sp_tenant_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+            "catalog": "ml_prod_catalog",
+            "schema": "ml_features",
+            "mlflow_tracking_uri": "databricks",
+            "created_at": "2025-02-07T09:00:00Z"
+          },
+          {
+            "id": "dbx_002",
+            "host": "https://adb-9876543210987654.3.azuredatabricks.net",
+            "token": "dapi-ZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZYXWVU",
+            "cluster_id": "9876-543210-zyxwv987",
+            "workspace_id": "9876543210987654",
+            "sp_client_id": "z9y8x7w6-v5u4-3210-zyxw-vu9876543210",
+            "sp_client_secret": "ZyXwVuTs~RqPoNmLkJiHgFedcba.9876543",
+            "sp_tenant_id": "y8x7w6v5-u4t3-2109-yxwv-u98765432109",
+            "catalog": "ml_dev_catalog",
+            "schema": "ml_experiments",
+            "mlflow_tracking_uri": "databricks",
+            "created_at": "2025-04-19T09:00:00Z"
+          }
+        ]
+      },
+      "notion": {
+        "service_name": "Notion API",
+        "credentials": [
+          {
+            "id": "ntn_001",
+            "api_key": "secret_aBcDeFgHiJkLmNoPqRsTuVwXyZ1234567890ABCDEFexample",
+            "integration_name": "ML Research Bot",
+            "integration_type": "internal",
+            "bot_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+            "owner_workspace_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+            "database_ids": {
+              "experiments": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+              "models": "d4e5f6a7-b8c9-0123-defa-234567890123",
+              "datasets": "e5f6a7b8-c9d0-1234-efab-345678901234"
+            },
+            "scopes": [
+              "read_content",
+              "update_content",
+              "insert_content"
+            ],
+            "created_at": "2025-03-25T10:00:00Z"
+          },
+          {
+            "id": "ntn_002",
+            "api_key": "secret_ZyXwVuTsRqPoNmLkJiHgFedcba9876543210ZYXWVUTexample",
+            "integration_name": "Data Science Tracker",
+            "integration_type": "internal",
+            "bot_id": "z9y8x7w6-v5u4-3210-zyxw-vu9876543210",
+            "owner_workspace_id": "y8x7w6v5-u4t3-2109-yxwv-u98765432109",
+            "database_ids": {
+              "sprints": "x7w6v5u4-t3s2-1098-xwvu-t98765432109",
+              "tasks": "w6v5u4t3-s2r1-0987-wvut-s98765432109"
+            },
+            "scopes": [
+              "read_content",
+              "insert_content"
+            ],
+            "created_at": "2025-05-14T10:00:00Z"
+          }
+        ]
+      }
+    }
+  }
+}

@@ -1,0 +1,139 @@
+[
+  {
+    "id": "SSL_PINNING",
+    "category": "ssl_pinning",
+    "description": "SSL/TLS certificate pinning check",
+    "method_names": [
+      "checkcertificate",
+      "checkservercertificate",
+      "verifyhostname",
+      "checkservertrusted",
+      "sslpinning",
+      "validatecertchain"
+    ],
+    "class_patterns": [
+      "sslpinning",
+      "certpinning",
+      "trustmanager",
+      "certificatepinner",
+      "networkpolicy"
+    ],
+    "required_calls": [
+      "x509trustmanager",
+      "checkservertrusted",
+      "certificatepinner",
+      "sslsocketfactory",
+      "hostnamevrifier"
+    ],
+    "string_patterns": [
+      "sha256/",
+      "pin-sha256",
+      "certificate",
+      "javax.net.ssl"
+    ],
+    "return_type": "V",
+    "patch_type": "return_void",
+    "weight": 0.8,
+    "min_match_score": 15
+  },
+  {
+    "id": "CERT_TRANSPARENCY_CHECK",
+    "category": "ssl_pinning",
+    "description": "Certificate Transparency (OkHttp CTPolicy / SCT validation)",
+    "method_names": [
+      "checkcertificatetransparency",
+      "verifyct",
+      "validatesct",
+      "checkctpolicy",
+      "enforcect",
+      "verifysct"
+    ],
+    "class_patterns": [
+      "certificatetransparency",
+      "ctverifier",
+      "ctpolicy",
+      "ctlog",
+      "okhttpctinterceptor",
+      "sctverifier"
+    ],
+    "required_calls": [
+      "x509certificate;->getextensionvalue",
+      "okhttp3",
+      "certificatepinner"
+    ],
+    "string_patterns": [
+      "certificate_transparency",
+      "ct_policy",
+      "sct",
+      "log_list",
+      "certificatetransparency",
+      "enforce_ct",
+      "google_ct"
+    ],
+    "return_type": "V",
+    "patch_type": "return_void",
+    "weight": 1.0,
+    "min_match_score": 12
+  },
+  {
+    "id": "NETWORK_SECURITY_POLICY",
+    "category": "ssl_pinning",
+    "description": "Network Security Config policy enforcement check",
+    "method_names": [
+      "checknetworkpolicy",
+      "verifynetworksecurity",
+      "istrafficsecure",
+      "checkcleartextpermitted",
+      "validatecertchain",
+      "networksecuritycheck"
+    ],
+    "class_patterns": [
+      "networksecuritypolicy",
+      "networksecurityconfig",
+      "cleartextcheck",
+      "netseccheck"
+    ],
+    "required_calls": [
+      "networksecuritypolicy;->iscleartexttrafficpermitted",
+      "networksecurityconfig",
+      "x509trustmanager"
+    ],
+    "string_patterns": [
+      "network_security_config",
+      "cleartextTrafficPermitted",
+      "trustAnchors",
+      "certificateTransparency",
+      "pinning"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.0,
+    "min_match_score": 12
+  },
+  {
+    "id": "pj05",
+    "category": "ssl_pinning",
+    "description": "Custom HostnameVerifier — accept all hosts",
+    "method_names": [
+      "verify",
+      "hostnameverifier"
+    ],
+    "class_patterns": [
+      "hostnameverifier",
+      "ssl",
+      "https",
+      "pinning"
+    ],
+    "required_calls": [
+      "verify"
+    ],
+    "string_patterns": [
+      "hostname",
+      "verify"
+    ],
+    "return_type": "Z",
+    "patch_type": "return_true",
+    "weight": 1.2,
+    "min_match_score": 12
+  }
+]

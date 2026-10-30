@@ -1,0 +1,3113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mega-Analyzer Security Console</title>
+    <!-- Offline-first: no external font CDN. System-font fallback stacks are defined
+         below via --font-main / --font-mono so the dashboard renders correctly with
+         no internet access. -->
+    <style>
+        :root {
+            --bg-base: #0a0b10;
+            --bg-panel: rgba(18, 19, 28, 0.85);
+            --bg-card: rgba(26, 27, 40, 0.6);
+            --border-glow: rgba(124, 58, 237, 0.15);
+            --border-thick: rgba(255, 255, 255, 0.05);
+            
+            --color-primary: #8b5cf6; /* violet */
+            --color-primary-glow: rgba(139, 92, 246, 0.25);
+            --color-success: #10b981; /* emerald */
+            --color-success-glow: rgba(16, 185, 129, 0.2);
+            --color-warning: #f59e0b; /* amber */
+            --color-danger: #ef4444; /* rose */
+            --color-info: #06b6d4; /* cyan */
+            
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --text-dark: #6b7280;
+            
+            --font-main: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, 'Cascadia Code', Consolas, 'Liberation Mono', Menlo, monospace;
+            
+            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: var(--font-main);
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(6, 182, 212, 0.08) 0%, transparent 40%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        /* --- Header & Layout --- */
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            background: var(--bg-panel);
+            border: 1px solid var(--border-thick);
+            border-radius: 16px;
+            padding: 1.5rem 2rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-section svg {
+            width: 42px;
+            height: 42px;
+            fill: var(--color-primary);
+            filter: drop-shadow(0 0 8px var(--color-primary-glow));
+        }
+
+        .logo-section h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 30%, var(--color-primary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.5px;
+        }
+
+        .logo-section span {
+            font-size: 0.8rem;
+            color: var(--color-info);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            background: rgba(6, 182, 212, 0.05);
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(16, 185, 129, 0.06);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            padding: 6px 14px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--color-success);
+        }
+
+        .status-badge .indicator {
+            width: 8px;
+            height: 8px;
+            background-color: var(--color-success);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--color-success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 14px var(--color-success); }
+            100% { transform: scale(0.9); opacity: 0.6; }
+        }
+
+        /* --- Quick Statistics --- */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-thick);
+            border-radius: 16px;
+            padding: 1.5rem;
+            backdrop-filter: blur(12px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: var(--transition-smooth);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            border-color: var(--border-glow);
+            box-shadow: 0 8px 24px rgba(139, 92, 246, 0.08);
+        }
+
+        .stat-info h3 {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+
+        .stat-info .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-icon.primary { background: rgba(139, 92, 246, 0.1); color: var(--color-primary); }
+        .stat-icon.success { background: rgba(16, 185, 129, 0.1); color: var(--color-success); }
+        .stat-icon.info { background: rgba(6, 182, 212, 0.1); color: var(--color-info); }
+        .stat-icon.warning { background: rgba(245, 158, 11, 0.1); color: var(--color-warning); }
+
+        .stat-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        /* --- Tabs Navigation --- */
+        .navigation-tabs {
+            display: flex;
+            gap: 12px;
+            background: rgba(18, 19, 28, 0.5);
+            border: 1px solid var(--border-thick);
+            padding: 6px;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-family: var(--font-main);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition-smooth);
+        }
+
+        .nav-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .nav-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .nav-btn.active {
+            color: #fff;
+            background: var(--color-primary);
+            box-shadow: 0 4px 14px var(--color-primary-glow);
+        }
+
+        /* --- Panel Content --- */
+        .panel-content {
+            display: none;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .panel-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Forms & Cards --- */
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .layout-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-thick);
+            border-radius: 16px;
+            padding: 2rem;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+            margin-bottom: 2rem;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-thick);
+            padding-bottom: 1rem;
+        }
+
+        .card-header h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-header h2 svg {
+            width: 22px;
+            height: 22px;
+            fill: var(--color-primary);
+        }
+
+        /* --- Form Inputs --- */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-control, select, textarea {
+            width: 100%;
+            background: rgba(10, 11, 16, 0.8);
+            border: 1px solid var(--border-thick);
+            color: #fff;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-family: var(--font-main);
+            font-size: 0.95rem;
+            transition: var(--transition-smooth);
+        }
+
+        .form-control:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-primary-glow);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            background: var(--color-primary);
+            color: #fff;
+            border: none;
+            padding: 11px 24px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-smooth);
+            font-family: var(--font-main);
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px var(--color-primary-glow);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-thick);
+            color: var(--text-main);
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: var(--text-muted);
+        }
+
+        .btn-danger {
+            background: var(--color-danger);
+        }
+        .btn-danger:hover {
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.2);
+        }
+
+        /* --- Custom Interactive Lists --- */
+        .rules-list {
+            max-height: 520px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .rules-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .rules-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+        }
+
+        .rule-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-thick);
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 12px;
+            transition: var(--transition-smooth);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .rule-item:hover {
+            border-color: rgba(139, 92, 246, 0.3);
+            background: rgba(26, 27, 40, 0.8);
+        }
+
+        .rule-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .rule-title-box {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .rule-id {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            color: var(--color-info);
+            font-weight: 500;
+        }
+
+        .rule-name {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .badge-severity {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .badge-severity.critical { background: rgba(239, 68, 68, 0.15); color: var(--color-danger); border: 1px solid rgba(239, 68, 68, 0.3); }
+        .badge-severity.high { background: rgba(245, 158, 11, 0.15); color: var(--color-warning); border: 1px solid rgba(245, 158, 11, 0.3); }
+        .badge-severity.medium { background: rgba(139, 92, 246, 0.15); color: var(--color-primary); border: 1px solid rgba(139, 92, 246, 0.3); }
+        .badge-severity.low { background: rgba(6, 182, 212, 0.15); color: var(--color-info); border: 1px solid rgba(6, 182, 212, 0.3); }
+        .badge-severity.success { background: rgba(16, 185, 129, 0.15); color: var(--color-success); border: 1px solid rgba(16, 185, 129, 0.3); }
+
+        .rule-desc {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .rule-meta-tag {
+            font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border-thick);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+            align-self: flex-start;
+        }
+
+        .rule-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            padding-top: 8px;
+            margin-top: 4px;
+        }
+
+        .action-icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: var(--transition-smooth);
+        }
+
+        .action-icon-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .action-icon-btn.edit:hover {
+            color: var(--color-info);
+            background: rgba(6, 182, 212, 0.05);
+        }
+
+        .action-icon-btn.delete:hover {
+            color: var(--color-danger);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .action-icon-btn svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
+        }
+
+        /* --- Custom Interactive Scanner Layout --- */
+        .sandbox-input-box {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .results-box {
+            background: rgba(10, 11, 16, 0.9);
+            border: 1px solid var(--border-thick);
+            border-radius: 12px;
+            padding: 1.5rem;
+            min-height: 350px;
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .results-box .placeholder-msg {
+            color: var(--text-dark);
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            width: 100%;
+        }
+
+        .results-box .placeholder-msg svg {
+            width: 48px;
+            height: 48px;
+            fill: currentColor;
+            margin-bottom: 12px;
+            opacity: 0.5;
+        }
+
+        /* --- Findings Table --- */
+        .findings-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .findings-table th {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 2px solid var(--border-thick);
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .findings-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-thick);
+            color: #fff;
+            font-size: 0.85rem;
+        }
+
+        .findings-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        /* --- Code Snippet Highlighter --- */
+        .token-view {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            line-height: 1.6;
+        }
+
+        .token-span {
+            padding: 2px 4px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.85rem;
+        }
+
+        .token-span.highlighted {
+            background: rgba(245, 158, 11, 0.2);
+            border-color: var(--color-warning);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        /* --- Form Registry Inner Tabs --- */
+        .registry-inner-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-thick);
+            padding-bottom: 8px;
+        }
+
+        .inner-tab-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-family: var(--font-main);
+            font-weight: 600;
+            transition: var(--transition-smooth);
+        }
+
+        .inner-tab-btn.active {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--color-primary);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        /* --- Toast Notification System --- */
+        .toast-container {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 9999;
+            pointer-events: none;
+        }
+        .toast {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-thick);
+            border-radius: 10px;
+            padding: 14px 18px;
+            min-width: 260px;
+            max-width: 380px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(12px);
+            animation: slideInToast 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            pointer-events: auto;
+            color: var(--text-main);
+        }
+        .toast.success { border-left: 3px solid var(--color-success); }
+        .toast.error { border-left: 3px solid var(--color-danger); }
+        .toast.warning { border-left: 3px solid var(--color-warning); }
+        .toast.info { border-left: 3px solid var(--color-info); }
+        .toast svg { width: 18px; height: 18px; flex-shrink: 0; fill: currentColor; }
+        .toast.success svg { color: var(--color-success); }
+        .toast.error svg { color: var(--color-danger); }
+        .toast.warning svg { color: var(--color-warning); }
+        .toast.info svg { color: var(--color-info); }
+        @keyframes slideInToast { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
+        @keyframes fadeOutToast { from { opacity: 1; } to { opacity: 0; transform: translateX(20px); } }
+
+        /* --- Modal Confirm Dialog --- */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            z-index: 9998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-box {
+            background: var(--bg-panel);
+            border: 1px solid var(--border-thick);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 420px;
+            width: 90%;
+            box-shadow: 0 24px 48px rgba(0,0,0,0.5);
+        }
+        .modal-title { font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 10px; }
+        .modal-title svg { width: 22px; height: 22px; fill: var(--color-warning); }
+        .modal-message { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 1.5rem; line-height: 1.5; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+        /* --- Search & Filter --- */
+        .search-wrapper {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        .search-wrapper svg {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 16px;
+            height: 16px;
+            fill: var(--text-dark);
+            pointer-events: none;
+        }
+        .search-wrapper input {
+            width: 100%;
+            padding: 8px 12px 8px 36px;
+            background: rgba(10, 11, 16, 0.8);
+            border: 1px solid var(--border-thick);
+            color: #fff;
+            border-radius: 8px;
+            font-family: var(--font-main);
+            font-size: 0.9rem;
+            transition: var(--transition-smooth);
+        }
+        .search-wrapper input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px var(--color-primary-glow);
+        }
+
+        /* --- System Health Styling --- */
+        .health-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .memory-bar-track { background: rgba(255,255,255,0.05); border-radius: 4px; height: 6px; width: 100%; margin-top: 10px; overflow: hidden; }
+        .memory-bar-fill { background: linear-gradient(90deg, var(--color-primary), var(--color-info)); height: 100%; border-radius: 4px; transition: width 0.5s ease; }
+        .storage-indicators { display: flex; gap: 1rem; flex-wrap: wrap; }
+        .storage-badge { display: flex; align-items: center; gap: 8px; background: var(--bg-card); border: 1px solid var(--border-thick); padding: 10px 16px; border-radius: 8px; font-size: 0.85rem; color: var(--text-muted); }
+        .storage-badge.ok { border-color: rgba(16, 185, 129, 0.3); color: var(--color-success); }
+        .storage-badge.ok svg { fill: var(--color-success); }
+        .storage-badge.error { border-color: rgba(239, 68, 68, 0.3); color: var(--color-danger); }
+        .storage-badge.error svg { fill: var(--color-danger); }
+    </style>
+</head>
+<body>
+
+<div class="toast-container" id="toast-container"></div>
+
+<div class="app-container">
+    <!-- Main Header -->
+    <header>
+        <div class="logo-section">
+            <svg viewBox="0 0 24 24">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10zM12 7c2.2 0 4 1.8 4 4 0 2.5-3.3 6.2-4 7-.7-.8-4-4.5-4-7 0-2.2 1.8-4 4-4z"/>
+            </svg>
+            <div>
+                <h1>Mega-Analyzer</h1>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">Dynamic Security Rule Engine & Visual Playground</p>
+            </div>
+            <span>V__VERSION__</span>
+        </div>
+        <div class="status-badge">
+            <div class="indicator"></div>
+            API Service Active
+        </div>
+    </header>
+
+    <!-- Top Grid Statistics -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-info">
+                <h3>Web Fuzz Rules</h3>
+                <div class="value" id="stat-web-count">0</div>
+            </div>
+            <div class="stat-icon primary">
+                <svg viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 14H4v-4h11v4zm0-5H4V9h11v4zm5 5h-4V9h4v9z"/></svg>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-info">
+                <h3>Binzap Rules</h3>
+                <div class="value" id="stat-binzap-count">0</div>
+            </div>
+            <div class="stat-icon success">
+                <svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-info">
+                <h3>Custom ML Patterns</h3>
+                <div class="value" id="stat-ml-count">0</div>
+            </div>
+            <div class="stat-icon info">
+                <svg viewBox="0 0 24 24"><path d="M12 3c-4.97 0-9 4.03-9 9 0 2.12.74 4.07 1.97 5.61L4.35 19.4c-.39.39-.39 1.02 0 1.41.39.39 1.02.39 1.41 0l1.9-1.9C9.17 19.62 10.53 20 12 20c4.97 0 9-4.03 9-9s-4.03-9-9-9zm0 15c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z"/></svg>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-info">
+                <h3>Core Analysers</h3>
+                <div class="value" id="stat-core-count">0</div>
+            </div>
+            <div class="stat-icon warning">
+                <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 15l-4-4 1.41-1.41L10 13.17l7.59-7.59L19 7l-9 9z"/></svg>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Navigation Tabs -->
+    <div class="navigation-tabs">
+        <button class="nav-btn active" onclick="switchPanel('panel-registry')">
+            <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0-2-.9-2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+            Dynamic Rules Registry
+        </button>
+        <button class="nav-btn" onclick="switchPanel('panel-webscanner')">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            Web Scanner Sandbox
+        </button>
+        <button class="nav-btn" onclick="switchPanel('panel-token-playground')">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"/></svg>
+            Token Tokenizer Playground
+        </button>
+        <button class="nav-btn" onclick="switchPanel('panel-dryrun')">
+            <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"/></svg>
+            Live Rule Tester (Dry-Run)
+        </button>
+        <button class="nav-btn" onclick="switchPanel('panel-health')">
+            <svg viewBox="0 0 24 24"><path d="M3.5 18.5l6-6 4 4L22 6.92 20.59 5.5l-7.09 8.08-4-4-7 7 1 1.92zM2 22h20v-2H2v2z"/></svg>
+            System Health
+        </button>
+        <button class="nav-btn" onclick="switchPanel('panel-recon')" style="border-color:rgba(6,182,212,0.25);">
+            <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            Recon Suite
+        </button>
+        <button class="nav-btn" onclick="switchPanel('panel-webtools')" style="border-color:rgba(245,158,11,0.25);">
+            <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 14l-3-3 1.41-1.41L11 12.17l5.59-5.58L18 8l-7 7z"/></svg>
+            Web Tools
+        </button>
+        <button class="nav-btn" onclick="switchPanel('panel-mitm')" style="border-color:rgba(239,68,68,0.25);">
+            <svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+            MITM Console
+        </button>
+    </div>
+
+    <!-- PANEL 1: RULE REGISTRY -->
+    <div id="panel-registry" class="panel-content active">
+        <!-- Inner Category Selector -->
+        <div class="registry-inner-tabs">
+            <button class="inner-tab-btn active" id="btn-inner-web" onclick="switchInnerTab('web')">Web Scanner Fuzzing</button>
+            <button class="inner-tab-btn" id="btn-inner-binzap" onclick="switchInnerTab('binzap')">Binzap Bytecode matching</button>
+            <button class="inner-tab-btn" id="btn-inner-ml" onclick="switchInnerTab('ml')">Smali ML patterns</button>
+        </div>
+
+        <div class="layout-grid">
+            <!-- Left Side: Add/Edit Form -->
+            <div class="card" id="editor-card-container">
+                <div class="card-header">
+                    <h2 id="editor-title">
+                        <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+                        Configure Analyzer Rule
+                    </h2>
+                    <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" onclick="resetEditor()">Clear Form</button>
+                </div>
+
+                <div id="form-container-web" class="rule-form-section">
+                    <div class="form-group">
+                        <label>Unique Rule Identifier (ID)</label>
+                        <input type="text" id="web-rule-id" class="form-control" placeholder="e.g. WS-DYN-CUSTOM-XSS">
+                    </div>
+                    <div class="form-group">
+                        <label>Vulnerability Name</label>
+                        <input type="text" id="web-rule-name" class="form-control" placeholder="e.g. Advanced Cross-Site Scripting">
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea id="web-rule-desc" placeholder="Brief technical summary..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Severity Level</label>
+                        <select id="web-rule-severity">
+                            <option value="CRITICAL">Critical</option>
+                            <option value="HIGH" selected>High</option>
+                            <option value="MEDIUM">Medium</option>
+                            <option value="LOW">Low</option>
+                            <option value="INFO">Info</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Mitigation Strategy</label>
+                        <textarea id="web-rule-mitigation" placeholder="How developers can fix this issue..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Rule Category/Type</label>
+                        <select id="web-rule-type" onchange="toggleWebFields()">
+                            <option value="fuzz" selected>Active Input Fuzzing</option>
+                            <option value="regex_passive">Passive HTML Regex Matching</option>
+                            <option value="header_check">HTTP Security Header Audit</option>
+                        </select>
+                    </div>
+
+                    <!-- Fuzz-specific fields -->
+                    <div id="web-fuzz-fields">
+                        <div class="form-group">
+                            <label>Payloads (one per line)</label>
+                            <textarea id="web-rule-payloads" placeholder="&lt;script&gt;alert('test')&lt;/script&gt;"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Verification Strategy (Match Type)</label>
+                            <select id="web-rule-matchtype">
+                                <option value="contains" selected>Body Contains Expected Value</option>
+                                <option value="regex">Body Matches Regex</option>
+                                <option value="sql_error">Database Errors Disclosed</option>
+                                <option value="lfi_success">System Files (LFI) Read Successfully</option>
+                                <option value="status_code">Triggered HTTP Status Code</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Match Verification Value (e.g. status code, regex, or search string)</label>
+                            <input type="text" id="web-rule-matchvalue" class="form-control" placeholder="Leave empty to use exact payload reflection">
+                        </div>
+                    </div>
+
+                    <!-- Regex-specific fields -->
+                    <div id="web-regex-fields" style="display: none;">
+                        <div class="form-group">
+                            <label>Regular Expression Pattern (matches page bodies passively)</label>
+                            <input type="text" id="web-rule-regex" class="form-control" placeholder="e.g. api_key=[a-zA-Z0-9]{32}">
+                        </div>
+                    </div>
+
+                    <!-- Header-specific fields -->
+                    <div id="web-header-fields" style="display: none;">
+                        <div class="form-group">
+                            <label>HTTP Response Header Name</label>
+                            <input type="text" id="web-rule-headername" class="form-control" placeholder="e.g. Content-Security-Policy">
+                        </div>
+                        <div class="form-group">
+                            <label>Header Check Logic</label>
+                            <select id="web-rule-headercheck">
+                                <option value="missing" selected>Header is Missing</option>
+                                <option value="equals">Header Value Equals Target</option>
+                                <option value="contains">Header Value Contains Target</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Header Target Value</label>
+                            <input type="text" id="web-rule-headervalue" class="form-control" placeholder="Expected or forbidden header content">
+                        </div>
+                    </div>
+
+                    <button class="btn" onclick="saveWebRule()">
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fff;"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                        Save Web Rule
+                    </button>
+                </div>
+
+                <div id="form-container-binzap" class="rule-form-section" style="display: none;">
+                    <div class="form-group">
+                        <label>Unique Rule Identifier (ID)</label>
+                        <input type="text" id="binzap-rule-id" class="form-control" placeholder="e.g. BZ-DYN-CUSTOM">
+                    </div>
+                    <div class="form-group">
+                        <label>Vulnerability Name</label>
+                        <input type="text" id="binzap-rule-name" class="form-control" placeholder="e.g. Insecure AES Padding">
+                    </div>
+                    <div class="form-group">
+                        <label>Severity Level</label>
+                        <select id="binzap-rule-severity">
+                            <option value="CRITICAL">Critical</option>
+                            <option value="HIGH">High</option>
+                            <option value="MEDIUM" selected>Medium</option>
+                            <option value="LOW">Low</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Token Match Pattern (JSON Array representation)</label>
+                        <textarea id="binzap-rule-steps" style="height: 180px; font-family: var(--font-mono); font-size: 0.85rem;" placeholder='[
+  {"type": "opcode", "value": "const-string"},
+  {"type": "any_register"},
+  {"type": "string_contains", "value": "AES/ECB"}
+]'></textarea>
+                    </div>
+                    <button class="btn" onclick="saveBinzapRule()">
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fff;"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                        Save Binzap Rule
+                    </button>
+                </div>
+
+                <div id="form-container-ml" class="rule-form-section" style="display: none;">
+                    <div class="form-group">
+                        <label>Unique Pattern Identifier (ID)</label>
+                        <input type="text" id="ml-rule-id" class="form-control" placeholder="e.g. PREMIUM_BYPASS_CUSTOM">
+                    </div>
+                    <div class="form-group">
+                        <label>Pattern Description</label>
+                        <textarea id="ml-rule-desc" placeholder="Identify premium boolean check return paths..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Patch Category</label>
+                        <select id="ml-rule-category">
+                            <option value="premium_check" selected>premium_check</option>
+                            <option value="billing">billing</option>
+                            <option value="license_check">license_check</option>
+                            <option value="subscription">subscription</option>
+                            <option value="ads">ads</option>
+                            <option value="root_detection">root_detection</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Target Method Names (comma separated)</label>
+                        <input type="text" id="ml-rule-methods" class="form-control" placeholder="e.g. isvip, ispremium, checklicense">
+                    </div>
+                    <div class="form-group">
+                        <label>Target Class/Path Patterns (comma separated)</label>
+                        <input type="text" id="ml-rule-classes" class="form-control" placeholder="e.g. billing, premium, subscription">
+                    </div>
+                    <div class="form-group">
+                        <label>Required API Calls (comma separated)</label>
+                        <input type="text" id="ml-rule-calls" class="form-control" placeholder="e.g. sharedpreferences;->getboolean">
+                    </div>
+                    <div class="form-group">
+                        <label>Constant String Patterns (comma separated)</label>
+                        <input type="text" id="ml-rule-strings" class="form-control" placeholder="e.g. vip, premium_user">
+                    </div>
+                    <div class="form-group">
+                        <label>Expected Method Return Type</label>
+                        <input type="text" id="ml-rule-returntype" class="form-control" placeholder="Z = Boolean, I = Integer, V = Void" value="Z">
+                    </div>
+                    <div class="form-group">
+                        <label>Patch Mode Strategy</label>
+                        <select id="ml-rule-patchtype">
+                            <option value="return_true" selected>Force return true</option>
+                            <option value="return_false">Force return false</option>
+                            <option value="return_void">Force return void</option>
+                            <option value="return_zero">Force return max integer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Weight Coefficient</label>
+                        <input type="number" id="ml-rule-weight" class="form-control" value="1.0" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>Minimum Match Score</label>
+                        <input type="number" id="ml-rule-minscore" class="form-control" value="10">
+                    </div>
+
+                    <button class="btn" onclick="saveMLRule()">
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fff;"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+                        Save ML Pattern
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Side: Current List -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z"/></svg>
+                        Active Dynamic Rules Registry
+                    </h2>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; display: flex; align-items: center; gap: 4px;" onclick="exportRules()">
+                            <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                            Export
+                        </button>
+                        <label class="btn btn-outline" style="padding: 6px 12px; font-size: 0.8rem; cursor: pointer; margin: 0; display: flex; align-items: center; gap: 4px;">
+                            <svg viewBox="0 0 24 24" style="width: 14px; height: 14px; fill: currentColor;"><path d="M9 16h6v-6h4l-7-7-7 7h4zm-4 2h14v2H5z"/></svg>
+                            Import
+                            <input type="file" accept=".json" id="import-file-input" style="display: none;" onchange="importRules(event)">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="search-wrapper">
+                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    <input type="text" id="rules-search" placeholder="Search by ID or name..." oninput="filterRules()">
+                </div>
+
+                <div class="rules-list" id="active-rules-list">
+                    <!-- Dynamic rule items loaded via javascript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL 2: WEB SCANNER SANDBOX -->
+    <div id="panel-webscanner" class="panel-content">
+        <div class="layout-grid">
+            <!-- Scan Trigger -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                        Trigger Target Vulnerability Scan
+                    </h2>
+                </div>
+                <div class="sandbox-input-box">
+                    <div class="form-group">
+                        <label>Target Web Application URL</label>
+                        <input type="text" id="scan-target-url" class="form-control" value="http://127.0.0.1:3000" placeholder="e.g. http://127.0.0.1:3000">
+                    </div>
+                    <button class="btn" id="btn-run-webscan" onclick="runWebScan()">
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fff;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                        Initiate Security Scan
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scan Findings -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+                        Scan Findings Matrix
+                    </h2>
+                </div>
+                <div class="results-box" id="web-findings-box">
+                    <div class="placeholder-msg" id="web-findings-placeholder">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"/></svg>
+                        Enter target URL and launch scan to view results.
+                    </div>
+                    <table class="findings-table" id="web-findings-table" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>Severity</th>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Param</th>
+                                <th>Payload</th>
+                            </tr>
+                        </thead>
+                        <tbody id="web-findings-body">
+                            <!-- Dynamic rows loaded via javascript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Real-time Diagnostic Event Console -->
+        <div class="card" style="margin-top: 2rem;">
+            <div class="card-header">
+                <h2>
+                    <svg viewBox="0 0 24 24" style="width: 22px; height: 22px; fill: var(--color-primary);"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 14H4v-4h11v4zm0-5H4V9h11v4zm5 5h-4V9h4v9z"/></svg>
+                    Real-time Scan Diagnostic Terminal
+                </h2>
+                <span class="badge-severity low" id="sse-connection-status">Connecting EventSource...</span>
+            </div>
+            <div class="results-box" id="sse-terminal-box" style="height: 250px; font-family: var(--font-mono); background: #000; overflow-y: auto;">
+                <div style="color: var(--text-dark);">[system] Diagnostic console ready. Waiting for scan logs...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL 3: TOKEN DEBUBG PLAYGROUND -->
+    <div id="panel-token-playground" class="panel-content">
+        <div class="layout-grid">
+            <!-- Code Editor Box -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+                        Paste Smali Bytecode
+                    </h2>
+                </div>
+                <div class="sandbox-input-box">
+                    <div class="form-group">
+                        <label>Smali instructions to lex and match</label>
+                        <textarea id="smali-input-code" style="height: 380px; font-family: var(--font-mono); font-size: 0.85rem;" placeholder=".method public checkVIP(Landroid/content/Context;)Z
+    .registers 4
+    
+    const-string v0, &quot;VIP_STATUS_PREMIUM&quot;
+    invoke-static {v0}, Ljava/security/MessageDigest;->getInstance(Ljava/lang/String;)Ljava/security/MessageDigest;
+    
+    const/4 v1, 0x0
+    return v1
+.end method"></textarea>
+                    </div>
+                    <button class="btn" id="btn-run-tokenizer" onclick="runTokenizer()">
+                        <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fff;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                        Lex & Analyse Tokens
+                    </button>
+                </div>
+            </div>
+
+            <!-- Highlighting & Findings Box -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        Token Stream & Finding Detections
+                    </h2>
+                </div>
+                <div class="results-box" id="token-findings-box" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div class="placeholder-msg" id="token-findings-placeholder">
+                        <svg viewBox="0 0 24 24"><path d="M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z"/></svg>
+                        Compile smali bytecode to visualize tokens and matching dynamic rules.
+                    </div>
+                    
+                    <div id="token-output-pane" style="display: none;">
+                        <h4 style="margin-bottom: 8px; font-size: 0.95rem; color: var(--text-muted);">Lexer Token Stream</h4>
+                        <div class="token-view" id="token-view-elements">
+                            <!-- Tokens injected here -->
+                        </div>
+                    </div>
+                    
+                    <div id="findings-output-pane" style="display: none; border-top: 1px solid var(--border-thick); padding-top: 1rem;">
+                        <h4 style="margin-bottom: 8px; font-size: 0.95rem; color: var(--text-muted);">Discovered Findings</h4>
+                        <table class="findings-table" id="token-findings-table">
+                            <thead>
+                                <tr>
+                                    <th>Rule ID</th>
+                                    <th>Severity</th>
+                                    <th>Matching Evidence</th>
+                                </tr>
+                            </thead>
+                            <tbody id="token-findings-body">
+                                <!-- Findings injected here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL 4: DRY-RUN RULE PLAYGROUND -->
+    <div id="panel-dryrun" class="panel-content">
+        <div class="layout-grid">
+            <!-- Sandbox Rule JSON Input -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10H7v-2h10v2z"/></svg>
+                        Rule Definition & Dry-Run Inputs
+                    </h2>
+                </div>
+                <div class="form-group">
+                    <label>Rule Category/Type</label>
+                    <select id="dryrun-rule-type" onchange="toggleDryRunFormPlaceholders()">
+                        <option value="web" selected>Web Passive Regex Rule</option>
+                        <option value="binzap">Binzap Token Sequence Matcher</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Temporary Rule JSON Structure</label>
+                    <textarea id="dryrun-rule-json" style="height: 180px; font-family: var(--font-mono); font-size: 0.85rem;" placeholder='{
+  "id": "DRY-RUN-WEB-PASSIVE",
+  "name": "Disclosed AWS Keys",
+  "severity": "HIGH",
+  "type": "regex_passive",
+  "regex_pattern": "AKIA[0-9A-Z]{16}"
+}'></textarea>
+                </div>
+                <div class="form-group">
+                    <label id="dryrun-sample-label">Test Target (URL to fetch and audit)</label>
+                    <textarea id="dryrun-sample-target" style="height: 120px;" placeholder="http://127.0.0.1:3000"></textarea>
+                </div>
+                <button class="btn" id="btn-run-dryrun" onclick="runDryRunTest()">
+                    <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fff;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg>
+                    Dry-Run Verify Rule
+                </button>
+            </div>
+
+            <!-- Dry-Run Result Diagnostics -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        Dry-Run Diagnostics Output
+                    </h2>
+                </div>
+                <div class="results-box" id="dryrun-findings-box">
+                    <div class="placeholder-msg" id="dryrun-placeholder">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                        Input dynamic rule parameters and launch Dry-Run to audit test targets.
+                    </div>
+                    <div id="dryrun-results-success" style="display: none; color: var(--color-success); font-size: 1.1rem; font-weight: 600; text-align: center; margin-top: 4rem;">
+                        <svg viewBox="0 0 24 24" style="width: 48px; height: 48px; fill: currentColor; margin-bottom: 8px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        <div>Dry-Run successfully executed! Check matching logs below.</div>
+                    </div>
+                    <div id="dryrun-results-data" style="display: none; border-top: 1px solid var(--border-thick); padding-top: 1rem; margin-top: 1rem;">
+                        <h4 style="margin-bottom: 8px; font-size: 0.95rem; color: var(--text-muted);">Dry-Run Matches Discovered</h4>
+                        <pre id="dryrun-log-pre" style="font-family: var(--font-mono); font-size: 0.85rem; color: #fff; white-space: pre-wrap; line-height: 1.4;"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANEL 5: SYSTEM HEALTH TAB -->
+    <div id="panel-health" class="panel-content">
+        <div class="health-grid" id="health-stats-grid">
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Uptime</h3>
+                    <div class="value" id="health-uptime">--</div>
+                </div>
+                <div class="stat-icon primary">
+                    <svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Goroutines</h3>
+                    <div class="value" id="health-goroutines">--</div>
+                </div>
+                <div class="stat-icon info">
+                    <svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>Heap Memory</h3>
+                    <div class="value" id="health-heap">-- MB</div>
+                    <div class="memory-bar-track"><div class="memory-bar-fill" id="health-heap-bar" style="width: 0%"></div></div>
+                </div>
+                <div class="stat-icon warning">
+                    <svg viewBox="0 0 24 24"><path d="M15 9H9v6h6V9zm-2 4h-2v-2h2v2zm8-2V9h-2V7c0-1.1-.9-2-2-2h-2V3h-2v2h-2V3H9v2H7c-1.1 0-2 .9-2 2v2H3v2h2v2H3v2h2v2c0 1.1.9 2 2 2h2v2h2v-2h2v2h2v-2h2c1.1 0 2-.9 2-2v-2h2v-2h-2v-2h2zm-4 6H7V7h10v10z"/></svg>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info">
+                    <h3>GC Cycles</h3>
+                    <div class="value" id="health-gc">--</div>
+                </div>
+                <div class="stat-icon success">
+                    <svg viewBox="0 0 24 24"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <div class="card-header">
+                <h2>
+                    <svg viewBox="0 0 24 24"><path d="M20 6h-2.18c.07-.44.18-.88.18-1.36C18 2.51 15.49 0 12.64 0c-2.4 0-4.22 1.6-5.14 3.19C7.1 2.46 6.19 2 5 2 2.8 2 1 3.8 1 6c0 2.03 1.44 3.73 3.35 4h13.29C19.63 9.73 21 8.03 21 6.36 21 6.24 20.99 6.12 20 6zM19 11H5v-1h14v1zm-2 3H7v-1h10v1zm-2 3H9v-1h6v1z"/></svg>
+                    Storage Health
+                </h2>
+            </div>
+            <div class="storage-indicators" id="storage-health-indicators">
+                <div class="storage-badge" id="storage-web">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-dark)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    Web Rules File
+                </div>
+                <div class="storage-badge" id="storage-binzap">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-dark)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    Binzap Rules File
+                </div>
+                <div class="storage-badge" id="storage-ml">
+                    <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-dark)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>
+                    ML Patterns File
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let activeMainPanel = 'panel-registry';
+    let activeRegistryTab = 'web';
+    let editingRuleId = null;
+
+    // Connect to SSE diagnostic event broker
+    const eventSource = new EventSource('/api/v1/scan/events');
+    const terminal = document.getElementById('sse-terminal-box');
+    const connStatus = document.getElementById('sse-connection-status');
+
+    eventSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        const logLine = document.createElement('div');
+        logLine.style.margin = '4px 0';
+        logLine.style.lineHeight = '1.4';
+        
+        let badgeColor = 'var(--text-muted)';
+        if (data.type === 'vuln_found') badgeColor = 'var(--color-danger)';
+        if (data.type === 'success') badgeColor = 'var(--color-success)';
+        
+        const timeStr = new Date(data.timestamp).toLocaleTimeString();
+        logLine.innerHTML = '<span style="color: var(--text-dark); font-size: 0.8rem;">[' + timeStr + ']</span> ' +
+            '<span style="color: ' + badgeColor + '; font-weight: 500;">[' + data.type.toUpperCase() + ']</span> ' +
+            '<span>' + data.message + '</span>';
+        
+        terminal.appendChild(logLine);
+        terminal.scrollTop = terminal.scrollHeight;
+    };
+
+    eventSource.onopen = function() {
+        connStatus.innerText = 'Connected';
+        connStatus.className = 'badge-severity success';
+    };
+
+    eventSource.onerror = function() {
+        connStatus.innerText = 'Disconnected';
+        connStatus.className = 'badge-severity critical';
+    };
+
+    // Fetch initial counts and data
+    window.onload = function() {
+        refreshDashboardData();
+        // Periodic statistics and status polling
+        setInterval(refreshDashboardData, 5000);
+    };
+
+    function switchPanel(panelId) {
+        document.querySelectorAll('.panel-content').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        
+        document.getElementById(panelId).classList.add('active');
+        
+        // Find which button activated it
+        let btnIndex = 0;
+        if (panelId === 'panel-webscanner') btnIndex = 1;
+        if (panelId === 'panel-token-playground') btnIndex = 2;
+        if (panelId === 'panel-dryrun') btnIndex = 3;
+        if (panelId === 'panel-health') btnIndex = 4;
+        
+        document.querySelectorAll('.nav-btn')[btnIndex].classList.add('active');
+        activeMainPanel = panelId;
+        refreshDashboardData();
+    }
+
+    function switchInnerTab(tab) {
+        document.querySelectorAll('.inner-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.rule-form-section').forEach(f => f.style.display = 'none');
+        
+        activeRegistryTab = tab;
+        if (tab === 'web') {
+            document.getElementById('btn-inner-web').classList.add('active');
+            document.getElementById('form-container-web').style.display = 'block';
+        } else if (tab === 'binzap') {
+            document.getElementById('btn-inner-binzap').classList.add('active');
+            document.getElementById('form-container-binzap').style.display = 'block';
+        } else if (tab === 'ml') {
+            document.getElementById('btn-inner-ml').classList.add('active');
+            document.getElementById('form-container-ml').style.display = 'block';
+        }
+
+        resetEditor();
+        refreshDashboardData();
+    }
+
+    function toggleWebFields() {
+        let type = document.getElementById('web-rule-type').value;
+        document.getElementById('web-fuzz-fields').style.display = type === 'fuzz' ? 'block' : 'none';
+        document.getElementById('web-regex-fields').style.display = type === 'regex_passive' ? 'block' : 'none';
+        document.getElementById('web-header-fields').style.display = type === 'header_check' ? 'block' : 'none';
+    }
+
+    function toggleDryRunFormPlaceholders() {
+        let type = document.getElementById('dryrun-rule-type').value;
+        let label = document.getElementById('dryrun-sample-label');
+        let text = document.getElementById('dryrun-sample-target');
+        let json = document.getElementById('dryrun-rule-json');
+
+        if (type === 'web') {
+            label.innerText = 'Test Target (URL to fetch and audit)';
+            text.placeholder = 'http://127.0.0.1:3000';
+            json.value = '{\n  "id": "DRY-RUN-WEB-PASSIVE",\n  "name": "Disclosed AWS Keys",\n  "severity": "HIGH",\n  "type": "regex_passive",\n  "regex_pattern": "AKIA[0-9A-Z]{16}"\n}';
+        } else if (type === 'binzap') {
+            label.innerText = 'Test Target (Smali bytecode content to audit)';
+            text.placeholder = '.method public hasPremium()Z\n    const-string v0, "license_valid"\n    return v0\n.end method';
+            json.value = '{\n  "id": "DRY-RUN-BZ-CRYPTO",\n  "name": "Custom String Matcher",\n  "severity": "MEDIUM",\n  "pattern_steps": [\n    { "type": "opcode", "value": "const-string" },\n    { "type": "any_register" },\n    { "type": "string_contains", "value": "license" }\n  ]\n}';
+        }
+    }
+
+    function refreshDashboardData() {
+        // 1. Fetch status / stats
+        fetch('/api/v1/status')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('stat-web-count').innerText = data.statistics.dynamic_web_rules;
+                document.getElementById('stat-binzap-count').innerText = data.statistics.dynamic_binzap_rules;
+                document.getElementById('stat-ml-count').innerText = data.statistics.dynamic_ml_patterns;
+                document.getElementById('stat-core-count').innerText = data.statistics.total_static_ml;
+                
+                if (activeMainPanel === 'panel-health') {
+                    updateHealthPanel(data);
+                }
+            });
+
+        // 2. Fetch current rules list based on activeRegistryTab
+        let apiEndpoint = '/api/v1/rules/' + activeRegistryTab;
+        fetch(apiEndpoint)
+            .then(res => res.json())
+            .then(rules => {
+                renderRulesList(rules);
+            });
+    }
+
+    function filterRules() {
+        var query = document.getElementById('rules-search').value.toLowerCase();
+        document.querySelectorAll('#active-rules-list .rule-item').forEach(function(item) {
+            var text = item.textContent.toLowerCase();
+            item.style.display = text.includes(query) ? '' : 'none';
+        });
+    }
+
+    function renderRulesList(rules) {
+        let listContainer = document.getElementById('active-rules-list');
+        if (!listContainer) return;
+        listContainer.innerHTML = '';
+        
+        let badge = document.getElementById('rules-count-badge');
+        if (badge) badge.innerText = rules.length + ' rules active';
+
+        if (rules.length === 0) {
+            listContainer.innerHTML = '<div style="color: var(--text-dark); text-align: center; margin-top: 2rem;">No dynamic rules configured yet.</div>';
+            return;
+        }
+
+        rules.forEach(rule => {
+            let item = document.createElement('div');
+            item.className = 'rule-item';
+            
+            // Map keys depending on type
+            let id = rule.id || rule.idStr || '';
+            let name = rule.name || rule.nameStr || id;
+            let severity = (rule.severity || rule.severityVal || 'medium').toLowerCase();
+            let desc = rule.description || rule.Notes || 'Custom registered dynamic matching logic.';
+            let categoryTag = rule.type || rule.category || 'SMALI PATTERN';
+
+            var safeRuleJson = JSON.stringify(rule).replace(/\\/g, '\\\\').replace(/'/g, '\\\'');
+
+            item.innerHTML = '<div class="rule-top">' +
+                '<div class="rule-title-box">' +
+                '<span class="rule-id">' + id + '</span>' +
+                '<span class="rule-name">' + name + '</span>' +
+                '</div>' +
+                '<span class="badge-severity ' + severity + '">' + severity + '</span>' +
+                '</div>' +
+                '<div class="rule-desc">' + desc + '</div>' +
+                '<div style="display: flex; gap: 8px; align-items: center; margin-top: 4px;">' +
+                '<span class="rule-meta-tag">' + categoryTag + '</span>' +
+                '</div>' +
+                '<div class="rule-actions">' +
+                '<button class="action-icon-btn edit" title="Edit rule" onclick="editRule(\'' + id + '\', \'' + safeRuleJson + '\')">' +
+                '<svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>' +
+                '</button>' +
+                '<button class="action-icon-btn delete" onclick="deleteRule(\'' + id + '\')">' +
+                '<svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>' +
+                '</button>' +
+                '</div>';
+
+            listContainer.appendChild(item);
+        });
+        filterRules();
+    }
+
+    function resetEditor() {
+        editingRuleId = null;
+        document.querySelectorAll('.form-control, textarea').forEach(el => {
+            el.value = '';
+            el.disabled = false;
+        });
+        document.getElementById('ml-rule-returntype').value = 'Z';
+        document.getElementById('ml-rule-weight').value = '1.0';
+        document.getElementById('ml-rule-minscore').value = '10';
+        document.getElementById('web-rule-severity').value = 'HIGH';
+        document.getElementById('binzap-rule-severity').value = 'MEDIUM';
+        
+        document.querySelector('#form-container-web .btn').innerHTML = '<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fff;"><path d="M17 3H5c-1.1 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg> Save Web Rule';
+        document.querySelector('#form-container-binzap .btn').innerHTML = '<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fff;"><path d="M17 3H5c-1.1 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg> Save Binzap Rule';
+        document.querySelector('#form-container-ml .btn').innerHTML = '<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fff;"><path d="M17 3H5c-1.1 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg> Save ML Pattern';
+    }
+
+    function editRule(id, ruleDataJson) {
+        const rule = JSON.parse(ruleDataJson);
+        editingRuleId = id;
+        
+        if (activeRegistryTab === 'web') {
+            document.getElementById('web-rule-id').value = rule.id || '';
+            document.getElementById('web-rule-id').disabled = true;
+            document.getElementById('web-rule-name').value = rule.name || '';
+            document.getElementById('web-rule-desc').value = rule.description || '';
+            document.getElementById('web-rule-severity').value = rule.severity || 'HIGH';
+            document.getElementById('web-rule-mitigation').value = rule.mitigation || '';
+            document.getElementById('web-rule-type').value = rule.type || 'fuzz';
+            toggleWebFields();
+            if (rule.payloads) document.getElementById('web-rule-payloads').value = rule.payloads.join('\n');
+            if (rule.match_type) document.getElementById('web-rule-matchtype').value = rule.match_type;
+            if (rule.match_value) document.getElementById('web-rule-matchvalue').value = rule.match_value;
+            if (rule.regex_pattern) document.getElementById('web-rule-regex').value = rule.regex_pattern;
+            if (rule.header_name) document.getElementById('web-rule-headername').value = rule.header_name;
+            if (rule.header_check) document.getElementById('web-rule-headercheck').value = rule.header_check;
+            if (rule.header_value) document.getElementById('web-rule-headervalue').value = rule.header_value;
+            document.querySelector('#form-container-web .btn').innerHTML = '<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fff;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Update Web Rule';
+        } else if (activeRegistryTab === 'binzap') {
+            document.getElementById('binzap-rule-id').value = rule.id || rule.idStr || '';
+            document.getElementById('binzap-rule-id').disabled = true;
+            document.getElementById('binzap-rule-name').value = rule.name || rule.nameStr || '';
+            document.getElementById('binzap-rule-severity').value = rule.severity || rule.severityVal || 'MEDIUM';
+            document.getElementById('binzap-rule-steps').value = JSON.stringify(rule.pattern_steps || [], null, 2);
+            document.querySelector('#form-container-binzap .btn').innerHTML = '<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fff;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Update Binzap Rule';
+        } else if (activeRegistryTab === 'ml') {
+            document.getElementById('ml-rule-id').value = rule.id || '';
+            document.getElementById('ml-rule-id').disabled = true;
+            document.getElementById('ml-rule-desc').value = rule.description || '';
+            document.getElementById('ml-rule-category').value = rule.category || 'premium_check';
+            if (rule.method_names) document.getElementById('ml-rule-methods').value = rule.method_names.join(', ');
+            if (rule.class_patterns) document.getElementById('ml-rule-classes').value = rule.class_patterns.join(', ');
+            if (rule.required_calls) document.getElementById('ml-rule-calls').value = rule.required_calls.join(', ');
+            if (rule.string_patterns) document.getElementById('ml-rule-strings').value = rule.string_patterns.join(', ');
+            document.getElementById('ml-rule-returntype').value = rule.return_type || 'Z';
+            document.getElementById('ml-rule-patchtype').value = rule.patch_type || 'return_true';
+            document.getElementById('ml-rule-weight').value = rule.weight || 1.0;
+            document.getElementById('ml-rule-minscore').value = rule.min_match_score || 10;
+            document.querySelector('#form-container-ml .btn').innerHTML = '<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fff;"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg> Update ML Pattern';
+        }
+        
+        document.getElementById('editor-card-container').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // Toast Notification System
+    function showToast(message, type) {
+        type = type || 'info';
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast ' + type;
+        const icons = {
+            success: '<svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>',
+            error: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>',
+            warning: '<svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>',
+            info: '<svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>'
+        };
+        toast.innerHTML = (icons[type] || icons.info) + '<span>' + message + '</span>';
+        container.appendChild(toast);
+        setTimeout(function() {
+            toast.style.animation = 'fadeOutToast 0.3s ease forwards';
+            setTimeout(function() { toast.remove(); }, 300);
+        }, 4000);
+    }
+
+    // Shared fetch helper: surfaces real backend errors (RFC7807 problem+json from
+    // writeProblem uses "title"/"detail", not "error") instead of treating any
+    // parseable JSON body as a success just because res.json() didn't throw.
+    async function fetchJSON(url, opts) {
+        const res = await fetch(url, opts);
+        let data = null;
+        try { data = await res.json(); } catch (parseErr) { data = null; }
+        if (!res.ok) {
+            const msg = (data && (data.detail || data.title)) || res.statusText || ('HTTP ' + res.status);
+            throw new Error(msg);
+        }
+        if (data && (data.error || data.title)) {
+            const msg = data.detail || data.error || data.title;
+            throw new Error(msg);
+        }
+        return data;
+    }
+
+    // Simple elapsed-time indicator for long-running synchronous scans (port scan,
+    // directory brute-force) so the UI shows it is still alive instead of a static
+    // unchanging "Scanning..." string. Returns a stop() function.
+    function startElapsedTimer(el, label) {
+        label = label || 'Scanning';
+        var start = Date.now();
+        var tick = function() {
+            var secs = Math.floor((Date.now() - start) / 1000);
+            el.textContent = '[ ' + label + '... ' + secs + 's elapsed ]';
+        };
+        tick();
+        var timer = setInterval(tick, 1000);
+        return function stop() { clearInterval(timer); };
+    }
+
+    // Modal Confirm Dialog
+    function showConfirmModal(message, onConfirm) {
+        const overlay = document.createElement('div');
+        overlay.className = 'modal-overlay';
+        overlay.innerHTML = '<div class="modal-box">' +
+            '<div class="modal-title"><svg viewBox="0 0 24 24"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>Confirm Action</div>' +
+            '<div class="modal-message">' + message + '</div>' +
+            '<div class="modal-actions">' +
+            '<button class="btn btn-outline" id="modal-cancel">Cancel</button>' +
+            '<button class="btn btn-danger" id="modal-confirm">Confirm</button>' +
+            '</div></div>';
+        document.body.appendChild(overlay);
+        overlay.querySelector('#modal-cancel').onclick = function() { overlay.remove(); };
+        overlay.querySelector('#modal-confirm').onclick = function() { overlay.remove(); onConfirm(); };
+        overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+    }
+
+    // CRUD - Save Rules
+    function saveWebRule() {
+        let id = document.getElementById('web-rule-id').value;
+        let name = document.getElementById('web-rule-name').value;
+        let desc = document.getElementById('web-rule-desc').value;
+        let severity = document.getElementById('web-rule-severity').value;
+        let mitigation = document.getElementById('web-rule-mitigation').value;
+        let type = document.getElementById('web-rule-type').value;
+
+        if(!id || !name) { showToast('Rule ID and Name are required!', 'error'); return; }
+
+        let payload = {
+            id: id,
+            name: name,
+            description: desc,
+            severity: severity,
+            mitigation: mitigation,
+            type: type
+        };
+
+        if (type === 'fuzz') {
+            payload.payloads = document.getElementById('web-rule-payloads').value.split('\n').filter(l => l.trim() !== '');
+            payload.match_type = document.getElementById('web-rule-matchtype').value;
+            payload.match_value = document.getElementById('web-rule-matchvalue').value;
+        } else if (type === 'regex_passive') {
+            payload.regex_pattern = document.getElementById('web-rule-regex').value;
+        } else if (type === 'header_check') {
+            payload.header_name = document.getElementById('web-rule-headername').value;
+            payload.header_check = document.getElementById('web-rule-headercheck').value;
+            payload.header_value = document.getElementById('web-rule-headervalue').value;
+        }
+
+        let url = '/api/v1/rules/web';
+        let method = 'POST';
+        if (editingRuleId) {
+            url = '/api/v1/rules/web/' + editingRuleId;
+            method = 'PUT';
+        }
+
+        fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        }).then(res => {
+            if (res.ok) {
+                showToast(editingRuleId ? 'Web Rule updated successfully!' : 'Web Rule saved successfully!', 'success');
+                resetEditor();
+                refreshDashboardData();
+            } else {
+                res.json().then(e => showToast('Error: ' + (e.detail || e.error), 'error'));
+            }
+        });
+    }
+
+    function saveBinzapRule() {
+        let id = document.getElementById('binzap-rule-id').value;
+        let name = document.getElementById('binzap-rule-name').value;
+        let severity = document.getElementById('binzap-rule-severity').value;
+        let stepsStr = document.getElementById('binzap-rule-steps').value;
+
+        if(!id || !name) { showToast('Rule ID and Name are required!', 'error'); return; }
+
+        let steps = [];
+        try {
+            steps = JSON.parse(stepsStr);
+        } catch(e) {
+            showToast('Steps must be a valid JSON Array!', 'error');
+            return;
+        }
+
+        let payload = {
+            id: id,
+            name: name,
+            severity: severity,
+            pattern_steps: steps
+        };
+
+        let url = '/api/v1/rules/binzap';
+        let method = 'POST';
+        if (editingRuleId) {
+            url = '/api/v1/rules/binzap/' + editingRuleId;
+            method = 'PUT';
+        }
+
+        fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        }).then(res => {
+            if (res.ok) {
+                showToast(editingRuleId ? 'Binzap Rule updated successfully!' : 'Binzap Rule saved successfully!', 'success');
+                resetEditor();
+                refreshDashboardData();
+            } else {
+                res.json().then(e => showToast('Error: ' + (e.detail || e.error), 'error'));
+            }
+        });
+    }
+
+    function saveMLRule() {
+        let id = document.getElementById('ml-rule-id').value;
+        let desc = document.getElementById('ml-rule-desc').value;
+        let cat = document.getElementById('ml-rule-category').value;
+        let methods = document.getElementById('ml-rule-methods').value.split(',').map(s => s.trim()).filter(s => s !== '');
+        let classes = document.getElementById('ml-rule-classes').value.split(',').map(s => s.trim()).filter(s => s !== '');
+        let calls = document.getElementById('ml-rule-calls').value.split(',').map(s => s.trim()).filter(s => s !== '');
+        let strings = document.getElementById('ml-rule-strings').value.split(',').map(s => s.trim()).filter(s => s !== '');
+        let returnType = document.getElementById('ml-rule-returntype').value;
+        let patchType = document.getElementById('ml-rule-patchtype').value;
+        let weight = parseFloat(document.getElementById('ml-rule-weight').value) || 1.0;
+        let minScore = parseFloat(document.getElementById('ml-rule-minscore').value) || 10;
+
+        if(!id) { showToast('Pattern ID is required!', 'error'); return; }
+
+        let payload = {
+            id: id,
+            category: cat,
+            description: desc,
+            method_names: methods,
+            class_patterns: classes,
+            required_calls: calls,
+            string_patterns: strings,
+            return_type: returnType,
+            patch_type: patchType,
+            weight: weight,
+            min_match_score: minScore
+        };
+
+        let url = '/api/v1/rules/ml';
+        let method = 'POST';
+        if (editingRuleId) {
+            url = '/api/v1/rules/ml/' + editingRuleId;
+            method = 'PUT';
+        }
+
+        fetch(url, {
+            method: method,
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload)
+        }).then(res => {
+            if (res.ok) {
+                showToast(editingRuleId ? 'ML Pattern updated successfully!' : 'ML Pattern saved successfully!', 'success');
+                resetEditor();
+                refreshDashboardData();
+            } else {
+                res.json().then(e => showToast('Error: ' + (e.detail || e.error), 'error'));
+            }
+        });
+    }
+
+    function deleteRule(id) {
+        showConfirmModal('Are you sure you want to delete rule "' + id + '"? This action cannot be undone.', function() {
+            fetch('/api/v1/rules/' + activeRegistryTab + '/' + id, {
+                method: 'DELETE'
+            }).then(res => {
+                if(res.ok) {
+                    showToast('Rule deleted successfully.', 'success');
+                    refreshDashboardData();
+                } else {
+                    res.json().then(e => showToast('Delete failed: ' + (e.detail || e.error), 'error'));
+                }
+            });
+        });
+    }
+
+    function exportRules() {
+        fetch('/api/v1/rules/export')
+        .then(res => {
+            if (!res.ok) throw new Error('HTTP error ' + res.status);
+            return res.blob();
+        })
+        .then(blob => {
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url;
+            a.download = 'mega-analyzer-rules-' + new Date().toISOString().split('T')[0] + '.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('Rules exported successfully.', 'success');
+        })
+        .catch(err => { showToast('Export failed: ' + err.message, 'error'); });
+    }
+
+    function importRules(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                var json = JSON.parse(e.target.result);
+                fetch('/api/v1/rules/import', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(json)
+                })
+                .then(res => {
+                    if (!res.ok) throw new Error('HTTP error ' + res.status);
+                    return res.json();
+                })
+                .then(data => {
+                    var total = (data.imported.web_rules || 0) + (data.imported.binzap_rules || 0) + (data.imported.ml_patterns || 0);
+                    showToast('Imported ' + total + ' rules successfully.', 'success');
+                    refreshDashboardData();
+                })
+                .catch(err => { showToast('Import failed: ' + err.message, 'error'); });
+            } catch(ex) {
+                showToast('Invalid JSON file.', 'error');
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = '';
+    }
+
+    // Interactive Web Scan execution
+    function runWebScan() {
+        let url = document.getElementById('scan-target-url').value;
+        if(!url) { showToast('Please enter a target URL!', 'warning'); return; }
+
+        let runBtn = document.getElementById('btn-run-webscan');
+        let placeholder = document.getElementById('web-findings-placeholder');
+        let table = document.getElementById('web-findings-table');
+        let body = document.getElementById('web-findings-body');
+
+        runBtn.disabled = true;
+        runBtn.innerText = 'Scanning Target URL...';
+        placeholder.innerHTML = '<svg viewBox="0 0 24 24" style="animation: spin 2s linear infinite;"><path d="M12 6v3l4-4-4-4v3c-4.42 0-8 3.58-8 8 0 1.57.46 3.03 1.24 4.26L6.7 14.8c-.45-.83-.7-1.79-.7-2.8 0-3.31 2.69-6 6-6zm6.76 1.74L17.3 9.2c.44.84.7 1.79.7 2.8 0 3.31-2.69 6-6 6v-3l-4 4 4 4v-3c4.42 0 8-3.58 8-8 0-1.57-.46-3.03-1.24-4.26z"/></svg>' +
+            'Active scan in progress. Testing targets with dynamic fuzz modules.';
+        placeholder.style.display = 'block';
+        table.style.display = 'none';
+
+        fetchJSON('/api/v1/scan/web', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({target: url})
+        })
+        .then(data => {
+            runBtn.disabled = false;
+            runBtn.innerHTML = '<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fff;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> Initiate Security Scan';
+            
+            body.innerHTML = '';
+            if(data.findings && data.findings.length > 0) {
+                placeholder.style.display = 'none';
+                table.style.display = 'table';
+                
+                data.findings.forEach(v => {
+                    let tr = document.createElement('tr');
+                    let sev = (v.severity || 'low').toLowerCase();
+                    tr.innerHTML = '<td><span class="badge-severity ' + sev + '">' + sev + '</span></td>' +
+                        '<td><code style="color: var(--color-info);">' + v.id + '</code></td>' +
+                        '<td><strong>' + v.name + '</strong></td>' +
+                        '<td><code>' + (v.parameter || 'N/A') + '</code></td>' +
+                        '<td><code style="color: var(--color-warning);">' + (v.payload || 'N/A') + '</code></td>';
+                    body.appendChild(tr);
+                });
+                showToast('Scan complete! Found ' + data.findings.length + ' vulnerabilities.', 'warning');
+            } else {
+                placeholder.innerHTML = '<svg viewBox="0 0 24 24" style="fill: var(--color-success);"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>' +
+                    'Scan Complete! Zero vulnerabilities detected. Clean target.';
+                showToast('Scan complete! Clean target.', 'success');
+            }
+        })
+        .catch(err => {
+            runBtn.disabled = false;
+            runBtn.innerHTML = '<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fff;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> Initiate Security Scan';
+            placeholder.innerText = 'Error running active scanner: ' + err.message;
+            showToast('Scan failed: ' + err.message, 'error');
+        });
+    }
+
+    // Interactive Tokenizer Sandbox
+    function runTokenizer() {
+        let code = document.getElementById('smali-input-code').value;
+        if(!code) { showToast('Please paste smali instructions!', 'warning'); return; }
+
+        let runBtn = document.getElementById('btn-run-tokenizer');
+        let placeholder = document.getElementById('token-findings-placeholder');
+        let tokenPane = document.getElementById('token-output-pane');
+        let findingsPane = document.getElementById('findings-output-pane');
+        let tokenContainer = document.getElementById('token-view-elements');
+        let findingsBody = document.getElementById('token-findings-body');
+
+        runBtn.disabled = true;
+        runBtn.innerText = 'Lexing Bytecode...';
+
+        fetchJSON('/api/v1/scan/tokens', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({text: code})
+        })
+        .then(data => {
+            runBtn.disabled = false;
+            runBtn.innerText = 'Lex & Analyse Tokens';
+
+            placeholder.style.display = 'none';
+            tokenPane.style.display = 'block';
+            
+            // Render Tokens
+            tokenContainer.innerHTML = '';
+            data.tokens.forEach(tok => {
+                let span = document.createElement('span');
+                span.className = 'token-span';
+                span.innerText = tok.value;
+                span.title = 'Type: ' + tok.type + ' | Line: ' + tok.line;
+                span.id = 'tok-line-' + tok.line;
+                tokenContainer.appendChild(span);
+            });
+
+            // Render Findings
+            findingsBody.innerHTML = '';
+            if(data.findings && data.findings.length > 0) {
+                findingsPane.style.display = 'block';
+                data.findings.forEach(find => {
+                    let tr = document.createElement('tr');
+                    let sev = (find.Severity || 'low').toLowerCase();
+                    tr.innerHTML = '<td><code style="color: var(--color-info);">' + find.RuleID + '</code></td>' +
+                        '<td><span class="badge-severity ' + sev + '">' + sev + '</span></td>' +
+                        '<td><code>' + find.Evidence + '</code></td>';
+                    findingsBody.appendChild(tr);
+
+                    // Highlight line in token view
+                    let targetLineSpan = document.getElementById('tok-line-' + find.Line);
+                    if(targetLineSpan) {
+                        targetLineSpan.classList.add('highlighted');
+                    }
+                });
+                showToast('Smali analyzed! Found ' + data.findings.length + ' structural signals.', 'info');
+            } else {
+                findingsPane.style.display = 'none';
+                showToast('Smali analyzed! No issues detected.', 'success');
+            }
+        })
+        .catch(err => {
+            runBtn.disabled = false;
+            runBtn.innerText = 'Lex & Analyse Tokens';
+            placeholder.innerText = 'Compilation error: ' + err.message;
+            tokenPane.style.display = 'none';
+            findingsPane.style.display = 'none';
+            showToast('Lexer failed: ' + err.message, 'error');
+        });
+    }
+
+    // Dry-Run Testing Executor
+    function runDryRunTest() {
+        let type = document.getElementById('dryrun-rule-type').value;
+        let jsonStr = document.getElementById('dryrun-rule-json').value;
+        let target = document.getElementById('dryrun-sample-target').value;
+
+        if(!jsonStr || !target) { showToast('Please input both Rule JSON and test target!', 'warning'); return; }
+
+        let runBtn = document.getElementById('btn-run-dryrun');
+        let placeholder = document.getElementById('dryrun-placeholder');
+        let success = document.getElementById('dryrun-results-success');
+        let results = document.getElementById('dryrun-results-data');
+        let pre = document.getElementById('dryrun-log-pre');
+
+        runBtn.disabled = true;
+        runBtn.innerText = 'Validating & Auditing...';
+
+        fetchJSON('/api/v1/rules/test', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                rule_type: type,
+                rule_json: jsonStr,
+                sample: target
+            })
+        })
+        .then(data => {
+            runBtn.disabled = false;
+            runBtn.innerHTML = '<svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: #fff;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg> Dry-Run Verify Rule';
+
+            placeholder.style.display = 'none';
+            if (data.matched) {
+                success.style.display = 'block';
+                success.style.color = 'var(--color-success)';
+                success.innerHTML = '<svg viewBox="0 0 24 24" style="width: 48px; height: 48px; fill: currentColor; margin-bottom: 8px;"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg><div>MATCH CONFIRMED! Target triggered the rule structure.</div>';
+                showToast('Dry-run match confirmed!', 'success');
+            } else {
+                success.style.display = 'block';
+                success.style.color = 'var(--color-warning)';
+                success.innerHTML = '<svg viewBox="0 0 24 24" style="width: 48px; height: 48px; fill: currentColor; margin-bottom: 8px;"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg><div>No Matches. Target evaluated clean against this rule.</div>';
+                showToast('Dry-run complete (no matches).', 'info');
+            }
+
+            results.style.display = 'block';
+            pre.innerText = JSON.stringify(data, null, 2);
+        })
+        .catch(err => {
+            runBtn.disabled = false;
+            runBtn.innerHTML = 'Dry-Run Verify Rule';
+            showToast('Dry-run failed: ' + err.message, 'error');
+        });
+    }
+
+    // Health panel data rendering
+    function updateHealthPanel(data) {
+        if (!data) return;
+        var tel = data.telemetry || {};
+        var storage = data.storage_health || {};
+        
+        var uptime = tel.uptime_seconds || 0;
+        var hours = Math.floor(uptime / 3600);
+        var mins = Math.floor((uptime % 3600) / 60);
+        var secs = uptime % 60;
+        document.getElementById('health-uptime').textContent = 
+            (hours > 0 ? hours + 'h ' : '') + mins + 'm ' + secs + 's';
+        document.getElementById('health-goroutines').textContent = tel.goroutines || '--';
+        
+        var heapMB = Math.round(tel.allocated_heap_mb || 0);
+        var maxMB = 100;
+        var pct = Math.min(100, Math.round((heapMB / maxMB) * 100));
+        document.getElementById('health-heap').textContent = heapMB + ' MB';
+        document.getElementById('health-heap-bar').style.width = pct + '%';
+        
+        document.getElementById('health-gc').textContent = tel.gc_cycles || '0';
+        
+        updateStorageBadge('storage-web', storage.web_rules_writable);
+        updateStorageBadge('storage-binzap', storage.binzap_rules_writable);
+        updateStorageBadge('storage-ml', storage.ml_patterns_writable);
+    }
+    
+    function updateStorageBadge(id, isWritable) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        if (isWritable) {
+            el.className = 'storage-badge ok';
+            el.innerHTML = '<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--color-success)"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Writable / Healthy';
+        } else {
+            el.className = 'storage-badge error';
+            el.innerHTML = '<svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--color-danger)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg> Read-Only / Error';
+        }
+    }
+</script>
+
+<!-- ═══════════════════════════════════════════════════════ PANEL: RECON SUITE -->
+<div id="panel-recon" class="panel-content">
+  <section class="web-sandbox-console">
+    <div class="ws-hero">
+      <div>
+        <div class="ws-kicker">WEB SANDBOX SESSION</div>
+        <h2>Live Site Detonation</h2>
+      </div>
+      <div class="ws-launch">
+        <input id="ws-url" class="form-control" placeholder="https://example.com">
+        <button class="btn btn-primary" onclick="runWebSandbox()" id="ws-run-btn">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#fff"><path d="M8 5v14l11-7z"/></svg>
+          Detonate Site
+        </button>
+      </div>
+    </div>
+
+    <div class="ws-status-strip">
+      <div class="ws-status-cell">
+        <span>Verdict</span>
+        <strong id="ws-verdict">WAITING</strong>
+      </div>
+      <div class="ws-status-cell">
+        <span>Risk</span>
+        <strong id="ws-risk">--</strong>
+      </div>
+      <div class="ws-status-cell">
+        <span>Secrets</span>
+        <strong id="ws-secrets">--</strong>
+      </div>
+      <div class="ws-status-cell">
+        <span>Exposed Files</span>
+        <strong id="ws-files">--</strong>
+      </div>
+      <div class="ws-status-cell">
+        <span>JS Bundles</span>
+        <strong id="ws-js">--</strong>
+      </div>
+      <div class="ws-status-cell">
+        <span>Headers</span>
+        <strong id="ws-headers">--</strong>
+      </div>
+    </div>
+
+    <div class="ws-grid">
+      <div class="ws-viewport">
+        <div class="ws-browser-bar">
+          <span></span><span></span><span></span>
+          <em id="ws-final-url">No target loaded</em>
+        </div>
+        <div class="ws-preview" id="ws-preview">
+          <div class="ws-preview-empty">
+            <div class="ws-reticle"></div>
+            <strong>Ready for web detonation</strong>
+            <p>Run a target to assemble HTML, JS, exposed files, RDAP, Wayback, and security posture in one session.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="ws-side">
+        <div class="ws-panel">
+          <div class="ws-panel-title">Behavior Timeline</div>
+          <div id="ws-timeline" class="ws-timeline">
+            <div class="ws-event muted">No events yet.</div>
+          </div>
+        </div>
+        <div class="ws-panel">
+          <div class="ws-panel-title">IOC / Findings</div>
+          <div id="ws-iocs" class="ws-iocs">
+            <div class="ws-event muted">No indicators yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ws-bottom-grid">
+      <div class="ws-panel">
+        <div class="ws-panel-title">Network & Assets</div>
+        <div id="ws-assets" class="ws-table">Waiting for scan.</div>
+      </div>
+      <div class="ws-panel">
+        <div class="ws-panel-title">Exposed Artifacts</div>
+        <div id="ws-artifacts" class="ws-table">Waiting for scan.</div>
+      </div>
+      <div class="ws-panel">
+        <div class="ws-panel-title">Domain Context</div>
+        <div id="ws-domain" class="ws-table">Waiting for scan.</div>
+      </div>
+    </div>
+  </section>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+    <!-- Port Scanner -->
+    <div class="card">
+      <div class="card-header"><h2 style="display:flex;align-items:center;gap:8px;">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--color-info)"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3a4.237 4.237 0 0 0-6 0zm-4-4 2 2a7.074 7.074 0 0 1 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+        Port Scanner</h2></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="form-group"><label>Target Host</label>
+          <input id="ps-host" class="form-control" placeholder="example.com or 1.2.3.4"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="form-group"><label>Concurrency</label>
+            <input id="ps-conc" class="form-control" type="number" value="200"></div>
+          <div class="form-group"><label>Timeout (ms)</label>
+            <input id="ps-timeout" class="form-control" type="number" value="800"></div>
+        </div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.9rem;color:var(--text-muted);">
+          <input type="checkbox" id="ps-banner"> Grab Service Banners</label>
+        <button class="btn btn-primary" onclick="runPortScan()">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#fff"><path d="M8 5v14l11-7z"/></svg>Scan Ports</button>
+        <div id="ps-results" class="results-box" style="min-height:200px;padding:12px;font-family:var(--font-mono);font-size:0.8rem;white-space:pre-wrap;display:none;"></div>
+      </div>
+    </div>
+    <!-- DNS Enumeration -->
+    <div class="card">
+      <div class="card-header"><h2 style="display:flex;align-items:center;gap:8px;">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--color-primary)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93H7c0 2.76 1.4 5.19 3.52 6.64L11 19.93zM4 12c0-4.07 3.06-7.44 7-7.93V7c-2.21.45-3.91 2.31-3.91 4.5C7.09 13.7 8.79 15.55 11 16v2.93c-3.94-.49-7-3.86-7-6.93z"/></svg>
+        DNS Enumeration</h2></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="form-group"><label>Domain</label>
+          <input id="dns-domain" class="form-control" placeholder="example.com"></div>
+        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.9rem;color:var(--text-muted);">
+          <input type="checkbox" id="dns-brute"> Subdomain Brute Force</label>
+        <button class="btn btn-primary" onclick="runDNSEnum()">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#fff"><path d="M8 5v14l11-7z"/></svg>Enumerate DNS</button>
+        <div id="dns-results" class="results-box" style="min-height:200px;padding:12px;font-family:var(--font-mono);font-size:0.8rem;white-space:pre-wrap;display:none;"></div>
+      </div>
+    </div>
+    <!-- SSL/TLS Audit -->
+    <div class="card">
+      <div class="card-header"><h2 style="display:flex;align-items:center;gap:8px;">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--color-success)"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/></svg>
+        SSL/TLS Audit</h2></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="form-group"><label>Host</label>
+          <input id="ssl-host" class="form-control" placeholder="example.com"></div>
+        <div class="form-group"><label>Port</label>
+          <input id="ssl-port" class="form-control" type="number" value="443"></div>
+        <button class="btn btn-primary" onclick="runSSLAudit()">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#fff"><path d="M8 5v14l11-7z"/></svg>Audit TLS</button>
+        <div id="ssl-results" class="results-box" style="min-height:200px;padding:12px;font-family:var(--font-mono);font-size:0.8rem;white-space:pre-wrap;display:none;"></div>
+      </div>
+    </div>
+    <!-- Host Fingerprint -->
+    <div class="card">
+      <div class="card-header"><h2 style="display:flex;align-items:center;gap:8px;">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--color-warning)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+        Host Fingerprint</h2></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div class="form-group"><label>Target Host</label>
+          <input id="hf-host" class="form-control" placeholder="example.com"></div>
+        <button class="btn btn-primary" onclick="runHostInfo()">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#fff"><path d="M8 5v14l11-7z"/></svg>Fingerprint Host</button>
+        <div id="hf-results" class="results-box" style="min-height:200px;padding:12px;font-family:var(--font-mono);font-size:0.8rem;white-space:pre-wrap;display:none;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ PANEL: WEB TOOLS -->
+<div id="panel-webtools" class="panel-content">
+  <div style="margin-bottom:1rem;">
+    <div class="registry-inner-tabs" id="webtools-inner-tabs">
+      <button class="inner-tab-btn active" onclick="switchWebToolTab('cors')">CORS Check</button>
+      <button class="inner-tab-btn" onclick="switchWebToolTab('jwt')">JWT Analyzer</button>
+      <button class="inner-tab-btn" onclick="switchWebToolTab('redirect')">Open Redirect</button>
+      <button class="inner-tab-btn" onclick="switchWebToolTab('dirscan')">Dir Bruteforce</button>
+      <button class="inner-tab-btn" onclick="switchWebToolTab('techdetect')">Tech Detect</button>
+      <button class="inner-tab-btn" onclick="switchWebToolTab('cookies')">Cookie Audit</button>
+      <button class="inner-tab-btn" onclick="switchWebToolTab('subdomains')">Subdomain Enum</button>
+    </div>
+  </div>
+
+  <!-- CORS -->
+  <div id="pt-cors" class="card">
+    <div class="card-header"><h2>CORS Misconfiguration Checker</h2></div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="form-group"><label>Target URL</label>
+        <input id="cors-url" class="form-control" placeholder="https://api.example.com/endpoint"></div>
+      <p style="font-size:0.85rem;color:var(--text-muted);">Tests 6 origin bypass techniques: arbitrary, null, subdomain, pre-domain, post-domain, HTTP downgrade.</p>
+      <button class="btn btn-primary" onclick="runCORSCheck()">Run CORS Audit</button>
+      <div id="cors-results" class="results-box" style="display:none;padding:12px;font-family:var(--font-mono);font-size:0.8rem;white-space:pre-wrap;"></div>
+    </div>
+  </div>
+
+  <!-- JWT -->
+  <div id="pt-jwt" class="card" style="display:none;">
+    <div class="card-header"><h2>JWT Analyzer &amp; Secret Cracker</h2></div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="form-group"><label>JWT Token</label>
+        <textarea id="jwt-token" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." style="height:80px;"></textarea></div>
+      <div class="form-group"><label>Extra Weak Keys to Try (one per line)</label>
+        <textarea id="jwt-keys" placeholder="mycompanysecret&#10;prod_jwt_key" style="height:60px;"></textarea></div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:0.9rem;color:var(--text-muted);">
+        <input type="checkbox" id="jwt-algnone" checked> Generate alg:none bypass token</label>
+      <button class="btn btn-primary" onclick="runJWTAnalyze()">Decode &amp; Crack JWT</button>
+      <div id="jwt-results" class="results-box" style="display:none;padding:12px;font-family:var(--font-mono);font-size:0.8rem;white-space:pre-wrap;"></div>
+    </div>
+  </div>
+
+  <!-- Open Redirect -->
+  <div id="pt-redirect" class="card" style="display:none;">
+    <div class="card-header"><h2>Open Redirect Checker</h2></div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="form-group"><label>Target URL</label>
+        <input id="redir-url" class="form-control" placeholder="https://example.com/login"></div>
+      <p style="font-size:0.85rem;color:var(--text-muted);">Tests 20 redirect parameter names × 8 bypass payloads including null-byte, Unicode, backslash techniques.</p>
+      <button class="btn btn-primary" onclick="runOpenRedirect()">Test Open Redirect</button>
+      <div id="redir-results" class="results-box" style="display:none;padding:12px;font-family:var(--font-mono);font-size:0.8rem;white-space:pre-wrap;"></div>
+    </div>
+  </div>
+
+  <!-- DirScan -->
+  <div id="pt-dirscan" class="card" style="display:none;">
+    <div class="card-header"><h2>Directory &amp; File Bruteforce</h2></div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="form-group"><label>Base URL</label>
+        <input id="dir-url" class="form-control" placeholder="https://example.com"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div class="form-group"><label>Concurrency</label>
+          <input id="dir-conc" class="form-control" type="number" value="20"></div>
+        <div class="form-group"><label>Extra Extensions (comma)</label>
+          <input id="dir-exts" class="form-control" placeholder=".php,.bak,.old"></div>
+      </div>
+      <button class="btn btn-primary" onclick="runDirScan()">
+        <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#fff"><path d="M8 5v14l11-7z"/></svg>Start Directory Scan</button>
+      <div id="dir-results" class="results-box" style="display:none;padding:12px;font-family:var(--font-mono);font-size:0.8rem;white-space:pre-wrap;min-height:200px;"></div>
+    </div>
+  </div>
+
+  <!-- Tech Detect -->
+  <div id="pt-techdetect" class="card" style="display:none;">
+    <div class="card-header"><h2>Technology Stack Fingerprinting</h2></div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="form-group"><label>Target URL</label>
+        <input id="tech-url" class="form-control" placeholder="https://example.com"></div>
+      <p style="font-size:0.85rem;color:var(--text-muted);">Detects: web servers, frameworks, CMS, JS libraries, CDNs, analytics, payment processors and more (30+ signatures).</p>
+      <button class="btn btn-primary" onclick="runTechDetect()">Fingerprint Stack</button>
+      <div id="tech-results" class="results-box" style="display:none;"></div>
+    </div>
+  </div>
+
+  <!-- Cookies -->
+  <div id="pt-cookies" class="card" style="display:none;">
+    <div class="card-header"><h2>Cookie Security Analyzer</h2></div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="form-group"><label>Target URL</label>
+        <input id="cookie-url" class="form-control" placeholder="https://example.com/login"></div>
+      <p style="font-size:0.85rem;color:var(--text-muted);">Checks Secure, HttpOnly, SameSite flags and session cookie hardening per OWASP standards.</p>
+      <button class="btn btn-primary" onclick="runCookieAudit()">Audit Cookies</button>
+      <div id="cookie-results" class="results-box" style="display:none;padding:12px;font-family:var(--font-mono);font-size:0.8rem;white-space:pre-wrap;"></div>
+    </div>
+  </div>
+
+  <!-- Subdomains -->
+  <div id="pt-subdomains" class="card" style="display:none;">
+    <div class="card-header"><h2>Subdomain Enumerator</h2></div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div class="form-group"><label>Domain</label>
+        <input id="sub-domain" class="form-control" placeholder="example.com"></div>
+      <div class="form-group"><label>Concurrency</label>
+        <input id="sub-conc" class="form-control" type="number" value="100"></div>
+      <p style="font-size:0.85rem;color:var(--text-muted);">Bruteforces 80+ common subdomains via DNS resolution.</p>
+      <button class="btn btn-primary" onclick="runSubdomainEnum()">Enumerate Subdomains</button>
+      <div id="sub-results" class="results-box" style="display:none;padding:12px;font-family:var(--font-mono);font-size:0.8rem;white-space:pre-wrap;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════ PANEL: MITM CONSOLE -->
+<div id="panel-mitm" class="panel-content">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+    <!-- Control -->
+    <div class="card">
+      <div class="card-header"><h2 style="display:flex;align-items:center;gap:8px;">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--color-danger)"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
+        MITM Proxy Control</h2></div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div id="mitm-status-badge" style="padding:10px 14px;border-radius:8px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);color:var(--color-danger);font-weight:600;font-size:0.9rem;">
+          ● Proxy Stopped</div>
+        <div class="form-group"><label>Listen Port</label>
+          <input id="mitm-port" class="form-control" type="number" value="8888"></div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="mitmStart()" id="btn-mitm-start" style="flex:1;">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:#fff"><path d="M8 5v14l11-7z"/></svg>Start Proxy</button>
+          <button class="btn btn-outline" onclick="mitmStop()" id="btn-mitm-stop" style="flex:1;">
+            <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:currentColor"><path d="M6 6h12v12H6z"/></svg>Stop</button>
+        </div>
+        <div id="mitm-stats" style="font-family:var(--font-mono);font-size:0.8rem;color:var(--text-muted);display:none;"></div>
+        <div id="mitm-ca-info" style="display:none;">
+          <div style="font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;">Install CA cert to intercept HTTPS:</div>
+          <a href="/api/v1/mitm/ca.pem" target="_blank" class="btn btn-outline" style="padding:6px 12px;font-size:0.8rem;display:inline-flex;align-items:center;gap:6px;">
+            <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            Download CA Cert (.pem)</a>
+        </div>
+      </div>
+    </div>
+    <!-- Header Injection -->
+    <div class="card">
+      <div class="card-header"><h2 style="display:flex;align-items:center;gap:8px;">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--color-warning)"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+        Inject Headers</h2></div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <p style="font-size:0.85rem;color:var(--text-muted);">Add or override headers in all intercepted requests.</p>
+        <div id="inject-rows" style="display:flex;flex-direction:column;gap:6px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center;">
+            <input class="form-control inject-k" placeholder="Header-Name" style="font-size:0.85rem;">
+            <input class="form-control inject-v" placeholder="value" style="font-size:0.85rem;">
+            <button onclick="addInjectRow()" style="background:var(--color-primary);border:none;color:#fff;padding:6px 10px;border-radius:6px;cursor:pointer;">+</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-primary" onclick="applyInjectHeaders()" style="flex:1;">Apply Headers</button>
+          <button class="btn btn-outline" onclick="clearInjectHeaders()" style="flex:1;">Clear All</button>
+        </div>
+        <div id="inject-status" style="font-family:var(--font-mono);font-size:0.8rem;color:var(--text-muted);"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Packet Viewer -->
+  <div class="card">
+    <div class="card-header">
+      <h2 style="display:flex;align-items:center;gap:8px;">
+        <svg viewBox="0 0 24 24" style="width:20px;height:20px;fill:var(--color-info)"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 14H4v-4h11v4zm0-5H4V9h11v4zm5 5h-4V9h4v9z"/></svg>
+        Intercepted Sessions</h2>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" onclick="mitmRefresh()" style="padding:6px 12px;font-size:0.8rem;">
+          <svg viewBox="0 0 24 24" style="width:14px;height:14px;fill:currentColor"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+          Refresh</button>
+        <button class="btn btn-outline" onclick="mitmClear()" style="padding:6px 12px;font-size:0.8rem;color:var(--color-danger);border-color:rgba(239,68,68,0.3);">Clear</button>
+      </div>
+    </div>
+    <div id="mitm-packets" style="font-family:var(--font-mono);font-size:0.8rem;color:var(--text-muted);min-height:300px;">
+      <div style="text-align:center;padding:40px;opacity:0.5;">No sessions captured yet. Start the proxy and configure your browser.</div>
+    </div>
+  </div>
+</div>
+
+<style>
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    .webtool-tab { display: none; }
+    .webtool-tab.active { display: block; }
+    .mitm-session { border: 1px solid var(--border-thick); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; background: var(--bg-card); cursor: pointer; transition: var(--transition-smooth); }
+    .mitm-session:hover { border-color: rgba(139,92,246,0.3); }
+    .mitm-session-header { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .mitm-method { font-weight:700; padding:2px 6px; border-radius:4px; font-size:0.75rem; }
+    .mitm-method.GET { background:rgba(16,185,129,0.15);color:var(--color-success); }
+    .mitm-method.POST { background:rgba(139,92,246,0.15);color:var(--color-primary); }
+    .mitm-method.PUT { background:rgba(245,158,11,0.15);color:var(--color-warning); }
+    .mitm-method.DELETE { background:rgba(239,68,68,0.15);color:var(--color-danger); }
+    .mitm-method.PATCH { background:rgba(6,182,212,0.15);color:var(--color-info); }
+    .mitm-status { font-size:0.8rem; padding:2px 6px; border-radius:4px; }
+    .mitm-status.ok { background:rgba(16,185,129,0.1);color:var(--color-success); }
+    .mitm-status.err { background:rgba(239,68,68,0.1);color:var(--color-danger); }
+    .mitm-session-body { display:none; margin-top:10px; border-top:1px solid var(--border-thick); padding-top:10px; }
+    .alert-tag { display:inline-block; padding:2px 8px; border-radius:4px; font-size:0.75rem; background:rgba(239,68,68,0.1); color:var(--color-danger); border:1px solid rgba(239,68,68,0.2); margin:2px; }
+    .web-sandbox-console { border:1px solid rgba(6,182,212,0.18); background:linear-gradient(180deg, rgba(9,14,22,0.96), rgba(12,14,20,0.88)); border-radius:12px; padding:18px; margin-bottom:24px; box-shadow:0 18px 48px rgba(0,0,0,0.34); }
+    .ws-hero { display:flex; align-items:end; justify-content:space-between; gap:16px; margin-bottom:14px; }
+    .ws-kicker { color:var(--color-info); font-family:var(--font-mono); font-size:0.72rem; letter-spacing:0.16em; margin-bottom:4px; }
+    .ws-hero h2 { font-size:1.55rem; letter-spacing:0; }
+    .ws-launch { display:grid; grid-template-columns:minmax(260px, 420px) auto; gap:10px; align-items:center; }
+    .ws-status-strip { display:grid; grid-template-columns:repeat(6, 1fr); border:1px solid rgba(255,255,255,0.06); border-radius:10px; overflow:hidden; margin-bottom:14px; background:rgba(255,255,255,0.025); }
+    .ws-status-cell { padding:12px 14px; border-right:1px solid rgba(255,255,255,0.06); min-width:0; }
+    .ws-status-cell:last-child { border-right:none; }
+    .ws-status-cell span { display:block; color:var(--text-dark); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:4px; }
+    .ws-status-cell strong { font-family:var(--font-mono); color:#fff; font-size:0.95rem; }
+    .ws-grid { display:grid; grid-template-columns:minmax(0, 1.45fr) minmax(320px, 0.75fr); gap:14px; }
+    .ws-viewport, .ws-panel { border:1px solid rgba(255,255,255,0.07); background:rgba(2,6,12,0.48); border-radius:10px; overflow:hidden; }
+    .ws-browser-bar { height:38px; display:flex; align-items:center; gap:7px; padding:0 12px; border-bottom:1px solid rgba(255,255,255,0.07); background:rgba(255,255,255,0.035); }
+    .ws-browser-bar span { width:9px; height:9px; border-radius:50%; background:#ef4444; }
+    .ws-browser-bar span:nth-child(2) { background:#f59e0b; }
+    .ws-browser-bar span:nth-child(3) { background:#10b981; margin-right:8px; }
+    .ws-browser-bar em { color:var(--text-muted); font-family:var(--font-mono); font-size:0.78rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .ws-preview { min-height:370px; position:relative; background:radial-gradient(circle at 35% 25%, rgba(6,182,212,0.12), transparent 30%), linear-gradient(135deg, rgba(16,185,129,0.05), rgba(139,92,246,0.05)); }
+    .ws-preview-empty { position:absolute; inset:0; display:flex; flex-direction:column; justify-content:center; align-items:center; text-align:center; gap:8px; padding:24px; color:var(--text-muted); }
+    .ws-preview-empty strong { color:#fff; font-size:1rem; }
+    .ws-preview-empty p { max-width:420px; line-height:1.45; }
+    .ws-reticle { width:72px; height:72px; border:1px solid rgba(6,182,212,0.45); border-radius:50%; position:relative; box-shadow:0 0 30px rgba(6,182,212,0.12) inset; }
+    .ws-reticle:before, .ws-reticle:after { content:""; position:absolute; background:rgba(6,182,212,0.55); }
+    .ws-reticle:before { left:50%; top:10px; bottom:10px; width:1px; }
+    .ws-reticle:after { top:50%; left:10px; right:10px; height:1px; }
+    .ws-preview-live { padding:22px; height:100%; display:grid; align-content:start; gap:12px; }
+    .ws-preview-card { border:1px solid rgba(255,255,255,0.08); border-radius:8px; padding:14px; background:rgba(0,0,0,0.22); }
+    .ws-side { display:grid; gap:14px; }
+    .ws-panel { padding:14px; }
+    .ws-panel-title { color:#fff; font-weight:700; font-size:0.88rem; letter-spacing:0.02em; margin-bottom:10px; display:flex; justify-content:space-between; }
+    .ws-timeline, .ws-iocs { display:grid; gap:8px; max-height:170px; overflow:auto; }
+    .ws-event { display:flex; gap:8px; align-items:flex-start; color:var(--text-muted); font-size:0.82rem; border-left:2px solid rgba(6,182,212,0.45); padding-left:9px; }
+    .ws-event strong { color:#fff; }
+    .ws-event.muted { border-left-color:rgba(255,255,255,0.12); }
+    .ws-sev-CRITICAL, .ws-sev-HIGH { color:var(--color-danger); }
+    .ws-sev-MEDIUM { color:var(--color-warning); }
+    .ws-sev-LOW, .ws-sev-INFO { color:var(--color-info); }
+    .ws-bottom-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-top:14px; }
+    .ws-table { font-family:var(--font-mono); font-size:0.78rem; color:var(--text-muted); max-height:230px; overflow:auto; }
+    .ws-row { display:grid; grid-template-columns:78px 1fr auto; gap:8px; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.055); align-items:center; }
+    .ws-row:last-child { border-bottom:none; }
+    .ws-pill { display:inline-flex; align-items:center; justify-content:center; border-radius:999px; padding:2px 7px; border:1px solid rgba(255,255,255,0.1); color:#fff; font-size:0.68rem; }
+    @media (max-width: 1100px) { .ws-grid, .ws-bottom-grid { grid-template-columns:1fr; } .ws-status-strip { grid-template-columns:repeat(2,1fr); } .ws-launch { grid-template-columns:1fr; width:100%; } .ws-hero { align-items:stretch; flex-direction:column; } }
+</style>
+
+<script>
+    // ── RECON SUITE ─────────────────────────────────────────────────────────────
+    function wsSetText(id, value) {
+        var el = document.getElementById(id);
+        if (el) el.textContent = value;
+    }
+
+    function wsRenderHTMLAudit(data) {
+        var findings = data.secrets_found || [];
+        var bundles = data.js_bundles_scanned || [];
+        var critical = findings.filter(function(f) { return f.severity === 'CRITICAL' || f.severity === 'HIGH'; }).length;
+        var risk = critical > 0 ? 'HIGH' : (findings.length > 0 ? 'MEDIUM' : 'LOW');
+
+        wsSetText('ws-verdict', risk === 'HIGH' ? 'SUSPICIOUS' : 'OBSERVED');
+        wsSetText('ws-risk', risk);
+        wsSetText('ws-secrets', String(findings.length));
+        wsSetText('ws-js', String(bundles.length));
+        wsSetText('ws-final-url', data.final_url || data.url || 'loaded');
+
+        var timeline = document.getElementById('ws-timeline');
+        if (timeline) {
+            var rows = [];
+            rows.push('<div class="ws-event"><strong>FETCH</strong><span>HTML status ' + (data.status_code || '?') + ', ' + (data.html_size_bytes || 0) + ' bytes</span></div>');
+            rows.push('<div class="ws-event"><strong>DEOBF</strong><span>' + ((data.html_deobf_passes || []).join(', ') || 'none') + '</span></div>');
+            rows.push('<div class="ws-event"><strong>ASSETS</strong><span>' + bundles.length + ' JavaScript bundles scanned</span></div>');
+            if (data.cloudflare && data.cloudflare.detected) rows.push('<div class="ws-event"><strong>EDGE</strong><span>Cloudflare signals detected</span></div>');
+            if (data.forms_missing_csrf) rows.push('<div class="ws-event"><strong>FORM</strong><span>' + data.forms_missing_csrf + ' POST forms missing CSRF marker</span></div>');
+            timeline.innerHTML = rows.join('');
+        }
+
+        var iocs = document.getElementById('ws-iocs');
+        if (iocs) {
+            if (!findings.length) {
+                iocs.innerHTML = '<div class="ws-event muted">No secrets or endpoint indicators found.</div>';
+            } else {
+                iocs.innerHTML = findings.slice(0, 12).map(function(f) {
+                    return '<div class="ws-event"><strong class="ws-sev-' + f.severity + '">' + f.severity + '</strong><span>' + f.type + ' · ' + (f.source || 'html') + '</span></div>';
+                }).join('');
+            }
+        }
+
+        var assets = document.getElementById('ws-assets');
+        if (assets) {
+            var assetRows = [];
+            bundles.slice(0, 10).forEach(function(b) {
+                var name = (b.url || '').split('/').pop() || 'bundle.js';
+                var pass = (b.deobf_passes || []).join(', ') || 'none';
+                assetRows.push('<div class="ws-row"><span class="ws-pill">JS</span><span title="' + (b.url || '') + '">' + name + '</span><em>' + Math.round((b.size_bytes || 0) / 1024) + ' KB · ' + pass + '</em></div>');
+            });
+            (data.trackers || []).slice(0, 8).forEach(function(t) {
+                assetRows.push('<div class="ws-row"><span class="ws-pill">TRACK</span><span>' + t.name + '</span><em>' + t.category + '</em></div>');
+            });
+            assets.innerHTML = assetRows.length ? assetRows.join('') : 'No external application assets summarized.';
+        }
+    }
+
+    function wsRunFileScan(url) {
+        return fetchJSON('/api/v1/recon/filescan', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({url: url, concurrency: 20})
+        }).then(function(data) {
+            var exposed = data.exposed || [];
+            wsSetText('ws-files', String(exposed.length));
+            var artifacts = document.getElementById('ws-artifacts');
+            if (artifacts) {
+                if (!exposed.length) {
+                    artifacts.innerHTML = 'No exposed sensitive files detected.';
+                } else {
+                    artifacts.innerHTML = exposed.slice(0, 12).map(function(f) {
+                        return '<div class="ws-row"><span class="ws-pill">' + f.severity + '</span><span>' + f.path + '</span><em>HTTP ' + f.status_code + '</em></div>';
+                    }).join('');
+                }
+            }
+            return data;
+        });
+    }
+
+    function wsRunSiteProfile(url) {
+        return fetchJSON('/api/v1/recon/siteprofile', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({url: url})
+        }).then(function(data) {
+            var sh = data.security_headers || {};
+            wsSetText('ws-headers', sh.score || '--');
+            var preview = document.getElementById('ws-preview');
+            if (preview) {
+                var tech = data.stack_summary || (data.technologies || []).slice(0, 8).join(', ') || 'unknown stack';
+                preview.innerHTML = '<div class="ws-preview-live">' +
+                    '<div class="ws-preview-card"><strong>' + (data.final_url || data.url || url) + '</strong><br><span>Status ' + (data.status_code || '?') + ' · Server ' + (data.server || 'unknown') + '</span></div>' +
+                    '<div class="ws-preview-card"><strong>Technology</strong><br><span>' + tech + '</span></div>' +
+                    '<div class="ws-preview-card"><strong>Security headers</strong><br><span>' + (sh.score || 'not measured') + '</span></div>' +
+                    '</div>';
+            }
+            return data;
+        });
+    }
+
+    function wsRunDomainContext(url) {
+        var domain = url.replace(/^https?:\/\//, '').split('/')[0];
+        var rdap = fetchJSON('/api/v1/recon/rdap', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({domain: domain})
+        }).catch(function() { return {}; });
+        var wayback = fetchJSON('/api/v1/recon/wayback', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({url: url})
+        }).catch(function() { return {}; });
+        return Promise.all([rdap, wayback]).then(function(all) {
+            var r = all[0] || {};
+            var w = all[1] || {};
+            var dates = r.dates || {};
+            var domainBox = document.getElementById('ws-domain');
+            if (domainBox) {
+                domainBox.innerHTML =
+                    '<div class="ws-row"><span class="ws-pill">RDAP</span><span>Registrar</span><em>' + (r.registrar || 'unknown') + '</em></div>' +
+                    '<div class="ws-row"><span class="ws-pill">DATE</span><span>Registered</span><em>' + (dates.registered || 'unknown') + '</em></div>' +
+                    '<div class="ws-row"><span class="ws-pill">NS</span><span>Name servers</span><em>' + ((r.nameservers || []).slice(0, 2).join(', ') || 'unknown') + '</em></div>' +
+                    '<div class="ws-row"><span class="ws-pill">ARC</span><span>Wayback snapshots</span><em>' + (w.approx_total_snapshots || 'unknown') + '</em></div>';
+            }
+        });
+    }
+
+    function runWebSandbox() {
+        var url = document.getElementById('ws-url').value.trim();
+        if (!url) { showToast('Enter a URL', 'warning'); return; }
+        var btn = document.getElementById('ws-run-btn');
+        if (btn) btn.disabled = true;
+        wsSetText('ws-verdict', 'RUNNING');
+        wsSetText('ws-risk', '--');
+        wsSetText('ws-secrets', '--');
+        wsSetText('ws-files', '--');
+        wsSetText('ws-js', '--');
+        wsSetText('ws-headers', '--');
+
+        fetchJSON('/api/v1/recon/htmlaudit', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({url: url})
+        }).then(function(data) {
+            wsRenderHTMLAudit(data);
+            wsRunFileScan(url).catch(function() { wsSetText('ws-files', 'ERR'); });
+            wsRunSiteProfile(url).catch(function() { wsSetText('ws-headers', 'ERR'); });
+            wsRunDomainContext(url);
+            showToast('Web sandbox HTML/JS audit complete', 'success');
+        }).catch(function(e) {
+            wsSetText('ws-verdict', 'FAILED');
+            showToast('Web sandbox failed: ' + e.message, 'error');
+        }).finally(function() {
+            if (btn) btn.disabled = false;
+        });
+    }
+
+    function runPortScan() {
+        let host = document.getElementById('ps-host').value.trim();
+        if (!host) { showToast('Enter a target host', 'warning'); return; }
+        let conc = parseInt(document.getElementById('ps-conc').value) || 200;
+        let timeout = parseInt(document.getElementById('ps-timeout').value) || 800;
+        let banner = document.getElementById('ps-banner').checked;
+        let res = document.getElementById('ps-results');
+        res.style.display = 'block';
+        let stopTimer = startElapsedTimer(res, 'Scanning');
+        fetchJSON('/api/v1/recon/portscan', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({host, concurrency: conc, timeout_ms: timeout, grab_banner: banner})
+        }).then(d => {
+            stopTimer();
+            let txt = '[ Port Scan: ' + d.host + ' ]  Scanned: ' + d.scanned + '  Open: ' + d.open_count + '\n\n';
+            (d.open_ports || []).forEach(p => {
+                txt += '[OPEN] ' + String(p.port).padStart(5) + '/tcp  ' + (p.service || '?').padEnd(20);
+                if (p.banner) txt += '  banner: ' + p.banner;
+                txt += '\n';
+            });
+            if (!d.open_count) txt += 'No open ports found.';
+            res.textContent = txt;
+            showToast('Port scan done — ' + d.open_count + ' open ports', d.open_count > 0 ? 'warning' : 'success');
+        }).catch(e => { stopTimer(); res.textContent = 'Error: ' + e.message; showToast('Scan failed: ' + e.message, 'error'); });
+    }
+
+    function runDNSEnum() {
+        let domain = document.getElementById('dns-domain').value.trim();
+        if (!domain) { showToast('Enter a domain', 'warning'); return; }
+        let brute = document.getElementById('dns-brute').checked;
+        let res = document.getElementById('dns-results');
+        res.style.display = 'block';
+        res.textContent = '[ Resolving DNS records... ]';
+        fetchJSON('/api/v1/recon/dns', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({domain, subdomain_brute: brute, concurrency: 50})
+        }).then(d => {
+            let txt = '[ DNS: ' + d.domain + ' ]\n\n';
+            (d.records || []).forEach(r => { txt += r.type.padEnd(8) + r.value + '\n'; });
+            if (brute && d.subdomains && d.subdomains.length > 0) {
+                txt += '\n[ Discovered Subdomains: ' + d.subdomains.length + ' ]\n';
+                d.subdomains.forEach(s => { txt += '  ' + s.subdomain + '  →  ' + (s.ips || []).join(', ') + '\n'; });
+            }
+            res.textContent = txt;
+            showToast('DNS enumeration complete', 'success');
+        }).catch(e => { res.textContent = 'Error: ' + e.message; showToast('DNS enumeration failed: ' + e.message, 'error'); });
+    }
+
+    function runSSLAudit() {
+        let host = document.getElementById('ssl-host').value.trim();
+        let port = parseInt(document.getElementById('ssl-port').value) || 443;
+        if (!host) { showToast('Enter a host', 'warning'); return; }
+        let res = document.getElementById('ssl-results');
+        res.style.display = 'block';
+        res.textContent = '[ Probing TLS versions... ]';
+        fetchJSON('/api/v1/recon/ssl', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({host, port})
+        }).then(d => {
+            let txt = '[ TLS Audit: ' + d.host + ':' + d.port + ' ]  Grade: ' + d.grade + '\n\n';
+            txt += '[ TLS Version Probes ]\n';
+            (d.tls_probes || []).forEach(p => {
+                txt += '  ' + (p.accepted ? '[✓]' : '[✗]') + ' ' + p.version.padEnd(22);
+                if (p.cipher) txt += '  cipher: ' + p.cipher;
+                txt += '\n';
+            });
+            if (d.certificate) {
+                let c = d.certificate;
+                txt += '\n[ Certificate ]\n';
+                txt += '  Subject:  ' + c.subject + '\n';
+                txt += '  Issuer:   ' + c.issuer + '\n';
+                txt += '  Expires:  ' + c.not_after + '  (' + c.days_until_expiry + ' days)\n';
+                txt += '  SelfSign: ' + c.self_signed + '\n';
+                txt += '  Expired:  ' + c.expired + '\n';
+                if (c.san && c.san.length) txt += '  SANs:     ' + c.san.slice(0,5).join(', ') + '\n';
+            }
+            if (d.issues && d.issues.length) {
+                txt += '\n[ Issues (' + d.issues.length + ') ]\n';
+                d.issues.forEach(i => { txt += '  ⚠ ' + i + '\n'; });
+            }
+            res.textContent = txt;
+            showToast('TLS audit complete — grade: ' + d.grade, d.grade === 'A+' ? 'success' : 'warning');
+        }).catch(e => { res.textContent = 'Error: ' + e.message; showToast('TLS audit failed: ' + e.message, 'error'); });
+    }
+
+    function runHostInfo() {
+        let host = document.getElementById('hf-host').value.trim();
+        if (!host) { showToast('Enter a host', 'warning'); return; }
+        let res = document.getElementById('hf-results');
+        res.style.display = 'block';
+        res.textContent = '[ Fingerprinting... ]';
+        fetchJSON('/api/v1/recon/hostinfo', {
+            method: 'POST',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({target: host})
+        }).then(d => {
+            let txt = '[ Host: ' + d.target + '  Scanned: ' + d.scanned_at + ' ]\n\n';
+            if (d.ip_addresses) txt += 'IPs:          ' + d.ip_addresses.join(', ') + '\n';
+            if (d.reverse_dns && d.reverse_dns.length) txt += 'Reverse DNS:  ' + d.reverse_dns.join(', ') + '\n';
+            if (d.quick_open_ports && d.quick_open_ports.length) txt += 'Open Ports:   ' + d.quick_open_ports.join(', ') + '\n';
+            let h = d.http;
+            if (h && h.available) {
+                txt += '\nHTTP:  ' + h.status_code;
+                if (h.server) txt += '  Server: ' + h.server;
+                if (h.powered_by) txt += '  Powered-By: ' + h.powered_by;
+                txt += '\n';
+            }
+            let hs = d.https;
+            if (hs && hs.available) {
+                txt += 'HTTPS: ' + hs.status_code;
+                if (hs.server) txt += '  Server: ' + hs.server;
+                txt += '\n';
+            }
+            res.textContent = txt;
+            showToast('Host fingerprint complete', 'success');
+        }).catch(e => { res.textContent = 'Error: ' + e.message; showToast('Host fingerprint failed: ' + e.message, 'error'); });
+    }
+
+    // ── WEB TOOLS ──────────────────────────────────────────────────────────
+    var activeWebToolTab = 'cors';
+    var webtoolTabs = ['cors','jwt','redirect','dirscan','techdetect','cookies','subdomains'];
+
+    function switchWebToolTab(tab) {
+        activeWebToolTab = tab;
+        webtoolTabs.forEach(t => {
+            var el = document.getElementById('pt-' + t);
+            if (el) el.style.display = (t === tab) ? 'block' : 'none';
+        });
+        var btns = document.querySelectorAll('#webtools-inner-tabs .inner-tab-btn');
+        var names = ['cors','jwt','redirect','dirscan','techdetect','cookies','subdomains'];
+        btns.forEach((b, i) => { b.classList.toggle('active', names[i] === tab); });
+    }
+
+    function runCORSCheck() {
+        let url = document.getElementById('cors-url').value.trim();
+        if (!url) { showToast('Enter a URL', 'warning'); return; }
+        let res = document.getElementById('cors-results');
+        res.style.display = 'block'; res.textContent = '[ Testing CORS policies... ]';
+        fetchJSON('/api/v1/web/cors', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url})})
+        .then(d => {
+            let txt = '[ CORS Audit: ' + d.url + ' ]\n' + d.summary + '\n\n';
+            (d.findings || []).forEach(f => {
+                txt += '[' + (f.vulnerable ? '⚠ VULN' : '  ok  ') + '] ' + f.test + '\n';
+                txt += '        Origin sent: ' + f.origin_sent + '\n';
+                txt += '        ACAO:        ' + (f.access_control_allow_origin || '(not set)') + '\n';
+                txt += '        ACAC:        ' + (f.access_control_allow_credentials || '(not set)') + '\n';
+                if (f.description) txt += '        ' + f.description + '\n';
+                txt += '\n';
+            });
+            res.textContent = txt;
+            showToast(d.vulnerable ? 'CORS vulnerability found!' : 'No CORS issues', d.vulnerable ? 'error' : 'success');
+        }).catch(e => { res.textContent = 'Error: ' + e.message; showToast('CORS check failed: ' + e.message, 'error'); });
+    }
+
+    function runJWTAnalyze() {
+        let token = document.getElementById('jwt-token').value.trim();
+        if (!token) { showToast('Enter a JWT token', 'warning'); return; }
+        let keysRaw = document.getElementById('jwt-keys').value.trim();
+        let extraKeys = keysRaw ? keysRaw.split('\n').map(s=>s.trim()).filter(s=>s) : [];
+        let checkNone = document.getElementById('jwt-algnone').checked;
+        let res = document.getElementById('jwt-results');
+        res.style.display = 'block'; res.textContent = '[ Decoding & cracking JWT... ]';
+        fetchJSON('/api/v1/web/jwt', {method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({token, weak_keys: extraKeys, check_alg_none: checkNone})})
+        .then(d => {
+            let txt = '[ JWT Analysis ]\n\n';
+            txt += 'Algorithm: ' + d.algorithm + '\n\n';
+            txt += '[ Header ]\n' + JSON.stringify(d.header, null, 2) + '\n\n';
+            txt += '[ Payload ]\n' + JSON.stringify(d.payload, null, 2) + '\n\n';
+            if (d.cracked_secret) txt += '🔴 CRACKED SECRET: "' + d.cracked_secret + '"\n\n';
+            if (d.none_bypass_token) txt += '[ alg:none Bypass Token ]\n' + d.none_bypass_token + '\n\n';
+            if (d.issues && d.issues.length) {
+                txt += '[ Issues: ' + d.issues.length + ' ]\n';
+                d.issues.forEach(i => { txt += '  [' + i.severity + '] ' + i.title + ': ' + i.description + '\n'; });
+            } else { txt += '[ No issues detected ]\n'; }
+            res.textContent = txt;
+            let hasCrit = (d.issues||[]).some(i => i.severity === 'CRITICAL');
+            showToast(hasCrit ? 'Critical JWT vulnerability!' : 'JWT decoded', hasCrit ? 'error' : 'info');
+        }).catch(e => { res.textContent = 'Error: ' + e.message; showToast('JWT analysis failed: ' + e.message, 'error'); });
+    }
+
+    function runOpenRedirect() {
+        let url = document.getElementById('redir-url').value.trim();
+        if (!url) { showToast('Enter a URL', 'warning'); return; }
+        let res = document.getElementById('redir-results');
+        res.style.display = 'block'; res.textContent = '[ Testing open redirect... ]';
+        fetchJSON('/api/v1/web/redirect', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url})})
+        .then(d => {
+            let txt = '[ Open Redirect: ' + d.url + ' ]\n';
+            txt += 'Params tested: ' + d.params_tested + '\n';
+            txt += 'Vulnerable: ' + (d.vulnerable ? '⚠ YES' : 'NO') + '\n\n';
+            (d.findings || []).forEach(f => {
+                txt += '[VULN] Param: ' + f.param + '  Payload: ' + f.payload + '\n';
+                txt += '       Location: ' + f.location + '  Status: ' + f.status_code + '\n\n';
+            });
+            if (!d.vulnerable) txt += 'No open redirect found.';
+            res.textContent = txt;
+            showToast(d.vulnerable ? 'Open redirect found!' : 'No redirect found', d.vulnerable ? 'error' : 'success');
+        }).catch(e => { res.textContent = 'Error: ' + e.message; showToast('Open redirect check failed: ' + e.message, 'error'); });
+    }
+
+    function runDirScan() {
+        let url = document.getElementById('dir-url').value.trim();
+        if (!url) { showToast('Enter a base URL', 'warning'); return; }
+        let conc = parseInt(document.getElementById('dir-conc').value) || 20;
+        let extsStr = document.getElementById('dir-exts').value.trim();
+        let exts = extsStr ? extsStr.split(',').map(s=>s.trim()) : [];
+        let res = document.getElementById('dir-results');
+        res.style.display = 'block';
+        let stopDirTimer = startElapsedTimer(res, 'Scanning directories, this may take a moment');
+        fetchJSON('/api/v1/web/dirscan', {method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({url, concurrency: conc, extensions: exts.length ? exts : undefined})})
+        .then(d => {
+            stopDirTimer();
+            let txt = '[ Dir Scan: ' + d.url + ' ]\nPaths tested: ' + d.paths_tested + '  Found: ' + d.found + '\n\n';
+            (d.results || []).sort((a,b) => a.status_code - b.status_code).forEach(r => {
+                let flag = r.notable ? ' ★' : '';
+                txt += '[' + r.status_code + ']' + flag + ' ' + r.path;
+                if (r.redirect) txt += '  → ' + r.redirect;
+                if (r.note) txt += '  ' + r.note;
+                txt += '\n';
+            });
+            if (!d.found) txt += 'Nothing interesting found.';
+            res.textContent = txt;
+            showToast('Dir scan done — ' + d.found + ' paths found', d.found > 0 ? 'warning' : 'success');
+        }).catch(e => { stopDirTimer(); res.textContent = 'Error: ' + e.message; showToast('Dir scan failed: ' + e.message, 'error'); });
+    }
+
+    function runTechDetect() {
+        let url = document.getElementById('tech-url').value.trim();
+        if (!url) { showToast('Enter a URL', 'warning'); return; }
+        let res = document.getElementById('tech-results');
+        res.style.display = 'block'; res.textContent = '[ Fingerprinting stack... ]';
+        fetchJSON('/api/v1/web/techdetect', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url})})
+        .then(d => {
+            let html = '<div style="margin-bottom:12px;font-size:0.95rem;">' +
+                '<b>' + escapeHtml(d.url || url) + '</b>' +
+                ' <span style="color:var(--text-muted);">HTTP ' + d.status + '</span>' +
+                (d.final_url && d.final_url !== d.url ? ' <span style="color:var(--text-muted);">→ ' + escapeHtml(d.final_url) + '</span>' : '') +
+                (d.title ? ' <span style="color:var(--text-muted);">· “' + escapeHtml(d.title) + '”</span>' : '') +
+                ' <span style="color:var(--color-info);">· ' + d.count + ' detected</span></div>';
+            if (d.summary) {
+                html += '<div style="background:var(--bg-card);border:1px solid var(--border-glow);border-radius:8px;' +
+                    'padding:10px 14px;margin-bottom:14px;font-size:0.9rem;">' +
+                    '<span style="color:var(--text-muted);">Built on:</span> <b style="color:var(--color-success);">' +
+                    escapeHtml(d.summary) + '</b></div>';
+            }
+            let bycat = {};
+            (d.detected || []).forEach(t => { (bycat[t.category] = bycat[t.category] || []).push(t); });
+            let cats = Object.keys(bycat).sort();
+            cats.forEach(cat => {
+                html += '<div style="margin-bottom:12px;">' +
+                    '<div style="color:var(--color-primary);font-size:0.75rem;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">' + escapeHtml(cat) + '</div>';
+                bycat[cat].forEach(t => {
+                    let confBadge = t.confidence === 'probable'
+                        ? '<span style="font-size:0.65rem;border:1px solid var(--color-warning);color:var(--color-warning);border-radius:4px;padding:1px 5px;margin-left:8px;">probable</span>'
+                        : '';
+                    html += '<div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 10px;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.04);">' +
+                        '<span style="min-width:170px;color:var(--text-main);">' + escapeHtml(t.name) +
+                        (t.version ? ' <span style="color:var(--color-info);font-size:0.75rem;">v' + escapeHtml(t.version) + '</span>' : '') + confBadge + '</span>' +
+                        '<span style="color:var(--text-dark);font-size:0.72rem;flex:1;min-width:200px;">' + escapeHtml(t.evidence) + '</span></div>';
+                });
+                html += '</div>';
+            });
+            if (!d.count) html += '<div style="color:var(--text-muted);">No technologies detected.</div>';
+            res.innerHTML = html;
+            showToast('Detected ' + d.count + ' technologies', 'info');
+        }).catch(e => { res.textContent = 'Error: ' + e.message; showToast('Tech detection failed: ' + e.message, 'error'); });
+    }
+
+    function runCookieAudit() {
+        let url = document.getElementById('cookie-url').value.trim();
+        if (!url) { showToast('Enter a URL', 'warning'); return; }
+        let res = document.getElementById('cookie-results');
+        res.style.display = 'block'; res.textContent = '[ Analyzing cookies... ]';
+        fetchJSON('/api/v1/web/cookies', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url})})
+        .then(d => {
+            let txt = '[ Cookie Audit: ' + d.url + ' ]  Total: ' + d.count + '\n\n';
+            (d.cookies || []).forEach(c => {
+                txt += 'Cookie: ' + c.name + '\n';
+                txt += '  Secure:   ' + c.secure + '  HttpOnly: ' + c.httponly + '  SameSite: ' + c.samesite + '\n\n';
+            });
+            if (d.issues && d.issues.length) {
+                txt += '[ Issues: ' + d.issues.length + ' ]\n';
+                d.issues.forEach(i => { txt += '  [' + i.severity + '] ' + i.issue + ' — ' + i.description + '\n'; });
+            } else { txt += '[ No cookie issues found ]\n'; }
+            res.textContent = txt;
+            let hasCrit = (d.issues||[]).some(i => i.severity === 'CRITICAL');
+            showToast(hasCrit ? 'Critical cookie config issues!' : (d.issues||[]).length + ' issues found', hasCrit ? 'error' : 'info');
+        }).catch(e => { res.textContent = 'Error: ' + e.message; showToast('Cookie audit failed: ' + e.message, 'error'); });
+    }
+
+    function runSubdomainEnum() {
+        let domain = document.getElementById('sub-domain').value.trim();
+        if (!domain) { showToast('Enter a domain', 'warning'); return; }
+        let conc = parseInt(document.getElementById('sub-conc').value) || 100;
+        let res = document.getElementById('sub-results');
+        res.style.display = 'block'; res.textContent = '[ Brute-forcing subdomains... ]';
+        fetchJSON('/api/v1/web/subdomains', {method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({domain, concurrency: conc})})
+        .then(d => {
+            let txt = '[ Subdomains: ' + d.domain + ' ]  Tested: ' + d.tested + '  Found: ' + d.found + '\n\n';
+            (d.subdomains || []).forEach(s => { txt += '  ' + s.subdomain.padEnd(40) + '  ' + (s.ips || []).join(', ') + '\n'; });
+            if (!d.found) txt += 'No subdomains found.';
+            res.textContent = txt;
+            showToast('Found ' + d.found + ' subdomains', d.found > 0 ? 'warning' : 'success');
+        }).catch(e => { res.textContent = 'Error: ' + e.message; showToast('Subdomain enumeration failed: ' + e.message, 'error'); });
+    }
+
+    // ── MITM CONSOLE ─────────────────────────────────────────────────────────
+    var mitmPolling = null;
+
+    function mitmStart() {
+        let port = parseInt(document.getElementById('mitm-port').value) || 8888;
+        fetchJSON('/api/v1/mitm/start', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({port})})
+        .then(d => {
+            showToast('MITM proxy started on port ' + port, 'success');
+            document.getElementById('mitm-ca-info').style.display = 'block';
+            mitmUpdateStatus();
+            mitmPolling = setInterval(mitmUpdateStatus, 3000);
+        }).catch(e => showToast('Error: ' + e.message, 'error'));
+    }
+
+    function mitmStop() {
+        fetchJSON('/api/v1/mitm/stop', {method:'POST'})
+        .then(d => {
+            showToast('Proxy stopped. ' + d.sessions_saved + ' sessions saved.', 'info');
+            if (mitmPolling) { clearInterval(mitmPolling); mitmPolling = null; }
+            mitmUpdateStatus();
+        }).catch(e => showToast('Error: ' + e.message, 'error'));
+    }
+
+    function mitmUpdateStatus() {
+        fetchJSON('/api/v1/mitm/status').then(d => {
+            let badge = document.getElementById('mitm-status-badge');
+            let stats = document.getElementById('mitm-stats');
+            if (d.running) {
+                badge.style.background = 'rgba(16,185,129,0.08)';
+                badge.style.borderColor = 'rgba(16,185,129,0.2)';
+                badge.style.color = 'var(--color-success)';
+                badge.textContent = '● Proxy Active on ' + d.listen_addr;
+                stats.style.display = 'block';
+                stats.textContent = 'Uptime: ' + d.uptime_seconds + 's  |  Requests: ' + d.total_requests +
+                    '  |  HTTPS intercepted: ' + d.https_intercepted + '  |  Sessions stored: ' + d.sessions_captured;
+                document.getElementById('mitm-ca-info').style.display = 'block';
+            } else {
+                badge.style.background = 'rgba(239,68,68,0.08)';
+                badge.style.borderColor = 'rgba(239,68,68,0.2)';
+                badge.style.color = 'var(--color-danger)';
+                badge.textContent = '● Proxy Stopped';
+                stats.style.display = 'none';
+            }
+        }).catch(()=>{});
+    }
+
+    function mitmRefresh() {
+        fetchJSON('/api/v1/mitm/packets?limit=100').then(d => {
+            let container = document.getElementById('mitm-packets');
+            if (!d.sessions || !d.sessions.length) {
+                container.innerHTML = '<div style="text-align:center;padding:40px;opacity:0.5;">No sessions captured yet.</div>';
+                return;
+            }
+            let html = '<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:8px;">Total: ' + d.total + ' sessions  (showing ' + d.sessions.length + ')</div>';
+            d.sessions.forEach(s => {
+                let methCls = ['GET','POST','PUT','DELETE','PATCH'].includes(s.method) ? s.method : 'GET';
+                let statCls = (s.status_code >= 200 && s.status_code < 400) ? 'ok' : 'err';
+                let alertsHtml = (s.alerts && s.alerts.length) ?
+                    s.alerts.map(a => '<span class="alert-tag">' + escapeHtml(a) + '</span>').join('') : '';
+                let httpsTag = s.is_https ? '<span style="font-size:0.7rem;color:var(--color-success);border:1px solid rgba(16,185,129,0.3);padding:1px 5px;border-radius:3px;">HTTPS</span>' : '';
+                html += '<div class="mitm-session" onclick="toggleSession(this)">';
+                html += '<div class="mitm-session-header">';
+                html += '<span class="mitm-method ' + methCls + '">' + escapeHtml(s.method) + '</span>';
+                html += httpsTag;
+                html += '<span class="mitm-status ' + statCls + '">' + (s.status_code || '?') + '</span>';
+                html += '<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:0.8rem;">' + escapeHtml(s.url) + '</span>';
+                html += '<span style="font-size:0.75rem;color:var(--text-dark);">' + s.duration_ms + 'ms</span>';
+                html += '</div>';
+                if (alertsHtml) html += '<div style="margin-top:6px;">' + alertsHtml + '</div>';
+                html += '<div class="mitm-session-body">';
+                if (s.req_body) html += '<div style="margin-bottom:8px;"><b style="color:var(--color-info);">Request Body:</b><pre style="margin-top:4px;overflow:auto;max-height:150px;font-size:0.75rem;">' + escapeHtml(s.req_body.substring(0,500)) + '</pre></div>';
+                if (s.resp_body) html += '<div><b style="color:var(--color-success);">Response Body:</b><pre style="margin-top:4px;overflow:auto;max-height:150px;font-size:0.75rem;">' + escapeHtml(s.resp_body.substring(0,500)) + '</pre></div>';
+                html += '</div></div>';
+            });
+            container.innerHTML = html;
+        }).catch(e => showToast('Refresh failed: ' + e.message, 'error'));
+    }
+
+    function toggleSession(el) {
+        let body = el.querySelector('.mitm-session-body');
+        if (body) body.style.display = body.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function mitmClear() {
+        fetchJSON('/api/v1/mitm/clear', {method:'POST'}).then(d => {
+            showToast('Cleared ' + d.cleared + ' sessions', 'info');
+            document.getElementById('mitm-packets').innerHTML = '<div style="text-align:center;padding:40px;opacity:0.5;">No sessions captured yet.</div>';
+        }).catch(e => showToast('Clear failed: ' + e.message, 'error'));
+    }
+
+    function addInjectRow() {
+        let container = document.getElementById('inject-rows');
+        let row = document.createElement('div');
+        row.style.cssText = 'display:grid;grid-template-columns:1fr 1fr auto;gap:6px;align-items:center;';
+        row.innerHTML = '<input class="form-control inject-k" placeholder="Header-Name" style="font-size:0.85rem;"><input class="form-control inject-v" placeholder="value" style="font-size:0.85rem;"><button onclick="this.parentNode.remove()" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:var(--color-danger);padding:6px 10px;border-radius:6px;cursor:pointer;">×</button>';
+        container.appendChild(row);
+    }
+
+    function applyInjectHeaders() {
+        let headers = {};
+        document.querySelectorAll('#inject-rows > div').forEach(row => {
+            let k = row.querySelector('.inject-k').value.trim();
+            let v = row.querySelector('.inject-v').value.trim();
+            if (k) headers[k] = v;
+        });
+        fetchJSON('/api/v1/mitm/inject', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({headers})})
+        .then(d => {
+            document.getElementById('inject-status').textContent = 'Active injections: ' + d.inject_headers_count;
+            showToast('Headers applied to proxy', 'success');
+        }).catch(e => showToast('Failed to apply headers: ' + e.message, 'error'));
+    }
+
+    function clearInjectHeaders() {
+        fetchJSON('/api/v1/mitm/inject', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({headers:{}, clear:true})})
+        .then(d => {
+            document.getElementById('inject-status').textContent = 'All injections cleared';
+            showToast('Inject headers cleared', 'info');
+        }).catch(e => showToast('Failed to clear headers: ' + e.message, 'error'));
+    }
+
+    function escapeHtml(s) {
+        if (!s) return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    // Poll MITM status on panel open
+    var _origSwitchPanel = switchPanel;
+    switchPanel = function(panel) {
+        _origSwitchPanel(panel);
+        if (panel === 'panel-mitm') {
+            mitmUpdateStatus();
+            mitmRefresh();
+        }
+    };
+</script>
+</body>
+</html>
