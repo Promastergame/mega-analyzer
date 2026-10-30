@@ -427,7 +427,7 @@ mega-analyzer is dual-licensed under [BSD](LICENSE) OR [GPLv2](COPYING).
 | :--- | :--- |
 | **Version** | v1.0.0-beta.1 |
 | **Maintainer** | [@Promastergame](https://github.com/Promastergame) — designed and written by a single developer, using AI tools |
-| **Contributions** | Solo project — pull requests are not accepted. Bug reports and ideas via [Issues](https://github.com/Promastergame/mega-analyzer/issues). Security vulnerabilities: [private advisory](docs/SECURITY.md). |
+| **Support** | [Donate via DonationAlerts](https://www.donationalerts.com/r/promastergame) |
 | **License** | [BSD](LICENSE) OR [GPLv2](COPYING) |
 ---
 

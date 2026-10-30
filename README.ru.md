@@ -439,7 +439,7 @@ mega-analyzer распространяется под двойной лицен�
 | :--- | :--- |
 | **Версия** | v1.0.0-beta.1 |
 | **Автор** | [@Promastergame](https://github.com/Promastergame) — спроектировано и написано одним разработчиком, с использованием ИИ |
-| **Контрибьюции** | Соло-проект — pull request'ы не принимаются. Баг-репорты и идеи через [Issues](https://github.com/Promastergame/mega-analyzer/issues). Уязвимости — через [приватный advisory](docs/SECURITY.ru.md). |
+| **Поддержать проект** | [Донат через DonationAlerts](https://www.donationalerts.com/r/promastergame) |
 | **Лицензия** | [BSD](LICENSE) ИЛИ [GPLv2](COPYING) |
 
 ---
