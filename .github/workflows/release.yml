@@ -71,7 +71,7 @@ jobs:
           python-version: '3.13'
       - name: Build and package core
         run: python scripts/release.py build --output dist --goos "${{ matrix.goos }}" --goarch "${{ matrix.goarch }}" --tag "${{ github.ref_name }}"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: release-${{ matrix.goos }}-${{ matrix.goarch }}
           path: |
@@ -110,7 +110,7 @@ jobs:
           path: dist/smoke
       - name: Verify the downloaded archive without rebuilding
         run: python scripts/release.py verify --output dist/smoke
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: release-smoke-evidence-${{ matrix.goos }}-${{ matrix.goarch }}
