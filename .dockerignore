@@ -7,6 +7,7 @@
 !configs/
 !configs/**
 !LICENSE
+!COPYING
 !NOTICE.txt
 !third-party/
 !third-party/licenses/
