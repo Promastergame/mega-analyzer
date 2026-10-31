@@ -4,43 +4,46 @@
 
 # Mega-Analyzer
 
-[English](README.md) · [Русский](README.ru.md) · [Quick Start](QUICKSTART.md) · [Build guide](docs/BUILD.md)
-
-[Compare analysis runs](docs/REPORT_COMPARISON.md) · [Prepare a public source snapshot](docs/PUBLIC_SOURCE.md)
+[English](README.md) · [Русский](README.ru.md) · [Quick start](QUICKSTART.md) · [Build](docs/BUILD.md)
 
 </div>
 
-**Local software security analysis with a Go CLI, Web UI and HTML/JSON/SARIF reports.**
+**A lab for dissecting apps and binaries that lives entirely on your machine.**
+APK, JAR, PE, ELF, firmware, a dynamic sandbox, traffic interception and reports in HTML, JSON and SARIF.
+No cloud, no telemetry.
 
-The default core scans APK, DEX, Smali, JAR/Minecraft archives and native binary
-security properties. Try the included synthetic sample with Go 1.27.3+:
+The base (core) build already covers APK, DEX, Smali, JAR and Minecraft archive analysis, plus checks of
+native-binary security mitigations. To run the tutorial example you need Go 1.27.3 or newer:
 
 ```sh
 go build -trimpath -o analyzer ./pkg/cmd/analyzer
 ./analyzer -t demo/vulnerable-app -report all -sarif
 ```
 
-On Windows PowerShell use `./analyzer.exe`. Open `analysis_output/REPORT.html`.
-[Prebuilt core archives](https://github.com/Promastergame/mega-analyzer/releases)
-include the same demo; unpack an archive and run the second command.
+In Windows PowerShell run `./analyzer.exe` and look for the report in `analysis_output/REPORT.html`.
+The [prebuilt core archives](https://github.com/Promastergame/mega-analyzer/releases) already contain this
+example: unpack the archive and run the second command.
 
-APK/DEX decoding is also available as a separate command:
-`go build -trimpath -tags noembed -o bin/decompiler ./cmd/decompiler`.
-The shared Go API lives in `pkg/decompiler`; see the [decompiler guide (RU)](docs/DECOMPILER.ru.md).
+If you only need decompilation, without running the analyzer, build the standalone tool:
+`go build -trimpath -tags noembed -o bin/decompiler.exe ./cmd/decompiler`.
+Details and the Go API: [docs/DECOMPILER.ru.md](docs/DECOMPILER.ru.md) (RU).
 
-| Capability | Included in core | Additional requirements |
+You can also plug in a local DecisionAI: it additionally reasons over the HTML and JSON findings, classifies
+Smali and answers questions about what a patch achieves. Setup instructions:
+[docs/DECISION_AI.ru.md](docs/DECISION_AI.ru.md) (RU).
+
+| Capability | In the core build | What else you need |
 | :--- | :--- | :--- |
-| Static analysis, reports, Web UI, REST API | Yes | Static analysis needs no network service |
-| OmniSec / Zig / GNN native engines | Optional build | Rust, Zig, C toolchain and the corresponding runtime libraries |
-| Android live analysis and instrumentation | Device integration | Configured device/emulator and tools such as ADB/Frida |
-| Network scanning and traffic interception | Selected modes | Access to the chosen target and any configured proxy |
+| Static analysis, reports, Web UI, REST API | Included | Nothing; static analysis needs no network |
+| Native OmniSec, Zig and GNN engines | Separate build | Rust, Zig, a C toolchain and the required libraries |
+| Live Android analysis, instrumentation | Via a connected device | A device or emulator, ADB, Frida and similar tools |
+| Network scanning, traffic interception | Separate modes | Access to the target and a configured proxy |
 
-No telemetry or cloud upload is required for core analysis. Servers bind to
-loopback by default; explicit LAN/container configuration changes that boundary.
-Native engines and device analysis have separate build/runtime requirements:
-see [build variants](docs/BUILD.md).
+Static analysis needs neither cloud nor telemetry. By default the servers listen on loopback only.
+If you open access from the LAN or a container yourself, that boundary moves. What the native engines and
+on-device analysis require is described in the [build guide](docs/BUILD.md).
 
-mega-analyzer is dual-licensed under [BSD](LICENSE) OR [GPLv2](COPYING).
+mega-analyzer is distributed under the dual [BSD](LICENSE) OR [GPLv2](COPYING) license.
 
 <img src=".github/assets/report.png" alt="Mega-Analyzer HTML report" width="860">
 
@@ -49,149 +52,214 @@ mega-analyzer is dual-licensed under [BSD](LICENSE) OR [GPLv2](COPYING).
 ## <img src=".github/assets/icons/bolt.svg" width="20"> Quick start
 
 > [!TIP]
-> In a hurry? Skip everything below and run the bundled demo — it produces real findings in seconds with zero setup. Jump to [**See it in action**](#-see-it-in-action).
+> Want to see results right away? Run the built-in demo: it finds real issues in a few seconds and needs
+> no setup. See the [Demo](#-demo) section.
 
-### <img src=".github/assets/icons/package.svg" width="20"> Option A — prebuilt binary
+### <img src=".github/assets/icons/package.svg" width="16"> Option A: prebuilt binary
 
-Download the archive for your OS/arch from [**Releases**](https://github.com/Promastergame/mega-analyzer/releases), unpack, and run:
+Download the archive for your OS and architecture from the [Releases](https://github.com/Promastergame/mega-analyzer/releases)
+page, unpack it and run:
 
 ```bash
 ./analyzer -t my_app.apk -report all
 ```
 
-### <img src=".github/assets/icons/terminal.svg" width="20"> Option B — build from source
+### <img src=".github/assets/icons/terminal.svg" width="16"> Option B: build from source
 
 ```bash
-# Requires Go 1.27.3+ — nothing else
+# Requires Go 1.27.3+
 go build -trimpath -ldflags "-s -w" -o analyzer ./pkg/cmd/analyzer
 ```
 
-> The default build is the **pure-Go core** — a complete, self-contained analyzer. The native engines (OmniSec / Zig / GNN) are optional. See [docs/BUILD.md](docs/BUILD.md).
+> The default build is pure Go and works as a full analyzer. The native engines (OmniSec, Zig, GNN) are
+> optional and need extra toolchains. Details in [docs/BUILD.md](docs/BUILD.md).
 
-### <img src=".github/assets/icons/hexagon.svg" width="20"> Option C — Docker
+### <img src=".github/assets/icons/hexagon.svg" width="16"> Option C: Docker
 
 ```bash
 docker build -t mega-analyzer .
 docker run --rm -v "$PWD:/work" mega-analyzer -t /work/my_app.apk -report all
 ```
 
-### <img src=".github/assets/icons/globe.svg" width="20"> Option D — web UI
+### <img src=".github/assets/icons/globe.svg" width="16"> Option D: Web UI
 
 ```bash
 ./analyzer -web                 # opens on http://localhost:7474
-./analyzer -web -web-port 8080  # custom port
-./analyzer -web -admin         # OS-confirmed administrator/root web server
+./analyzer -web -web-port 8080  # your own port
+./analyzer -web -admin          # Web UI with confirmed OS privileges
 ```
 
-Drag a file in, watch the analysis stream live, then explore the report in your browser. See [Web UI & live sandbox](#-web-ui--live-sandbox).
+Drag a file into the window, watch the analysis run in real time, then study the report right in the browser.
+More in [Web UI and live sandbox](#-web-ui-and-live-sandbox).
 
 ---
 
-## <img src=".github/assets/icons/flask.svg" width="20"> See it in action
+## <img src=".github/assets/icons/flask.svg" width="20"> Demo
 
-A bundled, intentionally vulnerable sample gives you real findings immediately — no Android SDK, emulator, or real APK required:
+The built-in, intentionally vulnerable example has something to find right away. No Android SDK, emulator
+or real APK required:
 
 ```console
 $ ./analyzer -t demo/vulnerable-app -report all -sarif
 
   Mega-Analyzer · target: demo/vulnerable-app
-  ─────────────────────────────────────────────
+  ---------------------------------------------
   ▸ manifest audit ........ exported components, debuggable, cleartext, StrandHogg
-  ▸ smali scan ............ hardcoded AWS key, Runtime.exec, reflection, weak crypto
-  ▸ secret triage ......... AWS · Stripe · Slack · GitHub  (entropy-gated)
-  ▸ correlation ........... 6 risk chains linked
-  ─────────────────────────────────────────────
+  ▸ smali scan ............ AWS key in code, Runtime.exec, reflection, weak crypto
+  ▸ secret triage ......... AWS · Stripe · Slack · GitHub  (entropy-based)
+  ▸ correlation ........... linked 6 risk chains
+  ---------------------------------------------
   VERDICT: CRITICAL · 29 findings · SARIF: 67 rules
   → analysis_output/REPORT.html
 ```
 
-Open `analysis_output/REPORT.html` for the interactive report, or feed `analysis_output/analysis.sarif` to any SARIF viewer (VS Code, GitHub, GitLab, SonarQube). See [`demo/`](demo/) for exactly what's planted inside.
+Open `analysis_output/REPORT.html` — that is the interactive report. The `analysis_output/analysis.sarif`
+file can be fed to any SARIF viewer: VS Code, GitHub, GitLab, SonarQube. What is planted in the example is
+described in [`demo/`](demo/).
 
 ---
 
-## <img src=".github/assets/icons/window.svg" width="20"> Web UI & live sandbox
+## <img src=".github/assets/icons/bolt.svg" width="20"> What Mega-Analyzer can do
 
-Run `analyzer -web` and you get a full **local dashboard** in the browser — drag-and-drop analysis, live progress over Server-Sent Events, and an **ANY.RUN-style live Android device view**. No cloud, no upload: everything stays on `localhost`.
+This is not just a manifest scanner. Inside is a whole toolkit for dissecting apps and binaries, and all of
+it runs locally and emits reports in one format.
+
+| Area | What's inside |
+| :--- | :--- |
+| **Mobile static analysis** | APK, DEX, Smali, React Native and Hermes. Manifest audit, secrets, SAST (105 rules), Exodus trackers (431 signatures), APKiD packer and obfuscator detection (30 signatures) |
+| **Java and backends** | JAR, WAR, deserialization, injections, XXE, weak cryptography, vulnerable dependencies by CVE |
+| **Native binaries** | PE, ELF, Mach-O: security mitigations, section entropy, JNI boundaries |
+| **Firmware and IoT** | rootfs hints, network services, web panels, hardcoded keys and passwords |
+| **RE and deobfuscation** | The OmniSec Rust engine: SSA, dataflow, symbolic execution, micro-emulators, devirtualization, a reverse-stepping debugger |
+| **Dynamic sandbox** | Sample execution on Windows (VMware) and Android, processes, network, files, API calls, key and IV extraction |
+| **Traffic and MITM** | Real-time decrypted HTTP(S), PCAP, DNS, TLS SNI |
+| **Frida** | An interactive REPL in the browser, `frida-server`, APK builds with the Frida Gadget |
+| **Patches and crack points** | License and root check discovery, 150+ patch patterns, CFG-aware patching |
+| **Private servers** | A protocol dissector, a client patcher, a ready-to-run Elixir/OTP server generator |
+| **Supply chain** | SDKs in Smali, CI configs (GitHub Actions, GitLab CI, Jenkins), K8s, Docker, AWS IAM |
+| **Web targets** | Vulnscan: time-based SQLi, OS command injection and other checks |
+| **Media forensics** | Polyglots, steganography, Exif and GPS |
+| **ML scoring** | A light offline ensemble that ranks risks and patches |
+| **Reports and CI** | HTML, Markdown, JSON, CSV and SARIF for GitHub and GitLab code scanning |
+
+### What the per-format checks find
+
+Every finding gets a stable rule id, a severity level, confidence and the surrounding code fragment. To keep
+the report from drowning in noise, a false-positive suppression layer is at work: entropy-based secret triage,
+library-vs-app-code separation and credit for protection that is already enabled.
+
+| Format | What is checked |
+| :--- | :--- |
+| <img src=".github/assets/icons/package.svg" width="18"> **APK / DEX** | Manifest: exported components, `debuggable`, cleartext, backup. Task hijacking and StrandHogg (custom `taskAffinity`, `singleTask` and `singleInstance`). Leaks through `grantUriPermissions`. Deep links without `assetlinks.json`. `sharedUserId`, dangerous permissions. Reflection and native-code loading in Smali. Crack points and patchable methods |
+| <img src=".github/assets/icons/atom.svg" width="18"> **React Native / Hermes** | `index.android.bundle` is analyzed as application code, not as noisy framework code. The `eval` family, `addJavascriptInterface`, prototype pollution, obfuscation. WebView issues (`setAllowUniversalAccessFromFileURLs`, `injectedJavaScript`). Disabled TLS verification (`rejectUnauthorized:false`, trust-all). `cordova.exec`. Secrets via entropy-based detection across providers |
+| <img src=".github/assets/icons/coffee.svg" width="18"> **JAR / Java / WAR** | RCE through deserialization (`readObject`, `XMLDecoder`, SnakeYAML, XStream). Dynamic code loading (`URLClassLoader`, ScriptEngine, Groovy). Injections: JNDI and Log4Shell, SpEL, OGNL, SQL. XXE (the finding is suppressed when the parser is already hardened). Trust-all TLS (`X509TrustManager`, `HostnameVerifier`). Weak ciphers and hashes (ECB, DES, RC4). Vulnerable dependencies by CVE |
+| <img src=".github/assets/icons/window.svg" width="18"> **PE (Windows)** | ASLR, DEP/NX, CFG, SafeSEH, stack canaries (`/GS`), AppContainer, digital signature. Per-region section entropy helps locate packed and encrypted areas |
+| <img src=".github/assets/icons/terminal.svg" width="18"> **ELF / Mach-O** (Linux, Android `.so`, macOS) | PIE, NX, RELRO (full and partial), stack canaries (SSP), Fortify Source, unsafe `RPATH` and `RUNPATH`, JNI boundaries |
+| <img src=".github/assets/icons/compass.svg" width="18"> **Firmware / IoT** | rootfs hints, telnet, ssh, ftp and upnp services, web panels, hardcoded keys and passwords |
+| <img src=".github/assets/icons/key.svg" width="18"> **Secrets in any text** | About 25 provider rules: AWS, GitHub, GitLab, Stripe, Slack, Telegram, Discord, OpenAI and Anthropic, Google, private keys, JWT and more. Entropy and charset triage: real keys keep full severity, while placeholders and low-entropy matches are downgraded and don't flood the report |
+| <img src=".github/assets/icons/network.svg" width="18"> **CI, cloud, containers** | GitHub Actions, GitLab CI, Jenkinsfile (context injection, PPE, unpinned versions). K8s, Docker, AWS IAM (container escape, IAM PassRole, confused deputy). CVE-2025-55182 (RCE in React Server Components) |
+| <img src=".github/assets/icons/flask.svg" width="18"> **Media files** | Polyglots, steganography, Exif and GPS, with auto-generated scripts for extracting the hidden data |
 
 > [!IMPORTANT]
-> **Dynamic Sandbox Status:** The dynamic sandbox is an active work-in-progress and is not yet complete.
-> Currently, only the **VMware Windows guest environment** (isolated execution, artifact collection, and telemetry) is fully implemented and verified.
-> Dynamic analysis and device execution for **Linux** and **Android** are experimental and have not been comprehensively tested yet.
+> **On false positives.** Findings never disappear silently. If confidence is low, a finding simply ranks
+> lower. Context (library vs application code, whether the parser is hardened, whether the key looks like a
+> placeholder) changes severity, but the signal is never hidden.
 
-| Feature | What it does |
-| :--- | :--- |
-| **Drag-and-drop analysis** | Drop an APK/DEX/PE/ELF and watch findings stream in live. Final report, artifact browser, and per-file download all in the page. |
-| **Live Android device view** | Real device or emulator mirrored in the browser via **H.264 over WebCodecs** (smooth), with an MJPEG/screenshot fallback. Tap, swipe, long-press, and key input are injected back — drive the app while it's analyzed. |
-| **ANY.RUN-style sandbox** | Detonate an APK on a device and watch **processes, network connections, DNS queries, file changes, API calls, and behavioral alerts** appear in real time. Pick the environment (device / emulator / AVD) from a built-in picker. |
-| **In-browser Frida REPL** | Push & start `frida-server`, list processes, and run an interactive Frida REPL over WebSocket — or repack the APK with a **Frida Gadget** injected, signed and ready. |
-| **Live MITM & traffic capture** | Stream decrypted HTTP(S) requests as they happen (mitmproxy), or capture full PCAP via **PCAPdroid** / on-device tcpdump — DNS, HTTP, and TLS SNI extracted automatically. |
-| **Mobile mode** | The whole dashboard is responsive with a dedicated mobile menu — analyze from your phone against a device on the same LAN. |
+---
+
+## <img src=".github/assets/icons/window.svg" width="20"> Web UI and live sandbox
+
+The `analyzer -web` command opens a local browser panel. Analysis happens right there: drop in a file, watch
+progress in real time via Server-Sent Events, and next to it sits an ANY.RUN-style live view of an Android
+device. No clouds and no uploads to other people's servers — everything stays on `localhost`.
+
+> [!IMPORTANT]
+> **Sandbox status.** The dynamic sandbox is still under active development. Only the Windows guest in
+> VMware mode is fully implemented and verified so far: isolated execution and telemetry collection inside
+> the virtual machine. Linux and Android execution remain experimental and have not been comprehensively tested.
+
+The sandbox can [extract keys and IVs from supported cryptographic calls](docs/SANDBOX_CRYPTO.ru.md) (RU) on
+Windows and Android. Everything it managed to capture appears on the **Crypto keys** tab and in the JSON and
+Markdown reports.
+
+For Windows VMs in VMware and Hyper-V there is a [collector that keeps reports on your main PC](docs/SANDBOX_VM_HOST.ru.md) (RU).
+The `-sandbox-remote-config` flag streams events and keys to the host Windows as they arrive. No separate
+server is needed, and already-saved data survives a guest crash. This mode runs from the CLI. Native execution
+of a sample on the main Windows host is blocked by default.
+
+In the web UI you can [run Windows files in VMware via Tools](docs/VMWARE-SAFETY.ru.md) (RU): prepare a
+powered-off VM, transfer the sample, observe it, stop the VM and save the report on the host. Virtual network
+adapters are disconnected for the run, and guest credentials are entered for that specific run only.
+
+| | Capability | What it does |
+| :---: | :--- | :--- |
+| <img src=".github/assets/icons/bolt.svg" width="18"> | **Drag-and-drop analysis** | Drop an APK, DEX, PE or ELF into the window and watch findings appear as the scan runs. The final report, the artifact browser and per-file downloads are on the same page. |
+| <img src=".github/assets/icons/window.svg" width="18"> | **Live Android device view** | A real device or emulator is mirrored into the browser over H.264 via WebCodecs, with MJPEG or screenshots as the fallback. Taps, swipes, long presses and keyboard input go back to the device, so you can drive the app while the analysis runs. |
+| <img src=".github/assets/icons/flask.svg" width="18"> | **ANY.RUN-style sandbox** | Run an APK on the device and watch processes, network connections, DNS queries, file changes, API calls and behavioral alerts in real time. The environment (device, emulator or AVD) is picked in the built-in selector. |
+| <img src=".github/assets/icons/bug.svg" width="18"> | **Frida REPL in the browser** | Load and start `frida-server`, list processes and open an interactive Frida REPL over WebSocket. Or rebuild the APK with the bundled Frida Gadget: it comes out signed and ready to run. |
+| <img src=".github/assets/icons/network.svg" width="18"> | **Live MITM and traffic capture** | Watch decrypted HTTP(S) requests as they appear (via mitmproxy) or capture a full PCAP with PCAPdroid or tcpdump on the device. DNS, HTTP and TLS SNI are extracted automatically. |
+| <img src=".github/assets/icons/laptop.svg" width="18"> | **Mobile mode** | The whole panel is responsive and has a separate mobile menu, so you can analyze from a phone while everything is on the same LAN. |
 
 > [!NOTE]
-> The web UI is just another face on the same engine — every tool (decode, machine-code, firmware, diff, JS deobf, sandbox, MITM) is reachable at its own slug (`/sandbox`, `/mitm`, …) and produces the exact same reports as the CLI. The same executable serves the REST API with `analyzer --api` (`/api/v1/*`, with Swagger docs), exposing web-scan and web tooling for automation.
+> The Web UI runs the same engine as the CLI, so the reports are identical. Each tool (decode, machine-code,
+> firmware, diff, JS deobfuscation, sandbox, MITM) has its own route, such as `/sandbox` or `/mitm`. For
+> automation there is a REST API: start `analyzer --api` and the web-scan and web-tool endpoints become
+> available under `/api/v1/*`, with Swagger documentation included.
 
 ---
 
-## <img src=".github/assets/icons/target.svg" width="20"> What it detects
+## <img src=".github/assets/icons/compass.svg" width="20"> How it compares to other tools
 
-Each finding carries a stable rule-id, severity, confidence, and a context snippet. A false-positive suppression layer (entropy-gated secret triage, library-vs-app-code context, hardening-aware suppression) keeps the signal clean.
-
-| Format | What it surfaces |
-| :--- | :--- |
-| <img src=".github/assets/icons/package.svg" width="18"> **APK / DEX** | Manifest audit (exported components, `debuggable`, cleartext, backup), **task-hijacking / StrandHogg** (custom `taskAffinity`, `singleTask`/`singleInstance`), **grantUriPermissions** leaks, deep links without `assetlinks.json`, `sharedUserId`, dangerous permissions, reflection and native loading in Smali, crack points and patchable methods |
-| <img src=".github/assets/icons/atom.svg" width="18"> **React Native / Hermes** | Full scan of `index.android.bundle` as **application code** (not "noisy framework"): the eval family, `addJavascriptInterface`, prototype pollution, obfuscation; **WebView** leaks (`setAllowUniversalAccessFromFileURLs`, `injectedJavaScript`), **disabled TLS** (`rejectUnauthorized:false`, trust-all), `cordova.exec`; secrets via entropy-gated provider detection |
-| <img src=".github/assets/icons/coffee.svg" width="18"> **JAR / Java / WAR** | RCE deserialization (`readObject`, `XMLDecoder`, SnakeYAML, XStream), dynamic code (`URLClassLoader`, ScriptEngine, Groovy), **injection** (JNDI/Log4Shell, SpEL, OGNL, SQL), **XXE** (suppressed when hardening is present), **trust-all TLS** (`X509TrustManager`/`HostnameVerifier`), weak ciphers (ECB/DES/RC4) and hashes, vulnerable dependencies by CVE |
-| <img src=".github/assets/icons/window.svg" width="18"> **PE (Windows)** | ASLR, DEP/NX, CFG, SafeSEH, stack canaries (`/GS`), AppContainer, digital signature, localized section entropy (packed/encrypted pockets) |
-| <img src=".github/assets/icons/terminal.svg" width="18"> **ELF / Mach-O (Linux · Android .so · macOS)** | PIE, NX, **RELRO** (full/partial), stack canaries (SSP), Fortify Source, unsafe `RPATH`/`RUNPATH`, JNI boundaries |
-| <img src=".github/assets/icons/compass.svg" width="18"> **Firmware / IoT** | rootfs hints, telnet/ssh/ftp/upnp services, web panels, hardcoded key/password markers |
-| <img src=".github/assets/icons/key.svg" width="18"> **Secrets (any text)** | ~25 provider rules (AWS, GitHub, GitLab, Stripe, Slack, Telegram, Discord, OpenAI/Anthropic, Google, private keys, JWT…) with **entropy and charset triage** — real keys pass at full strength; placeholder/low-entropy matches are demoted, not allowed to drown the report |
-
-> [!IMPORTANT]
-> **On false positives:** findings are **never silently dropped** — low-confidence ones are demoted in priority. Context (library or app code, parser already hardened, key looks like a placeholder) changes severity, but never hides the signal.
-
----
-
-## <img src=".github/assets/icons/compass.svg" width="20"> How it compares
-
-Mega-Analyzer combines a standalone Go core with optional native and device analysis. The comparison below refers to the available capabilities across those build variants; it is not a list of features bundled in every release archive.
+Mega-Analyzer doesn't try to replace Ghidra or MobSF. The idea is different: one binary that runs fully
+offline and immediately covers mobile static analysis, native files, dynamic analysis, ML and CI. The table
+shows what each tool can do and where its limits are.
 
 | | **Mega-Analyzer** | MobSF | JADX | Ghidra | ANY.RUN | VirusTotal |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| 100% offline / local | ✅ | ⚠️ self-host | ✅ | ✅ | ❌ cloud | ❌ cloud |
-| Single binary, no JDK/SDK | ✅ | ❌ | ⚠️ JRE | ⚠️ JRE | n/a | n/a |
-| APK / DEX static audit | ✅ | ✅ | <img src=".github/assets/icons/search.svg" width="18"> decompile | ➖ | ➖ | ➖ |
+| 100% offline, local | ✅ | ⚠️ self-host | ✅ | ✅ | ❌ cloud | ❌ cloud |
+| Single binary, no JDK or SDK | ✅ | ❌ | ⚠️ JRE | ⚠️ JRE | n/a | n/a |
+| APK / DEX static analysis | ✅ | ✅ | 🔍 decompilation | ➖ | ➖ | ➖ |
 | Native PE / ELF / Mach-O | ✅ | ➖ | ➖ | 🥇 deep RE | ➖ | ➖ |
-| Dynamic sandbox | ✅ Win + Android | ⚠️ VM addon | ➖ | ➖ | ⚠️ limited free tier | ⚠️ |
-| Live device view + input | ✅ | ➖ | ➖ | ➖ | ✅ | ➖ |
-| Decrypted traffic / MITM | ✅ | ⚠️ | ➖ | ➖ | ✅ | ➖ |
+| Dynamic sandbox | ✅ Win + Android | ⚠️ via VM | ➖ | ➖ | ⚠️ limited free tier | ⚠️ |
+| Live device view and input | ✅ | ➖ | ➖ | ➖ | ✅ | ➖ |
+| Decrypted traffic, MITM | ✅ | ⚠️ | ➖ | ➖ | ✅ | ➖ |
 | Offline ML scoring | ✅ | ➖ | ➖ | ➖ | ➖ | ⚠️ |
-| SARIF / code scanning | ✅ | ➖ | ➖ | ➖ | ➖ | ➖ |
-| Binary size | ~60 MB | ~500 MB+ | ~120 MB | ~1 GB+ | n/a | n/a (cloud) |
+| SARIF, code scanning | ✅ | ➖ | ➖ | ➖ | ➖ | ➖ |
 | License | BSD-3-Clause OR GPLv2 | GPL v3 | Apache 2.0 | Apache 2.0 | proprietary | proprietary |
 | Price | free | free | free | free | freemium | freemium |
 
-> Where the others win: **Ghidra** is the gold standard for deep native reverse engineering; **MobSF** has a mature ecosystem and integrations. Mega-Analyzer works as an offline, single-binary first pass alongside these tools. Full breakdown: [**docs/COMPARISON.md**](docs/COMPARISON.md).
+> **Where the others are stronger.** Ghidra remains the best choice for deep native reverse engineering, and
+> MobSF has a mature ecosystem with many integrations. Mega-Analyzer is convenient as the first pass; when
+> you need to dig deeper, move on to those tools. Detailed comparison: [docs/COMPARISON.md](docs/COMPARISON.md).
 
-> **ANY.RUN access and privacy** (reported free-tier experience, October 2026): hosted VMs save you from setting up your own VM. The service is **freemium**, but registration requires a business email on your own domain; acquiring and maintaining that domain and mailbox can cost money even with a free service plan. Reported free-tier limits are **5 minutes per run** and **5 uses of ML features**. Analyses are **public**, including the video recording of your session; **private analysis requires a paid subscription**. These restrictions make the free tier a poor fit for confidential samples or longer interactive investigations.
+> **A note on ANY.RUN: access and privacy.** In our experience as of October 2026, the free tier has caveats.
+> Cloud VMs are convenient because you don't have to configure your own. But registration requires a business
+> email on your own domain, and the domain and email can cost money even when the service itself is free.
+> A single run is limited to 5 minutes, and the ML features can be used 5 times. All analyses are public,
+> including a recording of what you do during the session, and private mode is available only on a paid
+> subscription. So for confidential samples and long interactive sessions, the free tier does not fit.
 
 ---
 
-## <img src=".github/assets/icons/cpu.svg" width="20"> Under the hood
+## <img src=".github/assets/icons/cpu.svg" width="20"> Technologies and engines
 
-### OmniSec engine (Rust core)
+### The OmniSec Rust engine
 
-The native side is a **52-crate Rust workspace** doing the heavy lifting on machine code:
+The native side of the project is a workspace of 52 Rust crates. It is what does the heavy lifting on
+machine code.
 
-- **HDC auto-naming (Hyperdimensional Computing)** — recovers meaningful variable/function names locally with **2048-bit sparse hypervectors**. <10 MB RAM, microseconds, no neural nets, no cloud.
-- **OmniIR / CFG / SSA / dataflow** — a unified IR with dominators, loops, SSA construction, and inter-procedural dataflow across PDG/IPDG.
-- **Deobfuscation pipeline** — constant propagation, dead-code elimination, opaque-predicate removal, variable recovery, loop reconstruction.
-- **Symbolic & concolic execution** — untangles obfuscated logic and proves path reachability (DPLL/SMT) to cut false positives.
-- **Micro-emulators (x86 / ARM64)** — run code in isolated memory with page permissions to auto-unpack XOR/RC4 strings and hidden payloads.
-- **Hyperion v3 — virtualization detection & devirt** — spots VM-dispatcher patterns and lifts handler semantics back to readable code.
-- **Behavioral telemetry (eBPF retired)** — the `aya`-based syscall tracer was removed: `omnisec-ebpf` keeps only the serialized-API shim, Linux reads real `/proc` telemetry instead, other platforms use the simulator.
-- **GDB-like debugger with replay** — disassembly, breakpoints/watchpoints, patch-and-continue, YARA-like memory scanning, and **time-travel debugging** (`reverse_step`/`reverse_continue`) with incremental snapshots.
-- **NCER — network correlation engine** — parses captured traffic (`ncer-parse-net`), reconciles evidence (`ncer-evidence`, `ncer-reconcile`), and surfaces results into Go via FFI (`ncer-reconcile-ffi`, `ncer-types`).
-- **Cross-modal graph GNN (`omnisec-ml-graph`)** — a second graph-neural-network path for vulnerability detection that fuses code- and metadata-level features, complementing the DEX license/piracy classifier in `omnisec-ml-gnn`.
+| Capability | How it works |
+| :--- | :--- |
+| **HDC auto-naming** | Recovers meaningful variable and function names locally on 2048-bit sparse hypervectors (Hyperdimensional Computing). Under 10 MB of RAM, microsecond latency, no neural networks or cloud involved. |
+| **OmniIR, CFG, SSA, dataflow** | A single intermediate representation with dominators, loops and SSA construction. Interprocedural dataflow runs through the PDG and IPDG. |
+| **Deobfuscation** | Constant propagation, dead-code elimination, opaque-predicate removal, variable and loop recovery. |
+| **Symbolic and concolic execution** | Unravels obfuscated logic and proves path reachability (DPLL and SMT), which cuts false positives. |
+| **x86 and ARM64 micro-emulators** | Run code in isolated memory with page permissions and unpack XOR- or RC4-encrypted strings and hidden payloads on their own. |
+| **Hyperion v3** | Finds VM-dispatcher patterns (virtualization) and lifts handler semantics back into readable code. |
+| **Replay debugger** | GDB-like: disassembly, breakpoints and watchpoints, patch-and-continue, YARA-style memory scanning. It can step backward in time (`reverse_step`, `reverse_continue`) on incremental snapshots. |
+| **NCER** | The network-evidence correlation engine. Parses captured traffic (`ncer-parse-net`), reconciles evidence (`ncer-evidence`, `ncer-reconcile`) and hands the result to Go over FFI (`ncer-reconcile-ffi`, `ncer-types`). |
+| **Graph GNN** (`omnisec-ml-graph`) | A second vulnerability-detection path built on a graph neural network. It merges code and metadata features and complements the DEX license and piracy classifier from `omnisec-ml-gnn`. |
+| **Behavioral telemetry** | The `aya`-based syscall tracer was removed; `omnisec-ebpf` remains as an API stub. On Linux, real telemetry is read from `/proc`; other platforms use a simulator. |
 
 <details>
 <summary><b>▸ All 52 OmniSec crates</b></summary>
@@ -219,92 +287,109 @@ omnisec-z3-worker
 
 </details>
 
-### Performance & scale
+### Speed and scale
 
-- **Content-addressed cache** keyed by method SHA-256 — repeat scans up to **10× faster** (CFG/SSA/taint/metrics reused).
-- **SIMD ULEB128 batch decoder** (Plan 9 assembly) for the DEX parser hot path — **+30%** throughput (400 vs 310 MB/s on an i5-3340), with a portable fallback.
-- **Adaptive worker scheduler** scales the pool by live CPU/heap/GC pressure instead of a static `NumCPU×2`, so huge APKs don't OOM.
+| What was done | Result |
+| :--- | :--- |
+| **Per-method SHA-256 cache** | Repeat scans up to 10× faster, because CFG, SSA, taint and metrics are reused. |
+| **SIMD ULEB128 decoder** (Plan 9 assembly) | Speeds up the DEX parser's hot path by 30%: 400 MB/s vs 310 MB/s on an i5-3340. A portable fallback is included. |
+| **Adaptive worker scheduler** | The pool size adapts to actual CPU, heap and GC pressure instead of being pinned to `NumCPU×2`. Huge APKs don't lead to out-of-memory failures. |
 
 ---
 
-## <img src=".github/assets/icons/flask.svg" width="20"> The toolkits
+## <img src=".github/assets/icons/flask.svg" width="20"> Additional toolkits
 
-Beyond static detection, Mega-Analyzer ships a set of focused, offline sidecar toolkits — each writes its own Markdown + JSON into the output directory and never blocks the main pipeline.
+Beyond static analysis, the project ships a set of separate offline modules. Each writes its own Markdown
+and JSON into the output folder and never blocks the main pipeline.
 
-| <img src=".github/assets/icons/flask.svg" width="18"> Toolkit | What it gives you |
+| <img src=".github/assets/icons/flask.svg" width="16"> Toolkit | What it gives you |
 | :--- | :--- |
-| **Dynamic sandbox** | Detonate on **Windows** (Job Objects, optional kernel/syscall monitor, WFP network rules, file/registry/API/network evidence) or **Android** (real device/emulator over ADB, install + launch, live process/network/file capture, traffic capture, downloaded-file pull). |
-| **Private Server Toolkit** | Built-in MITM proxy & protocol dissector (Protobuf/MsgPack/JSON), smart client patcher (IP/domain rewrite in APK and `.so`, SSL-pinning bypass), Go server-stub generator from a captured session, an Elixir/OTP **private-server generator** that emits a *runnable* backend — hot-reloadable rule engine, fault-injection scenarios and a live dashboard, with a hand-written reference and a playable demo in [`elixir_privserver/`](elixir_privserver/) — and a Lab DNS server (sinkhole + DGA detection). |
-| **Crack Point Discovery** | Finds gate checks (`isPremium`, `checkLicense`, `isRooted`, `isDebuggable`), ranks them by impact, and proposes Smali patches — with a **CFG-aware apply** that rewrites the right basic block, not a blind line swap. |
-| **ML Patch Predictor** | **150+ patch patterns** (license, billing v5–v7, premium, ads, root, SSL pinning, Play Integrity, JWT, anti-cheat) ranked by `Risk × Impact / (Cost × Detection × Breakage)`, cross-language (Kotlin · React Native · Flutter · Unity), with SHA-256-verified `.original` backups. |
-| **Smart Patcher engine** | Signature-aware patch identity with overload-safe, deterministic patch IDs, a **schema v2** JSON bridge, and a **12-strategy** Smali/JS rewriter — `early_return_true`/`false`, `assign_true`/`false`, `condition_true`/`false`, `inline_true`/`false`, `nop`, `replace_url`, `remove_pin`, `informational` — ranked and normalized by Dalvik return type. Applies **minimal validated blocks** (not blind whole-method swaps): path-safe, idempotent, atomic, with precise **per-patch revert** instead of whole-file rollback. |
-| **TOP-5 Insights** | JNI Boundary Analyzer, Privacy Analyzer, Version Diff, Interactive Graph Explorer (HTML), and Firmware/IoT Analyzer. |
-| **MobSF-style analyzers, built from scratch** | SAST rule scanner (**105 rules**, CVSS/CWE/OWASP/MASVS), Exodus trackers (**431 signatures**), Network Security Config auditor, deep manifest audit, APKiD packer/obfuscator fingerprinting (**30 signatures**). |
-| **Website Analysis + Vulnerability Scanner** | Integrated in the single `analyzer` binary: `status` (one GET/HTTP 200), `passive` (one response, no fuzzing), and authorized `active` mode with curl/raw-HTTP (Burp) import, security headers, CORS, open redirect, JWT, IDOR, SSRF, XSS, SQLi, prototype pollution, GraphQL, and more. Active mode requires explicit `--i-own-this-target`. |
-| **Web scanner + vuln scanner** | Full rewrite with pipeline engine, differential analysis, AIMD rate controller; time-based SQLi (CWE-89), OS command injection (CWE-78), +11 new checks. Requires `--i-own-this-target`. |
-| **Supply chain audit** | Static SDK profiler in Smali (Firebase, Facebook, Yandex Metrica, Adjust — risk scoring); CVE-2025-55182 React Server Components RCE detection; GitHub Actions/GitLab CI/Jenkinsfile audit (context injection, PPE, mutable action pin); Kubernetes/Docker/AWS IAM config audit (container escape, IAM PassRole, confused-deputy AssumeRole). All offline. |
-| **Bytecode + native analysis** | Clear `--scan-bytecode` / `--scan-native` flags. DEX now goes through a full **Hyperion IR** pipeline (MIR → CFG → SSA → DFG via `omnisec-lifter-dalvik`) before scanning — no raw Smali. |
-| **Media Forensics** | Polyglot/steganography detection, Exif/GPS metadata analysis, and auto-generated extraction scripts. Full rewrite: 14 new modules. |
+| **Dynamic sandbox** | Runs samples on **Windows** (Job Objects, an optional kernel and syscall monitor, WFP network rules, file, registry, API and network data) or on **Android** (a real device or emulator over ADB: install, launch, live process, network and file capture, traffic capture, extraction of downloaded files). |
+| **Private Server Toolkit** | A built-in MITM proxy and protocol dissector (Protobuf, MsgPack, JSON). A smart client patcher: IP and domain replacement in APKs and `.so` files, SSL pinning bypass. A Go server-stub generator from a recorded session. A **private Elixir/OTP server generator** that emits a ready-to-run backend with a rules engine, hot reload, failure scenarios and a live dashboard (the hand-written reference version and a playable demo live in [`elixir_privserver/`](elixir_privserver/)). Plus Lab DNS: sinkholing and DGA detection. |
+| **Crack Point Discovery** | Finds checks like `isPremium`, `checkLicense`, `isRooted`, `isDebuggable`, ranks them by impact and proposes Smali patches. A patch is applied with CFG awareness: the right basic block is edited, not a blind string replacement. |
+| **ML Patch Predictor** | Over 150 patch patterns (license, billing v5 to v7, premium, ads, root, SSL pinning, Play Integrity, JWT, anti-cheat), ranked by `Risk × Impact / (Cost × Detection × Breakage)`. Works for Kotlin, React Native, Flutter and Unity; `.original` backups are verified by SHA-256. |
+| **TOP-5 Insights** | JNI Boundary Analyzer, Privacy Analyzer, Version Diff, Interactive Graph Explorer (HTML) and the Firmware/IoT Analyzer. |
+| **MobSF analogues written from scratch** | A SAST rule scanner (**105 rules**, CVSS, CWE, OWASP, MASVS), Exodus trackers (**431 signatures**), a Network Security Config auditor, deep manifest audit, and APKiD packer and obfuscator detection (**30 signatures**). |
+| **Vulnscan** | Fully rewritten: a pipeline engine, differential analysis, AIMD request rate control. New checks: time-based SQLi (CWE-89), OS command injection (CWE-78) and 11 more. Active mode requires the `--i-own-this-target` flag. |
+| **Supply chain audit** | Static SDK detection in Smali (Firebase, Facebook, Yandex Metrica, Adjust) with risk scoring. CVE-2025-55182 (RCE in React Server Components). GitHub Actions, GitLab CI and Jenkinsfile audits (context injection, PPE, mutable versions). K8s, Docker and AWS IAM config audits (container escape, IAM PassRole, confused deputy). Everything runs offline. |
+| **Bytecode and native-file analysis** | The `--scan-bytecode` and `--scan-native` flags. DEX goes through the **Hyperion IR** pipeline (MIR, CFG, SSA, DFG via `omnisec-lifter-dalvik`), meaning OmniIR analyzes it, not raw Smali. |
+| **Media Forensics** | Polyglot and steganography hunting, Exif and GPS analysis, automatic generation of data-extraction scripts. Fully rewritten, with 14 new modules. |
 
 <details>
-<summary><b>▸ Medium-priority sidecar analyzers (7 more)</b></summary>
+<summary><b>▸ 7 more auxiliary analyzers</b></summary>
 
-Seven additional offline modules write to `<output>/medium/`: Play Store metadata, SBOM extraction, Permission-to-Code mapping, Certificate deep analysis (v1/v2/v3 signing, debug-key), Malware-domain checks, Icon analysis, and NIAP compliance.
+These offline modules write their results to `<output>/medium/`: Play Store metadata, SBOM extraction, a
+Permission-to-Code map, deep certificate analysis (v1, v2, v3 signatures, debug key), checks against a
+malicious-domain list, icon analysis and NIAP compliance.
 
 </details>
 
 ---
 
-## <img src=".github/assets/icons/globe.svg" width="20"> Private server engine & Bit Arena demo
+## <img src=".github/assets/icons/globe.svg" width="20"> Private server and the Bit Arena demo
 
-When the Private Server Toolkit captures a session it can emit a **runnable** Elixir/OTP backend rather than a stub you have to finish. The hand-written reference lives in [`elixir_privserver/mock_server`](elixir_privserver/mock_server) and is the exact shape the generator targets.
+When the Private Server Toolkit records a session, it can emit a ready-to-run Elixir/OTP backend instead of
+a stub you still have to finish. The hand-written reference version lives in
+[`elixir_privserver/mock_server`](elixir_privserver/mock_server), and that is exactly the shape the generator
+aims for.
 
 | <img src=".github/assets/icons/globe.svg" width="18"> Part | What it does |
 | :--- | :--- |
-| **Rule engine** | Declarative `request → response` rules in `priv/rules.json` (regex `path` / `path_prefix` / `method`, first match wins), **hot-reloaded at runtime** so connected clients stay connected. Placeholders like `$premium_token`, `$now` and `$rand_hex` are minted per request. |
-| **Fault scenarios** | Live-switchable profiles — `normal`, `flaky` (20–250 ms latency + ~20% `503`s), `offline`, `expired` — flipped mid-session to watch how a client copes when its backend stops being polite. |
-| **Live dashboard** | One self-contained HTML page on a separate admin port (no CDN, no external fonts — offline like everything else): request counters, a rolling traffic log, scenario switch and rule reload. |
-| **Heuristic fallback** | If no rule matches, the engine recognises auth / license / feature-flag endpoints by name and answers plausibly — an unknown app usually works with zero configuration. |
+| **Rules engine** | Declarative request → response rules live in `priv/rules.json` (regex on `path`, `path_prefix` and `method`; the first match wins). Rules reload on the fly, so connected clients don't drop. The `$premium_token`, `$now` and `$rand_hex` placeholders are substituted on every request. |
+| **Failure scenarios** | Profiles switch mid-session: `normal`, `flaky` (20 to 250 ms delays and about 20% `503` responses), `offline`, `expired`. That shows how the client copes with a backend that stopped being polite. |
+| **Live dashboard** | A single self-contained HTML page on a separate admin port, no CDNs or external fonts — offline, like everything else. Request counters, a traffic log, a scenario switcher and rule reloading. |
+| **Heuristic fallback** | When no rule matches, the engine recognizes auth, license and feature-flag endpoints by name and answers plausibly. An unfamiliar app usually starts working with no configuration at all. |
 
-**Bit Arena** ([`elixir_privserver/demo_game`](elixir_privserver/demo_game)) is a small authoritative multiplayer game server that makes the toolkit tangible: one process per player, one supervised temporary `GenServer` per match, a 20 Hz authoritative tick, an ETS leaderboard, a zero-build browser client and a zero-dependency Node bot. Its only trust boundary is an **unsigned** entitlement token it fetches from its own `/api/v1/session`, so pointing just that lookup at the mock server hands the same account a golden skin, double coins and a speed boost — live on the dashboard:
+**Bit Arena** ([`elixir_privserver/demo_game`](elixir_privserver/demo_game)) is a small multiplayer server
+with authoritative logic where the toolkit is shown in action. One process per player, one supervised
+temporary `GenServer` per match, an authoritative 20 Hz tick, an ETS leaderboard, a browser client with no
+build step and a dependency-free Node bot. The single place where the server trusts the client is the
+**unsigned** entitlement token the game fetches from its own `/api/v1/session`. Point just that request at
+the mock server and the same account gets a golden skin, doubled coins and a speed boost — all visible on
+the dashboard:
 
 ```bash
-# honest game on :4000, private server on :9340
+# fair game on :4000, private server on :9340
 cd elixir_privserver/demo_game/client
 node bot.mjs --account guest                                   # tier=free
 node bot.mjs --account guest --backend http://localhost:9340   # tier=premium
 ```
 
-The lesson in one line: *an entitlement your client asks a server for is only as trustworthy as the signature on the answer.* Both apps ship with tests — including one that deliberately proves a forged token is accepted, so it fails the day you add a signature. Full guides: [`elixir_privserver/mock_server/README.md`](elixir_privserver/mock_server/README.md) and [`elixir_privserver/demo_game/README.md`](elixir_privserver/demo_game/README.md).
+The moral is simple: entitlement the client fetches from a server is worth exactly as much as the signature
+on the response. Both apps ship tests, and one of them specifically proves that a forged token is accepted —
+so it will fail on the day you add a signature. Full guides:
+[`elixir_privserver/mock_server/README.md`](elixir_privserver/mock_server/README.md) and
+[`elixir_privserver/demo_game/README.md`](elixir_privserver/demo_game/README.md).
 
 ---
 
-## <img src=".github/assets/icons/package.svg" width="20"> Reports & output
+## <img src=".github/assets/icons/package.svg" width="20"> Reports and outputs
 
-One run can emit everything below. Pick a depth with `-profile {quick|balanced|deep|paranoid}` and a verbosity with `-report {short|default|full|all}`.
+A single run can produce everything listed below. The `-profile {quick|balanced|deep|paranoid}` flag sets
+analysis depth, and the `-report {short|default|full|all}` flag sets report detail.
 
 ```text
 analysis_output/
-├── REPORT.html                 # interactive report (open this first)
-├── REPORT.md                   # Markdown for issues / wikis
+├── REPORT.html                 # interactive report (open this one first)
+├── REPORT.md                   # Markdown for issues and wikis
 ├── analysis.json               # machine-readable findings
-├── analysis.sarif              # optional: -sarif  → GitHub/GitLab code scanning
+├── analysis.sarif              # with -sarif: GitHub and GitLab code scanning
 ├── PATCHES.md                  # proposed patches
-├── PATCHES_WITH_FIX.md         # patches with applied fixes
+├── PATCHES_WITH_FIX.md         # patches with the fix applied
 ├── correlation_report.{md,json}# findings linked into risk chains
 ├── insights/                   # JNI_BRIDGE · PRIVACY · VERSION_DIFF · GRAPH_EXPLORER · FIRMWARE
-├── mobsf/                       # SAST_RULES · EXODUS_TRACKERS · NSC_AUDIT · MANIFEST_AUDIT · APKID
-└── medium/                      # SBOM · PERMISSION_MAP · CERT_AUDIT · MALWARE_DOMAINS · ICON · NIAP · PLAYSTORE
+├── mobsf/                      # SAST_RULES · EXODUS_TRACKERS · NSC_AUDIT · MANIFEST_AUDIT · APKID
+└── medium/                     # SBOM · PERMISSION_MAP · CERT_AUDIT · MALWARE_DOMAINS · ICON · NIAP · PLAYSTORE
 ```
 
-| Format | Use it for |
+| Format | What it is for |
 | :--- | :--- |
-| **HTML** | Reading with your eyes — risk scoring, finding breakdown, artifact browser, crack-point view |
-| **Markdown** | Pasting into issues, PRs, and wikis |
-| **JSON / CSV** | Scripting and dashboards |
-| **SARIF** | GitHub/GitLab code scanning, VS Code SARIF Viewer, SonarQube |
+| **HTML** | Reading by eye: risk summary, finding breakdown, artifact browser, crack-point view |
+| **Markdown** | Pasting into issues, PRs and wikis |
+| **JSON and CSV** | Scripts and dashboards |
+| **SARIF** | GitHub and GitLab code scanning, VS Code SARIF Viewer, SonarQube |
 
-A full flag reference lives in [**docs/USAGE.md**](docs/USAGE.md) and `FlagiFiles.md`.
+Full flag reference: [docs/USAGE.md](docs/USAGE.md) and `FlagiFiles.md`.
 
 ---
 
@@ -316,7 +401,7 @@ flowchart TD
     UI["CLI · TUI · Web UI (:7474) · REST API"]
     IN --> UI
 
-    UI --> A["Android / bytecode<br/>Go pipeline"]
+    UI --> A["Android and bytecode<br/>Go pipeline"]
     UI --> B["OmniSec native<br/>Rust · 52 crates"]
     UI --> C["Dynamic sandbox<br/>Windows + Android"]
     UI --> D["Toolkits<br/>privsrv · crack · insights · mobsf"]
@@ -331,16 +416,16 @@ flowchart TD
     COR --> OUT["Reports<br/>HTML · MD · JSON · CSV · SARIF"]
 ```
 
-| Layer | Language | Where |
+| Layer | Language | Where it lives |
 | :--- | :--- | :--- |
-| CLI / TUI / Web UI / REST API | Go | `pkg/cmd/analyzer`, `pkg/api` |
-| Static pipeline · taint · SMT · SSA IR | Go | `pkg/internal/{pipeline,taint,smt,ssair}` |
-| Dynamic sandbox (Windows + Android) | Go + Zig | `pkg/internal/sandbox`, `zig/sandbox` |
+| CLI, TUI, Web UI, REST API | Go | `pkg/cmd/analyzer`, `pkg/api` |
+| Static pipeline, taint, SMT, SSA IR | Go | `pkg/internal/{pipeline,taint,smt,ssair}` |
+| Dynamic sandbox (Windows and Android) | Go + Zig | `pkg/internal/sandbox`, `zig/sandbox` |
 | OmniSec native engine (52 crates) | Rust | `rust/crates/omnisec-*` |
-| SIMD ML runtime (XNOR-GEMM · Hamming · SpMV) | Zig | `zig/src` |
-| APK Editor IDE — desktop + on-device Android port | Zig + Java | `apk-editor` (separate repository) |
+| SIMD ML runtime (XNOR-GEMM, Hamming, SpMV) | Zig | `zig/src` |
+| APK Editor IDE (desktop and Android port) | Zig + Java | `apk-editor` (separate repository) |
 | Distributed analysis server (optional) | Elixir/OTP | `server/` |
-| Private-server engine + Bit Arena demo | Elixir/OTP | `elixir_privserver/` |
+| Private-server engine and Bit Arena demo | Elixir/OTP | `elixir_privserver/` |
 
 More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
@@ -348,19 +433,22 @@ More detail: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## <img src=".github/assets/icons/cpu.svg" width="20"> Machine learning
 
-ML assists the audit — deliberately lightweight, CPU-only, and fully offline (no LLMs, no gigabyte model weights):
+ML here assists the audit and is deliberately lightweight: it runs on CPU, fully offline, with no LLMs and
+no gigabyte-sized weights.
 
-- <img src=".github/assets/icons/search.svg" width="14"> **HDC auto-naming** — recovers obfuscated variable/function names locally using sparse associative memory.
-- <img src=".github/assets/icons/target.svg" width="14"> **Smart risk scoring** — an ensemble (GNN, GBT, Random Forest, Logistic Regression) for spotting dangerous patterns, with **Platt-calibrated confidence** and SHAP-inspired feature attribution.
-- <img src=".github/assets/icons/cpu.svg" width="14"> **ML Patcher** — 150+ patch patterns ranked by `Risk × Impact / (Cost × Detection × Breakage)`, with CFG-aware apply and SHA-256-verified backups.
+- <img src=".github/assets/icons/search.svg" width="14"> **HDC auto-naming.** Recovers the names of obfuscated variables and functions locally on sparse associative memory.
+- <img src=".github/assets/icons/target.svg" width="14"> **Risk scoring.** An ensemble of GNN, GBT, Random Forest and Logistic Regression hunts dangerous patterns. Platt calibration and SHAP-style feature attribution are used.
+- <img src=".github/assets/icons/gear.svg" width="14"> **ML Patcher.** Over 150 patch patterns ranked by `Risk × Impact / (Cost × Detection × Breakage)`, applied with CFG awareness and SHA-256-verified backups.
 
-The longer-term plan (conformal prediction, on-device incremental learning, drift monitoring) lives in [docs/ML_ROADMAP.md](docs/ML_ROADMAP.md).
+What is planned next (conformal prediction, incremental on-device retraining, drift monitoring) is described
+in [docs/ML_ROADMAP.md](docs/ML_ROADMAP.md).
 
 ---
 
 ## <img src=".github/assets/icons/globe.svg" width="20"> GitHub code scanning
 
-Mega-Analyzer emits **SARIF**, so its findings appear directly in your repo's **Security → Code scanning** tab and inline on pull requests. Drop in the reusable action:
+Mega-Analyzer can emit **SARIF**, so findings appear right on the **Security → Code scanning** tab and in
+pull-request comments. Just add the analyzer to your workflow:
 
 ```yaml
 # After building/installing analyzer in the workflow:
@@ -371,18 +459,19 @@ Mega-Analyzer emits **SARIF**, so its findings appear directly in your repo's **
     sarif_file: analysis_output/analysis.sarif
 ```
 
-Full guide: [docs/CODE_SCANNING.md](docs/CODE_SCANNING.md).
+The full guide: [docs/CODE_SCANNING.md](docs/CODE_SCANNING.md).
 
 ---
 
 ## <img src=".github/assets/icons/shield.svg" width="20"> Principles
 
-These constraints are non-negotiable and define what the project is:
+These rules are non-negotiable; the whole project rests on them.
 
-- **Local core analysis.** Static scans run without cloud services or telemetry. Servers default to loopback. Explicit network/device modes require their configured targets and tools.
-- **Lightweight by mandate.** Targets modest hardware (a 2012-era quad-core, 8 GB RAM). Peak RAM within ~1.5–2 GB; normal runs fit in 500–800 MB. No heavy LLMs or gigabyte model weights.
-- **Dual-licensed.** mega-analyzer is dual-licensed under [BSD](LICENSE) OR [GPLv2](COPYING).
-- **Defensive only.** For security research, auditing, and defense. Not for building or distributing malware.
+| | |
+| :---: | :--- |
+| <img src=".github/assets/icons/lock.svg" width="20"> | **Static analysis stays local.** No cloud services and no telemetry. Servers listen on loopback by default, and the explicit network modes only touch the targets and tools you configured yourself. |
+| <img src=".github/assets/icons/cpu.svg" width="20"> | **Lightweight is a requirement.** The target is modest hardware, for example 4 cores from around 2012 and 8 GB of RAM. Peak memory is roughly 1.5 to 2 GB; everyday runs sit at 500 to 800 MB. No heavy LLMs and no gigabyte-sized weights. |
+| <img src=".github/assets/icons/shield.svg" width="20"> | **Defensive use only.** The project was created for security research, auditing and defense. It is not intended for creating or distributing malware. |
 
 ---
 
@@ -391,33 +480,28 @@ These constraints are non-negotiable and define what the project is:
 | | |
 | :--- | :--- |
 | [QUICKSTART.md](QUICKSTART.md) | The 60-second version |
-| [FlagiFiles.md](FlagiFiles.md) | Complete flag reference — every flag, env var, and build command |
-| [docs/USAGE.md](docs/USAGE.md) | Flags, profiles, and recipes (cheat sheet) |
-| [docs/BUILD.md](docs/BUILD.md) | Core build vs full native, toolchains, testing |
-| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Directory layout, Go/Rust/Zig/Elixir interaction, adaptive scheduler |
-| [docs/COMPARISON.md](docs/COMPARISON.md) | Honest comparison vs MobSF / JADX / Ghidra / ANY.RUN / VirusTotal |
-| [docs/FAQ.md](docs/FAQ.md) | Common questions, gotchas, and design choices |
-| [docs/CODE_SCANNING.md](docs/CODE_SCANNING.md) | SARIF output and GitHub Action integration |
-| [docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md) | Docker / Compose / Kubernetes deployment |
-| [docs/ROADMAP.md](docs/ROADMAP.md) | Project roadmap (sandbox, ML, detection) |
-| [docs/ML_ROADMAP.md](docs/ML_ROADMAP.md) | Machine-learning strategy and roadmap |
-| [docs/RELEASING.md](docs/RELEASING.md) | Release workflow and signature verification |
-| [docs/SECURITY.md](docs/SECURITY.md) | How to report vulnerabilities (private advisory) |
-| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | How to report bugs and suggest ideas (no PRs) |
-| [docs/CODE_OF_CONDUCT.md](docs/CODE_OF_CONDUCT.md) | Community standards |
-| [docs/DONATION.md](docs/DONATION.md) | Support the project |
+| [FlagiFiles.md](FlagiFiles.md) | Full reference: every flag, environment variable and build command |
+| [docs/USAGE.md](docs/USAGE.md) | Flags, profiles and recipes (cheat sheet) |
+| [docs/BUILD.md](docs/BUILD.md) | The core build and the full native one, toolchains, tests |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Directory layout, how Go, Rust, Zig and Elixir interact, the adaptive scheduler |
+| [docs/COMPARISON.md](docs/COMPARISON.md) | An honest comparison with MobSF, JADX, Ghidra, ANY.RUN and VirusTotal |
+| [docs/FAQ.md](docs/FAQ.md) | Common questions, pitfalls and design decisions |
+| [docs/CODE_SCANNING.md](docs/CODE_SCANNING.md) | SARIF and the GitHub Action integration |
+| [docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md) | Deployment with Docker, Compose and Kubernetes |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Plans for the sandbox, ML and detections |
+| [docs/ML_ROADMAP.md](docs/ML_ROADMAP.md) | Machine-learning strategy and plans |
+| [docs/RELEASING.md](docs/RELEASING.md) | How releases are cut and the signature is verified |
+| [docs/SECURITY.md](docs/SECURITY.md) | How to report a vulnerability (private advisory) |
+| [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md) | How to report bugs and suggest ideas (PRs are not accepted) |
+| [docs/CODE_OF_CONDUCT.md](docs/CODE_OF_CONDUCT.md) | Community rules |
+| [docs/DONATION.md](docs/DONATION.md) | How to support the project |
 
 ---
 
 ## <img src=".github/assets/icons/bolt.svg" width="20"> Support the project
 
-You can support Mega-Analyzer with a voluntary [donation via DonationAlerts](https://www.donationalerts.com/r/promastergame).
-
----
-
-## <img src=".github/assets/icons/key.svg" width="20"> License
-
-mega-analyzer is dual-licensed under [BSD](LICENSE) OR [GPLv2](COPYING).
+If Mega-Analyzer turned out to be useful, you can send a voluntary
+[donation via DonationAlerts](https://www.donationalerts.com/r/promastergame).
 
 ---
 
@@ -426,19 +510,15 @@ mega-analyzer is dual-licensed under [BSD](LICENSE) OR [GPLv2](COPYING).
 | | |
 | :--- | :--- |
 | **Version** | v1.0.0-beta.1 |
-| **Maintainer** | [@Promastergame](https://github.com/Promastergame) — designed and written by a single developer, using AI tools |
-| **Support** | [Donate via DonationAlerts](https://www.donationalerts.com/r/promastergame) |
+| **Author** | [@Promastergame](https://github.com/Promastergame). Designed and written by one developer with AI assistance |
 | **License** | [BSD](LICENSE) OR [GPLv2](COPYING) |
+
 ---
 
 <div align="center">
 
 **Mega-Analyzer** · a whole malware lab on `localhost`
 
-<sub>Dual-licensed under BSD or GPLv2 · See <a href="LICENSE">LICENSE</a> and <a href="COPYING">COPYING</a> for details · runs at 100% with the network cable pulled</sub>
+<sub>Dual-licensed BSD or GPLv2 · see <a href="LICENSE">LICENSE</a> and <a href="COPYING">COPYING</a> · static analysis works even with the network cable unplugged</sub>
 
 </div>
-
-### Administrator web mode and UTF-8
-
-`-admin` is web-only: Windows UAC, Linux sudo or already-rooted Android su. Loopback and a pairing token are mandatory. Open the printed URL in a normal browser; do not run untrusted samples on your main machine. Windows console UTF-8 and BOM-aware UTF-8 profile files are supported. [Details and patch instructions](docs/WEB_ADMIN.ru.md).
