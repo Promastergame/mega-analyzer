@@ -1,38 +1,12 @@
-# Mega-Analyzer 1.0.0-beta.1
+False-positive cleanup across the board, a faster quick profile, WASM release infrastructure and the project site at [mega-analyzer.lol](https://mega-analyzer.lol).
 
-These notes describe preparation of the public beta from the current lineage.
-Test and CI changes keep the existing version; they do not create a new release.
-The core package contains the
-standalone Go core; optional Rust/Zig/GNN libraries and the native APK editor
-remain separate builds.
-
-- REST API rejects unexpected Host headers on every route, including reads.
-- Web UI bounds active scans and queued uploads, supports cancelling waiting
-  jobs, and reports queued/running states.
-- API reference and request console work offline with embedded assets.
-- CLI, API, OpenAPI and metrics share version metadata; archives include
-  `BUILD.json` with the source commit, build date and target architecture.
-- The bundled demonstration uses the documented `demo/vulnerable-app` path.
-  Archives contain concise English/Russian instructions, Quick Start and the
-  native APK sample project. Every packaged Markdown file's relative links are
-  checked against the unpacked archive.
-- In-house sources and binaries use BSD-3-Clause OR GPL-2.0-only, at the user's
-  option; third-party notices and license texts are preserved separately.
-- JSON exports preserve typed findings, evidence, coverage and build metadata.
-  HTML/Markdown/JSON/SARIF reports replace earlier files only after a successful
-  write; failed exports keep the previous report. SARIF paths are URI-escaped.
-- `scripts/compare_reports.py` compares saved findings by stable identity and
-  supports regression thresholds with an explicit incomplete-coverage status.
-- Public source exports verify their manifest before packaging/building. CI
-  checks that the exported core builds without private files or Git history.
-- Publication waits for Go tests, race checks, detection evaluation, fuzz smoke
-  and checks of the downloaded `amd64` release archives on Windows, Linux and
-  macOS. The shared core smoke job currently covers Linux only.
-
-Known limits: this is a beta; native engines and Android device execution are
-not covered by the core release smoke checks. Release smoke hosts use `amd64`;
-ARM64 archives are cross-compiled without runtime tests. Reports and
-workspace data are retained until the user removes them.
+- Engine: quick profile honors module switches — flag defaults no longer re-enable data-flow, crack points and anomaly detection (fast triage is ~15 seconds quicker).
+- False positives on clean APKs: `setAccessible` custom-keyword boilerplate suppressed, vendored Play Billing SDK internals counted as library code, native artifact findings deduplicated across ABI copies, inventory-grade numeric literals no longer raise a Derived Exploit Payload.
+- Reports: the coverage-limitation banner is gone from HTML/Markdown (the data stays in `analysis.json`).
+- Web UI: the report iframe gets a dark background (no more white scrollbar strip below reports) and the app declares its color scheme.
+- Branding: favicon.ico/PNG + apple-touch-icon everywhere, an inline favicon for REPORT tabs and the red bug emblem as the sidebar logo.
+- Site: [mega-analyzer.lol](https://mega-analyzer.lol) — the sidebar footer links to the source catalog at mrbeast.art.
+- Infra: `scripts/build_web_site.py` builds the WASM site (bridge/worker/pool/memfs/GNN, GOOS=js targets) and copies the icons; version bumped to 1.0.0-beta.2.
 
 For a first run, unpack and execute:
 
