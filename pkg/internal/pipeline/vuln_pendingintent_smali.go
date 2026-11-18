@@ -67,8 +67,14 @@ func detectPendingIntentInMethod(m *types.SmaliMethod, class *types.SmaliClass, 
 		return
 	}
 
-	// Integer-constant provenance per register.
+	// Integer-constant provenance per register. `assembled` marks values
+	// produced by or-int: such constants are typically built across runtime
+	// branches (compat wrappers add FLAG_MUTABLE conditionally), so the value
+	// at the call site may differ from the linearly-tracked one — those call
+	// sites stay review-grade, while a plain `const` flags register is a
+	// definite missing-FLAG_IMMUTABLE vulnerability.
 	ints := make(map[string]int64, 16)
+	assembled := make(map[string]bool, 8)
 
 	for bodyIdx, raw := range m.Body {
 		line := strings.TrimSpace(strings.SplitN(raw, "#", 2)[0])
@@ -83,7 +89,7 @@ func detectPendingIntentInMethod(m *types.SmaliMethod, class *types.SmaliClass, 
 				continue
 			}
 			if call.classDesc == "Landroid/app/PendingIntent;" && piFactoryMethods[call.method] {
-				evalPendingIntentCallSite(call, ints, m, class, analysis, lineNumber)
+				evalPendingIntentCallSite(call, ints, assembled, m, class, analysis, lineNumber)
 			}
 			continue
 		}
@@ -101,25 +107,31 @@ func detectPendingIntentInMethod(m *types.SmaliMethod, class *types.SmaliClass, 
 			// below — flags are 32-bit ints and never live in wide pairs).
 			if strings.HasPrefix(line, "const-wide") {
 				delete(ints, dest)
+				delete(assembled, dest)
 				continue
 			}
 			if v, ok := parseSmaliIntOperand(line); ok {
 				ints[dest] = v
+				delete(assembled, dest)
 			} else {
 				delete(ints, dest)
+				delete(assembled, dest)
 			}
 
 		case strings.HasPrefix(line, "or-int"):
 			if v, ok := evalOrInt(line, ints); ok {
 				ints[dest] = v
+				assembled[dest] = true
 			} else {
 				delete(ints, dest)
+				delete(assembled, dest)
 			}
 
 		default:
 			// Any other write (move*, move-result*, iget*, aget*, add-int*,
 			// invoke result not yet landed, ...) makes prior constants stale.
 			delete(ints, dest)
+			delete(assembled, dest)
 		}
 	}
 }
@@ -129,6 +141,7 @@ func detectPendingIntentInMethod(m *types.SmaliMethod, class *types.SmaliClass, 
 func evalPendingIntentCallSite(
 	call cryptoInvoke,
 	ints map[string]int64,
+	assembled map[string]bool,
 	m *types.SmaliMethod,
 	class *types.SmaliClass,
 	analysis *types.FileAnalysis,
@@ -164,18 +177,26 @@ func evalPendingIntentCallSite(
 	case resolved && flags&piFlagMutable != 0:
 		emit(types.CategoryPendingIntentVuln, "PendingIntent uses FLAG_MUTABLE. If the token is shared with an untrusted recipient, unspecified Intent fields may be filled in. Review whether mutability is required (for example, inline reply)",
 			"PendingIntent;->"+call.method+" FLAG_MUTABLE", "high", types.SeverityMedium)
+	case resolved && !assembled[flagsReg]:
+		// A plain `const` with neither mutability bit is a fully-known flag
+		// value: the register was never rewritten and no or-int assembly can
+		// contribute extra bits at runtime. This is the classic
+		// missing-FLAG_IMMUTABLE vulnerability (targetSdk 31+ makes the
+		// PendingIntent throw or the implicit mutability becomes a hijack
+		// surface for untrusted recipients).
+		emit(types.CategoryPendingIntentVuln, "PendingIntent is created without FLAG_IMMUTABLE or FLAG_MUTABLE. The flags register is a plain constant (0x"+
+			strconv.FormatInt(flags, 16)+"), so the call site relies on implicit mutability: an untrusted recipient may fill in unspecified Intent fields or return a crafted Intent. Pass FLAG_IMMUTABLE when the PendingIntent does not need mutation",
+			"PendingIntent;->"+call.method+" flags=0x"+strconv.FormatInt(flags, 16)+" missing FLAG_IMMUTABLE", "high", types.SeverityMedium)
 	case resolved:
-		// A resolved constant with neither mutability bit (typically
-		// FLAG_UPDATE_CURRENT = 0x8000000 built by or-int from compat
-		// wrappers) cannot establish a vulnerability on its own: the or-int
-		// tracker sees only the local constant, so the real flag value may
-		// include more bits assembled elsewhere; and on targetSdk 31+ a
-		// PendingIntent without an explicit mutability flag throws at
-		// runtime, making this either dead code or under-constant analysis.
-		// Either way it is a review note, not a MEDIUM finding.
+		// An or-int assembled constant with neither mutability bit: compat
+		// wrappers typically build flags across runtime branches (e.g. add
+		// FLAG_MUTABLE only below API 31), so the linearly-tracked value may
+		// differ from the value at this call site. The real flag set can
+		// include mutability bits assembled on another path — a review note,
+		// not a MEDIUM finding.
 		emit(types.CategoryPendingIntentReview, "PendingIntent flags constant (0x"+
-			strconv.FormatInt(flags, 16)+") carries no explicit mutability flag. The constant may be partial (flags assembled via or-int at runtime) or the call site may be unreachable, because targetSdk 31+ throws without FLAG_IMMUTABLE/FLAG_MUTABLE. Verify the full flag value and reachability before treating this as a mutable surface",
-			"PendingIntent;->"+call.method+" flags=0x"+strconv.FormatInt(flags, 16), "low", types.SeverityInfo)
+			strconv.FormatInt(flags, 16)+") carries no explicit mutability flag, but the value is assembled via or-int: flags may be extended on other runtime branches (compat wrappers conditionally add FLAG_MUTABLE). Verify the full flag value across branches before treating this as a mutable surface",
+			"PendingIntent;->"+call.method+" flags=0x"+strconv.FormatInt(flags, 16)+" or-int assembled", "low", types.SeverityInfo)
 	default:
 		emit(types.CategoryPendingIntentReview, "PendingIntent flags could not be resolved. Mutability and a vulnerability are not established; inspect the callers supplying flags",
 			"PendingIntent;->"+call.method+" unresolved flags", "low", types.SeverityInfo)

@@ -55,14 +55,15 @@ func TestPendingIntentAST_MixedSafeAndUnsafe(t *testing.T) {
 	if matches[0].MethodName != "unsafe" {
 		t.Errorf("finding attributed to %q, want unsafe", matches[0].MethodName)
 	}
-	// flags=0 resolved: neither mutability bit is present, which at targetSdk
-	// 31+ means dead code or under-constant or-int analysis — a review note,
-	// not a MEDIUM vulnerability finding.
-	if matches[0].Category != types.CategoryPendingIntentReview {
-		t.Errorf("flags=0 must be a review note, got %v", matches[0].Category)
+	// flags=0 as a plain const is a fully-known flag value: no or-int
+	// assembly can contribute extra bits, so this is the classic
+	// missing-FLAG_IMMUTABLE vulnerability (eval corpus v6:
+	// pi-missing-immutable / pi-mixed-safe-and-unsafe expect vuln).
+	if matches[0].Category != types.CategoryPendingIntentVuln {
+		t.Errorf("plain-const flags=0 must be a vuln, got %v", matches[0].Category)
 	}
-	if matches[0].IsCritical || matches[0].Severity != types.SeverityInfo {
-		t.Error("resolved flags without a mutability bit are a review note, not a critical exploit")
+	if matches[0].IsCritical || matches[0].Severity != types.SeverityMedium {
+		t.Error("missing-FLAG_IMMUTABLE vuln must be MEDIUM severity, not critical")
 	}
 }
 

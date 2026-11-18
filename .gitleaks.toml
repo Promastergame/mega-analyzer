@@ -434,3 +434,23 @@ paths = ["\\Azig/apk_editor/src/logic/packfinish\\.zig\\z", "\\A\\.gitleaks\\.to
 regexes = [
   "\\Awin32\\.BCRYPT_HANDLE\\z",
 ]
+
+[[allowlists]]
+targetRules = ["generic-api-key"]
+description = "Local-only dev token for measure_game_budget.py benchmark script (server started with this token via env var, never a real credential)"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Adecisionai/scripts/measure_game_budget\\.py\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\Alocal\\-budget\\-test\\-token\\z",
+]
+
+[[allowlists]]
+targetRules = ["generic-api-key"]
+description = "Non-secret Linux sysfs thermal key identifier in pkg/internal/antivm/adapter/thermal.go"
+condition = "AND"
+regexTarget = "secret"
+paths = ["\\Apkg/internal/antivm/adapter/thermal\\.go\\z", "\\A\\.gitleaks\\.toml\\z"]
+regexes = [
+  "\\Athermal_zone0\\.temperature\\z",
+]

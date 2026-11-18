@@ -342,7 +342,21 @@ func (s *sliceState) traceDefinition(signature string, method methodData, index 
 		if source, ok := sourceFor(call.signature); ok {
 			if containerReadSource(call.signature) && !call.isStatic && len(call.registers) > 0 {
 				hits := s.traceRegister(signature, callIndex-1, call.registers[0], depth+1)
-				if len(hits) > 0 {
+				// Container reads (Bundle/Parcel) are not an IPC boundary: the
+				// app can fill the container itself, so tracing the receiver
+				// yields the precise origin when it is labeled. But a plain
+				// method parameter receiver produces label-less parameter
+				// hits — those carry no taint labels and every sink filter
+				// would drop them, silently losing the flow. Fall back to the
+				// labeled [unverified container origin] source in that case.
+				labeled := false
+				for i := range hits {
+					if hits[i].labels != 0 {
+						labeled = true
+						break
+					}
+				}
+				if labeled {
 					return addPropagationStep(hits, signature, method.LineStart+callIndex)
 				}
 				return []sliceHit{{source: "[unverified container origin] " + call.signature,
