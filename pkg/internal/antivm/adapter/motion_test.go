@@ -11,7 +11,11 @@ import (
 )
 
 func motionFixture() MotionConfig {
-	return MotionConfig{IntervalMillis: 100, DurationSeconds: 5, Frames: []MotionFrame{
+	// DurationSeconds headroom: under `go test -race` on CI every helper
+	// re-exec (the test binary itself) is several times slower, and playback
+	// writes against a 5-second lifetime end in run.err before the assertions
+	// run. The playback is cancelled as soon as the assertions pass.
+	return MotionConfig{IntervalMillis: 100, DurationSeconds: 30, Frames: []MotionFrame{
 		{Readings: []SensorVector{{Name: "acceleration", Values: [3]float64{.1, 0, 9.8}}, {Name: "gyroscope", Values: [3]float64{.01, 0, 0}}}},
 		{Readings: []SensorVector{{Name: "acceleration", Values: [3]float64{0, .1, 9.8}}, {Name: "gyroscope", Values: [3]float64{0, .01, 0}}}},
 	}}
@@ -61,17 +65,29 @@ func TestPlaybackObservesAndroidEventsAndRestoresOriginalVectors(t *testing.T) {
 			if err != nil || !result.OK() {
 				t.Fatalf("result=%+v err=%v", result, err)
 			}
-			time.Sleep(250 * time.Millisecond)
-			st, err := dev.ReadState(ctx)
-			if err != nil || st.Sensors["motion.active"] != "true" || st.Sensors["acceleration.samples"] != "12" {
-				t.Fatalf("state=%+v err=%v", st, err)
-			}
 			want := "true"
 			if frozen == "1" {
 				want = "false"
 			}
-			if st.Sensors["acceleration.moving"] != want || st.Sensors["gyroscope.moving"] != want {
-				t.Fatalf("probe output ignored: %+v", st.Sensors)
+			// The probe answer is canned, but playback startup is not: under
+			// `go test -race` on CI every helper re-exec runs slower, so poll
+			// until the playback reports active with the expected moving
+			// flags instead of assuming a fixed 250ms is enough.
+			deadline := time.Now().Add(20 * time.Second)
+			var st DeviceState
+			for {
+				st, err = dev.ReadState(ctx)
+				if err != nil {
+					st = DeviceState{Sensors: map[string]string{}}
+				}
+				if st.Sensors["motion.active"] == "true" && st.Sensors["acceleration.samples"] == "12" &&
+					st.Sensors["acceleration.moving"] == want && st.Sensors["gyroscope.moving"] == want {
+					break
+				}
+				if time.Now().After(deadline) {
+					t.Fatalf("state=%+v err=%v", st, err)
+				}
+				time.Sleep(250 * time.Millisecond)
 			}
 			cancel()
 			if err := dev.Stop(context.Background()); err != nil {
