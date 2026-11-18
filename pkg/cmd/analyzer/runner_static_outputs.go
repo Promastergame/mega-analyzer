@@ -86,9 +86,6 @@ func (a *App) runStaticOutputs(ctx context.Context, target, output string) error
 			Headers: a.opts.SmaliHeaders && !a.opts.NoSmaliHeaders, JavaView: a.opts.JavaView,
 			CopyOriginal: a.opts.CopyOriginal, ClassCache: a.opts.ClassCache,
 			FrameworkDir: a.opts.FrameworkDir,
-			Baksmali: decompiler.BaksmaliOptions{JarPath: a.opts.BaksmaliJar, APILevel: a.opts.SmaliAPI, Jobs: a.opts.SmaliJobs,
-				JavaHeapMB: a.opts.SmaliHeapMB, UseLocals: a.opts.BaksmaliUseLocals,
-				SequentialLabels: a.opts.BaksmaliSeqLabels, NoParameterRegisters: a.opts.BaksmaliNoParamRegs},
 		})
 		stage.Diagnostics = append(stage.Diagnostics, decoded.Warnings...)
 		if err != nil {

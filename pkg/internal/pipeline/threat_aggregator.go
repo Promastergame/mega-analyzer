@@ -3,6 +3,7 @@ package pipeline
 import (
 	"sort"
 
+	"mega-analyzer/pkg/internal/finding"
 	"mega-analyzer/pkg/internal/types"
 )
 
@@ -100,13 +101,13 @@ func (ta *ThreatAggregator) correlateWebViewAbuse() {
 
 		ta.signals.Correlations = append(ta.signals.Correlations, Correlation{
 			Name:        "WEBVIEW_JS_BRIDGE_REMOTE",
-			Description: "WebView with JavaScript bridge loading remote content (potential RCE vector)",
+			Description: "JavaScript bridge, settings and network/content-loader references in one file; receiver association, origins and exposed methods require review",
 			Signals: []SignalType{
 				SignalWebViewJSInterface, SignalWebViewLoadURL,
 			},
 			Files:    bridgeFiles,
 			Score:    SignalWeight[SignalWebViewRemoteCode],
-			Severity: SeverityCritical,
+			Severity: SeverityMedium,
 		})
 
 		ta.signals.TotalScore += SignalWeight[SignalWebViewRemoteCode]
@@ -177,18 +178,16 @@ func (ta *ThreatAggregator) correlateAccessibilityAbuse() {
 		)
 
 		ta.signals.Correlations = append(ta.signals.Correlations, Correlation{
-			Name:        "ACCESSIBILITY_ABUSE_FULL",
-			Description: "Full accessibility abuse chain: permission + service + event + root/actions (banking trojan pattern)",
+			Name:        "ACCESSIBILITY_UI_CAPABILITIES",
+			Description: "Accessibility declaration, service/event references and UI access/action calls; targets, authorization and malicious intent remain unproven",
 			Signals: []SignalType{
 				SignalAccessibilityPermission, SignalAccessibilityService,
 				SignalAccessibilityRootWindow, SignalAccessibilityGlobalAction,
 			},
 			Files:    files,
-			Score:    SignalWeight[SignalAccessibilityAbuse],
-			Severity: SeverityHigh,
+			Score:    0,
+			Severity: SeverityInfo,
 		})
-
-		ta.signals.TotalScore += SignalWeight[SignalAccessibilityAbuse]
 	} else if hasPermission && (hasService || hasEvent) {
 		// High risk: Permission + Service/Event
 		files := ta.collectFilesForSignals(
@@ -197,17 +196,15 @@ func (ta *ThreatAggregator) correlateAccessibilityAbuse() {
 		)
 
 		ta.signals.Correlations = append(ta.signals.Correlations, Correlation{
-			Name:        "ACCESSIBILITY_SERVICE_ACTIVE",
-			Description: "Active accessibility service implementation (high risk for overlay attacks)",
+			Name:        "ACCESSIBILITY_SERVICE_DECLARATIONS",
+			Description: "Accessibility service declarations and implementation references; activation by the user has not been observed",
 			Signals: []SignalType{
 				SignalAccessibilityPermission, SignalAccessibilityService,
 			},
 			Files:    files,
-			Score:    4,
-			Severity: SeverityMedium,
+			Score:    0,
+			Severity: SeverityInfo,
 		})
-
-		ta.signals.TotalScore += 4
 	}
 }
 
@@ -235,23 +232,14 @@ func (ta *ThreatAggregator) correlateStealerCombo() {
 	if count >= 3 {
 		files := ta.collectFilesForSignals(foundPerms...)
 
-		severity := SeverityHigh
-		score := 10
-		if count >= 5 {
-			severity = SeverityCritical
-			score = SignalWeight[SignalStealerCombo]
-		}
-
 		ta.signals.Correlations = append(ta.signals.Correlations, Correlation{
-			Name:        "STEALER_PERMISSION_COMBO",
-			Description: "Multiple data-stealing permissions detected (SMS, contacts, calls, camera, mic, location)",
+			Name:        "SENSITIVE_PERMISSION_PROFILE",
+			Description: "Multiple sensitive-data permissions are declared; grants, data collection and exfiltration are not established",
 			Signals:     foundPerms,
 			Files:       files,
-			Score:       score,
-			Severity:    severity,
+			Score:       0,
+			Severity:    SeverityInfo,
 		})
-
-		ta.signals.TotalScore += score
 	}
 }
 
@@ -335,37 +323,32 @@ func (ta *ThreatAggregator) correlateBase64Network() {
 	}
 }
 
-// Anti-Analysis + Payload: Evasion with suspicious payload
+// Co-present protection/instrumentation and loader/network indicators do not
+// establish a payload, a shared execution path or malicious purpose.
 func (ta *ThreatAggregator) correlateAntiAnalysisPayload() {
-	hasAntiAnalysis := ta.signals.HasAnyGlobal(
+	protectionSignals := []SignalType{
 		SignalFrida, SignalXposed, SignalSubstrate,
 		SignalPtrace, SignalDebuggerCheck, SignalEmulatorCheck,
 		SignalRootCheck,
-	)
+	}
 
-	hasSuspiciousPayload := ta.signals.HasAnyGlobal(
+	loaderNetworkSignals := []SignalType{
 		SignalNativeDexLoader, SignalNativeHTTP, SignalNativeC2,
 		SignalDexClassLoader, SignalInMemoryDexClassLoader,
-	)
+	}
 
-	if hasAntiAnalysis && hasSuspiciousPayload {
-		files := ta.collectFilesForSignals(
-			SignalFrida, SignalXposed, SignalPtrace,
-			SignalNativeDexLoader, SignalNativeC2,
-		)
+	if ta.signals.HasAnyGlobal(protectionSignals...) && ta.signals.HasAnyGlobal(loaderNetworkSignals...) {
+		relatedSignals := append(protectionSignals, loaderNetworkSignals...)
+		files := ta.collectFilesForSignals(relatedSignals...)
 
 		ta.signals.Correlations = append(ta.signals.Correlations, Correlation{
 			Name:        "ANTI_ANALYSIS_WITH_PAYLOAD",
-			Description: "Anti-analysis techniques combined with suspicious payload (likely packed malware)",
-			Signals: []SignalType{
-				SignalFrida, SignalNativeDexLoader,
-			},
-			Files:    files,
-			Score:    15,
-			Severity: SeverityCritical,
+			Description: "Protection/instrumentation and loader/network indicators are co-present; activation and a connected malicious operation require separate evidence",
+			Signals:     relatedSignals,
+			Files:       files,
+			Score:       0,
+			Severity:    SeverityInfo,
 		})
-
-		ta.signals.TotalScore += 15
 	}
 }
 
@@ -454,7 +437,7 @@ func (ta *ThreatAggregator) correlateRuntimeLoadChain() {
 
 		ta.signals.Correlations = append(ta.signals.Correlations, Correlation{
 			Name:        "RUNTIME_LOAD_CHAIN",
-			Description: "Full runtime loading chain: native lib → JNI bridge → dynamic DEX injection (packer/malware pattern)",
+			Description: "Static co-occurrence of native loading, JNI bridge and dynamic DEX loading indicators (packer/malware pattern); a linked call chain and execution have not been established",
 			Signals: []SignalType{
 				SignalSystemLoadLibrary, SignalRegisterNatives, SignalDexClassLoader,
 			},
@@ -474,7 +457,7 @@ func (ta *ThreatAggregator) correlateRuntimeLoadChain() {
 
 		ta.signals.Correlations = append(ta.signals.Correlations, Correlation{
 			Name:        "RUNTIME_LOAD_PARTIAL",
-			Description: "Native library loading combined with DEX injection (partial packer chain)",
+			Description: "Static co-occurrence of native and DEX loading indicators (partial packer pattern); execution has not been established",
 			Signals: []SignalType{
 				SignalSystemLoadLibrary, SignalDexClassLoader,
 			},
@@ -517,14 +500,32 @@ func (ta *ThreatAggregator) GenerateMatches() []types.Match {
 	for _, corr := range ta.signals.Correlations {
 		cat := correlationToCategory(corr.Name)
 		for _, file := range corr.Files {
-			matches = append(matches, newMatch(
+			match := newMatch(
 				cat,
 				file,
 				0,
 				corr.Description,
 				corr.Name,
-				true,
-			))
+				corr.Severity == SeverityCritical,
+			)
+			match.Severity = determineSeverity(corr.Severity.String())
+			match.Score = float64(corr.Score)
+			match.EvidenceType = "signal_correlation"
+			if cat == types.CategoryAccessibilityCapability || corr.Name == "SENSITIVE_PERMISSION_PROFILE" || corr.Name == "ANTI_ANALYSIS_WITH_PAYLOAD" {
+				match.Metadata["finding_kind"] = "inventory"
+				match.Explanation = &finding.Explanation{Status: "observation", Summary: corr.Description,
+					Limitations: []string{"Co-present declarations, API references and strings do not establish grants, runtime activation or a linked attack flow."},
+					NextChecks:  []string{"Verify reachable callers, native cross-references and actual inputs before assigning a connected behavior."}}
+			}
+			if signals := ta.signals.Files[file]; signals != nil {
+				for _, sig := range corr.Signals {
+					if hit := signals.Signals[sig]; hit != nil {
+						match.Evidence = append(match.Evidence, finding.NewEvidence("correlated_signal", hit.Context, hit.Evidence,
+							finding.Location{File: file, Line: hit.Line}))
+					}
+				}
+			}
+			matches = append(matches, match)
 		}
 	}
 
@@ -537,10 +538,10 @@ func correlationToCategory(name string) types.Category {
 		return types.CategoryDexNetworkLoad
 	case "WEBVIEW_JS_BRIDGE_REMOTE", "WEBVIEW_REMOTE_JS":
 		return types.CategoryWebViewRemoteJS
-	case "ACCESSIBILITY_ABUSE_FULL", "ACCESSIBILITY_SERVICE_ACTIVE":
-		return types.CategoryStealerIndicator
-	case "STEALER_PERMISSION_COMBO":
-		return types.CategoryStealerIndicator
+	case "ACCESSIBILITY_UI_CAPABILITIES", "ACCESSIBILITY_SERVICE_DECLARATIONS":
+		return types.CategoryAccessibilityCapability
+	case "SENSITIVE_PERMISSION_PROFILE":
+		return types.CategoryManifestPermission
 	case "REFLECTION_NETWORK_COMBO":
 		return types.CategoryDynamicCodeLoad
 	case "BASE64_OBFUSCATED_NETWORK":

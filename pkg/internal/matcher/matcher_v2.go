@@ -368,15 +368,16 @@ var suppressionRules = []suppressionRule{
 
 	// ── Custom Keyword false positives ───────────────────────────────────────
 
-	// "setAccessible" в reflection-heavy SDK
+	// "setAccessible" — universal reflection plumbing. AndroidX, Play Services
+	// and app glue alike call setAccessible(true) for every reflective access,
+	// so as a standalone finding it carries no triage value in any file
+	// (including R8-obfuscated classes where the original package is hidden).
+	// Reflective crack-point evidence is tracked separately by the CFG-based
+	// detectors, which keep their own context.
 	{
 		category: types.CategoryCustomKeyword,
 		keyword:  "setaccessible",
-		pathMust: []string{
-			"androidx/", "com/google/", "kotlin/", "kotlinx/",
-			"com/unity3d/", "com/appsflyer/", "com/facebook/",
-			"com/ironsource/", "com/mbridge/", "okhttp3/",
-		},
+		pathMust: []string{}, // везде suppress
 	},
 	// "getDeviceId" в analytics SDK
 	{
@@ -388,8 +389,57 @@ var suppressionRules = []suppressionRule{
 		},
 	},
 
-	// ── Ad patterns в SDK ────────────────────────────────────────────────────
+	// ── Vendored billing SDK internals ───────────────────────────────────────
 
+	// Google Play Billing ships as a vendored library inside the APK, so any
+	// match against the library's own classes (Purchase/SkuDetails field and
+	// .param boilerplate, play_billing internals) describes the SDK, not app
+	// behavior. App-side billing wrappers (obfuscated or smellymoo/sand/**)
+	// stay visible: they are the actual integration evidence.
+	{
+		category: types.CategoryBillingClient,
+		pathMust: []string{
+			"com/android/billingclient/", "com/android/vending/billing/",
+			"com/google/android/gms/internal/play_billing/",
+		},
+	},
+	{
+		category: types.CategoryPurchaseToken,
+		pathMust: []string{
+			"com/android/billingclient/", "com/android/vending/billing/",
+			"com/google/android/gms/internal/play_billing/",
+		},
+	},
+	{
+		category: types.CategoryBillingCallback,
+		pathMust: []string{
+			"com/android/billingclient/", "com/android/vending/billing/",
+			"com/google/android/gms/internal/play_billing/",
+		},
+	},
+	{
+		category: types.CategorySubscription,
+		pathMust: []string{
+			"com/android/billingclient/", "com/android/vending/billing/",
+			"com/google/android/gms/internal/play_billing/",
+		},
+	},
+	{
+		category: types.CategoryPremiumCheck,
+		pathMust: []string{
+			"com/android/billingclient/", "com/android/vending/billing/",
+			"com/google/android/gms/internal/play_billing/",
+		},
+	},
+	{
+		category: types.CategoryPremiumUnlock,
+		pathMust: []string{
+			"com/android/billingclient/", "com/android/vending/billing/",
+			"com/google/android/gms/internal/play_billing/",
+		},
+	},
+
+	// ── Ad patterns в SDK ────────────────────────────────────────────────────
 	// "banner" в ad SDK — шум
 	{
 		category: types.CategoryAdShow,
@@ -455,6 +505,15 @@ var suppressionRules = []suppressionRule{
 		category: types.CategorySecurity,
 		pathMust: []string{"com/google/android/gms/", "androidx/", "com/facebook/", "com/unity3d/"},
 	},
+}
+
+// ShouldSuppressCustomKeyword lets the custom-keyword detector apply the same
+// false-positive table as the built-in pattern scan. Custom keywords are
+// user-configurable, so their hits previously bypassed suppression entirely
+// and flooded reports with framework boilerplate (46 setAccessible findings on
+// a clean app).
+func ShouldSuppressCustomKeyword(category types.Category, matchText, filePath, context string) bool {
+	return shouldSuppress(category, matchText, filePath, context)
 }
 
 func shouldSuppress(category types.Category, matchText, filePath, context string) bool {

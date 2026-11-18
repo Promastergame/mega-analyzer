@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 )
 
@@ -14,6 +13,7 @@ import (
 // homeScreen renders the landing page: centered logo and target prompt.
 type homeScreen struct {
 	t      *tuiState
+	edit   textEdit
 	prompt string // target input buffer
 	start  bool   // true when user pressed Enter
 }
@@ -23,82 +23,51 @@ func newHomeScreen(t *tuiState) *homeScreen {
 	if t.opts.Target != "" {
 		h.prompt = t.opts.Target
 	}
+	h.edit = newTextEdit(h.prompt)
 	return h
 }
 
-func (h *homeScreen) activate() error {
-	// Trim quotes and whitespace from both target and prompt
-	cleaned := strings.TrimSpace(strings.Trim(h.t.opts.Target, "\"'"))
-	if runtime.GOOS == "windows" && len(cleaned) > 2 && cleaned[0] == '/' && cleaned[2] == ':' {
-		cleaned = cleaned[1:]
-	}
-	h.t.opts.Target = cleaned
-	h.prompt = cleaned
+func (h *homeScreen) setPrompt(s string) {
+	h.prompt = s
+	h.edit = newTextEdit(s)
+}
 
-	if h.t.opts.Target == "" {
-		h.t.flash = "enter a target first"
-		h.t.toast(toastWarn, "target required")
-		return nil
-	}
-	if _, err := os.Stat(h.t.opts.Target); err != nil {
-		h.t.flash = "target not found: " + h.t.opts.Target
-		h.t.toast(toastError, "target not found")
-		return nil
-	}
-	if warn := h.checkCompatibility(); warn != "" {
-		h.t.toast(toastWarn, warn+" — press Enter again to proceed")
-		return nil
-	}
-	h.t.log("ok", "starting analysis")
-	return errStartAnalysis
+func (h *homeScreen) activate() error {
+	h.t.opts.Target = cleanTUIPath(h.prompt)
+	h.setPrompt(h.t.opts.Target)
+	return h.t.startAnalysis()
 }
 
 func (h *homeScreen) handleKey(ev keyEvent) bool {
-	if h.t.palette.open {
-		return false
-	}
 	switch ev.kind {
 	case keyEnter:
 		h.start = true
-		return true
-	case keyBackspace:
-		if len(h.prompt) > 0 {
-			runes := []rune(h.prompt)
-			h.prompt = string(runes[:len(runes)-1])
-			h.t.opts.Target = h.prompt
-		}
-		return true
+	case keyTab:
+		h.t.screen = "settings"
+	case keyEsc:
+		h.t.confirmQuit()
 	case keyChar:
-		switch ev.r {
-		case 'q', 'Q', 'й', 'Й':
-			h.t.confirmQuit()
-			return true
-		case '/':
+		if ev.r == 0x0b {
 			h.t.palette.toggle()
 			return true
-		case 0x0b: // Ctrl+K
-			h.t.palette.toggle()
-			return true
-		case '?':
-			h.t.screen = "help"
-			return true
-		case 'g', 'G':
+		}
+		if ev.r == 0x10 {
 			h.t.screen = "results"
 			return true
-		default:
-			h.prompt += string(ev.r)
-			h.t.opts.Target = h.prompt
-			return true
 		}
-	case keyEsc:
-		if h.t.screen != "home" {
-			h.t.screen = "home"
-			return true
+		fallthrough
+	default:
+		if h.edit.text != h.prompt {
+			h.edit = newTextEdit(h.prompt)
 		}
-		h.t.confirmQuit()
-		return true
+		if !h.edit.handleKey(ev, false) {
+			return false
+		}
+		h.prompt = h.edit.text
+		h.t.opts.Target = h.prompt
+		h.t.flash = ""
 	}
-	return false
+	return true
 }
 
 func (h *homeScreen) render(width, edge int) []string {
@@ -116,6 +85,9 @@ func (h *homeScreen) render(width, edge int) []string {
 			spacerTop = 1
 		}
 	}
+	if rowsTerm > 0 && rowsTerm < 20 {
+		spacerTop = 0
+	}
 
 	for i := 0; i < spacerTop; i++ {
 		out = append(out, "")
@@ -123,20 +95,23 @@ func (h *homeScreen) render(width, edge int) []string {
 
 	// ─── Logo ───
 	logo := h.pickLogo(width)
+	if rowsTerm > 0 && rowsTerm < 20 {
+		logo = []string{"MEGA ANALYZER"}
+	}
 	for _, ln := range logo {
 		out = append(out, pad+centerText(th.Primary+th.Bold+ln+th.Reset, width))
 	}
 	out = append(out, "")
 
 	// Subtitle
-	sub := th.Muted + "MEGA ANALYZER  //  Interactive Security Cockpit" + th.Reset
+	sub := th.Muted + "MEGA ANALYZER  /  ANALYSIS WORKSPACE" + th.Reset
 	out = append(out, pad+centerText(sub, width))
 	out = append(out, "")
 
 	// ─── Target Prompt (Premium OpenCode Box Style) ───
 	promptW := width - 16
 	if promptW < 54 {
-		promptW = 54
+		promptW = width
 	}
 	if promptW > 74 {
 		promptW = 74
@@ -147,8 +122,14 @@ func (h *homeScreen) render(width, edge int) []string {
 	}
 	out = append(out, "")
 
+	summary := fmt.Sprintf("%s%s%s profile  ·  %d workers  ·  %ds timeout", th.Accent, h.t.opts.Profile, th.Reset, h.t.opts.Workers, h.t.opts.Timeout)
+	out = append(out, pad+centerText(summary, width), "")
+	if h.t.flash != "" {
+		out = append(out, pad+centerText(th.Warning+truncateVisible(h.t.flash, width)+th.Reset, width))
+	}
+
 	// ─── Footer Hints ───
-	footer := fmt.Sprintf("%s↵%s start  %s/%s actions  %s?%s help  %sQ%s quit",
+	footer := fmt.Sprintf("%sEnter%s start  %sTab%s settings  %sCtrl+K%s search  %sF1%s help",
 		th.Bold+th.Accent, th.Reset,
 		th.Bold+th.Accent, th.Reset,
 		th.Bold+th.Accent, th.Reset,
@@ -160,8 +141,8 @@ func (h *homeScreen) render(width, edge int) []string {
 
 func (h *homeScreen) renderPrompt(w int, th Theme) []string {
 	boxW := w
-	if boxW < 54 {
-		boxW = 54
+	if boxW < 4 {
+		boxW = 4
 	}
 	innerW := boxW - 4 // padding inside border
 
@@ -169,10 +150,7 @@ func (h *homeScreen) renderPrompt(w int, th Theme) []string {
 	validIcon := "  "
 	validColor := th.Muted
 	if h.prompt != "" {
-		cleaned := strings.TrimSpace(strings.Trim(h.prompt, "\"'"))
-		if runtime.GOOS == "windows" && len(cleaned) > 2 && cleaned[0] == '/' && cleaned[2] == ':' {
-			cleaned = cleaned[1:]
-		}
+		cleaned := cleanTUIPath(h.prompt)
 		if _, err := os.Stat(cleaned); err == nil {
 			validIcon = "✓ "
 			validColor = th.Success
@@ -188,25 +166,19 @@ func (h *homeScreen) renderPrompt(w int, th Theme) []string {
 	// ─── Content line ───
 	promptSymbol := th.Bold + th.Primary + "❯ " + th.Reset
 	placeholder := th.Muted + "enter APK / DEX / directory path..." + th.Reset
-	cursor := th.Bold + th.Primary + "▮" + th.Reset
 
 	var content string
 	if h.prompt == "" {
-		content = promptSymbol + placeholder
+		content = promptSymbol + truncateVisible(placeholder, innerW-2)
 	} else {
-		content = promptSymbol + th.Text + h.prompt + th.Reset + cursor
+		e := h.edit
+		if e.text != h.prompt {
+			e = newTextEdit(h.prompt)
+		}
+		content = promptSymbol + e.view(innerW-2, th)
 	}
 
-	// Truncate if too long
 	contentVis := visibleLen(content)
-	if contentVis > innerW {
-		maxChars := innerW - 3
-		if maxChars > 5 {
-			trimmed := truncateVisible(h.prompt, maxChars)
-			content = promptSymbol + th.Text + trimmed + th.Reset + cursor
-		}
-		contentVis = visibleLen(content)
-	}
 	contentPad := innerW - contentVis
 	if contentPad < 0 {
 		contentPad = 0
@@ -215,8 +187,8 @@ func (h *homeScreen) renderPrompt(w int, th Theme) []string {
 	line1 := th.Edge + "│ " + th.Reset + content + strings.Repeat(" ", contentPad) + th.Edge + " │" + th.Reset
 
 	// ─── Bottom hint line ───
-	hintText := "/ actions  ? help"
-	hintColored := th.Muted + "/" + th.Reset + th.Text + " actions  " + th.Muted + "?" + th.Reset + th.Text + " help" + th.Reset
+	hintText := truncateVisible("spaces / quotes supported", innerW-2)
+	hintColored := th.Muted + hintText + th.Reset
 	hintPad := innerW - visibleLen(hintText) - visibleLen(validIcon)
 	if hintPad < 0 {
 		hintPad = 0
@@ -231,6 +203,9 @@ func (h *homeScreen) renderPrompt(w int, th Theme) []string {
 
 // truncateVisible truncates a string to max visible columns, adding "…"
 func truncateVisible(s string, max int) string {
+	if max <= 0 {
+		return ""
+	}
 	if visibleLen(s) <= max {
 		return s
 	}

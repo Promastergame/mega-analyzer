@@ -100,6 +100,10 @@ func networkSource(st adapter.DeviceState, key string) (string, bool) {
 	v, ok := st.Network[key]
 	return v, ok
 }
+func sensorSource(st adapter.DeviceState, key string) (string, bool) {
+	v, ok := st.Sensors[key]
+	return v, ok
+}
 
 // Verify compares expected profile against actual state and produces a Report.
 // criticalGroups lists groups whose mismatch makes the overall status Failed;
@@ -162,20 +166,60 @@ func Verify(expected profile.DeviceProfile, actual adapter.DeviceState, critical
 
 // buildSpecs maps a profile to the list of field checks.
 func buildSpecs(p profile.DeviceProfile) []spec {
-	return []spec{
+	specs := []spec{
 		{GroupIdentity, "model", p.Model, "ro.product.model", propSource, SeverityHigh},
 		{GroupIdentity, "brand", p.Brand, "ro.product.brand", propSource, SeverityMedium},
 		{GroupIdentity, "manufacturer", p.Manufacturer, "ro.product.manufacturer", propSource, SeverityMedium},
 		{GroupIdentity, "device", p.Device, "ro.product.device", propSource, SeverityMedium},
+		{GroupIdentity, "product", p.Product, "ro.product.name", propSource, SeverityMedium},
+		{GroupIdentity, "hardware", p.Hardware, "ro.hardware", propSource, SeverityHigh},
+		{GroupIdentity, "board", p.Board, "ro.product.board", propSource, SeverityHigh},
 		{GroupBuild, "fingerprint", p.Fingerprint, "ro.build.fingerprint", propSource, SeverityHigh},
 		{GroupBuild, "build_id", p.BuildID, "ro.build.display.id", propSource, SeverityMedium},
 		{GroupBuild, "security_patch", p.SecurityPatch, "ro.build.version.security_patch", propSource, SeverityLow},
+		{GroupBuild, "android_version", p.AndroidVersion, "ro.build.version.release", propSource, SeverityHigh},
+		{GroupBuild, "api_level", optionalInt(p.APILevel), "ro.build.version.sdk", propSource, SeverityHigh},
+		{GroupBuild, "abi", p.ABI, "ro.product.cpu.abi", propSource, SeverityHigh},
 		{GroupEnvironment, "qemu", "0", "ro.kernel.qemu", propSource, SeverityHigh},
+		{GroupEnvironment, "boot_qemu", "0", "ro.boot.qemu", propSource, SeverityHigh},
+		{GroupEnvironment, "debuggable", "0", "ro.debuggable", propSource, SeverityMedium},
+		{GroupEnvironment, "secure", "1", "ro.secure", propSource, SeverityMedium},
+		{GroupEnvironment, "build_type", "user", "ro.build.type", propSource, SeverityMedium},
+		{GroupEnvironment, "build_tags", "release-keys", "ro.build.tags", propSource, SeverityMedium},
 		{GroupDisplay, "resolution", p.Resolution, "resolution", displaySource, SeverityLow},
-		{GroupDisplay, "density", itoa(p.Density), "density", displaySource, SeverityLow},
+		{GroupDisplay, "density", optionalInt(p.Density), "density", displaySource, SeverityLow},
 		{GroupBattery, "level", itoa(p.Battery.Level), "level", batterySource, SeverityLow},
 		{GroupBattery, "status", p.Battery.Status, "status", batterySource, SeverityLow},
+		{GroupBattery, "temperature", optionalInt(p.Battery.Temperature), "temperature", batterySource, SeverityLow},
+		{GroupBattery, "health", p.Battery.Health, "health", batterySource, SeverityLow},
+		{GroupBattery, "plugged", p.Battery.Plugged, "plugged", batterySource, SeverityLow},
 		{GroupNetwork, "mac", p.Network.MACAddress, "mac", networkSource, SeverityMedium},
 		{GroupNetwork, "imei", p.Network.IMEI, "imei", networkSource, SeverityMedium},
 	}
+	if p.Sensor.Enabled {
+		specs = append(specs, spec{GroupSensors, "thermal_temperature", itoa(profile.ThermalTemperatureMilliC), adapter.ThermalTemperatureKey, sensorSource, SeverityMedium})
+		for _, sensor := range []struct {
+			enabled bool
+			name    string
+		}{{p.Sensor.Accelerometer, "acceleration"}, {p.Sensor.Gyroscope, "gyroscope"}} {
+			if !sensor.enabled {
+				continue
+			}
+			for _, suffix := range []string{"available", "moving"} {
+				key := sensor.name + "." + suffix
+				specs = append(specs, spec{GroupSensors, key, "true", key, sensorSource, SeverityMedium})
+			}
+		}
+		if p.Sensor.Accelerometer || p.Sensor.Gyroscope {
+			specs = append(specs, spec{GroupSensors, "motion.active", "true", "motion.active", sensorSource, SeverityMedium})
+		}
+	}
+	return specs
+}
+
+func optionalInt(v int) string {
+	if v == 0 {
+		return ""
+	}
+	return itoa(v)
 }

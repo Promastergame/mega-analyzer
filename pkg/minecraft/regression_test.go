@@ -14,6 +14,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 const resourceUUID = "cccccccc-cccc-cccc-cccc-cccccccccccc"
@@ -168,7 +170,7 @@ func TestPathsAndLinks(t *testing.T) {
 	}
 }
 func TestDirectoryAndSHA(t *testing.T) {
-	root := t.TempDir()
+	root := testutil.TempDir(t)
 	descriptor := manifest(behaviorUUID, "data", "[]")
 	if err := os.WriteFile(filepath.Join(root, "manifest.json"), []byte(descriptor), 0600); err != nil {
 		t.Fatal(err)
@@ -181,7 +183,7 @@ func TestDirectoryAndSHA(t *testing.T) {
 		t.Fatalf("directory %+v", r)
 	}
 	b := archiveFixture(t, map[string]string{"manifest.json": descriptor})
-	target := filepath.Join(t.TempDir(), "pack.mcaddon")
+	target := filepath.Join(testutil.TempDir(t), "pack.mcaddon")
 	os.WriteFile(target, b, 0600)
 	r, err = AnalyzePath(context.Background(), target, Options{})
 	if err != nil {
@@ -205,7 +207,7 @@ func TestReportEscapesAndWrites(t *testing.T) {
 	if strings.Contains(b.String(), "<script>alert(1)</script>") || !strings.Contains(b.String(), "&lt;script&gt;") {
 		t.Fatal("unescaped report")
 	}
-	out := t.TempDir()
+	out := testutil.TempDir(t)
 	if err := WriteReports(out, r); err != nil {
 		t.Fatal(err)
 	}
@@ -231,7 +233,7 @@ func TestZIP64SizeDoesNotOverflow(t *testing.T) {
 }
 
 func TestReportDoesNotOverwriteInput(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	input := filepath.Join(dir, "analysis.json")
 	if err := os.WriteFile(input, []byte("original input"), 0600); err != nil {
 		t.Fatal(err)

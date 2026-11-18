@@ -31,7 +31,7 @@ func (s *Server) routes() http.Handler {
 	mux.HandleFunc("/api/meta", s.handleMeta)
 	mux.HandleFunc("/api/v1/apk-editor/open", s.handleAPKEditorOpen)
 	mux.HandleFunc("/api/apk-editor/open", s.handleAPKEditorOpen)
-	mux.HandleFunc("/api/scan", s.handleScan)
+	mux.Handle("/api/scan", errorDrainHandler(http.HandlerFunc(s.handleScan)))
 	mux.HandleFunc("/api/workspace/list", s.handleWorkspaceList)
 	mux.HandleFunc("/api/workspace/mkdir", s.handleWorkspaceMkdir)
 	mux.HandleFunc("/api/workspace/file", s.handleWorkspaceFile)

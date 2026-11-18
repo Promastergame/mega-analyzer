@@ -102,6 +102,50 @@ func (b *budgetReader) Read(p []byte) (int, error) {
 	return n, err
 }
 
+// maxErrorDrainBytes bounds the read-back of a request body that is rejected
+// before it was consumed. Browsers still mid-upload treat a connection closed
+// under them as a network failure ("TypeError: Failed to fetch") and never
+// show the server's error text, so rejected uploads are drained first. Legit
+// rejections happen below the 512 MiB upload cap; the headroom keeps a hostile
+// unbounded body from pinning the server for long.
+const maxErrorDrainBytes = 1 << 30
+
+// drainUpload reads and discards up to maxErrorDrainBytes of the remaining
+// request body.
+func drainUpload(r *http.Request) {
+	if r.Body != nil {
+		_, _ = io.Copy(io.Discard, io.LimitReader(r.Body, maxErrorDrainBytes))
+	}
+}
+
+// errorDrainWriter delays an error response until the rejected upload body has
+// been drained, so the browser displays the server's message instead of a
+// generic network error. Successful responses pass through untouched: the
+// handler has then consumed the body itself.
+type errorDrainWriter struct {
+	http.ResponseWriter
+	r       *http.Request
+	started bool
+}
+
+func (w *errorDrainWriter) WriteHeader(code int) {
+	if !w.started {
+		w.started = true
+		if code >= 400 {
+			drainUpload(w.r)
+		}
+	}
+	w.ResponseWriter.WriteHeader(code)
+}
+
+// errorDrainHandler wraps an upload endpoint so a rejected request drains the
+// remaining body before its error response goes out.
+func errorDrainHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(&errorDrainWriter{ResponseWriter: w, r: r}, r)
+	})
+}
+
 // saveUpload writes a part whose request body is already budgeted. Each part
 // gets its own directory so client filenames cannot overwrite another input.
 func saveUpload(dir, name string, src io.Reader) (string, int64, error) {
@@ -124,7 +168,7 @@ func saveUpload(dir, name string, src io.Reader) (string, int64, error) {
 }
 
 const (
-	maxScanFormParts = 32
+	maxScanFormParts      = 32
 	maxScanFormValueBytes = 64 << 10
 )
 
@@ -133,10 +177,10 @@ var errScanFormValueTooLarge = errors.New("form field too large")
 // scanUpload owns its reservation and temporary files until submission transfers
 // both to a job. Every parse/validation error goes through the same cleanup path.
 type scanUpload struct {
-	dir string
-	bytes int64
+	dir    string
+	bytes  int64
 	values map[string]string
-	files map[string]string
+	files  map[string]string
 }
 
 func (u *scanUpload) cleanup() {
@@ -250,17 +294,12 @@ func sandboxListFiles(w http.ResponseWriter, sessionDir string) {
 }
 
 // sandboxDownloadFile serves a file from inside a sandbox session directory.
-// The lexical prefix check rejects ".." escapes; the file itself is opened
+// The lexical local-path check rejects ".." escapes; the file itself is opened
 // through os.Root so a symlink planted inside the session can never redirect
 // the read outside of it (the open fails instead of serving foreign bytes).
 func sandboxDownloadFile(w http.ResponseWriter, r *http.Request, sessionDir, relPath string) {
-	clean := filepath.Clean(filepath.Join(sessionDir, filepath.FromSlash(relPath)))
-	if !strings.HasPrefix(clean, sessionDir+string(os.PathSeparator)) {
-		http.Error(w, "forbidden", http.StatusForbidden)
-		return
-	}
-	rel, err := filepath.Rel(sessionDir, clean)
-	if err != nil {
+	rel := filepath.FromSlash(relPath)
+	if !filepath.IsLocal(rel) {
 		http.Error(w, "forbidden", http.StatusForbidden)
 		return
 	}
@@ -281,8 +320,13 @@ func sandboxDownloadFile(w http.ResponseWriter, r *http.Request, sessionDir, rel
 		return
 	}
 	defer f.Close()
+	w.Header().Set("Content-Security-Policy", "sandbox; default-src 'none'")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename=%q`, fi.Name()))
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", fi.Size()))
+	if r.Method == http.MethodHead {
+		return
+	}
 	io.Copy(w, f) //nolint:errcheck
 }

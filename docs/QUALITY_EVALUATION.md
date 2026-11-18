@@ -14,10 +14,38 @@ recall, and F1. Add a minimal positive fixture and a confusing benign fixture
 for every detector change. Corpus schema changes require incrementing
 `version` in `testdata/eval/corpus.json`.
 
-Corpus v5 contains 97 cases, with precision, recall and F1 of 1.00 on this
+Corpus v6 contains 97 cases, with precision, recall and F1 of 1.00 on this
 fixed set: 70 expected category detections, zero false positives and zero
 false negatives. These are regression metrics, not an estimate of accuracy
 on arbitrary APKs.
+
+Version 6 requires an informational `pending_intent_review` observation when
+factory flags come from an unresolved parameter, and forbids
+`pending_intent_vuln` in that case. The fixture contains no evidence of mutable
+flags; resolving them at the caller remains a separate check.
+
+## Real APKs and incomplete scans
+
+Compare samples with the same analyzer build, profile, optional engines and
+timeout. Record the download source and SHA-256 of each APK. A repository's
+malware family label is attribution from that source, not independent ground
+truth. Keep downloaded APKs and private reports out of the public source tree.
+
+The overall risk score includes security weaknesses and privacy concerns.
+HIGH or CRITICAL alone does not classify an application as malware. Inspect
+the typed findings (`kind`, `severity`, `confidence`) and their evidence;
+inventory observations describe capabilities without proving abuse.
+
+Check `run.status`, `run.stop_reason`, `coverage` and `data_flow_stats` before
+interpreting an absence of findings. A scan that reaches a timeout or traversal
+budget is incomplete even when the process exits successfully. Zero malware
+findings in an incomplete scan is not a clean verdict. Small APK collections
+are useful regressions, but do not establish general malware precision or recall.
+
+Web static-analysis jobs use `-json-compact`: findings, matches, coverage and
+evidence remain in `analysis.json`, while full Smali method bodies are omitted.
+Use the same flag for daily CLI review; full bodies can be exported by running
+the CLI without it.
 
 ## Arrays and helper calls
 

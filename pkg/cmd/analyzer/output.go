@@ -895,7 +895,7 @@ func (o *Output) printLegacyResults(result *types.AnalysisResult, duration time.
 		{"📊", "Files analyzed", result.Stats.AnalyzedFiles, t.Green},
 		{"🧩", "Application units", result.Stats.AppCodeFiles, ""},
 		{"🎯", "Matches found", result.Stats.TotalMatches, o.matchColor(result.Stats.TotalMatches)},
-		{"🔴", "Critical", result.Stats.CriticalMatches, o.criticalColor(result.Stats.CriticalMatches)},
+		{"🎯", "Priority matches", result.Stats.CriticalMatches, ""},
 		{"🔥", "Hotspots", len(result.Hotspots), t.Purple},
 	}
 	if result.NcerResult != nil {
@@ -952,6 +952,16 @@ func (o *Output) criticalColor(count int) string {
 
 func (o *Output) calculateRiskLevel(result *types.AnalysisResult) riskLevel {
 	t := o.theme
+	if profile := report.SuspicionScore(result).Profile; profile != nil {
+		color := t.Green
+		switch profile.OverallLevel {
+		case "HIGH", "MEDIUM":
+			color = t.Yellow
+		case "CRITICAL":
+			color = t.Red
+		}
+		return riskLevel{profile.OverallLevel, color}
+	}
 
 	if len(result.Hotspots) == 0 && result.Stats.CriticalMatches == 0 {
 		return riskLevel{"LOW", t.Green}

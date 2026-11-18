@@ -7,6 +7,11 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+
+	"mega-analyzer/pkg/internal/antivm/adapter"
+	"mega-analyzer/pkg/internal/antivm/modules"
+	vmprofile "mega-analyzer/pkg/internal/antivm/profile"
+	"mega-analyzer/pkg/internal/antivm/verifier"
 )
 
 // Evasion is the interface for an anti-VM evasion engine.
@@ -19,19 +24,20 @@ type Evasion interface {
 
 // EvasionReport summarises the anti-VM patching that was applied.
 type EvasionReport struct {
-	Applied           bool           `json:"applied"`
-	DeviceProfile     DeviceProfile  `json:"device_profile"`
-	IMEI              string         `json:"imei"`
-	SerialNumber      string         `json:"serial_number"`
-	MACAddress        string         `json:"mac_address"`
-	WiFiSSID          string         `json:"wifi_ssid"`
-	OperatorName      string         `json:"operator_name"`
-	OperatorNumeric   string         `json:"operator_numeric"`
-	BatteryLevel      int            `json:"battery_level"`
-	SensorNoiseActive bool           `json:"sensor_noise_active"`
-	PropertiesSet     []PropertyPair `json:"properties_set"`
-	Warnings          []string       `json:"warnings,omitempty"`
-	AppliedAt         time.Time      `json:"applied_at"`
+	Applied                  bool           `json:"applied"`
+	DeviceProfile            DeviceProfile  `json:"device_profile"`
+	IMEI                     string         `json:"imei"`
+	SerialNumber             string         `json:"serial_number"`
+	MACAddress               string         `json:"mac_address"`
+	WiFiSSID                 string         `json:"wifi_ssid"`
+	OperatorName             string         `json:"operator_name"`
+	OperatorNumeric          string         `json:"operator_numeric"`
+	BatteryLevel             int            `json:"battery_level"`
+	SensorNoiseActive        bool           `json:"sensor_noise_active"`
+	ThermalTemperatureMilliC int            `json:"thermal_temperature_millic,omitempty"`
+	PropertiesSet            []PropertyPair `json:"properties_set"`
+	Warnings                 []string       `json:"warnings,omitempty"`
+	AppliedAt                time.Time      `json:"applied_at"`
 }
 
 // PropertyPair is a key=value system property change.
@@ -71,8 +77,9 @@ func DefaultEvasionConfig() EvasionConfig {
 // reading device state (rather than assuming a command that exited 0 worked).
 // This type is retained so androidruntime and existing callers keep compiling.
 type EvasionEngine struct {
-	cfg    EvasionConfig
-	report EvasionReport
+	cfg           EvasionConfig
+	report        EvasionReport
+	sensorAdapter *adapter.ADBAdapter
 }
 
 // NewEvasionEngine creates a new anti-VM evasion engine.
@@ -224,18 +231,52 @@ func (e *EvasionEngine) Apply(ctx context.Context, adbPath string, serial string
 		warn(adb.shell(ctx, "dumpsys battery set status 3"), "battery set status") // 3 = DISCHARGING
 	}
 
-	// Sensor noise looper (runs in background on the emulator). We do NOT treat
-	// the launch command's exit code as success: a background process can die
-	// immediately. Instead we launch it, then verify the marker file it writes
-	// actually exists, proving the looper is alive.
+	// Replay actual emulator sensor vectors, then observe Android event queues.
 	if e.cfg.SensorNoise {
-		script := buildSensorNoiseScript()
-		warn(adb.shell(ctx, fmt.Sprintf("echo '%s' > /data/local/tmp/sensor_noise.sh", script)), "write sensor script")
-		warn(adb.shell(ctx, "nohup sh /data/local/tmp/sensor_noise.sh &"), "launch sensor script")
-		e.report.SensorNoiseActive = adb.markerAlive(ctx, "/data/local/tmp/.sensor_alive")
-		if !e.cfg.PatchBattery && !e.report.SensorNoiseActive {
-			e.report.Warnings = append(e.report.Warnings,
-				"sensor noise looper did not produce a liveness marker")
+		if err := e.StopSensorNoise(ctx); err != nil {
+			warn(err, "stop prior sensor playback")
+		}
+		e.report.ThermalTemperatureMilliC = 0
+		e.report.SensorNoiseActive = false
+		// The legacy runtime uses the same verified thermal fixture as the CLI.
+		// Resolve the selected device before allowing an emulator-only mutation.
+		thermalSerial, err := adb.selectedSerial(ctx)
+		if err != nil {
+			warn(err, "thermal device selection")
+		} else {
+			dev := adapter.NewADBAdapter(adbPath, thermalSerial)
+			e.sensorAdapter = dev
+			dev.BindSensorLifetime(ctx)
+			p := vmprofile.DeviceProfile{Sensor: vmprofile.SensorProfile{Enabled: true, Accelerometer: true, Gyroscope: true}}
+			m := modules.NewSensorsModule(p)
+			res, err := m.Apply(ctx, dev)
+			warn(err, "thermal fixture")
+			for _, failure := range res.Failed {
+				e.report.Warnings = append(e.report.Warnings, "thermal fixture: "+failure.Err)
+			}
+			if err == nil {
+				rep, err := m.Verify(ctx, dev)
+				warn(err, "thermal verification")
+				if err == nil {
+					passed := map[string]bool{}
+					for _, check := range rep.Checks {
+						passed[check.Field] = check.Status == verifier.StatusPassed
+					}
+					if res.OK() && passed["thermal_temperature"] {
+						e.report.ThermalTemperatureMilliC = vmprofile.ThermalTemperatureMilliC
+					}
+					motionApplied := false
+					for _, operation := range res.Succeeded {
+						if operation == "sensor motion playback" {
+							motionApplied = true
+						}
+					}
+					e.report.SensorNoiseActive = motionApplied && passed["motion.active"] && passed["acceleration.available"] && passed["acceleration.moving"] && passed["gyroscope.available"] && passed["gyroscope.moving"]
+					if rep.Status != verifier.StatusPassed {
+						e.report.Warnings = append(e.report.Warnings, "sensor event/thermal verification did not pass")
+					}
+				}
+			}
 		}
 	}
 
@@ -245,18 +286,23 @@ func (e *EvasionEngine) Apply(ctx context.Context, adbPath string, serial string
 
 // Report returns the evasion report.
 func (e *EvasionEngine) Report() EvasionReport {
-	return e.report
+	report := e.report
+	if e.sensorAdapter != nil {
+		status := e.sensorAdapter.SensorPlaybackStatus()
+		report.SensorNoiseActive = report.SensorNoiseActive && status.Active
+		if status.Error != "" {
+			report.Warnings = append(append([]string(nil), report.Warnings...), "sensor playback: "+status.Error)
+		}
+	}
+	return report
 }
 
-// buildSensorNoiseScript creates a shell script that periodically
-// writes micro-vibration data to emulate real sensor readings.
-func buildSensorNoiseScript() string {
-	return `#!/system/bin/sh
-while true; do
-  sleep 1
-  # Touch a marker file to prove the script is alive.
-  touch /data/local/tmp/.sensor_alive
-done`
+// StopSensorNoise waits for playback to stop and the original vectors to be restored.
+func (e *EvasionEngine) StopSensorNoise(ctx context.Context) error {
+	if e.sensorAdapter == nil {
+		return nil
+	}
+	return e.sensorAdapter.Stop(ctx)
 }
 
 // ── ADB Client ───────────────────────────────────────────────
@@ -265,6 +311,23 @@ done`
 type adbClient struct {
 	path   string
 	serial string
+}
+
+func (a *adbClient) selectedSerial(ctx context.Context) (string, error) {
+	if a.serial != "" {
+		return a.serial, nil
+	}
+	ctx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+	out, err := exec.CommandContext(ctx, a.path, "get-serialno").Output()
+	if err != nil {
+		return "", fmt.Errorf("read selected ADB serial: %w", err)
+	}
+	serial := strings.TrimSpace(string(out))
+	if serial == "" || serial == "unknown" {
+		return "", fmt.Errorf("no unique ADB device selected")
+	}
+	return serial, nil
 }
 
 // adbArgs builds the base ADB argument list.

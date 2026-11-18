@@ -8,11 +8,13 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestMiniSandboxOriginalEntries(t *testing.T) {
 	sourceDir := writeMiniSandbox(t)
-	origXapk := filepath.Join(t.TempDir(), "mini-sandbox.apk")
+	origXapk := filepath.Join(testutil.TempDir(t), "mini-sandbox.apk")
 	rebuilder := NewAPKRebuilder(sourceDir)
 	rebuilder.UseSmali = false
 	rebuilder.IncludeSignature = false

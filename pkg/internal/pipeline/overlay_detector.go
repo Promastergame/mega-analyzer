@@ -40,6 +40,10 @@ func NewOverlayDetector() *OverlayDetector {
 func (d *OverlayDetector) Name() string { return "overlay_bank_detector" }
 
 func (d *OverlayDetector) Detect(ctx *FileDetectContext, analysis *types.FileAnalysis) {
+	if ctx == nil || analysis == nil {
+		return
+	}
+	defer calibrateAccessibilityMatches(analysis, len(analysis.Matches), d.Name())
 	switch ctx.FileType {
 	case types.FileTypeXML:
 		d.detectManifestOverlay(ctx, analysis)
@@ -84,6 +88,10 @@ func (d *OverlayDetector) FeedCorrelationEngine(ce *CorrelationEngine) {
 // ── XML (Manifest + Layouts) ───────────────────────────────────────────────
 
 func (d *OverlayDetector) detectManifestOverlay(ctx *FileDetectContext, analysis *types.FileAnalysis) {
+	if !isAndroidManifestContext(ctx, analysis) {
+		d.detectSuspiciousLayoutName(ctx, analysis)
+		return
+	}
 	// ✅ Fix #1: одна конвертация, дальше strings.Index без []byte аллокаций.
 	// strings.Index по строковому литералу не аллоцирует (в отличие от bytes.Contains + []byte("...")).
 	content := string(ctx.ContentLower)
@@ -156,6 +164,14 @@ func (d *OverlayDetector) detectSuspiciousLayoutName(ctx *FileDetectContext, ana
 // ── Smali ──────────────────────────────────────────────────────────────────
 
 func (d *OverlayDetector) detectSmaliOverlay(ctx *FileDetectContext, analysis *types.FileAnalysis) {
+	// Overlay abuse is an app-code behaviour. Vendored SDKs (androidx,
+	// emoji2, recyclerview, lifecycle) reference WindowManager, getPackageName
+	// and Google package strings for their own reasons; treating those files as
+	// attacker-controlled produced 16 "banking overlay" hits on a clean game.
+	if !ctx.IsAppCode {
+		return
+	}
+
 	// ✅ Fix #1: одна конвертация для всего файла
 	content := string(ctx.ContentLower)
 
@@ -167,8 +183,12 @@ func (d *OverlayDetector) detectSmaliOverlay(ctx *FileDetectContext, analysis *t
 
 	hasWindowManager := strings.Contains(content, "windowmanager")
 
-	hasPkgEnumeration := strings.Contains(content, "getpackagename") ||
-		strings.Contains(content, "getinstalledpackages") ||
+	// getPackageName() is called by virtually every Android component (intent
+	// construction, notifications, analytics) and is NOT package enumeration.
+	// Require an API that actually lists other packages.
+	hasPkgEnumeration := strings.Contains(content, "getinstalledpackages") ||
+		strings.Contains(content, "getinstalledapplications") ||
+		strings.Contains(content, "queryintentactivities") ||
 		strings.Contains(content, "resolveactivity")
 
 	// 1️⃣ Overlay window types

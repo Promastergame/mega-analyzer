@@ -88,6 +88,8 @@ OUTPUT:
   -quiet, -q              Minimal output
   -no-color               Disable colors
   -tui                    Enable interactive TUI settings cockpit
+  -tui-section NAME       Open general|analysis|mobile|compliance|artifacts|cache|reports|toolkit|network
+  -tui-search TEXT        Open TUI search for flags and actions (also enables TUI)
   -no-tui                 Disable TUI panels (CLI mode)
   -no-profile             Do not load settings from analyzer.flags.*.txt files
   -json                   Output as JSON to stdout
@@ -227,20 +229,14 @@ APK REBUILDING / DECODING (apktool-style) & PATCH EDITOR:
   -no-headers             Omit Smali comment headers (overrides -headers)
   -copy-original          Copy original META-INF for rebuild fidelity
   -framework-dir <path>   Framework directory for resource decoding
-  -dex-backend <mode>     Decode backend: auto|native|baksmali (default: auto; native avoids JVM + enables class cache)
+  -dex-backend <mode>     Decode backend: auto|native (default: auto; both use the native Go decoder)
   -class-cache            Cache native DEX->Smali per class in .mega-analyzer-cache.db (default: true; use -class-cache=false to disable)
-  -smali-jar <path>       Path to smali.jar for smali->dex assembly (auto-detect if unset)
-  -baksmali-jar <path>    Path to baksmali.jar for dex->smali disassembly (auto-detect if unset)
   -aapt2 <path>           Path to aapt2 binary for resource compile+link (auto-detect if unset)
   -use-smali              Enable smali->dex assembly during rebuild (default: true)
   -use-aapt2              Enable aapt2 resource compile+link during rebuild (default: true)
-  -smali-api <N>          smali/baksmali API level (-a); 0 keeps tool default
-  -smali-jobs <N>         smali/baksmali workers (-j); 0 auto-limits per process
-  -smali-verbose          Pass --verbose to smali for richer diagnostics
+  -smali-api <N>          Native assembler Android API level; 0 auto-matches tree DEX
+  -smali-jobs <N>         Native DEX assembly workers; 0 = automatic (up to 4)
   -smali-incremental      Incremental smali->dex via .mega-analyzer-build-cache.json (default: true; use -smali-incremental=false for full rebuild)
-  -baksmali-use-locals    Pass --use-locals to baksmali
-  -baksmali-seq-labels    Pass --sequential-labels to baksmali
-  -baksmali-no-param-regs Pass --parameter-registers=false to baksmali
   -compression-mode <m>   Rebuild ZIP mode: fast|balanced|best (default: balanced)
   -spool-threshold-mb <N> Spool ZIP entries larger than N MB to temp files (0 = default 128MB)
 

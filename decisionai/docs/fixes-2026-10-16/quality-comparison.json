@@ -1,0 +1,587 @@
+[
+  {
+    "dataset": "evals/golden-test.jsonl",
+    "before": {
+      "questions": 39,
+      "by_type": {
+        "choice": {
+          "n": 19,
+          "agreement": 0.8421,
+          "brier": 0.255,
+          "log_loss": 0.5713,
+          "ece": 0.1137,
+          "js_divergence": 0.2037,
+          "auto_rate": 0.4737,
+          "auto_agreement": 1,
+          "agreement_low": 0.6243,
+          "agreement_high": 0.9448
+        },
+        "noul": {
+          "n": 15,
+          "agreement": 0.9333,
+          "brier": 0.3786,
+          "log_loss": 0.5476,
+          "ece": 0.3379,
+          "js_divergence": 0.2482,
+          "auto_rate": 0.1333,
+          "auto_agreement": 1,
+          "agreement_low": 0.7018,
+          "agreement_high": 0.9881
+        },
+        "score": {
+          "n": 5,
+          "agreement": 0.8,
+          "brier": 0.3543,
+          "log_loss": 0.7064,
+          "ece": 0.358,
+          "js_divergence": 0.295,
+          "auto_rate": 0,
+          "auto_agreement": 0,
+          "agreement_low": 0.3755,
+          "agreement_high": 0.9638
+        }
+      },
+      "errors": []
+    },
+    "after": {
+      "questions": 39,
+      "by_type": {
+        "choice": {
+          "n": 19,
+          "agreement": 0.8421,
+          "brier": 0.255,
+          "log_loss": 0.5713,
+          "ece": 0.1137,
+          "js_divergence": 0.2037,
+          "auto_rate": 0,
+          "auto_agreement": 0,
+          "agreement_low": 0.6243,
+          "agreement_high": 0.9448
+        },
+        "noul": {
+          "n": 15,
+          "agreement": 0.9333,
+          "brier": 0.3786,
+          "log_loss": 0.5476,
+          "ece": 0.3379,
+          "js_divergence": 0.2482,
+          "auto_rate": 0,
+          "auto_agreement": 0,
+          "agreement_low": 0.7018,
+          "agreement_high": 0.9881
+        },
+        "score": {
+          "n": 5,
+          "agreement": 0.8,
+          "brier": 0.3543,
+          "log_loss": 0.7064,
+          "ece": 0.358,
+          "js_divergence": 0.295,
+          "auto_rate": 0,
+          "auto_agreement": 0,
+          "agreement_low": 0.3755,
+          "agreement_high": 0.9638
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "dataset": "evals/distill/decision-blind.jsonl",
+    "before": {
+      "questions": 64,
+      "by_type": {
+        "choice": {
+          "n": 24,
+          "agreement": 1,
+          "brier": 0.1195,
+          "log_loss": 0.2622,
+          "ece": 0.1761,
+          "js_divergence": 0.1135,
+          "auto_rate": 0.7083,
+          "auto_agreement": 1,
+          "agreement_low": 0.862,
+          "agreement_high": 1
+        },
+        "noul": {
+          "n": 26,
+          "agreement": 0.8462,
+          "brier": 0.3012,
+          "log_loss": 0.4709,
+          "ece": 0.1659,
+          "js_divergence": 0.19,
+          "auto_rate": 0.4231,
+          "auto_agreement": 0.9091,
+          "agreement_low": 0.6647,
+          "agreement_high": 0.9385
+        },
+        "score": {
+          "n": 14,
+          "agreement": 0.6429,
+          "brier": 0.4925,
+          "log_loss": 1.0675,
+          "ece": 0.2631,
+          "js_divergence": 0.3013,
+          "auto_rate": 0.7143,
+          "auto_agreement": 0.8,
+          "agreement_low": 0.3876,
+          "agreement_high": 0.8366
+        }
+      },
+      "errors": []
+    },
+    "after": {
+      "questions": 64,
+      "by_type": {
+        "choice": {
+          "n": 24,
+          "agreement": 1,
+          "brier": 0.1195,
+          "log_loss": 0.2622,
+          "ece": 0.1761,
+          "js_divergence": 0.1135,
+          "auto_rate": 0,
+          "auto_agreement": 0,
+          "agreement_low": 0.862,
+          "agreement_high": 1
+        },
+        "noul": {
+          "n": 26,
+          "agreement": 0.8462,
+          "brier": 0.3012,
+          "log_loss": 0.4709,
+          "ece": 0.1659,
+          "js_divergence": 0.19,
+          "auto_rate": 0.0385,
+          "auto_agreement": 1,
+          "agreement_low": 0.6647,
+          "agreement_high": 0.9385
+        },
+        "score": {
+          "n": 14,
+          "agreement": 0.6429,
+          "brier": 0.4925,
+          "log_loss": 1.0675,
+          "ece": 0.2631,
+          "js_divergence": 0.3013,
+          "auto_rate": 0,
+          "auto_agreement": 0,
+          "agreement_low": 0.3876,
+          "agreement_high": 0.8366
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "dataset": "evals/distill/jev-holdout.jsonl",
+    "before": {
+      "questions": 341,
+      "by_type": {
+        "noul": {
+          "n": 270,
+          "agreement": 0.8778,
+          "brier": 0.1868,
+          "log_loss": 0.6096,
+          "ece": 0.1659,
+          "js_divergence": 0.1031,
+          "auto_rate": 0.5111,
+          "auto_agreement": 0.9275,
+          "agreement_low": 0.8333,
+          "agreement_high": 0.9116
+        },
+        "score": {
+          "n": 71,
+          "agreement": 0.9577,
+          "brier": 0.0958,
+          "log_loss": 0.5628,
+          "ece": 0.1948,
+          "js_divergence": 0.084,
+          "auto_rate": 0.662,
+          "auto_agreement": 1,
+          "agreement_low": 0.883,
+          "agreement_high": 0.9855
+        }
+      },
+      "errors": []
+    },
+    "after": {
+      "questions": 341,
+      "by_type": {
+        "noul": {
+          "n": 270,
+          "agreement": 0.8778,
+          "brier": 0.1868,
+          "log_loss": 0.6096,
+          "ece": 0.1659,
+          "js_divergence": 0.1031,
+          "auto_rate": 0,
+          "auto_agreement": 0,
+          "agreement_low": 0.8333,
+          "agreement_high": 0.9116
+        },
+        "score": {
+          "n": 71,
+          "agreement": 0.9577,
+          "brier": 0.0958,
+          "log_loss": 0.5628,
+          "ece": 0.1948,
+          "js_divergence": 0.084,
+          "auto_rate": 0,
+          "auto_agreement": 0,
+          "agreement_low": 0.883,
+          "agreement_high": 0.9855
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "dataset": "evals/base-tasks.jsonl",
+    "before": {
+      "questions": 61,
+      "by_type": {
+        "choice": {
+          "n": 18,
+          "agreement": 0.7222,
+          "brier": 0.3277,
+          "log_loss": 0.6272,
+          "ece": 0.1529,
+          "js_divergence": 0.2599,
+          "auto_rate": 0.4444,
+          "auto_agreement": 1,
+          "agreement_low": 0.4913,
+          "agreement_high": 0.875
+        },
+        "noul": {
+          "n": 31,
+          "agreement": 0.7742,
+          "brier": 0.4486,
+          "log_loss": 0.8578,
+          "ece": 0.2181,
+          "js_divergence": 0.2587,
+          "auto_rate": 0.4839,
+          "auto_agreement": 0.8,
+          "agreement_low": 0.6019,
+          "agreement_high": 0.886
+        },
+        "score": {
+          "n": 12,
+          "agreement": 0.3333,
+          "brier": 0.7176,
+          "log_loss": 1.4237,
+          "ece": 0.0187,
+          "js_divergence": 0.5444,
+          "auto_rate": 0.0833,
+          "auto_agreement": 1,
+          "agreement_low": 0.1381,
+          "agreement_high": 0.6094
+        }
+      },
+      "errors": []
+    },
+    "after": {
+      "questions": 61,
+      "by_type": {
+        "choice": {
+          "n": 18,
+          "agreement": 0.7222,
+          "brier": 0.3277,
+          "log_loss": 0.6272,
+          "ece": 0.1529,
+          "js_divergence": 0.2599,
+          "auto_rate": 0.2222,
+          "auto_agreement": 1,
+          "agreement_low": 0.4913,
+          "agreement_high": 0.875
+        },
+        "noul": {
+          "n": 31,
+          "agreement": 0.7742,
+          "brier": 0.4486,
+          "log_loss": 0.8578,
+          "ece": 0.2181,
+          "js_divergence": 0.2587,
+          "auto_rate": 0.1935,
+          "auto_agreement": 1,
+          "agreement_low": 0.6019,
+          "agreement_high": 0.886
+        },
+        "score": {
+          "n": 12,
+          "agreement": 0.3333,
+          "brier": 0.7176,
+          "log_loss": 1.4237,
+          "ece": 0.0187,
+          "js_divergence": 0.5444,
+          "auto_rate": 0,
+          "auto_agreement": 0,
+          "agreement_low": 0.1381,
+          "agreement_high": 0.6094
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "dataset": "evals/unseen.jsonl",
+    "before": {
+      "questions": 85,
+      "by_type": {
+        "choice": {
+          "n": 14,
+          "agreement": 0.5,
+          "brier": 0.7216,
+          "log_loss": 1.2608,
+          "ece": 0.2905,
+          "js_divergence": 0.4376,
+          "auto_rate": 0.4286,
+          "auto_agreement": 0.6667,
+          "agreement_low": 0.268,
+          "agreement_high": 0.732
+        },
+        "noul": {
+          "n": 54,
+          "agreement": 0.8148,
+          "brier": 0.3577,
+          "log_loss": 0.7138,
+          "ece": 0.1923,
+          "js_divergence": 0.2132,
+          "auto_rate": 0.463,
+          "auto_agreement": 0.84,
+          "agreement_low": 0.6916,
+          "agreement_high": 0.8962
+        },
+        "score": {
+          "n": 17,
+          "agreement": 0.4118,
+          "brier": 0.6613,
+          "log_loss": 1.2089,
+          "ece": 0.2235,
+          "js_divergence": 0.4822,
+          "auto_rate": 0,
+          "auto_agreement": 0,
+          "agreement_low": 0.2161,
+          "agreement_high": 0.6399
+        }
+      },
+      "errors": []
+    },
+    "after": {
+      "questions": 85,
+      "by_type": {
+        "choice": {
+          "n": 14,
+          "agreement": 0.5,
+          "brier": 0.7216,
+          "log_loss": 1.2608,
+          "ece": 0.2905,
+          "js_divergence": 0.4376,
+          "auto_rate": 0.0714,
+          "auto_agreement": 1,
+          "agreement_low": 0.268,
+          "agreement_high": 0.732
+        },
+        "noul": {
+          "n": 54,
+          "agreement": 0.8148,
+          "brier": 0.3577,
+          "log_loss": 0.7138,
+          "ece": 0.1923,
+          "js_divergence": 0.2132,
+          "auto_rate": 0.1481,
+          "auto_agreement": 1,
+          "agreement_low": 0.6916,
+          "agreement_high": 0.8962
+        },
+        "score": {
+          "n": 17,
+          "agreement": 0.4118,
+          "brier": 0.6613,
+          "log_loss": 1.2089,
+          "ece": 0.2235,
+          "js_divergence": 0.4822,
+          "auto_rate": 0,
+          "auto_agreement": 0,
+          "agreement_low": 0.2161,
+          "agreement_high": 0.6399
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "dataset": "evals/unseen2.jsonl",
+    "before": {
+      "questions": 98,
+      "by_type": {
+        "choice": {
+          "n": 18,
+          "agreement": 0.5556,
+          "brier": 0.6375,
+          "log_loss": 1.1683,
+          "ece": 0.2712,
+          "js_divergence": 0.374,
+          "auto_rate": 0.5,
+          "auto_agreement": 0.8889,
+          "agreement_low": 0.3372,
+          "agreement_high": 0.7544
+        },
+        "noul": {
+          "n": 63,
+          "agreement": 0.6825,
+          "brier": 0.5524,
+          "log_loss": 1.2073,
+          "ece": 0.239,
+          "js_divergence": 0.3026,
+          "auto_rate": 0.5397,
+          "auto_agreement": 0.6471,
+          "agreement_low": 0.56,
+          "agreement_high": 0.7841
+        },
+        "score": {
+          "n": 17,
+          "agreement": 0.4118,
+          "brier": 0.9146,
+          "log_loss": 1.9543,
+          "ece": 0.3863,
+          "js_divergence": 0.5795,
+          "auto_rate": 0.2353,
+          "auto_agreement": 0,
+          "agreement_low": 0.2161,
+          "agreement_high": 0.6399
+        }
+      },
+      "errors": []
+    },
+    "after": {
+      "questions": 98,
+      "by_type": {
+        "choice": {
+          "n": 18,
+          "agreement": 0.5556,
+          "brier": 0.6375,
+          "log_loss": 1.1683,
+          "ece": 0.2712,
+          "js_divergence": 0.374,
+          "auto_rate": 0.1667,
+          "auto_agreement": 1,
+          "agreement_low": 0.3372,
+          "agreement_high": 0.7544
+        },
+        "noul": {
+          "n": 63,
+          "agreement": 0.6825,
+          "brier": 0.5524,
+          "log_loss": 1.2073,
+          "ece": 0.239,
+          "js_divergence": 0.3026,
+          "auto_rate": 0.127,
+          "auto_agreement": 1,
+          "agreement_low": 0.56,
+          "agreement_high": 0.7841
+        },
+        "score": {
+          "n": 17,
+          "agreement": 0.4118,
+          "brier": 0.9146,
+          "log_loss": 1.9543,
+          "ece": 0.3863,
+          "js_divergence": 0.5795,
+          "auto_rate": 0,
+          "auto_agreement": 0,
+          "agreement_low": 0.2161,
+          "agreement_high": 0.6399
+        }
+      },
+      "errors": []
+    }
+  },
+  {
+    "dataset": "evals/unseen3.jsonl",
+    "before": {
+      "questions": 31,
+      "by_type": {
+        "choice": {
+          "n": 3,
+          "agreement": 1,
+          "brier": 0.3497,
+          "log_loss": 0.5718,
+          "ece": 0.3991,
+          "js_divergence": 0.2527,
+          "auto_rate": 0.3333,
+          "auto_agreement": 1,
+          "agreement_low": 0.4385,
+          "agreement_high": 1
+        },
+        "noul": {
+          "n": 22,
+          "agreement": 1,
+          "brier": 0.0691,
+          "log_loss": 0.1352,
+          "ece": 0.1094,
+          "js_divergence": 0.063,
+          "auto_rate": 0.8636,
+          "auto_agreement": 1,
+          "agreement_low": 0.8513,
+          "agreement_high": 1
+        },
+        "score": {
+          "n": 6,
+          "agreement": 1,
+          "brier": 0.01,
+          "log_loss": 0.0873,
+          "ece": 0.0833,
+          "js_divergence": 0.0431,
+          "auto_rate": 1,
+          "auto_agreement": 1,
+          "agreement_low": 0.6097,
+          "agreement_high": 1
+        }
+      },
+      "errors": []
+    },
+    "after": {
+      "questions": 31,
+      "by_type": {
+        "choice": {
+          "n": 3,
+          "agreement": 1,
+          "brier": 0.3497,
+          "log_loss": 0.5718,
+          "ece": 0.3991,
+          "js_divergence": 0.2527,
+          "auto_rate": 0.3333,
+          "auto_agreement": 1,
+          "agreement_low": 0.4385,
+          "agreement_high": 1
+        },
+        "noul": {
+          "n": 22,
+          "agreement": 1,
+          "brier": 0.0691,
+          "log_loss": 0.1352,
+          "ece": 0.1094,
+          "js_divergence": 0.063,
+          "auto_rate": 0.8636,
+          "auto_agreement": 1,
+          "agreement_low": 0.8513,
+          "agreement_high": 1
+        },
+        "score": {
+          "n": 6,
+          "agreement": 1,
+          "brier": 0.01,
+          "log_loss": 0.0873,
+          "ece": 0.0833,
+          "js_divergence": 0.0431,
+          "auto_rate": 1,
+          "auto_agreement": 1,
+          "agreement_low": 0.6097,
+          "agreement_high": 1
+        }
+      },
+      "errors": []
+    }
+  }
+]

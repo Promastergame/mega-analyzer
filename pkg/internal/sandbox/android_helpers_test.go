@@ -121,7 +121,7 @@ case "$args" in
   *"pm list packages -3"*) printf 'package:com.example.one\npackage:com.example.two\n' ;;
   *"cmd package resolve-activity --brief com.example.one"*) printf 'priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=true\ncom.example.one/.MainActivity\n' ;;
   *"ps -A"*) printf 'u0_a123 2345 1 0 com.example.one\nu0_a124 9876 1 0 other.process\n' ;;
-  *"netstat -an"*) printf 'tcp 0 0 10.0.2.15:12345 93.184.216.34:443 ESTABLISHED\nudp 0 0 10.0.2.15:5353 224.0.0.251:5353\nraw 0 0 ignored ignored\n' ;;
+  *"netstat -anp"*) printf 'tcp 0 0 10.0.2.15:12345 93.184.216.34:443 ESTABLISHED 2345/com.example.one\nudp 0 0 10.0.2.15:5353 224.0.0.251:5353 2345/com.example.one\ntcp 0 0 10.0.2.15:5555 10.0.2.2:40000 ESTABLISHED 9876/adbd\nraw 0 0 ignored ignored\n' ;;
   *) printf 'unexpected args: %s\n' "$args" >&2; exit 1 ;;
 esac
 `)
@@ -141,9 +141,9 @@ esac
 	if len(pids) != 1 || pids[0] != 2345 {
 		t.Fatalf("getAppPIDs = %+v", pids)
 	}
-	connections := getAppConnections(adb, device, pids)
-	if len(connections) != 2 {
-		t.Fatalf("getAppConnections = %+v", connections)
+	connections, connectionErr := getAppConnections(t.Context(), adb, device, pids)
+	if connectionErr != nil || len(connections) != 2 {
+		t.Fatalf("getAppConnections = %+v, %v", connections, connectionErr)
 	}
 	if connections[0].PID != 2345 || connections[0].Protocol != "tcp" || connections[0].RemoteAddr != "93.184.216.34:443" {
 		t.Fatalf("first connection = %+v", connections[0])

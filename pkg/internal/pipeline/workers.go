@@ -16,6 +16,7 @@ import (
 
 	"mega-analyzer/pkg/internal/analyzer"
 	"mega-analyzer/pkg/internal/apkloader"
+	"mega-analyzer/pkg/internal/boundedfile"
 	"mega-analyzer/pkg/internal/cfg"
 	"mega-analyzer/pkg/internal/contentcache"
 	deobfuscator "mega-analyzer/pkg/internal/deobfuscation"
@@ -24,7 +25,6 @@ import (
 	"mega-analyzer/pkg/internal/types"
 	"mega-analyzer/pkg/logger"
 	"mega-analyzer/pkg/media"
-	"os"
 	"sync"
 	"sync/atomic"
 )
@@ -371,7 +371,7 @@ func (p *Pipeline) processDEXJob(ctx context.Context, job FileJob, results chan<
 		p.stats.ErrorCount.Add(1)
 		p.stats.ParseFailed.Add(1)
 		// Malformed/unsupported DEX still gets a cheap raw signature pass.
-		content, readErr := os.ReadFile(job.Path)
+		content, readErr := boundedfile.ReadFile(job.Path, 64<<20)
 		if readErr != nil {
 			p.stats.FilesFailed.Add(1)
 			return
@@ -397,10 +397,19 @@ func (p *Pipeline) processFile(ctx context.Context, job FileJob) *types.FileAnal
 	default:
 	}
 
-	content, err := os.ReadFile(job.Path)
+	limit := int64(64 << 20)
+	if fastLowerExt(job.RelPath) == ".svg" {
+		limit = 8 << 20
+	}
+	content, err := boundedfile.ReadFile(job.Path, limit)
 	if err != nil {
 		p.stats.FilesFailed.Add(1)
-		return nil
+		analysis := types.NewFileAnalysis(job.RelPath, job.Type, job.Size)
+		analysis.ParseError = err.Error()
+		m := newMatch(types.CategoryMediaAnomaly, job.RelPath, 1, "Content inspection skipped: bounded read failed", err.Error(), false)
+		m.Metadata["rule_id"] = "analysis.bounded_read"
+		analysis.Matches = append(analysis.Matches, m)
+		return analysis
 	}
 
 	// A binary AndroidManifest.xml reaches this point only on the in-memory
@@ -447,6 +456,7 @@ func (p *Pipeline) processContent(ctx context.Context, job FileJob, content []by
 	defer buffer.release()
 	analysis := types.NewFileAnalysis(job.RelPath, job.Type, job.Size)
 	analysis.IsAppCode = isAppCode
+	analysis.IsLibrary = classification.IsLibrary && !isAppCode
 	analysis.Importance = classification.Importance
 	scanContent := shouldScanContent(job.Type, content)
 	var contentLower []byte
@@ -467,7 +477,16 @@ func (p *Pipeline) processContent(ctx context.Context, job FileJob, content []by
 	// detectors; the generic pattern matcher emits false positives on their
 	// binary/cleartext contents, so skip it for them.
 	forensicOnly := job.Type == types.FileTypeUnknown && isForensicDataFile(job.RelPath)
-	if scanContent && !forensicOnly {
+	var fileFuture fileScanFuture
+	if p.fileExecutor != nil && !forensicOnly && (job.Type == types.FileTypeSmali ||
+		job.Type == types.FileTypeXML || job.Type == types.FileTypeJSON ||
+		job.Type == types.FileTypeText || job.Type == types.FileTypeProperties) {
+		fileFuture = p.fileExecutor.Start(ctx, FileScanTask{Job: job, AppCode: isAppCode, Library: analysis.IsLibrary, Patterns: scanContent}, content)
+	}
+	if p.fileExecutor != nil {
+		defer p.fileExecutor.Yield()
+	}
+	if scanContent && !forensicOnly && fileFuture == nil {
 		t0pm := time.Now()
 		analysis.Matches = p.matcher.MatchContentWithFilterLower(
 			buffer.String(), buffer.LowerString(), job.RelPath, isAppCode,
@@ -487,17 +506,50 @@ func (p *Pipeline) processContent(ctx context.Context, job FileJob, content []by
 		p.processSmali(analysis, buffer.String())
 	}
 
+	var precomputedPiracy *[]types.Match
+	var piracyDuration time.Duration
+	var precomputedDetectors map[string]FileDetectorResult
+	if fileFuture != nil {
+		remote, err := fileFuture(ctx)
+		if err != nil {
+			if ctx.Err() != nil {
+				return nil
+			}
+			// A helper failure must never silently suppress evidence.
+			logger.Warn("Browser file helper failed; scanning locally", "error", err)
+			if scanContent {
+				started := time.Now()
+				matches := p.matcher.MatchContentWithFilterLower(buffer.String(), buffer.LowerString(), job.RelPath, isAppCode)
+				analysis.Matches = append(matches, analysis.Matches...)
+				p.stats.InternalTimings.PatternMatch.Record(time.Since(started))
+			}
+		} else {
+			// Smali processing may already have added recovered-string findings.
+			// Original pattern hits retain their original position before them.
+			analysis.Matches = append(remote.Patterns, analysis.Matches...)
+			precomputedPiracy = &remote.Piracy
+			piracyDuration = time.Duration(remote.PiracyNs)
+			precomputedDetectors = remote.Detectors
+			if scanContent {
+				p.stats.InternalTimings.PatternMatch.Record(time.Duration(remote.PatternNs))
+			}
+		}
+	}
+
 	// ── Детекторы ────────────────────────────────────────────────────────────
 	dctx := &FileDetectContext{
-		Ctx:          ctx,
-		Path:         job.RelPath,
-		Content:      content,
-		ContentLower: contentLower,
-		LineOffsets:  analysis.LineOffsets,
-		IsAppCode:    isAppCode,
-		FileType:     job.Type,
-		Job:          job,
-		Class:        analysis.SmaliClass,
+		Ctx:                  ctx,
+		Path:                 job.RelPath,
+		Content:              content,
+		ContentLower:         contentLower,
+		LineOffsets:          analysis.LineOffsets,
+		IsAppCode:            isAppCode,
+		FileType:             job.Type,
+		Job:                  job,
+		Class:                analysis.SmaliClass,
+		PrecomputedPiracy:    precomputedPiracy,
+		PiracyDuration:       piracyDuration,
+		PrecomputedDetectors: precomputedDetectors,
 	}
 
 	t0det := time.Now()
@@ -692,6 +744,26 @@ func (p *Pipeline) collectResult(analysis *types.FileAnalysis) {
 		}
 	}
 
+	// Protection categories describe the app protecting *itself* (anti-tamper,
+	// anti-debug, anti-emulator, root checks). Inside a third-party library —
+	// the vendored apksig signer checking isDebuggable of the APK it signs,
+	// or androidx plumbing — they are not the app's protection stack and only
+	// manufacture anti-analysis findings. Drop them from non-app code; the
+	// match counters below have not run yet, so removal keeps stats honest.
+	if !analysis.IsAppCode {
+		kept := analysis.Matches[:0]
+		for _, m := range analysis.Matches {
+			switch m.Category {
+			case types.CategoryIntegrityCheck, types.CategoryDebugDetection,
+				types.CategoryEmulatorDetection, types.CategoryRootBypass,
+				types.CategoryTamperDetection:
+				continue
+			}
+			kept = append(kept, m)
+		}
+		analysis.Matches = kept
+	}
+
 	p.result.Files[analysis.Path] = analysis
 	p.result.Stats.TotalMatches += len(analysis.Matches)
 	p.stats.MatchesTotal.Add(int64(len(analysis.Matches)))
@@ -754,7 +826,7 @@ func (p *Pipeline) processSmali(analysis *types.FileAnalysis, content string) {
 			}
 			if fm == nil {
 				t0mf := time.Now()
-				ma := p.methodAnalyzer.Analyze(method, class)
+				ma := p.methodAnalyzer.AnalyzeFeatures(method, class)
 				p.stats.InternalTimings.MethodFeatures.Record(time.Since(t0mf))
 				p.stats.InternalTimings.MethodFeatures.Miss()
 				fm = ma.FeatureMap
@@ -832,6 +904,7 @@ func (p *Pipeline) processSmali(analysis *types.FileAnalysis, content string) {
 	// the plaintext here turns it into a finding and the file survives.
 	if p.config.EnableDeobfuscation {
 		p.deobfuscateClass(analysis, class)
+		p.recoverStaticClassNetworkValues(analysis, class)
 	}
 }
 
@@ -846,6 +919,18 @@ func (p *Pipeline) DetectorMetrics() *DetectorMetrics {
 // runOneDetector wraps one detector call with cost/yield accounting so the
 // 35-detector chain stops being a single opaque 'detectors' counter.
 func (p *Pipeline) runOneDetector(d FileDetector, dctx *FileDetectContext, analysis *types.FileAnalysis) {
+	if independentFileDetector(d) {
+		if result, ok := dctx.PrecomputedDetectors[d.Name()]; ok {
+			analysis.Matches = append(analysis.Matches, result.Matches...)
+			p.DetectorMetrics().Record(d.Name(), len(result.Matches), result.DurationNs)
+			return
+		}
+	}
+	if _, independent := d.(*PiracyDetectorAdapter); independent && dctx.PrecomputedPiracy != nil {
+		analysis.Matches = append(analysis.Matches, (*dctx.PrecomputedPiracy)...)
+		p.DetectorMetrics().Record(d.Name(), len(*dctx.PrecomputedPiracy), dctx.PiracyDuration.Nanoseconds())
+		return
+	}
 	before := len(analysis.Matches)
 	t0 := time.Now()
 	d.Detect(dctx, analysis)
@@ -854,6 +939,7 @@ func (p *Pipeline) runOneDetector(d FileDetector, dctx *FileDetectContext, analy
 
 // runDetectors applies the detector chain to one content view.
 func (p *Pipeline) runDetectors(dctx *FileDetectContext, analysis *types.FileAnalysis, job FileJob) {
+	defer normalizeSubscriptionVocabulary(dctx, analysis)
 	// Raw forensic data blobs (e.g. global-metadata.dat, save files) are admitted
 	// as Unknown only for the dedicated data/ detectors; skip generic detectors on
 	// them to avoid false positives from scanning binary content.
@@ -1233,6 +1319,17 @@ func (p *Pipeline) processXML(analysis *types.FileAnalysis, content, contentLowe
 	suspicious := findXMLSuspicious(contentLower)
 	if len(suspicious) > 0 {
 		analysis.XMLData = &types.XMLAnalysis{Suspicious: suspicious}
+	}
+	if isAndroidManifestPath(analysis.RelPath) || isAndroidManifestPath(analysis.Path) {
+		if analysis.XMLData == nil {
+			analysis.XMLData = &types.XMLAnalysis{}
+		}
+		const maxManifestContext = 128 << 10
+		if len(content) <= maxManifestContext {
+			analysis.XMLData.ManifestSource = string(content)
+		} else {
+			analysis.XMLData.ManifestSourceTruncated = true
+		}
 	}
 
 	// Ad patterns in XML

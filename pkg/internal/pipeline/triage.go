@@ -24,11 +24,11 @@ func (p *Pipeline) triageFindings() {
 
 		for _, m := range fa.Matches {
 			// Initialize triage properties
-			evidenceType := "string_match"
-			confidence := "high"
-			reasonForSeverity := "Standard heuristic match."
-			falsePositiveHints := ""
-			requiredNextEvidence := ""
+			evidenceType := firstNonEmpty(m.EvidenceType, "string_match")
+			confidence := firstNonEmpty(m.Confidence, "high")
+			reasonForSeverity := firstNonEmpty(m.ReasonForSeverity, "Standard heuristic match.")
+			falsePositiveHints := m.FalsePositiveHints
+			requiredNextEvidence := m.RequiredNextEvidence
 			severity := m.Severity
 			isCritical := m.IsCritical
 

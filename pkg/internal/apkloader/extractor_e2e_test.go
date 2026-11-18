@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"mega-analyzer/pkg/internal/apkloader/axml"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 // TestExtractor_DecodeHelpers_BeatStar exercises the AXML/ARSC
@@ -25,7 +27,7 @@ func TestExtractor_DecodeHelpers_BeatStar(t *testing.T) {
 		t.Skipf("sample APK not present: %v", err)
 	}
 
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	zr, err := zip.OpenReader(apkPath)
 	if err != nil {
 		t.Fatalf("open apk: %v", err)

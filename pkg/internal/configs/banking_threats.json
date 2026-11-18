@@ -2,88 +2,195 @@
   "category": "banking_threats",
   "version": "3.0",
   "description": "Comprehensive banking threat detection rules. Covers overlay attacks (classic + modern), 2FA/OTP interception (SMS, notification, accessibility, push), credential theft (keylogging, form injection, screen capture), automated transfer systems (ATS), call interception/forwarding, payment hijacking, crypto theft, banking app targeting, session hijacking, card data theft, anti-fraud bypass, and social engineering. Based on real-world banking malware families: Anubis, Cerberus, Hydra, Flubot, SharkBot, Vultur, Hook, Godfather, Xenomorph, Octo, Ermac, Coper, TeaBot, BianLian, Medusa, ToxicPanda, SpyNote.",
-
-
   "rules": [
-
-
-
     {
       "id": "bank_overlay_classic",
-      "name": "Classic Banking Overlay Attack (Anubis/Cerberus pattern)",
-      "description": "Accessibility + SYSTEM_ALERT_WINDOW + internet + performGlobalAction — the original banking trojan technique. Draws a fake login screen pixel-identical to the real banking app over the legitimate app, captures entered credentials, then sends them to C2 server while forwarding user to the real app.",
+      "name": "Accessibility actions with overlay permissions",
+      "description": "Accessibility action API references with overlay/network declarations. This is a co-presence heuristic; phishing and credential collection require a linked code path.",
       "category": "malware",
-      "severity": "critical",
-      "score": 98,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "combo", "values": ["android.permission.BIND_ACCESSIBILITY_SERVICE", "android.permission.SYSTEM_ALERT_WINDOW", "android.permission.INTERNET"] },
-        { "type": "api_call", "value": "performGlobalAction" }
+        {
+          "type": "combo",
+          "values": [
+            "android.permission.BIND_ACCESSIBILITY_SERVICE",
+            "android.permission.SYSTEM_ALERT_WINDOW",
+            "android.permission.INTERNET"
+          ]
+        },
+        {
+          "type": "api_call",
+          "value": "performGlobalAction"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1417.002", "MITRE ATT&CK Mobile: T1626.001", "Anubis banking trojan", "Cerberus banking trojan", "Flubot"],
-      "tags": ["overlay_attack", "credential_theft", "anubis", "cerberus", "flubot"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1417.002",
+        "MITRE ATT&CK Mobile: T1626.001",
+        "Flubot"
+      ],
+      "tags": [
+        "overlay_attack",
+        "credential_theft",
+        "flubot"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "Generic permissions and API combinations do not identify a malware family or prove execution."
+      ],
+      "next_checks": [
+        "Inspect actual permission grants and a source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_overlay_a11y_modern",
-      "name": "Modern A11y-Only Overlay (Hook/Ermac pattern)",
-      "description": "Uses AccessibilityService alone for overlay injection without SYSTEM_ALERT_WINDOW. Injects fake UI elements directly into the accessibility tree or uses TYPE_APPLICATION_OVERLAY. Bypasses Play Protect overlay detection. Used by Hook, Ermac, and Xenomorph v3+.",
+      "name": "Accessibility node lookup and action APIs",
+      "description": "Node lookup and action API references with accessibility and network declarations. Overlay construction, targeted applications and credential collection require a linked code path.",
       "category": "malware",
-      "severity": "critical",
-      "score": 96,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "AccessibilityNodeInfo" },
-        { "type": "api_call", "value": "performAction" },
-        { "type": "api_call", "value": "findAccessibilityNodeInfosByViewId" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "AccessibilityNodeInfo"
+        },
+        {
+          "type": "api_call",
+          "value": "performAction"
+        },
+        {
+          "type": "api_call",
+          "value": "findAccessibilityNodeInfosByViewId"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1626.001", "Hook banking trojan", "Ermac banking trojan", "Xenomorph v3"],
-      "tags": ["overlay_attack", "accessibility_abuse", "hook", "ermac", "xenomorph"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1626.001"
+      ],
+      "tags": [
+        "accessibility",
+        "ui_automation",
+        "api_observation"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "API references and manifest declarations establish static indicators, not runtime activation, permission grants, attacker control or a linked malicious operation."
+      ],
+      "next_checks": [
+        "Verify component declarations and enabled state, actual platform grants, callers, data values and a connected source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_overlay_webview_inject",
-      "name": "WebView Injection Overlay (Godfather pattern)",
-      "description": "Loads phishing HTML/JS pages in WebView overlay on top of banking app. JavaScript captures keystrokes from fake form and sends to C2. More flexible than static overlays — can be updated from server without app update.",
+      "name": "WebView bridge and content loading with overlay permissions",
+      "description": "WebView content loading and JavaScript bridge references with overlay permissions; deceptive forms and credential transmission require separate evidence.",
       "category": "malware",
-      "severity": "critical",
-      "score": 94,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.SYSTEM_ALERT_WINDOW" },
-        { "type": "api_call", "value": "WebView" },
-        { "type": "api_call", "value": "loadUrl" },
-        { "type": "api_call", "value": "addJavascriptInterface" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.SYSTEM_ALERT_WINDOW"
+        },
+        {
+          "type": "api_call",
+          "value": "WebView"
+        },
+        {
+          "type": "api_call",
+          "value": "loadUrl"
+        },
+        {
+          "type": "api_call",
+          "value": "addJavascriptInterface"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1417.002", "Godfather banking trojan", "OWASP MASTG: MSTG-PLATFORM-7"],
-      "tags": ["overlay_attack", "webview_injection", "godfather", "phishing"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1417.002",
+        "OWASP MASTG: MSTG-PLATFORM-7"
+      ],
+      "tags": [
+        "overlay_attack",
+        "webview_injection",
+        "phishing"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "Generic permissions and API combinations do not identify a malware family or prove execution."
+      ],
+      "next_checks": [
+        "Inspect actual permission grants and a source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_overlay_webview_js_bridge",
-      "name": "WebView JavaScript Bridge Credential Capture",
-      "description": "WebView with JavaScript bridge + evaluateJavascript — injects JS to capture form data from overlay phishing page and passes credentials to Java code via @JavascriptInterface.",
+      "name": "WebView JavaScript evaluation and bridge APIs",
+      "description": "WebView JavaScript evaluation and bridge references with overlay/network declarations. Loaded content, bridge exposure and credential collection or transmission require separate evidence.",
       "category": "malware",
-      "severity": "critical",
-      "score": 92,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "WebView" },
-        { "type": "api_call", "value": "evaluateJavascript" },
-        { "type": "api_call", "value": "addJavascriptInterface" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "WebView"
+        },
+        {
+          "type": "api_call",
+          "value": "evaluateJavascript"
+        },
+        {
+          "type": "api_call",
+          "value": "addJavascriptInterface"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.SYSTEM_ALERT_WINDOW"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1417.002", "CVE-2012-6636"],
-      "tags": ["overlay_attack", "javascript_bridge", "credential_theft"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1417.002",
+        "CVE-2012-6636"
+      ],
+      "tags": [
+        "webview",
+        "javascript_bridge",
+        "api_observation"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "API references and manifest declarations establish static indicators, not runtime activation, permission grants, attacker control or a linked malicious operation."
+      ],
+      "next_checks": [
+        "Verify component declarations and enabled state, actual platform grants, callers, data values and a connected source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_overlay_dynamic_html",
       "name": "Dynamic HTML Overlay Injection (Server-side)",
@@ -94,34 +201,78 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "HttpURLConnection" },
-        { "type": "api_call", "value": "WebView" },
-        { "type": "api_call", "value": "loadDataWithBaseURL" },
-        { "type": "permission", "value": "android.permission.SYSTEM_ALERT_WINDOW" }
+        {
+          "type": "api_call",
+          "value": "HttpURLConnection"
+        },
+        {
+          "type": "api_call",
+          "value": "WebView"
+        },
+        {
+          "type": "api_call",
+          "value": "loadDataWithBaseURL"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.SYSTEM_ALERT_WINDOW"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1417.002", "Cerberus v2", "Hydra banking trojan"],
-      "tags": ["overlay_attack", "dynamic_injection", "server_side", "cerberus", "hydra"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1417.002"
+      ],
+      "tags": [
+        "overlay_attack",
+        "dynamic_injection",
+        "server_side"
+      ]
     },
-
     {
       "id": "bank_overlay_usage_stats_trigger",
-      "name": "Usage Stats Overlay Trigger (TeaBot pattern)",
-      "description": "Uses PACKAGE_USAGE_STATS to detect when banking app is opened, then instantly injects overlay. More reliable than accessibility-based foreground app detection. Used by TeaBot, BianLian.",
+      "name": "Usage statistics API with overlay permissions",
+      "description": "Usage statistics API references with overlay/network declarations; this does not establish a banking overlay trigger.",
       "category": "malware",
-      "severity": "critical",
-      "score": 90,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.PACKAGE_USAGE_STATS" },
-        { "type": "permission", "value": "android.permission.SYSTEM_ALERT_WINDOW" },
-        { "type": "api_call", "value": "UsageStatsManager" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.PACKAGE_USAGE_STATS"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.SYSTEM_ALERT_WINDOW"
+        },
+        {
+          "type": "api_call",
+          "value": "UsageStatsManager"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1418", "TeaBot banking trojan", "BianLian banking trojan"],
-      "tags": ["overlay_attack", "usage_stats", "app_detection", "teabot", "bianlian"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1418",
+        "BianLian banking trojan"
+      ],
+      "tags": [
+        "overlay_attack",
+        "usage_stats",
+        "app_detection",
+        "bianlian"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "Generic permissions and API combinations do not identify a malware family or prove execution."
+      ],
+      "next_checks": [
+        "Inspect actual permission grants and a source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_overlay_notification_dismiss",
       "name": "Overlay + Notification Dismiss (Anti-detection)",
@@ -132,15 +283,33 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.SYSTEM_ALERT_WINDOW" },
-        { "type": "permission", "value": "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" },
-        { "type": "api_call", "value": "cancelNotification" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.SYSTEM_ALERT_WINDOW"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "cancelNotification"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1417.002", "MITRE ATT&CK Mobile: T1517"],
-      "tags": ["overlay_attack", "notification_abuse", "anti_detection"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1417.002",
+        "MITRE ATT&CK Mobile: T1517"
+      ],
+      "tags": [
+        "overlay_attack",
+        "notification_abuse",
+        "anti_detection"
+      ]
     },
-
     {
       "id": "bank_overlay_custom_tab",
       "name": "Custom Chrome Tab Phishing Overlay",
@@ -151,17 +320,32 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "CustomTabsIntent" },
-        { "type": "api_call", "value": "setToolbarColor" },
-        { "type": "api_call", "value": "shouldOverrideUrlLoading" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "CustomTabsIntent"
+        },
+        {
+          "type": "api_call",
+          "value": "setToolbarColor"
+        },
+        {
+          "type": "api_call",
+          "value": "shouldOverrideUrlLoading"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1660"],
-      "tags": ["overlay_attack", "phishing", "custom_tabs"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1660"
+      ],
+      "tags": [
+        "overlay_attack",
+        "phishing",
+        "custom_tabs"
+      ]
     },
-
-
-
     {
       "id": "bank_2fa_sms_intercept",
       "name": "SMS 2FA Code Interception",
@@ -172,33 +356,66 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.RECEIVE_SMS" },
-        { "type": "permission", "value": "android.permission.READ_SMS" },
-        { "type": "api_call", "value": "abortBroadcast" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.RECEIVE_SMS"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.READ_SMS"
+        },
+        {
+          "type": "api_call",
+          "value": "abortBroadcast"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1412", "MITRE ATT&CK Mobile: T1582.001"],
-      "tags": ["2fa_bypass", "sms_interception", "otp_theft"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1412",
+        "MITRE ATT&CK Mobile: T1582.001"
+      ],
+      "tags": [
+        "2fa_bypass",
+        "sms_interception",
+        "otp_theft"
+      ]
     },
-
     {
       "id": "bank_2fa_sms_receiver",
       "name": "SMS Receiver with Internet (2FA Relay)",
-      "description": "SMS broadcast receiver + internet permission — intercepts SMS and forwards to C2 server. Core component of every SMS-based 2FA stealing trojan.",
+      "description": "An SMS receiver with network access is the definition of every SMS app — spam filters and messengers (truecaller, 2026-11-05). Review signal: a real 2FA relay shows an OTP-parse and forward chain (verification-code regex feeding a network sink) — covered by data-flow and dedicated OTP detectors.",
       "category": "malware",
-      "severity": "critical",
-      "score": 90,
+      "severity": "high",
+      "score": 60,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.READ_SMS" },
-        { "type": "api_call", "value": "SmsReceiver" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.READ_SMS"
+        },
+        {
+          "type": "api_call",
+          "value": "SmsReceiver"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1412"],
-      "tags": ["2fa_bypass", "sms_receiver", "otp_relay"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1412"
+      ],
+      "tags": [
+        "2fa_bypass",
+        "sms_receiver",
+        "otp_relay",
+        "review_signal"
+      ]
     },
-
     {
       "id": "bank_2fa_sms_forward",
       "name": "SMS Auto-Forward to Attacker",
@@ -209,15 +426,33 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.RECEIVE_SMS" },
-        { "type": "permission", "value": "android.permission.SEND_SMS" },
-        { "type": "api_call", "value": "SmsManager" },
-        { "type": "api_call", "value": "sendTextMessage" }
+        {
+          "type": "permission",
+          "value": "android.permission.RECEIVE_SMS"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.SEND_SMS"
+        },
+        {
+          "type": "api_call",
+          "value": "SmsManager"
+        },
+        {
+          "type": "api_call",
+          "value": "sendTextMessage"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1412", "MITRE ATT&CK Mobile: T1582.001"],
-      "tags": ["2fa_bypass", "sms_forward", "otp_relay"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1412",
+        "MITRE ATT&CK Mobile: T1582.001"
+      ],
+      "tags": [
+        "2fa_bypass",
+        "sms_forward",
+        "otp_relay"
+      ]
     },
-
     {
       "id": "bank_2fa_sms_default_app",
       "name": "Default SMS App Hijack for 2FA",
@@ -228,15 +463,32 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "pattern", "value": "android.provider.Telephony.SMS_DELIVER" },
-        { "type": "pattern", "value": "android.provider.Telephony.WAP_PUSH_DELIVER" },
-        { "type": "permission", "value": "android.permission.READ_SMS" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "pattern",
+          "value": "android.provider.Telephony.SMS_DELIVER"
+        },
+        {
+          "type": "pattern",
+          "value": "android.provider.Telephony.WAP_PUSH_DELIVER"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.READ_SMS"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1582.001"],
-      "tags": ["2fa_bypass", "default_sms_app", "sms_hijack"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1582.001"
+      ],
+      "tags": [
+        "2fa_bypass",
+        "default_sms_app",
+        "sms_hijack"
+      ]
     },
-
     {
       "id": "bank_2fa_notification_intercept",
       "name": "Notification 2FA/Push Auth Interception",
@@ -247,15 +499,33 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" },
-        { "type": "api_call", "value": "NotificationListenerService" },
-        { "type": "api_call", "value": "onNotificationPosted" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "NotificationListenerService"
+        },
+        {
+          "type": "api_call",
+          "value": "onNotificationPosted"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1517", "Cerberus notification interception"],
-      "tags": ["2fa_bypass", "notification_theft", "push_auth", "otp_theft"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1517"
+      ],
+      "tags": [
+        "2fa_bypass",
+        "notification_theft",
+        "push_auth",
+        "otp_theft"
+      ]
     },
-
     {
       "id": "bank_2fa_notification_auto_approve",
       "name": "Push 2FA Auto-Approve (A11y + Notification)",
@@ -266,57 +536,120 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" },
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "performAction" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "performAction"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1517", "MITRE ATT&CK Mobile: T1626.001"],
-      "tags": ["2fa_bypass", "push_auto_approve", "accessibility_abuse"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1517",
+        "MITRE ATT&CK Mobile: T1626.001"
+      ],
+      "tags": [
+        "2fa_bypass",
+        "push_auto_approve",
+        "accessibility_abuse"
+      ]
     },
-
     {
       "id": "bank_2fa_a11y_totp_reader",
-      "name": "TOTP Code Reader via Accessibility",
-      "description": "Uses AccessibilityService to read TOTP codes displayed by authenticator apps (Google Authenticator, Authy, etc.). Traverses UI tree to find and extract the 6-digit code.",
+      "name": "Accessibility node traversal with text reading",
+      "description": "AccessibilityNodeInfo findAccessibilityNodeInfosByText and getText invocations with an accessibility service declared. Extracting TOTP codes additionally requires targeting authenticator windows; generic getText calls in UI code do not match this rule.",
       "category": "malware",
       "severity": "critical",
       "score": 90,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "findAccessibilityNodeInfosByText" },
-        { "type": "api_call", "value": "getText" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "findaccessibilitynodeinfosbytext"
+        },
+        {
+          "type": "api_call",
+          "value": "accessibilitynodeinfo;->gettext("
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1626.001", "MITRE ATT&CK Mobile: T1417.001"],
-      "tags": ["2fa_bypass", "totp_theft", "authenticator_theft", "accessibility_abuse"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1626.001",
+        "MITRE ATT&CK Mobile: T1417.001"
+      ],
+      "tags": [
+        "2fa_bypass",
+        "totp_theft",
+        "authenticator_theft",
+        "accessibility_abuse"
+      ]
     },
-
     {
       "id": "bank_2fa_full_bypass_chain",
-      "name": "Complete 2FA Bypass Chain (All Vectors)",
-      "description": "SMS + Notification + Accessibility — bypasses ALL common 2FA methods simultaneously: SMS OTP, push notification, TOTP display, and biometric prompt. No 2FA method is safe against this combination.",
+      "name": "Permissions relevant to OTP delivery channels",
+      "description": "SMS, notification-listener and accessibility declarations can expose some OTP channels if granted and used. They do not show code interception, biometric bypass, passkey compromise or universal 2FA bypass.",
       "category": "malware",
-      "severity": "critical",
-      "score": 99,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "threshold",
       "min_match": 3,
       "conditions": [
-        { "type": "permission", "value": "android.permission.RECEIVE_SMS" },
-        { "type": "permission", "value": "android.permission.READ_SMS" },
-        { "type": "permission", "value": "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" },
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.RECEIVE_SMS"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.READ_SMS"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1412", "MITRE ATT&CK Mobile: T1517", "MITRE ATT&CK Mobile: T1626.001"],
-      "tags": ["2fa_bypass", "complete_chain", "maximum_threat"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1412",
+        "MITRE ATT&CK Mobile: T1517",
+        "MITRE ATT&CK Mobile: T1626.001"
+      ],
+      "tags": [
+        "2fa_bypass"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "Generic permissions and API combinations do not identify a malware family or prove execution."
+      ],
+      "next_checks": [
+        "Inspect actual permission grants and a source-to-action-to-destination path."
+      ]
     },
-
-
-
     {
       "id": "bank_cred_a11y_keylog",
       "name": "Accessibility Keylogger (Credential Capture)",
@@ -327,53 +660,113 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "AccessibilityEvent" },
-        { "type": "api_call", "value": "TYPE_VIEW_TEXT_CHANGED" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "AccessibilityEvent"
+        },
+        {
+          "type": "api_call",
+          "value": "TYPE_VIEW_TEXT_CHANGED"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1417.001", "CWE-200"],
-      "tags": ["credential_theft", "keylogger", "accessibility_abuse"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1417.001",
+        "CWE-200"
+      ],
+      "tags": [
+        "credential_theft",
+        "keylogger",
+        "accessibility_abuse"
+      ]
     },
-
     {
       "id": "bank_cred_form_injection",
-      "name": "Form Injection via Accessibility (getText/setText)",
-      "description": "Uses AccessibilityService to read text from banking app fields (getText) and inject text (setText). Can steal entered credentials AND auto-fill attacker's account details for unauthorized transfers.",
+      "name": "Accessibility node text reading and injection",
+      "description": "AccessibilityNodeInfo getText/setText invocations with an accessibility service declared. Reading or injecting form text additionally requires node access against login/banking UIs; TextView and EditText setters do not match this rule.",
       "category": "malware",
       "severity": "critical",
       "score": 93,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "getText" },
-        { "type": "api_call", "value": "setText" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "accessibilitynodeinfo;->gettext("
+        },
+        {
+          "type": "api_call",
+          "value": "accessibilitynodeinfo;->settext("
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1417.002", "MITRE ATT&CK Mobile: T1626.001"],
-      "tags": ["credential_theft", "form_injection", "accessibility_abuse"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1417.002",
+        "MITRE ATT&CK Mobile: T1626.001"
+      ],
+      "tags": [
+        "credential_theft",
+        "form_injection",
+        "accessibility_abuse"
+      ]
     },
-
     {
       "id": "bank_cred_screen_recording",
-      "name": "Screen Recording for Credential Capture (Vultur pattern)",
-      "description": "Records device screen via MediaProjection to capture banking credentials as user types them. Streams screen to attacker's server in real-time. Used by Vultur and Octo banking trojans as alternative to overlay attacks.",
+      "name": "Screen capture API combination",
+      "description": "MediaProjection, virtual-display and image-reader API references are co-present. User consent, captured content and its destination require review.",
       "category": "malware",
-      "severity": "critical",
-      "score": 96,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "MediaProjection" },
-        { "type": "api_call", "value": "createVirtualDisplay" },
-        { "type": "api_call", "value": "ImageReader" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "MediaProjection"
+        },
+        {
+          "type": "api_call",
+          "value": "createVirtualDisplay"
+        },
+        {
+          "type": "api_call",
+          "value": "ImageReader"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1513", "Vultur banking trojan", "Octo banking trojan"],
-      "tags": ["credential_theft", "screen_recording", "vultur", "octo"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1513"
+      ],
+      "tags": [
+        "credential_theft",
+        "screen_recording"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "Generic permissions and API combinations do not identify a malware family or prove execution."
+      ],
+      "next_checks": [
+        "Inspect actual permission grants and a source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_cred_screen_stream_vnc",
       "name": "VNC/Screen Streaming for Manual Fraud",
@@ -384,15 +777,34 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "MediaProjection" },
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "dispatchGesture" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "MediaProjection"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "dispatchGesture"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1513", "MITRE ATT&CK Mobile: T1626.001", "Vultur v2", "Octo2"],
-      "tags": ["credential_theft", "screen_streaming", "vnc", "remote_fraud", "vultur"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1513",
+        "MITRE ATT&CK Mobile: T1626.001"
+      ],
+      "tags": [
+        "credential_theft",
+        "screen_streaming",
+        "vnc",
+        "remote_fraud"
+      ]
     },
-
     {
       "id": "bank_cred_screenshot_capture",
       "name": "Screenshot Capture of Banking Screens",
@@ -403,32 +815,67 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "MediaProjection" },
-        { "type": "api_call", "value": "createScreenCaptureIntent" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "MediaProjection"
+        },
+        {
+          "type": "api_call",
+          "value": "createScreenCaptureIntent"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1513"],
-      "tags": ["credential_theft", "screenshot", "screen_capture"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1513"
+      ],
+      "tags": [
+        "credential_theft",
+        "screenshot",
+        "screen_capture"
+      ]
     },
-
     {
       "id": "bank_cred_clipboard_steal",
-      "name": "Clipboard Credential/Token Theft",
-      "description": "Monitors clipboard for copied banking credentials, account numbers, IBAN, tokens, and crypto addresses. Many users copy-paste credentials from password managers — this intercepts them.",
+      "name": "Clipboard change listener APIs",
+      "description": "Clipboard manager and change-listener API references with network permission. Reading sensitive values, modifying the clipboard and sending data are not established by these references.",
       "category": "malware",
-      "severity": "high",
-      "score": 82,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "ClipboardManager" },
-        { "type": "api_call", "value": "addPrimaryClipChangedListener" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "ClipboardManager"
+        },
+        {
+          "type": "api_call",
+          "value": "addPrimaryClipChangedListener"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1414"],
-      "tags": ["credential_theft", "clipboard", "token_theft"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1414"
+      ],
+      "tags": [
+        "clipboard",
+        "api_observation"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "API references and manifest declarations establish static indicators, not runtime activation, permission grants, attacker control or a linked malicious operation."
+      ],
+      "next_checks": [
+        "Verify component declarations and enabled state, actual platform grants, callers, data values and a connected source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_cred_input_method",
       "name": "Fake Input Method for Credential Capture",
@@ -439,100 +886,203 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_INPUT_METHOD" },
-        { "type": "api_call", "value": "InputMethodService" },
-        { "type": "api_call", "value": "onKey" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_INPUT_METHOD"
+        },
+        {
+          "type": "api_call",
+          "value": "InputMethodService"
+        },
+        {
+          "type": "api_call",
+          "value": "onKey"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1417.001"],
-      "tags": ["credential_theft", "fake_keyboard", "keylogger"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1417.001"
+      ],
+      "tags": [
+        "credential_theft",
+        "fake_keyboard",
+        "keylogger"
+      ]
     },
-
-
-
     {
       "id": "bank_ats_basic",
-      "name": "Automated Transfer System — Basic ATS (SharkBot pattern)",
-      "description": "Uses accessibility to auto-fill recipient account and amount, then clicks transfer button. Performs unauthorized money transfer through victim's own banking app while device is idle. The most dangerous banking trojan technique — no overlay needed.",
+      "name": "Automated transfer system — accessibility auto-fill and click",
+      "description": "Accessibility node text-setting and action invocation can auto-fill fields and click controls — the mechanism used for automated transfers. An unauthorized transfer additionally requires a logged-in banking session and a matching target app; review the observed targets.",
       "category": "malware",
       "severity": "critical",
       "score": 99,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "performGlobalAction" },
-        { "type": "api_call", "value": "performAction" },
-        { "type": "api_call", "value": "ACTION_SET_TEXT" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "performGlobalAction"
+        },
+        {
+          "type": "api_call",
+          "value": "performAction"
+        },
+        {
+          "type": "api_call",
+          "value": "ACTION_SET_TEXT"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1626.001", "SharkBot ATS", "Gustuff ATS", "Xenomorph v3 ATS"],
-      "tags": ["ats", "automated_fraud", "sharkbot", "gustuff", "xenomorph"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1626.001"
+      ],
+      "tags": [
+        "ats",
+        "automated_fraud"
+      ]
     },
-
     {
       "id": "bank_ats_gesture_injection",
-      "name": "ATS via Gesture Injection (Android 7+ API)",
-      "description": "Uses dispatchGesture API (Android 7+) for precise tap/swipe injection. Can navigate complex banking app UIs, scroll through menus, and complete multi-step transfers automatically.",
+      "name": "Accessibility gesture injection APIs",
+      "description": "Gesture dispatch API references with accessibility and network declarations. Transaction targets, injected values and transfer confirmation are not established.",
       "category": "malware",
-      "severity": "critical",
-      "score": 97,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "dispatchGesture" },
-        { "type": "api_call", "value": "GestureDescription" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "dispatchGesture"
+        },
+        {
+          "type": "api_call",
+          "value": "GestureDescription"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1626.001", "Hook gesture injection", "Octo gesture injection"],
-      "tags": ["ats", "gesture_injection", "hook", "octo"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1626.001"
+      ],
+      "tags": [
+        "accessibility",
+        "gestures",
+        "api_observation"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "API references and manifest declarations establish static indicators, not runtime activation, permission grants, attacker control or a linked malicious operation."
+      ],
+      "next_checks": [
+        "Verify component declarations and enabled state, actual platform grants, callers, data values and a connected source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_ats_full_chain",
-      "name": "Complete ATS Chain (Detection + Injection + Confirmation)",
-      "description": "Full automated transfer: 1) Detects banking app via usage stats, 2) Injects recipient/amount via accessibility, 3) Bypasses 2FA via notification/SMS interception, 4) Confirms transfer. End-to-end automated fraud.",
+      "name": "Accessibility gesture and network indicators",
+      "description": "Gesture dispatch and accessibility/network declarations are present. A complete automated transfer chain requires evidence of the target, input values, confirmation and their connected execution path.",
       "category": "malware",
-      "severity": "critical",
-      "score": 100,
-      "enabled": true,
-      "logic": "threshold",
-      "min_match": 4,
-      "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "performAction" },
-        { "type": "permission", "value": "android.permission.RECEIVE_SMS" },
-        { "type": "permission", "value": "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" },
-        { "type": "permission", "value": "android.permission.PACKAGE_USAGE_STATS" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
-      ],
-      "references": ["MITRE ATT&CK Mobile: T1626.001", "Xenomorph v3 ATS", "SharkBot v2 ATS"],
-      "tags": ["ats", "complete_chain", "maximum_threat", "automated_fraud"]
-    },
-
-    {
-      "id": "bank_ats_sleep_fraud",
-      "name": "Sleep-time ATS (Night-time Automated Fraud)",
-      "description": "Waits for device idle/screen-off state then performs automated transfers while victim sleeps. Uses AlarmManager for timing and reduces screen brightness to avoid detection.",
-      "category": "malware",
-      "severity": "critical",
-      "score": 95,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "permission", "value": "android.permission.DISABLE_KEYGUARD" },
-        { "type": "permission", "value": "android.permission.WAKE_LOCK" },
-        { "type": "api_call", "value": "AlarmManager" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "dispatchGesture"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1626.001", "Gustuff sleep fraud"],
-      "tags": ["ats", "sleep_fraud", "night_time", "gustuff"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1626.001"
+      ],
+      "tags": [
+        "accessibility",
+        "gestures",
+        "api_observation"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "API references and manifest declarations establish static indicators, not runtime activation, permission grants, attacker control or a linked malicious operation."
+      ],
+      "next_checks": [
+        "Verify component declarations and enabled state, actual platform grants, callers, data values and a connected source-to-action-to-destination path."
+      ]
     },
-
-
-
+    {
+      "id": "bank_ats_sleep_fraud",
+      "name": "Accessibility, wake and alarm indicators",
+      "description": "Accessibility, wake/keyguard declarations and alarm API references are present. Scheduling time, runtime activation and financial operations are not established.",
+      "category": "malware",
+      "severity": "info",
+      "score": 0,
+      "enabled": true,
+      "logic": "and",
+      "conditions": [
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.DISABLE_KEYGUARD"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.WAKE_LOCK"
+        },
+        {
+          "type": "api_call",
+          "value": "AlarmManager"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
+      ],
+      "references": [
+        "MITRE ATT&CK Mobile: T1626.001"
+      ],
+      "tags": [
+        "accessibility",
+        "scheduling",
+        "api_observation"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "API references and manifest declarations establish static indicators, not runtime activation, permission grants, attacker control or a linked malicious operation."
+      ],
+      "next_checks": [
+        "Verify component declarations and enabled state, actual platform grants, callers, data values and a connected source-to-action-to-destination path."
+      ]
+    },
     {
       "id": "bank_call_redirect",
       "name": "Banking Call Redirection/Forwarding",
@@ -543,33 +1093,88 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.PROCESS_OUTGOING_CALLS" },
-        { "type": "permission", "value": "android.permission.CALL_PHONE" },
-        { "type": "api_call", "value": "setResultData" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.PROCESS_OUTGOING_CALLS"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.CALL_PHONE"
+        },
+        {
+          "type": "api_call",
+          "value": "setResultData"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1616", "FakeCalls banking trojan"],
-      "tags": ["call_interception", "call_redirect", "fakecalls", "social_engineering"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1616",
+        "FakeCalls banking trojan"
+      ],
+      "tags": [
+        "call_interception",
+        "call_redirect",
+        "fakecalls",
+        "social_engineering"
+      ]
     },
-
     {
       "id": "bank_call_forward_ussd",
       "name": "USSD Call Forwarding Activation",
-      "description": "Activates call forwarding via USSD codes (*21*, *67*, *61*) to redirect all incoming calls (including bank verification calls) to attacker's number. Victim doesn't receive bank's security callbacks.",
+      "description": "USSD call-forwarding hijack requires the forwarding MMI codes in the app; sendUssdRequest is exposed by every dialer (truecaller, 2026-11-05).",
       "category": "malware",
       "severity": "critical",
       "score": 90,
       "enabled": true,
-      "logic": "and",
+      "logic": "threshold",
       "conditions": [
-        { "type": "permission", "value": "android.permission.CALL_PHONE" },
-        { "type": "api_call", "value": "sendUssdRequest" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.CALL_PHONE"
+        },
+        {
+          "type": "api_call",
+          "value": "sendUssdRequest"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        },
+        {
+          "type": "string",
+          "value": "**21*"
+        },
+        {
+          "type": "string",
+          "value": "**004*"
+        },
+        {
+          "type": "string",
+          "value": "**61*"
+        },
+        {
+          "type": "string",
+          "value": "**67*"
+        },
+        {
+          "type": "string",
+          "value": "call forwarding"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1582", "MITRE ATT&CK Mobile: T1616"],
-      "tags": ["call_interception", "ussd_abuse", "call_forwarding"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1582",
+        "MITRE ATT&CK Mobile: T1616"
+      ],
+      "tags": [
+        "call_interception",
+        "ussd_abuse",
+        "call_forwarding"
+      ],
+      "min_match": 4
     },
-
     {
       "id": "bank_call_intercept_full",
       "name": "Full Call Interception (Log + Redirect + Record)",
@@ -580,35 +1185,70 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.READ_CALL_LOG" },
-        { "type": "permission", "value": "android.permission.PROCESS_OUTGOING_CALLS" },
-        { "type": "permission", "value": "android.permission.RECORD_AUDIO" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.READ_CALL_LOG"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.PROCESS_OUTGOING_CALLS"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.RECORD_AUDIO"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1616", "MITRE ATT&CK Mobile: T1429"],
-      "tags": ["call_interception", "call_recording", "wiretap"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1616",
+        "MITRE ATT&CK Mobile: T1429"
+      ],
+      "tags": [
+        "call_interception",
+        "call_recording",
+        "wiretap"
+      ]
     },
-
     {
       "id": "bank_call_fake_ivr",
-      "name": "Fake IVR/Bank Phone System",
-      "description": "Displays fake incoming call screen mimicking bank's caller ID, then plays recorded IVR prompts to trick victim into entering PIN/OTP via keypad. Social engineering via fake phone call.",
+      "name": "Fake incoming-call screen with IVR playback",
+      "description": "Call-state permission, overlay and audio playback APIs are co-present — the building blocks of fake IVR screens. A fake bank caller ID additionally requires call-state handling and target UI content; ad SDK video playback does not match this rule.",
       "category": "malware",
       "severity": "high",
       "score": 82,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.SYSTEM_ALERT_WINDOW" },
-        { "type": "api_call", "value": "MediaPlayer" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.PROCESS_OUTGOING_CALLS"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.SYSTEM_ALERT_WINDOW"
+        },
+        {
+          "type": "api_call",
+          "value": "MediaPlayer"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["FakeCalls banking trojan", "LetsCAll trojan"],
-      "tags": ["call_interception", "fake_ivr", "social_engineering", "fakecalls"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1616"
+      ],
+      "tags": [
+        "call_interception",
+        "fake_ivr",
+        "social_engineering",
+        "fakecalls"
+      ]
     },
-
-
-
     {
       "id": "bank_payment_google_billing",
       "name": "Google Play Billing Hijack",
@@ -619,14 +1259,27 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "pattern", "value": "com/android/vending/billing" },
-        { "type": "api_call", "value": "BillingClient" },
-        { "type": "api_call", "value": "queryPurchasesAsync" }
+        {
+          "type": "pattern",
+          "value": "com/android/vending/billing"
+        },
+        {
+          "type": "api_call",
+          "value": "BillingClient"
+        },
+        {
+          "type": "api_call",
+          "value": "queryPurchasesAsync"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1582.001"],
-      "tags": ["payment_hijack", "google_play_billing"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1582.001"
+      ],
+      "tags": [
+        "payment_hijack",
+        "google_play_billing"
+      ]
     },
-
     {
       "id": "bank_payment_nfc_relay",
       "name": "NFC Payment Relay Attack",
@@ -637,15 +1290,34 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.NFC" },
-        { "type": "api_call", "value": "HostApduService" },
-        { "type": "api_call", "value": "processCommandApdu" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.NFC"
+        },
+        {
+          "type": "api_call",
+          "value": "HostApduService"
+        },
+        {
+          "type": "api_call",
+          "value": "processCommandApdu"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1398", "NGate NFC relay"],
-      "tags": ["payment_hijack", "nfc_relay", "contactless_fraud", "ngate"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1398",
+        "NGate NFC relay"
+      ],
+      "tags": [
+        "payment_hijack",
+        "nfc_relay",
+        "contactless_fraud",
+        "ngate"
+      ]
     },
-
     {
       "id": "bank_payment_qr_hijack",
       "name": "QR Code Payment Hijack",
@@ -656,15 +1328,32 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "permission", "value": "android.permission.CAMERA" },
-        { "type": "api_call", "value": "BarcodeDetector" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.CAMERA"
+        },
+        {
+          "type": "api_call",
+          "value": "BarcodeDetector"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1626.001"],
-      "tags": ["payment_hijack", "qr_code", "camera_abuse"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1626.001"
+      ],
+      "tags": [
+        "payment_hijack",
+        "qr_code",
+        "camera_abuse"
+      ]
     },
-
     {
       "id": "bank_payment_intent_hijack",
       "name": "Payment Intent Hijack",
@@ -675,35 +1364,71 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "pattern", "value": "android.intent.action.VIEW" },
-        { "type": "pattern", "value": "android.intent.category.BROWSABLE" },
-        { "type": "pattern", "value": "pay" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "pattern",
+          "value": "android.intent.action.VIEW"
+        },
+        {
+          "type": "pattern",
+          "value": "android.intent.category.BROWSABLE"
+        },
+        {
+          "type": "pattern",
+          "value": "pay"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["CWE-927"],
-      "tags": ["payment_hijack", "intent_hijack", "deep_link"]
+      "references": [
+        "CWE-927"
+      ],
+      "tags": [
+        "payment_hijack",
+        "intent_hijack",
+        "deep_link"
+      ]
     },
-
-
-
     {
       "id": "bank_target_package_scan",
-      "name": "Banking App Target List — Package Enumeration",
-      "description": "Enumerates installed packages looking for banking/fintech apps. Builds target list to determine which overlay HTML to download from C2 server. Core reconnaissance step of every banking trojan.",
+      "name": "Installed package enumeration APIs",
+      "description": "Installed-package enumeration and package-info API references with network permission. Specific target packages, purpose and transmission of the resulting list require separate evidence.",
       "category": "malware",
-      "severity": "high",
-      "score": 78,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "getInstalledPackages" },
-        { "type": "api_call", "value": "getPackageInfo" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "getInstalledPackages"
+        },
+        {
+          "type": "api_call",
+          "value": "getPackageInfo"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1418"],
-      "tags": ["targeting", "package_enumeration", "recon"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1418"
+      ],
+      "tags": [
+        "package_enumeration",
+        "api_observation"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "API references and manifest declarations establish static indicators, not runtime activation, permission grants, attacker control or a linked malicious operation."
+      ],
+      "next_checks": [
+        "Verify component declarations and enabled state, actual platform grants, callers, data values and a connected source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_target_a11y_foreground_detect",
       "name": "Foreground Banking App Detection via A11y",
@@ -714,15 +1439,34 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "TYPE_WINDOW_STATE_CHANGED" },
-        { "type": "api_call", "value": "getPackageName" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "TYPE_WINDOW_STATE_CHANGED"
+        },
+        {
+          "type": "api_call",
+          "value": "getPackageName"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1418", "MITRE ATT&CK Mobile: T1626.001"],
-      "tags": ["targeting", "app_detection", "accessibility_abuse", "overlay_trigger"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1418",
+        "MITRE ATT&CK Mobile: T1626.001"
+      ],
+      "tags": [
+        "targeting",
+        "app_detection",
+        "accessibility_abuse",
+        "overlay_trigger"
+      ]
     },
-
     {
       "id": "bank_target_usage_stats_detect",
       "name": "Banking App Detection via Usage Stats",
@@ -733,35 +1477,77 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.PACKAGE_USAGE_STATS" },
-        { "type": "api_call", "value": "UsageStatsManager" },
-        { "type": "api_call", "value": "queryUsageStats" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.PACKAGE_USAGE_STATS"
+        },
+        {
+          "type": "api_call",
+          "value": "UsageStatsManager"
+        },
+        {
+          "type": "api_call",
+          "value": "queryUsageStats"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1418"],
-      "tags": ["targeting", "app_detection", "usage_stats"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1418"
+      ],
+      "tags": [
+        "targeting",
+        "app_detection",
+        "usage_stats"
+      ]
     },
-
     {
       "id": "bank_target_resolver_probe",
-      "name": "Banking App Probe via Intent Resolution",
-      "description": "Uses resolveActivity/queryIntentActivities to check if specific banking apps are installed without QUERY_ALL_PACKAGES. Stealthier than getInstalledPackages.",
+      "name": "Package enumeration and intent resolution indicators",
+      "description": "The threshold matched package enumeration, intent resolution or package-visibility declarations. These indicators do not establish a banking target list.",
       "category": "malware",
-      "severity": "medium",
-      "score": 65,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
-      "logic": "and",
+      "logic": "threshold",
       "conditions": [
-        { "type": "api_call", "value": "resolveActivity" },
-        { "type": "api_call", "value": "queryIntentActivities" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "resolveActivity"
+        },
+        {
+          "type": "api_call",
+          "value": "queryIntentActivities"
+        },
+        {
+          "type": "api_call",
+          "value": "getInstalledPackages"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.QUERY_ALL_PACKAGES"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1418"],
-      "tags": ["targeting", "intent_probe", "stealth_recon"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1418"
+      ],
+      "tags": [
+        "package_enumeration",
+        "intent_resolution",
+        "api_observation"
+      ],
+      "min_match": 3,
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "API references and manifest declarations establish static indicators, not runtime activation, permission grants, attacker control or a linked malicious operation."
+      ],
+      "next_checks": [
+        "Verify component declarations and enabled state, actual platform grants, callers, data values and a connected source-to-action-to-destination path."
+      ]
     },
-
-
-
     {
       "id": "bank_card_overlay_form",
       "name": "Card Data Overlay — Fake Card Entry Form",
@@ -772,34 +1558,71 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.SYSTEM_ALERT_WINDOW" },
-        { "type": "pattern", "value": "card_number" },
-        { "type": "pattern", "value": "cvv" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.SYSTEM_ALERT_WINDOW"
+        },
+        {
+          "type": "pattern",
+          "value": "card_number"
+        },
+        {
+          "type": "pattern",
+          "value": "cvv"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1417.002", "PCI DSS violation"],
-      "tags": ["card_theft", "overlay_attack", "credit_card", "pci"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1417.002",
+        "PCI DSS violation"
+      ],
+      "tags": [
+        "card_theft",
+        "overlay_attack",
+        "credit_card",
+        "pci"
+      ]
     },
-
     {
       "id": "bank_card_a11y_scrape",
-      "name": "Card Data Scraping via Accessibility",
-      "description": "Reads credit card numbers and other financial data directly from banking app UI using accessibility node traversal. No overlay needed — steals data from legitimate app screens.",
+      "name": "Accessibility node traversal for card data scraping",
+      "description": "AccessibilityNodeInfo findAccessibilityNodeInfosByViewId and getText invocations with an accessibility service declared. Reading card data additionally requires node access against payment/banking UIs; generic getText calls in UI code do not match this rule.",
       "category": "malware",
       "severity": "critical",
       "score": 92,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "findAccessibilityNodeInfosByViewId" },
-        { "type": "api_call", "value": "getText" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "findaccessibilitynodeinfosbyviewid"
+        },
+        {
+          "type": "api_call",
+          "value": "accessibilitynodeinfo;->gettext("
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1626.001", "MITRE ATT&CK Mobile: T1417.001"],
-      "tags": ["card_theft", "accessibility_abuse", "data_scraping"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1626.001",
+        "MITRE ATT&CK Mobile: T1417.001"
+      ],
+      "tags": [
+        "card_theft",
+        "accessibility_abuse",
+        "data_scraping"
+      ]
     },
-
     {
       "id": "bank_card_nfc_read",
       "name": "Contactless Card Data Theft via NFC",
@@ -810,17 +1633,33 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.NFC" },
-        { "type": "api_call", "value": "IsoDep" },
-        { "type": "api_call", "value": "transceive" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.NFC"
+        },
+        {
+          "type": "api_call",
+          "value": "IsoDep"
+        },
+        {
+          "type": "api_call",
+          "value": "transceive"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["NGate NFC malware"],
-      "tags": ["card_theft", "nfc_clone", "contactless", "ngate"]
+      "references": [
+        "NGate NFC malware"
+      ],
+      "tags": [
+        "card_theft",
+        "nfc_clone",
+        "contactless",
+        "ngate"
+      ]
     },
-
-
-
     {
       "id": "bank_crypto_clipper",
       "name": "Crypto Address Clipper (Clipboard Hijack)",
@@ -831,19 +1670,36 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "ClipboardManager" },
-        { "type": "api_call", "value": "setPrimaryClip" },
-        { "type": "api_call", "value": "addPrimaryClipChangedListener" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "ClipboardManager"
+        },
+        {
+          "type": "api_call",
+          "value": "setPrimaryClip"
+        },
+        {
+          "type": "api_call",
+          "value": "addPrimaryClipChangedListener"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1414"],
-      "tags": ["crypto_theft", "clipper", "clipboard_hijack"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1414"
+      ],
+      "tags": [
+        "crypto_theft",
+        "clipper",
+        "clipboard_hijack"
+      ]
     },
-
     {
       "id": "bank_crypto_wallet_steal",
       "name": "Crypto Wallet Seed/Key Theft",
-      "description": "Searches device storage for cryptocurrency wallet files, seed phrase backups, private keys, and keystore files. Targets MetaMask, Trust Wallet, Coinbase Wallet data directories.",
+      "description": "Searches device storage for cryptocurrency wallet artifacts: known wallet package names and directories (MetaMask, Trust Wallet, Coinbase Wallet), wallet.dat and seed-phrase material. Generic words like 'seed' or 'keystore' no longer match: random-number and generic crypto code produced CRITICAL false positives on benign apps (measured on markor 2026-11-04).",
       "category": "malware",
       "severity": "critical",
       "score": 88,
@@ -851,18 +1707,68 @@
       "logic": "threshold",
       "min_match": 3,
       "conditions": [
-        { "type": "string", "value": "wallet" },
-        { "type": "string", "value": "seed" },
-        { "type": "string", "value": "mnemonic" },
-        { "type": "string", "value": "private_key" },
-        { "type": "string", "value": "keystore" },
-        { "type": "permission", "value": "android.permission.READ_EXTERNAL_STORAGE" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "string",
+          "value": "wallet.dat"
+        },
+        {
+          "type": "string",
+          "value": "metamask"
+        },
+        {
+          "type": "string",
+          "value": "trustapp"
+        },
+        {
+          "type": "string",
+          "value": "trust wallet"
+        },
+        {
+          "type": "string",
+          "value": "coinbase wallet"
+        },
+        {
+          "type": "string",
+          "value": "org.toshi"
+        },
+        {
+          "type": "string",
+          "value": "piuk.blockchain.android"
+        },
+        {
+          "type": "string",
+          "value": "com.coinbase.android"
+        },
+        {
+          "type": "string",
+          "value": "seed phrase"
+        },
+        {
+          "type": "string",
+          "value": "seedphrase"
+        },
+        {
+          "type": "string",
+          "value": "mnemonic"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.READ_EXTERNAL_STORAGE"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1533"],
-      "tags": ["crypto_theft", "wallet_theft", "seed_phrase"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1533"
+      ],
+      "tags": [
+        "crypto_theft",
+        "wallet_theft",
+        "seed_phrase"
+      ]
     },
-
     {
       "id": "bank_crypto_exchange_overlay",
       "name": "Crypto Exchange Overlay Attack",
@@ -873,15 +1779,32 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.SYSTEM_ALERT_WINDOW" },
-        { "type": "api_call", "value": "getInstalledPackages" },
-        { "type": "string", "value": "binance" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.SYSTEM_ALERT_WINDOW"
+        },
+        {
+          "type": "api_call",
+          "value": "getInstalledPackages"
+        },
+        {
+          "type": "string",
+          "value": "binance"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1417.002"],
-      "tags": ["crypto_theft", "overlay_attack", "exchange_targeting"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1417.002"
+      ],
+      "tags": [
+        "crypto_theft",
+        "overlay_attack",
+        "exchange_targeting"
+      ]
     },
-
     {
       "id": "bank_crypto_transaction_hijack",
       "name": "Crypto Transaction Hijack via Accessibility",
@@ -892,36 +1815,73 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "ACTION_SET_TEXT" },
-        { "type": "api_call", "value": "findAccessibilityNodeInfosByViewId" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "ACTION_SET_TEXT"
+        },
+        {
+          "type": "api_call",
+          "value": "findAccessibilityNodeInfosByViewId"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1626.001"],
-      "tags": ["crypto_theft", "transaction_hijack", "accessibility_abuse"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1626.001"
+      ],
+      "tags": [
+        "crypto_theft",
+        "transaction_hijack",
+        "accessibility_abuse"
+      ]
     },
-
-
-
     {
       "id": "bank_session_cookie_steal",
-      "name": "Banking Session/Cookie Theft via WebView",
-      "description": "Extracts session cookies from banking WebView to hijack authenticated session. Uses CookieManager to read cookies and exfiltrate to C2 for session replay attack.",
-      "category": "malware",
-      "severity": "critical",
-      "score": 88,
+      "name": "WebView cookie access",
+      "description": "CookieManager.getCookie and WebView APIs are present with network access. Login and media applications use these APIs routinely. This observation does not establish cookie exfiltration or session hijacking.",
+      "category": "privacy",
+      "severity": "info",
+      "score": 0,
+      "finding_kind": "inventory",
+      "limitations": [
+        "No flow from the cookie value to an outbound destination is established by this rule."
+      ],
+      "next_checks": [
+        "Trace the returned cookie value to a network sink and inspect the destination before claiming session theft."
+      ],
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "CookieManager" },
-        { "type": "api_call", "value": "getCookie" },
-        { "type": "api_call", "value": "WebView" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "CookieManager"
+        },
+        {
+          "type": "api_call",
+          "value": "getCookie"
+        },
+        {
+          "type": "api_call",
+          "value": "WebView"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["CWE-384", "OWASP MASTG: MSTG-AUTH-8"],
-      "tags": ["session_hijack", "cookie_theft", "webview"]
+      "references": [],
+      "tags": [
+        "cookie_access",
+        "webview",
+        "inventory"
+      ]
     },
-
     {
       "id": "bank_session_token_extract",
       "name": "OAuth/Bearer Token Extraction",
@@ -932,15 +1892,33 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "SharedPreferences" },
-        { "type": "pattern", "value": "token" },
-        { "type": "pattern", "value": "bearer" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "SharedPreferences"
+        },
+        {
+          "type": "pattern",
+          "value": "token"
+        },
+        {
+          "type": "pattern",
+          "value": "bearer"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["CWE-522", "OWASP MASTG: MSTG-STORAGE-1"],
-      "tags": ["session_hijack", "token_theft", "oauth"]
+      "references": [
+        "CWE-522",
+        "OWASP MASTG: MSTG-STORAGE-1"
+      ],
+      "tags": [
+        "session_hijack",
+        "token_theft",
+        "oauth"
+      ]
     },
-
     {
       "id": "bank_session_webview_inject",
       "name": "WebView JavaScript Injection for Session Theft",
@@ -951,17 +1929,33 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "WebView" },
-        { "type": "api_call", "value": "evaluateJavascript" },
-        { "type": "pattern", "value": "document.cookie" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "WebView"
+        },
+        {
+          "type": "api_call",
+          "value": "evaluateJavascript"
+        },
+        {
+          "type": "pattern",
+          "value": "document.cookie"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["CWE-79", "OWASP MASTG: MSTG-PLATFORM-7"],
-      "tags": ["session_hijack", "javascript_injection", "xss"]
+      "references": [
+        "CWE-79",
+        "OWASP MASTG: MSTG-PLATFORM-7"
+      ],
+      "tags": [
+        "session_hijack",
+        "javascript_injection",
+        "xss"
+      ]
     },
-
-
-
     {
       "id": "bank_evasion_play_protect_disable",
       "name": "Google Play Protect Disable (via Accessibility)",
@@ -972,15 +1966,32 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "string", "value": "com.google.android.gms" },
-        { "type": "string", "value": "com.google.android.gms.security" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "string",
+          "value": "com.google.android.gms"
+        },
+        {
+          "type": "string",
+          "value": "com.google.android.gms.security"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1629.003"],
-      "tags": ["evasion", "play_protect_disable", "anti_detection"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1629.003"
+      ],
+      "tags": [
+        "evasion",
+        "play_protect_disable",
+        "anti_detection"
+      ]
     },
-
     {
       "id": "bank_evasion_a11y_grant",
       "name": "Self-Grant Accessibility via Settings Navigation",
@@ -991,15 +2002,32 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "pattern", "value": "android.settings.ACCESSIBILITY_SETTINGS" },
-        { "type": "api_call", "value": "performAction" },
-        { "type": "api_call", "value": "ACTION_CLICK" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "pattern",
+          "value": "android.settings.ACCESSIBILITY_SETTINGS"
+        },
+        {
+          "type": "api_call",
+          "value": "performAction"
+        },
+        {
+          "type": "api_call",
+          "value": "ACTION_CLICK"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1626.001"],
-      "tags": ["evasion", "self_grant", "accessibility_abuse"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1626.001"
+      ],
+      "tags": [
+        "evasion",
+        "self_grant",
+        "accessibility_abuse"
+      ]
     },
-
     {
       "id": "bank_evasion_uninstall_protect",
       "name": "Anti-Removal via Accessibility",
@@ -1010,15 +2038,32 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "performGlobalAction" },
-        { "type": "api_call", "value": "GLOBAL_ACTION_BACK" },
-        { "type": "string", "value": "com.android.settings" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "performGlobalAction"
+        },
+        {
+          "type": "api_call",
+          "value": "GLOBAL_ACTION_BACK"
+        },
+        {
+          "type": "string",
+          "value": "com.android.settings"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1629.003"],
-      "tags": ["evasion", "anti_removal", "persistence"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1629.003"
+      ],
+      "tags": [
+        "evasion",
+        "anti_removal",
+        "persistence"
+      ]
     },
-
     {
       "id": "bank_evasion_av_disable",
       "name": "Antivirus/Security App Disable",
@@ -1029,15 +2074,32 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "performGlobalAction" },
-        { "type": "api_call", "value": "getInstalledPackages" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "performGlobalAction"
+        },
+        {
+          "type": "api_call",
+          "value": "getInstalledPackages"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1629.002"],
-      "tags": ["evasion", "av_disable", "anti_security"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1629.002"
+      ],
+      "tags": [
+        "evasion",
+        "av_disable",
+        "anti_security"
+      ]
     },
-
     {
       "id": "bank_evasion_device_admin_lock",
       "name": "Device Admin Anti-Removal",
@@ -1048,14 +2110,30 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "DeviceAdminReceiver" },
-        { "type": "api_call", "value": "onDisableRequested" },
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" }
+        {
+          "type": "api_call",
+          "value": "DeviceAdminReceiver"
+        },
+        {
+          "type": "api_call",
+          "value": "onDisableRequested"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1401", "MITRE ATT&CK Mobile: T1629.003"],
-      "tags": ["evasion", "device_admin", "anti_removal", "persistence"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1401",
+        "MITRE ATT&CK Mobile: T1629.003"
+      ],
+      "tags": [
+        "evasion",
+        "device_admin",
+        "anti_removal",
+        "persistence"
+      ]
     },
-
     {
       "id": "bank_evasion_hidden_icon",
       "name": "Hidden App Icon (Stealth Mode)",
@@ -1066,14 +2144,28 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "setComponentEnabledSetting" },
-        { "type": "api_call", "value": "COMPONENT_ENABLED_STATE_DISABLED" },
-        { "type": "permission", "value": "android.permission.RECEIVE_BOOT_COMPLETED" }
+        {
+          "type": "api_call",
+          "value": "setComponentEnabledSetting"
+        },
+        {
+          "type": "api_call",
+          "value": "COMPONENT_ENABLED_STATE_DISABLED"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.RECEIVE_BOOT_COMPLETED"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1628.001"],
-      "tags": ["evasion", "hidden_app", "stealth"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1628.001"
+      ],
+      "tags": [
+        "evasion",
+        "hidden_app",
+        "stealth"
+      ]
     },
-
     {
       "id": "bank_evasion_emulator_check",
       "name": "Emulator/Sandbox Detection (Banking Context)",
@@ -1085,40 +2177,86 @@
       "logic": "threshold",
       "min_match": 3,
       "conditions": [
-        { "type": "api_call", "value": "Build.FINGERPRINT" },
-        { "type": "api_call", "value": "Build.MODEL" },
-        { "type": "string", "value": "generic" },
-        { "type": "string", "value": "google_sdk" },
-        { "type": "string", "value": "goldfish" },
-        { "type": "string", "value": "sdk_gphone" },
-        { "type": "api_call", "value": "SensorManager" }
+        {
+          "type": "api_call",
+          "value": "Build.FINGERPRINT"
+        },
+        {
+          "type": "api_call",
+          "value": "Build.MODEL"
+        },
+        {
+          "type": "string",
+          "value": "generic"
+        },
+        {
+          "type": "string",
+          "value": "google_sdk"
+        },
+        {
+          "type": "string",
+          "value": "goldfish"
+        },
+        {
+          "type": "string",
+          "value": "sdk_gphone"
+        },
+        {
+          "type": "api_call",
+          "value": "SensorManager"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1623"],
-      "tags": ["evasion", "anti_emulator", "sandbox_detection"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1623"
+      ],
+      "tags": [
+        "evasion",
+        "anti_emulator",
+        "sandbox_detection"
+      ]
     },
-
     {
       "id": "bank_evasion_geo_targeting",
-      "name": "Geo-fencing — Regional Banking Trojan Activation",
-      "description": "Checks SIM country code or locale to activate only in target countries. For example, activates overlay for Russian banks only in RU, or for EU banks only in EU countries. Reduces detection by avoiding activation in security researchers' countries.",
-      "category": "evasion",
-      "severity": "high",
-      "score": 68,
+      "name": "Country and locale API references",
+      "description": "Reads country, locale or timezone information. These APIs are also used for localization and media handling; this observation does not establish regional malware activation.",
+      "category": "privacy",
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "threshold",
       "min_match": 2,
       "conditions": [
-        { "type": "api_call", "value": "getSimCountryIso" },
-        { "type": "api_call", "value": "getNetworkCountryIso" },
-        { "type": "api_call", "value": "getCountry" },
-        { "type": "api_call", "value": "TimeZone.getDefault" }
+        {
+          "type": "api_call",
+          "value": "getSimCountryIso"
+        },
+        {
+          "type": "api_call",
+          "value": "getNetworkCountryIso"
+        },
+        {
+          "type": "api_call",
+          "value": "getCountry"
+        },
+        {
+          "type": "api_call",
+          "value": "TimeZone.getDefault"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1623"],
-      "tags": ["evasion", "geofencing", "regional_targeting"]
+      "references": [],
+      "tags": [
+        "country",
+        "locale",
+        "inventory"
+      ],
+      "finding_kind": "inventory",
+      "limitations": [
+        "No country-dependent malicious branch or banking target is established by the API references."
+      ],
+      "next_checks": [
+        "Trace the returned country value into a branch controlling a security-sensitive action before inferring geo-fencing."
+      ]
     },
-
-
-
     {
       "id": "bank_social_fake_update",
       "name": "Fake Banking App Update Prompt",
@@ -1129,14 +2267,28 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.SYSTEM_ALERT_WINDOW" },
-        { "type": "permission", "value": "android.permission.REQUEST_INSTALL_PACKAGES" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.SYSTEM_ALERT_WINDOW"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.REQUEST_INSTALL_PACKAGES"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1660"],
-      "tags": ["social_engineering", "fake_update", "dropper"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1660"
+      ],
+      "tags": [
+        "social_engineering",
+        "fake_update",
+        "dropper"
+      ]
     },
-
     {
       "id": "bank_social_fake_security_alert",
       "name": "Fake Security Alert / Suspicious Activity Warning",
@@ -1147,14 +2299,28 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.POST_NOTIFICATIONS" },
-        { "type": "permission", "value": "android.permission.SYSTEM_ALERT_WINDOW" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.POST_NOTIFICATIONS"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.SYSTEM_ALERT_WINDOW"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1660"],
-      "tags": ["social_engineering", "fake_alert", "phishing"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1660"
+      ],
+      "tags": [
+        "social_engineering",
+        "fake_alert",
+        "phishing"
+      ]
     },
-
     {
       "id": "bank_social_push_phishing",
       "name": "Push Notification Phishing",
@@ -1165,76 +2331,165 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "FirebaseMessagingService" },
-        { "type": "api_call", "value": "NotificationCompat" },
-        { "type": "permission", "value": "android.permission.POST_NOTIFICATIONS" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "FirebaseMessagingService"
+        },
+        {
+          "type": "api_call",
+          "value": "NotificationCompat"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.POST_NOTIFICATIONS"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1481.003", "MITRE ATT&CK Mobile: T1660"],
-      "tags": ["social_engineering", "push_phishing", "firebase_c2"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1481.003",
+        "MITRE ATT&CK Mobile: T1660"
+      ],
+      "tags": [
+        "social_engineering",
+        "push_phishing",
+        "firebase_c2"
+      ]
     },
-
-
-
     {
       "id": "bank_c2_firebase",
-      "name": "Banking C2 via Firebase Cloud Messaging",
-      "description": "Uses Firebase/FCM as C2 channel to receive commands (inject overlays, start screen recording, enable ATS) and report stolen data. Hides C2 traffic in legitimate Google infrastructure.",
+      "name": "Firebase message handling APIs",
+      "description": "Firebase messaging API references and network permission. The message sender, decoded content, command dispatch and financial targets require separate evidence.",
       "category": "c2",
-      "severity": "high",
-      "score": 72,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "FirebaseMessagingService" },
-        { "type": "api_call", "value": "onMessageReceived" },
-        { "type": "api_call", "value": "RemoteMessage" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "FirebaseMessagingService"
+        },
+        {
+          "type": "api_call",
+          "value": "onMessageReceived"
+        },
+        {
+          "type": "api_call",
+          "value": "RemoteMessage"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1481.003", "Cerberus FCM C2", "Ermac FCM C2"],
-      "tags": ["c2", "firebase", "push_c2", "cerberus", "ermac"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1481.003"
+      ],
+      "tags": [
+        "firebase",
+        "messaging",
+        "api_observation"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "API references and manifest declarations establish static indicators, not runtime activation, permission grants, attacker control or a linked malicious operation."
+      ],
+      "next_checks": [
+        "Verify component declarations and enabled state, actual platform grants, callers, data values and a connected source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_c2_websocket_realtime",
-      "name": "Real-time Banking C2 via WebSocket",
-      "description": "WebSocket for real-time bidirectional C2 — essential for VNC-style screen streaming, real-time ATS, and interactive fraud sessions where attacker manually controls victim's banking app.",
+      "name": "WebSocket with accessibility and network declarations",
+      "description": "WebSocket API references with accessibility and network declarations. Endpoint use, command handling and any banking targets are not established by this combination.",
       "category": "c2",
-      "severity": "high",
-      "score": 75,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "WebSocket" },
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "WebSocket"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1437.001", "Vultur WebSocket C2"],
-      "tags": ["c2", "websocket", "real_time", "vnc"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1437.001"
+      ],
+      "tags": [
+        "websocket",
+        "accessibility",
+        "api_observation"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "API references and manifest declarations establish static indicators, not runtime activation, permission grants, attacker control or a linked malicious operation."
+      ],
+      "next_checks": [
+        "Verify component declarations and enabled state, actual platform grants, callers, data values and a connected source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_c2_json_command_handler",
-      "name": "JSON Command Handler (C2 Protocol)",
-      "description": "Parses JSON commands from C2 server with command dispatcher pattern. Supports commands like 'inject', 'sms_intercept', 'screen_record', 'ats_transfer'. Core C2 handler architecture.",
+      "name": "JSON over HTTP capability",
+      "description": "JSON parsing and HTTP calls do not establish a banking trojan or a command handler.",
       "category": "c2",
-      "severity": "medium",
-      "score": 62,
+      "severity": "info",
+      "score": 10,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "JSONObject" },
-        { "type": "api_call", "value": "getString" },
-        { "type": "api_call", "value": "HttpURLConnection" },
-        { "type": "permission", "value": "android.permission.INTERNET" },
-        { "type": "permission", "value": "android.permission.RECEIVE_BOOT_COMPLETED" }
+        {
+          "type": "api_call",
+          "value": "JSONObject"
+        },
+        {
+          "type": "api_call",
+          "value": "getString"
+        },
+        {
+          "type": "api_call",
+          "value": "HttpURLConnection"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.RECEIVE_BOOT_COMPLETED"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1437.001"],
-      "tags": ["c2", "command_handler", "json_protocol"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1437.001"
+      ],
+      "tags": [
+        "c2",
+        "command_handler",
+        "json_protocol"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.45,
+      "limitations": [
+        "Co-located APIs and manifest permissions do not prove execution or remote commands."
+      ],
+      "next_checks": [
+        "Trace network input to a command dispatcher or sensitive action and validate runtime reachability."
+      ]
     },
-
-
-
     {
       "id": "bank_antifraud_device_spoof",
       "name": "Device Fingerprint Spoofing (Anti-Fraud Bypass)",
@@ -1246,17 +2501,40 @@
       "logic": "threshold",
       "min_match": 3,
       "conditions": [
-        { "type": "api_call", "value": "ANDROID_ID" },
-        { "type": "api_call", "value": "Build.SERIAL" },
-        { "type": "api_call", "value": "Build.FINGERPRINT" },
-        { "type": "api_call", "value": "getDeviceId" },
-        { "type": "api_call", "value": "getMacAddress" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "ANDROID_ID"
+        },
+        {
+          "type": "api_call",
+          "value": "Build.SERIAL"
+        },
+        {
+          "type": "api_call",
+          "value": "Build.FINGERPRINT"
+        },
+        {
+          "type": "api_call",
+          "value": "getDeviceId"
+        },
+        {
+          "type": "api_call",
+          "value": "getMacAddress"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1422"],
-      "tags": ["anti_fraud_bypass", "device_spoofing", "fingerprint"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1422"
+      ],
+      "tags": [
+        "anti_fraud_bypass",
+        "device_spoofing",
+        "fingerprint"
+      ]
     },
-
     {
       "id": "bank_antifraud_proxy_detection",
       "name": "Anti-Fraud System Proxy/VPN Detection",
@@ -1267,186 +2545,424 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "Proxy.NO_PROXY" },
-        { "type": "api_call", "value": "ConnectivityManager" },
-        { "type": "api_call", "value": "getActiveNetworkInfo" }
+        {
+          "type": "api_call",
+          "value": "Proxy.NO_PROXY"
+        },
+        {
+          "type": "api_call",
+          "value": "ConnectivityManager"
+        },
+        {
+          "type": "api_call",
+          "value": "getActiveNetworkInfo"
+        }
       ],
       "references": [],
-      "tags": ["anti_fraud_bypass", "proxy_detection"]
+      "tags": [
+        "anti_fraud_bypass",
+        "proxy_detection"
+      ]
     },
-
     {
       "id": "bank_antifraud_accessibility_check_bypass",
-      "name": "Accessibility Detection Bypass in Banking Apps",
-      "description": "Intercepts banking app's accessibility service detection check and returns false. Prevents banking app from blocking transactions when malicious accessibility service is active.",
+      "name": "Accessibility state inspection APIs",
+      "description": "AccessibilityManager state and enabled-service-list queries with an accessibility declaration. These checks do not establish interception of another application or replacement of its return values.",
       "category": "malware",
-      "severity": "high",
-      "score": 78,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "AccessibilityManager" },
-        { "type": "api_call", "value": "isEnabled" },
-        { "type": "api_call", "value": "getEnabledAccessibilityServiceList" },
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" }
+        {
+          "type": "api_call",
+          "value": "AccessibilityManager"
+        },
+        {
+          "type": "api_call",
+          "value": "isEnabled"
+        },
+        {
+          "type": "api_call",
+          "value": "getEnabledAccessibilityServiceList"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        }
       ],
-      "references": ["MITRE ATT&CK Mobile: T1626.001"],
-      "tags": ["anti_fraud_bypass", "accessibility_check_bypass"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1626.001"
+      ],
+      "tags": [
+        "accessibility",
+        "state_inspection",
+        "api_observation"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "API references and manifest declarations establish static indicators, not runtime activation, permission grants, attacker control or a linked malicious operation."
+      ],
+      "next_checks": [
+        "Verify component declarations and enabled state, actual platform grants, callers, data values and a connected source-to-action-to-destination path."
+      ]
     },
-
-
-
     {
       "id": "bank_combo_cerberus_full",
-      "name": "Cerberus/Alien Family Full Pattern",
-      "description": "Complete Cerberus/Alien pattern: overlay + a11y + SMS + notification + boot + hidden icon + C2. Full-featured banking trojan with all attack vectors.",
+      "name": "Accessibility, overlay and messaging permission profile",
+      "description": "Manifest declarations for accessibility, overlays, messaging, notifications, boot and networking; no family attribution or implemented attack chain follows from these declarations.",
       "category": "malware",
-      "severity": "critical",
-      "score": 100,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "threshold",
       "min_match": 5,
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "permission", "value": "android.permission.SYSTEM_ALERT_WINDOW" },
-        { "type": "permission", "value": "android.permission.RECEIVE_SMS" },
-        { "type": "permission", "value": "android.permission.READ_SMS" },
-        { "type": "permission", "value": "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" },
-        { "type": "permission", "value": "android.permission.RECEIVE_BOOT_COMPLETED" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.SYSTEM_ALERT_WINDOW"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.RECEIVE_SMS"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.READ_SMS"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.RECEIVE_BOOT_COMPLETED"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["Cerberus banking trojan", "Alien banking trojan", "MITRE ATT&CK Mobile: T1417"],
-      "tags": ["combo", "cerberus", "alien", "banking_trojan", "maximum_threat"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1417"
+      ],
+      "tags": [
+        "combo",
+        "banking_trojan"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "Generic permissions and API combinations do not identify a malware family or prove execution."
+      ],
+      "next_checks": [
+        "Inspect actual permission grants and a source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_combo_vultur_pattern",
-      "name": "Vultur/Octo Screen Streaming Pattern",
-      "description": "Screen recording + accessibility + internet — modern banking trojan that records screen instead of using overlays. Harder to detect because no fake UI is injected.",
+      "name": "Screen capture and accessibility API profile",
+      "description": "Screen capture/display API references and accessibility/network declarations; no malware family or remote streaming flow is identified.",
       "category": "malware",
-      "severity": "critical",
-      "score": 97,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "api_call", "value": "MediaProjection" },
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "createVirtualDisplay" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "MediaProjection"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "createVirtualDisplay"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["Vultur banking trojan", "Octo banking trojan", "MITRE ATT&CK Mobile: T1513"],
-      "tags": ["combo", "vultur", "octo", "screen_streaming"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1513"
+      ],
+      "tags": [
+        "combo",
+        "screen_streaming"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "Generic permissions and API combinations do not identify a malware family or prove execution."
+      ],
+      "next_checks": [
+        "Inspect actual permission grants and a source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_combo_sharkbot_ats",
-      "name": "SharkBot/Gustuff ATS Pattern",
-      "description": "Automated Transfer System: a11y-based auto-fill + auto-click + package awareness + SMS/notification interception for 2FA bypass. Complete automated fraud without victim interaction.",
+      "name": "Accessibility, package and messaging indicators",
+      "description": "The threshold matched accessibility, package enumeration, SMS or network indicators. An automated transfer chain and malware-family attribution require distinguishing linked evidence.",
       "category": "malware",
-      "severity": "critical",
-      "score": 99,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "threshold",
       "min_match": 4,
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "performAction" },
-        { "type": "api_call", "value": "getInstalledPackages" },
-        { "type": "permission", "value": "android.permission.RECEIVE_SMS" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "performAction"
+        },
+        {
+          "type": "api_call",
+          "value": "getInstalledPackages"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.RECEIVE_SMS"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["SharkBot v2", "Gustuff ATS", "MITRE ATT&CK Mobile: T1626.001"],
-      "tags": ["combo", "sharkbot", "gustuff", "ats", "automated_fraud"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1626.001"
+      ],
+      "tags": [
+        "accessibility",
+        "package_enumeration",
+        "messaging",
+        "api_observation"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "API references and manifest declarations establish static indicators, not runtime activation, permission grants, attacker control or a linked malicious operation."
+      ],
+      "next_checks": [
+        "Verify component declarations and enabled state, actual platform grants, callers, data values and a connected source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_combo_godfather_pattern",
-      "name": "Godfather Banking Trojan Pattern",
-      "description": "WebView-based dynamic overlay injection + accessibility + notification listener + multi-region targeting. Godfather's signature: downloads overlay HTML from C2, supports 400+ banking app targets across multiple countries.",
+      "name": "WebView content and installed-package API profile",
+      "description": "WebView content loading and installed-package enumeration references with sensitive declarations; no family attribution or complete attack chain is established.",
       "category": "malware",
-      "severity": "critical",
-      "score": 98,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "threshold",
       "min_match": 4,
       "conditions": [
-        { "type": "api_call", "value": "WebView" },
-        { "type": "api_call", "value": "loadDataWithBaseURL" },
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "permission", "value": "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" },
-        { "type": "api_call", "value": "getInstalledPackages" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "api_call",
+          "value": "WebView"
+        },
+        {
+          "type": "api_call",
+          "value": "loadDataWithBaseURL"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "getInstalledPackages"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["Godfather banking trojan", "MITRE ATT&CK Mobile: T1417.002"],
-      "tags": ["combo", "godfather", "webview_injection", "dynamic_overlay"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1417.002"
+      ],
+      "tags": [
+        "combo",
+        "webview_injection",
+        "dynamic_overlay"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "Generic permissions and API combinations do not identify a malware family or prove execution."
+      ],
+      "next_checks": [
+        "Inspect actual permission grants and a source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_combo_hook_remote_control",
-      "name": "Hook Banking Trojan Remote Control Pattern",
-      "description": "Hook's signature: VNC-like remote control + WebSocket C2 + accessibility gesture injection + file manager. Attacker manually controls victim's banking app in real-time for on-device fraud.",
+      "name": "Gesture, WebSocket and screen capture API profile",
+      "description": "Gesture, WebSocket and screen capture references are co-present. A linked command/response path must be inspected to establish remote control.",
       "category": "malware",
-      "severity": "critical",
-      "score": 98,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "threshold",
       "min_match": 4,
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "api_call", "value": "dispatchGesture" },
-        { "type": "api_call", "value": "WebSocket" },
-        { "type": "api_call", "value": "MediaProjection" },
-        { "type": "permission", "value": "android.permission.READ_EXTERNAL_STORAGE" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "api_call",
+          "value": "dispatchGesture"
+        },
+        {
+          "type": "api_call",
+          "value": "WebSocket"
+        },
+        {
+          "type": "api_call",
+          "value": "MediaProjection"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.READ_EXTERNAL_STORAGE"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["Hook banking trojan", "MITRE ATT&CK Mobile: T1626.001", "MITRE ATT&CK Mobile: T1513"],
-      "tags": ["combo", "hook", "remote_control", "vnc", "gesture_injection"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1626.001",
+        "MITRE ATT&CK Mobile: T1513"
+      ],
+      "tags": [
+        "combo",
+        "hook",
+        "remote_control",
+        "vnc",
+        "gesture_injection"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "Generic permissions and API combinations do not identify a malware family or prove execution."
+      ],
+      "next_checks": [
+        "Inspect actual permission grants and a source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_combo_xenomorph_v3",
-      "name": "Xenomorph v3 Full-Featured Pattern",
-      "description": "Xenomorph v3's complete feature set: ATS engine + overlay framework + cookie stealer + crypto targeting + anti-detection. One of the most advanced banking trojans.",
+      "name": "Cookie and clipboard APIs with sensitive permissions",
+      "description": "Cookie/clipboard API references and sensitive permissions are co-present. This does not establish cookie theft, an automated transfer system, a complete feature set or a malware family.",
       "category": "malware",
-      "severity": "critical",
-      "score": 100,
+      "severity": "info",
+      "score": 0,
       "enabled": true,
       "logic": "threshold",
       "min_match": 5,
       "conditions": [
-        { "type": "permission", "value": "android.permission.BIND_ACCESSIBILITY_SERVICE" },
-        { "type": "permission", "value": "android.permission.SYSTEM_ALERT_WINDOW" },
-        { "type": "api_call", "value": "CookieManager" },
-        { "type": "api_call", "value": "ClipboardManager" },
-        { "type": "permission", "value": "android.permission.RECEIVE_SMS" },
-        { "type": "permission", "value": "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_ACCESSIBILITY_SERVICE"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.SYSTEM_ALERT_WINDOW"
+        },
+        {
+          "type": "api_call",
+          "value": "CookieManager"
+        },
+        {
+          "type": "api_call",
+          "value": "ClipboardManager"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.RECEIVE_SMS"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["Xenomorph v3", "ThreatFabric Xenomorph analysis"],
-      "tags": ["combo", "xenomorph", "ats", "cookie_stealer", "maximum_threat"]
+      "references": [],
+      "tags": [
+        "combo",
+        "ats",
+        "cookie_stealer"
+      ],
+      "finding_kind": "inventory",
+      "confidence": 0.9,
+      "limitations": [
+        "Generic permissions and API combinations do not identify a malware family or prove execution."
+      ],
+      "next_checks": [
+        "Inspect actual permission grants and a source-to-action-to-destination path."
+      ]
     },
-
     {
       "id": "bank_combo_fakecalls_vishing",
-      "name": "FakeCalls Vishing Pattern",
-      "description": "Fake call overlay + call interception + audio playback — displays fake incoming call screen mimicking bank, intercepts outgoing calls to bank, plays pre-recorded IVR audio. Complete voice phishing infrastructure.",
+      "name": "Fake call screen with call interception",
+      "description": "Overlay, call-interception permission and audio playback APIs are co-present — the building blocks of voice-phishing overlays. A fake bank call screen additionally requires call-state handling and target UI content; ad SDK video playback does not match this rule.",
       "category": "malware",
       "severity": "critical",
       "score": 90,
       "enabled": true,
       "logic": "threshold",
-      "min_match": 3,
+      "min_match": 4,
       "conditions": [
-        { "type": "permission", "value": "android.permission.SYSTEM_ALERT_WINDOW" },
-        { "type": "permission", "value": "android.permission.PROCESS_OUTGOING_CALLS" },
-        { "type": "permission", "value": "android.permission.CALL_PHONE" },
-        { "type": "api_call", "value": "MediaPlayer" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.SYSTEM_ALERT_WINDOW"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.PROCESS_OUTGOING_CALLS"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.CALL_PHONE"
+        },
+        {
+          "type": "api_call",
+          "value": "MediaPlayer"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["FakeCalls banking trojan", "LetsCAll trojan", "MITRE ATT&CK Mobile: T1616"],
-      "tags": ["combo", "fakecalls", "vishing", "voice_phishing"]
+      "references": [
+        "MITRE ATT&CK Mobile: T1616"
+      ],
+      "tags": [
+        "combo",
+        "fakecalls",
+        "vishing",
+        "voice_phishing"
+      ]
     },
-
     {
       "id": "bank_combo_ngate_nfc_clone",
       "name": "NGate NFC Relay/Clone Pattern",
@@ -1457,13 +2973,33 @@
       "enabled": true,
       "logic": "and",
       "conditions": [
-        { "type": "permission", "value": "android.permission.NFC" },
-        { "type": "api_call", "value": "IsoDep" },
-        { "type": "permission", "value": "android.permission.SYSTEM_ALERT_WINDOW" },
-        { "type": "permission", "value": "android.permission.INTERNET" }
+        {
+          "type": "permission",
+          "value": "android.permission.NFC"
+        },
+        {
+          "type": "api_call",
+          "value": "IsoDep"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.SYSTEM_ALERT_WINDOW"
+        },
+        {
+          "type": "permission",
+          "value": "android.permission.INTERNET"
+        }
       ],
-      "references": ["NGate NFC malware", "MITRE ATT&CK Mobile: T1398"],
-      "tags": ["combo", "ngate", "nfc_relay", "card_clone"]
+      "references": [
+        "NGate NFC malware",
+        "MITRE ATT&CK Mobile: T1398"
+      ],
+      "tags": [
+        "combo",
+        "ngate",
+        "nfc_relay",
+        "card_clone"
+      ]
     }
   ]
 }

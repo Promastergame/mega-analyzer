@@ -1,5 +1,5 @@
 {
-  "version": 5,
+  "version": 6,
   "cases": [
     {
       "id": "tls-empty-trust-manager",
@@ -208,6 +208,9 @@
         "smali/eval/app/PiFactory.smali": ".class public Leval/app/PiFactory;\n.super Ljava/lang/Object;\n\n.method public build(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;\n  .locals 0\n  invoke-static {p1, p2, p3, p4}, Landroid/app/PendingIntent;->getActivity(Landroid/content/Context;ILandroid/content/Intent;I)Landroid/app/PendingIntent;\n  move-result-object p0\n  return-object p0\n.end method\n"
       },
       "expected": [
+        "pending_intent_review"
+      ],
+      "forbidden": [
         "pending_intent_vuln"
       ]
     },

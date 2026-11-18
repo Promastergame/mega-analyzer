@@ -10,6 +10,7 @@ import (
 	"strings"
 	"unicode/utf8"
 
+	"mega-analyzer/pkg/internal/rating"
 	"mega-analyzer/pkg/internal/types"
 )
 
@@ -30,18 +31,19 @@ func NewViewBuilder(result *types.AnalysisResult, opts MarkdownOptions) *ViewBui
 func (b *ViewBuilder) Build() ReportView {
 	return ReportView{
 		BundleAnalysis: b.result.BundleAnalysis, StaticOutputs: b.result.StaticOutputs,
-		Meta:            b.buildMeta(),
-		Summary:         b.buildSummary(),
-		Stats:           b.buildStats(),
-		Detections:      b.buildDetections(),
-		Hotspots:        b.buildHotspots(),
-		HotspotDetails:  b.buildHotspotDetails(),
-		RiskSummary:     b.buildRiskSummary(),
-		Suspicion:       SuspicionScore(b.result),
-		Recommendations: b.buildRecommendations(),
-		RuleFindings:    b.buildRuleFindings(),
-		BankingThreats:  b.buildBankingThreats(),
-		TypedFindings:   b.buildTypedFindings(),
+		Meta:              b.buildMeta(),
+		Summary:           b.buildSummary(),
+		Stats:             b.buildStats(),
+		Detections:        b.buildDetections(),
+		Hotspots:          b.buildHotspots(),
+		HotspotDetails:    b.buildHotspotDetails(),
+		RiskSummary:       b.buildRiskSummary(),
+		Suspicion:         SuspicionScore(b.result),
+		Recommendations:   b.buildRecommendations(),
+		RuleFindings:      b.buildRuleFindings(),
+		BankingThreats:    b.buildBankingThreats(),
+		TypedFindings:     b.buildTypedFindings(),
+		NetworkIndicators: b.buildNetworkIndicators(),
 
 		// 🆕 v9.0.0 Elite Research Views
 		Deobfuscation:      b.buildDeobfuscation(),
@@ -343,20 +345,30 @@ func (b *ViewBuilder) buildContextLines(lines []string, m types.Match, line, bef
 
 func (b *ViewBuilder) buildMeta() MetaView {
 	targetName := normalizePath(filepath.Base(b.result.TargetDir))
-	if b.result.BundleAnalysis != nil && b.result.BundleAnalysis.Standalone && b.result.Run != nil {
+	if b.result.Run != nil {
 		if name := b.result.Run.Identity["target"]; name != "" {
 			targetName = name
 		}
 	}
+	// Coverage/limitation text is intentionally not rendered in the
+	// human-facing reports anymore: the banner had no styling of its own
+	// (white strip on the dark theme) and repeated the data-flow budget
+	// notice twice. Run status and limitations remain available in
+	// analysis.json for tooling.
+	artifactSHA := ""
+	if b.result.Run != nil {
+		artifactSHA = b.result.Run.ArtifactSHA256
+	}
 	return MetaView{
-		EngineVersion: b.opts.EngineVersion,
-		ReportSchema:  b.opts.ReportSchema,
-		Profile:       b.opts.Profile,
-		Timestamp:     b.result.Timestamp.Format("2006-01-02 15:04:05 MST"),
-		Duration:      b.result.Duration.String(),
-		TargetDir:     normalizePath(b.result.TargetDir),
-		TargetName:    targetName,
-		AppPackage:    b.result.AppPackage,
+		EngineVersion:  b.opts.EngineVersion,
+		ReportSchema:   b.opts.ReportSchema,
+		Profile:        b.opts.Profile,
+		Timestamp:      b.result.Timestamp.Format("2006-01-02 15:04:05 MST"),
+		Duration:       b.result.Duration.String(),
+		TargetDir:      normalizePath(b.result.ShareableTargetName()),
+		TargetName:     targetName,
+		AppPackage:     b.result.AppPackage,
+		ArtifactSHA256: artifactSHA,
 	}
 }
 
@@ -400,6 +412,9 @@ func (b *ViewBuilder) buildSummary() SummaryView {
 }
 
 func (b *ViewBuilder) calculateRiskLevel(s SummaryView) types.RiskLevel {
+	if bd := SuspicionScore(b.result); bd.Profile != nil {
+		return profileScoreToRisk(bd.Score)
+	}
 	hasLicense := s.DetectedGroups[types.GroupLicense]
 
 	switch {
@@ -453,6 +468,20 @@ func (b *ViewBuilder) buildTopCategories(limit int) []CategorySummary {
 }
 
 func (b *ViewBuilder) buildVerdict(s SummaryView) string {
+	if len(b.result.Findings) > 0 {
+		switch s.RiskLevel {
+		case types.RiskCritical:
+			return "Critical risk from reported security findings. Review the supporting evidence."
+		case types.RiskHigh:
+			return "High risk from reported security findings. Manual review recommended."
+		case types.RiskMedium:
+			return "Security findings require further review."
+		case types.RiskLow:
+			return "Low-severity security findings reported."
+		default:
+			return "No actionable malware or vulnerability findings were reported. Check analysis coverage."
+		}
+	}
 	switch s.RiskLevel {
 	case types.RiskCritical:
 		return "Multiple high-confidence protection mechanisms detected. Requires thorough analysis."
@@ -475,7 +504,7 @@ func (b *ViewBuilder) buildStats() StatsView {
 	stats := StatsView{
 		TotalFiles:        b.result.Stats.TotalFiles,
 		AnalyzedFiles:     b.result.Stats.AnalyzedFiles,
-		SkippedFiles:      b.result.Stats.TotalFiles - b.result.Stats.AnalyzedFiles,
+		SkippedFiles:      max(0, b.result.Stats.TotalFiles-b.result.Stats.AnalyzedFiles),
 		AppCodeFiles:      b.result.Stats.AppCodeFiles,
 		TotalMatches:      b.result.Stats.TotalMatches,
 		CriticalMatches:   b.result.Stats.CriticalMatches,
@@ -503,6 +532,9 @@ func (b *ViewBuilder) buildStats() StatsView {
 	}
 
 	for _, a := range b.result.Files {
+		if a == nil {
+			continue
+		}
 		for _, dp := range a.DecisionPoints {
 			if isNoisyStatsDecisionPoint(a, dp) {
 				continue
@@ -522,11 +554,12 @@ func (b *ViewBuilder) buildStats() StatsView {
 			})
 		}
 	}
-	// Coverage counts physical parsed files, including files with no findings.
-	// The remainder after app code classification is dependency/library code.
-	stats.LibraryCodeFiles = stats.AnalyzedFiles - stats.AppCodeFiles
-	if stats.LibraryCodeFiles < 0 {
-		stats.LibraryCodeFiles = 0
+	// Physical files and virtual DEX classes are different units. Count only
+	// positively classified libraries; resources and unknown code are not SDKs.
+	for _, a := range b.result.Files {
+		if a != nil && a.IsLibrary {
+			stats.LibraryCodeFiles++
+		}
 	}
 
 	sort.SliceStable(stats.DecisionPointsList, func(i, j int) bool {
@@ -552,28 +585,75 @@ func (b *ViewBuilder) buildTypedFindings() []TypedFindingView {
 	result := make([]TypedFindingView, 0, len(b.result.Findings))
 	for _, item := range b.result.Findings {
 		view := TypedFindingView{
+			ID: item.ID, Locations: item.Locations,
 			Kind: string(item.Kind), RuleID: item.RuleID, Category: item.Category,
 			Title: item.Title, Severity: item.Severity, Confidence: item.Confidence,
 			CWE: strings.Join(item.CWE, ", "), MASVS: strings.Join(item.MASVS, ", "),
 			Fingerprint: item.Fingerprint,
+			Description: explanationPreview(item.Description), EvidenceItems: item.Evidence, Explanation: item.Explanation,
 		}
 		if len(item.Locations) > 0 {
 			view.File = normalizePath(item.Locations[0].File)
 			view.Line = item.Locations[0].Line
 		}
 		if len(item.Evidence) > 0 {
-			view.Evidence = item.Evidence[0].Snippet
+			view.Evidence = explanationPreview(item.Evidence[0].Snippet)
 		}
 		if len(item.Provenance) > 0 {
 			view.Detector = item.Provenance[0].Detector
 		}
 		result = append(result, view)
 	}
+	sort.SliceStable(result, func(i, j int) bool {
+		a, z := result[i], result[j]
+		if findingDisplayGroup(a.Kind) != findingDisplayGroup(z.Kind) {
+			return findingDisplayGroup(a.Kind) < findingDisplayGroup(z.Kind)
+		}
+		if severityDisplayRank(a.Severity) != severityDisplayRank(z.Severity) {
+			return severityDisplayRank(a.Severity) > severityDisplayRank(z.Severity)
+		}
+		if a.Kind != z.Kind {
+			return a.Kind == "malware"
+		}
+		if a.RuleID != z.RuleID {
+			return a.RuleID < z.RuleID
+		}
+		return a.Fingerprint < z.Fingerprint
+	})
 	return result
+}
+
+func findingDisplayGroup(kind string) int {
+	switch kind {
+	case "malware", "vulnerability":
+		return 0
+	case "hardening":
+		return 1
+	default:
+		return 2
+	}
+}
+
+func severityDisplayRank(severity string) int {
+	switch strings.ToLower(severity) {
+	case "critical":
+		return 4
+	case "high":
+		return 3
+	case "medium":
+		return 2
+	case "low":
+		return 1
+	default:
+		return 0
+	}
 }
 
 func isNoisyStatsDecisionPoint(analysis *types.FileAnalysis, dp types.DecisionPoint) bool {
 	if analysis == nil {
+		return true
+	}
+	if analysis.IsLibrary {
 		return true
 	}
 	if !analysis.IsAppCode && analysis.Type != types.FileTypeDex {
@@ -650,6 +730,11 @@ func (b *ViewBuilder) visibleCategoryCounts() map[types.Category]int {
 		if analysis == nil {
 			continue
 		}
+		// Library files never define visible category counts, detections
+		// tables or correlation inputs, even when typed as DEX (smali).
+		if analysis.IsLibrary {
+			continue
+		}
 		if !analysis.IsAppCode && analysis.Type != types.FileTypeDex {
 			continue
 		}
@@ -667,6 +752,19 @@ func (b *ViewBuilder) visibleCategoryCounts() map[types.Category]int {
 		}
 	}
 	return counts
+}
+
+// VisibleCategoryCounts exposes the deduplicated, app-code-only per-category
+// counts that the Markdown/HTML reports use. Callers that summarise a scan
+// elsewhere (e.g. the CLI system card) must use the same numbers, otherwise the
+// terminal says "Billing 65" while the report says "50 matches" for the same
+// scan. Returns nil when there is no per-file data to dedupe against.
+func VisibleCategoryCounts(result *types.AnalysisResult) map[types.Category]int {
+	if result == nil || len(result.Files) == 0 {
+		return nil
+	}
+	b := NewViewBuilder(result, DefaultOptions())
+	return b.visibleCategoryCounts()
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -727,6 +825,10 @@ func (b *ViewBuilder) buildDetectionGroup(groupName, icon string, categories []t
 		// Show only app code in the Detections table.
 		// DEX files (classes2.dex, classes3.dex) are exempt because they
 		// represent the merged bytecode pool and are always relevant.
+		// Known libraries stay excluded regardless of their file type.
+		if analysis.IsLibrary {
+			continue
+		}
 		if !analysis.IsAppCode && analysis.Type != types.FileTypeDex {
 			continue
 		}
@@ -1117,20 +1219,60 @@ func isKnownSDKHotspotPath(haystack string) bool {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 func (b *ViewBuilder) buildRiskSummary() RiskSummaryView {
-	return RiskSummaryView{
+	summary := RiskSummaryView{
 		OverallRisk:   b.calculateOverallRisk(),
 		Confidence:    b.calculateConfidence(),
 		ByCategory:    b.buildRiskByCategory(),
 		KeyFindings:   b.extractKeyFindings(),
 		AttackSurface: b.identifyAttackSurface(),
 	}
+	if profile, ok := rating.ResultProfile(b.result); ok {
+		if profile.Inconclusive {
+			summary.Inconclusive = true
+			summary.InconclusiveReason = profile.InconclusiveReason
+			if summary.OverallRisk == types.RiskCritical {
+				// Keep the displayed risk consistent with the capped score.
+				summary.OverallRisk = types.RiskHigh
+			}
+		}
+		for _, key := range []string{
+			rating.CatMalware, rating.CatPiracy, rating.CatCrackPoint,
+			rating.CatSecurity, rating.CatBilling, rating.CatPrivacy,
+		} {
+			if cat, present := profile.Categories[key]; present && (cat.Count > 0 || cat.Score > 0) {
+				summary.Breakdown = append(summary.Breakdown, ScoreBreakdownView{
+					Name: cat.Name, Score: cat.Score, Level: cat.Level,
+					Findings: cat.Count, MaxScore: cat.MaxScore,
+				})
+			}
+		}
+	}
+	return summary
 }
 
 func (b *ViewBuilder) calculateOverallRisk() types.RiskLevel {
+	if bd := SuspicionScore(b.result); bd.Profile != nil {
+		return profileScoreToRisk(bd.Score)
+	}
 	if len(b.result.Hotspots) == 0 {
 		return types.RiskNone
 	}
 	return scoreToRisk(b.result.Hotspots[0].Score)
+}
+
+func profileScoreToRisk(score int) types.RiskLevel {
+	switch {
+	case score >= 85:
+		return types.RiskCritical
+	case score >= 65:
+		return types.RiskHigh
+	case score >= 35:
+		return types.RiskMedium
+	case score > 0:
+		return types.RiskLow
+	default:
+		return types.RiskNone
+	}
 }
 
 func (b *ViewBuilder) calculateConfidence() float64 {
@@ -1398,6 +1540,11 @@ func (b *ViewBuilder) hasStrongBankingTrojanEvidence() bool {
 		if analysis == nil {
 			continue
 		}
+		// Library files never define visible category counts, detections
+		// tables or correlation inputs, even when typed as DEX (smali).
+		if analysis.IsLibrary {
+			continue
+		}
 		if !analysis.IsAppCode && analysis.Type != types.FileTypeDex {
 			continue
 		}
@@ -1479,26 +1626,9 @@ func mainCategory(hs types.Hotspot) types.Category {
 }
 
 func estimateConfidence(hs types.Hotspot) float64 {
-	// Decision points — самый надёжный
-	var sum float64
-	count := 0
-	for _, dp := range hs.DecisionPoints {
-		if dp.Confidence > 0 {
-			sum += dp.Confidence
-			count++
-		}
-	}
-	if count > 0 {
-		return clamp01(sum / float64(count))
-	}
-
-	if hs.MatchCount > 0 {
-		critRatio := float64(hs.CriticalCount) / float64(hs.MatchCount)
-		scoreNorm := clamp01(hs.Score / 100)
-		return clamp01(critRatio*0.6 + scoreNorm*0.4)
-	}
-
-	return clamp01(hs.Score / 100)
+	// Single shared rule with the rating package so the displayed confidence
+	// and the inconclusive verdict cap are computed from the same numbers.
+	return rating.HotspotConfidence(hs)
 }
 
 func explainWhyRisky(hs types.Hotspot) string {
@@ -2125,15 +2255,17 @@ func (b *ViewBuilder) buildMediaReports() []MediaReportView {
 		}
 
 		views = append(views, MediaReportView{
-			Path:          normalizePath(analysis.Path),
-			RiskScore:     int(md.RiskScore),
-			SeverityClass: sevClass,
-			IsPolyglot:    md.Classification.IsPolyglot,
-			PrimaryFormat: string(md.Classification.PrimaryFormat),
-			HiddenFormats: hiddenFormats,
-			Regions:       regions,
-			RecoveredData: md.Classification.RecoveredData,
-			Extra:         extra,
+			Path:             normalizePath(analysis.Path),
+			RiskScore:        int(md.RiskScore),
+			SeverityClass:    sevClass,
+			IsPolyglot:       md.Classification.IsPolyglot,
+			PrimaryFormat:    string(md.Classification.PrimaryFormat),
+			HiddenFormats:    hiddenFormats,
+			Regions:          regions,
+			RecoveredData:    md.Classification.RecoveredData,
+			Extra:            extra,
+			ThumbnailPreview: b.result.DecisionAIImages.PreviewFor(normalizePath(analysis.Path) + "::thumbnail"),
+			NoImageBlur:      b.opts.Artifacts.NoImageBlur,
 		})
 	}
 	return views

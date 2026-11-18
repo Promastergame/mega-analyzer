@@ -208,8 +208,8 @@ func (pc *PipelineCache) BatchGetFeatures(methods []MethodInput) map[string]*Cac
 // CachedDeobfResult represents cached deobfuscation output.
 type CachedDeobfResult struct {
 	DeobfuscatedBody []string `json:"deobf_body"`
-	CFFFDetected    bool     `json:"cff_detected,omitempty"`
-	Findings        []string `json:"findings,omitempty"`
+	CFFFDetected     bool     `json:"cff_detected,omitempty"`
+	Findings         []string `json:"findings,omitempty"`
 	ConstantsProp    int      `json:"constants_propagated"`
 	DeadCodeRemoved  int      `json:"dead_code_removed"`
 	OpaqueRemoved    int      `json:"opaque_removed"`
@@ -233,7 +233,9 @@ func (pc *PipelineCache) PutDeobf(body []string, result *CachedDeobfResult) {
 // results; old entries lack structural findings and must not be reused.
 func deobfMethodKey(className, methodName, signature, options string, body []string) ContentKey {
 	input := make([]string, 0, len(body)+2)
-	input = append(input, "deobfuscation-v2", options)
+	// v4 recovers salted nibble strings and rejects raw transforms of opaque
+	// encoded blobs; older positive and negative results are stale.
+	input = append(input, "deobfuscation-v4", options)
 	input = append(input, body...)
 	return ComputeMethodKey(className, methodName, signature, input)
 }

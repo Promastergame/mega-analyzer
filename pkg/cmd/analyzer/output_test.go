@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"mega-analyzer/pkg/internal/rating"
 	"mega-analyzer/pkg/internal/types"
 )
 
@@ -16,6 +17,21 @@ import (
 func newTestOutput(quiet bool) (*Output, *bytes.Buffer) {
 	var buf bytes.Buffer
 	return NewOutputWithWriter(DarkTheme(), quiet, &buf), &buf
+}
+
+func TestOutputRiskLevelUsesCanonicalProfile(t *testing.T) {
+	output, _ := newTestOutput(false)
+	result := &types.AnalysisResult{
+		Stats:       types.AnalysisStats{CriticalMatches: 67},
+		Hotspots:    []types.Hotspot{{Score: 100}},
+		RiskProfile: &rating.RiskProfile{OverallScore: 80, OverallLevel: "HIGH"},
+	}
+	if level := output.calculateRiskLevel(result); level.label != "HIGH" {
+		t.Fatalf("CLI disagrees with the canonical report risk: %+v", level)
+	}
+	if score := output.riskScore(result); score != 80 {
+		t.Fatalf("CLI disagrees with the canonical report score: %d", score)
+	}
 }
 
 func TestNewOutput(t *testing.T) {

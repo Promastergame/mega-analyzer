@@ -83,8 +83,8 @@ func TestWebViewAST_EnabledBridgeWithRemoteURL(t *testing.T) {
 	if len(remote) != 1 {
 		t.Fatalf("expected one RemoteJS finding, got %v", matches)
 	}
-	if !remote[0].IsCritical {
-		t.Error("remote JS bridge must be critical")
+	if remote[0].IsCritical || remote[0].Severity != types.SeverityMedium {
+		t.Error("remote JS bridge calls require review; they do not prove RCE")
 	}
 	if remote[0].Confidence != "high" {
 		t.Errorf("fully resolved chain → Confidence=high, got %q", remote[0].Confidence)

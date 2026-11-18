@@ -81,7 +81,7 @@ func (r *CommandRunner) buildCmd(ctx context.Context, request Request, outputDir
 func (r *CommandRunner) Run(ctx context.Context, request Request, outputDir string) (RunResult, error) {
 	output := &boundedBuffer{limit: r.maxOutput}
 	cmd := r.buildCmd(ctx, request, outputDir)
-	// The analyzer may spawn children (aapt2, baksmali, adb). Without these
+	// The analyzer may spawn children (aapt2, apksigner, adb). Without these
 	// two lines a timed-out child holding stdout/stderr kept cmd.Run() alive
 	// forever and orphaned the rest of the tree.
 	cmd.WaitDelay = 5 * time.Second

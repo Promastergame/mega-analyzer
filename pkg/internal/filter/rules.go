@@ -1140,6 +1140,7 @@ func defaultStandardLibraries() []LibraryPattern {
 		{Pattern: "android/", MatchType: MatchPrefix, Category: "sdk", Description: "Android SDK"},
 		{Pattern: "androidx/", MatchType: MatchPrefix, Category: "sdk", Description: "AndroidX"},
 		{Pattern: "com/android/internal/", MatchType: MatchPrefix, Category: "sdk", Description: "Android Internal"},
+		{Pattern: "com/android/apksig/", MatchType: MatchPrefix, Category: "sdk", Description: "APK signing library"},
 
 		// Google Services
 		{
@@ -1148,6 +1149,11 @@ func defaultStandardLibraries() []LibraryPattern {
 			Exceptions: []string{"gms/ads/rewarded", "gms/ads/interstitial", "gms/ads/purchase"},
 		},
 		{Pattern: "com/google/android/play/", MatchType: MatchPrefix, Category: "google", Description: "Google Play Core"},
+		// Google Play Billing is a vendored SDK. Without this entry its classes
+		// count as app code, so the payment detector reported the SDK's own
+		// Purchase/PurchaseToken fields as CRITICAL app findings.
+		{Pattern: "com/android/billingclient/", MatchType: MatchPrefix, Category: "billing", Description: "Google Play Billing library"},
+		{Pattern: "com/android/vending/billing/", MatchType: MatchPrefix, Category: "billing", Description: "Google Play In-App Billing (legacy)"},
 		{Pattern: "com/google/android/material/", MatchType: MatchPrefix, Category: "google", Description: "Material Components"},
 		{Pattern: "com/google/android/flexbox/", MatchType: MatchPrefix, Category: "google", Description: "Flexbox Layout"},
 		{Pattern: "com/google/crypto/", MatchType: MatchPrefix, Category: "google", Description: "Google Tink Crypto"},
@@ -1189,6 +1195,37 @@ func defaultStandardLibraries() []LibraryPattern {
 		{Pattern: "com/baseflow/permissionhandler/", MatchType: MatchPrefix, Category: "common", Description: "PermissionHandler Flutter plugin"},
 		{Pattern: "dagger/", MatchType: MatchPrefix, Category: "common", Description: "Dagger DI"},
 		{Pattern: "javax/inject/", MatchType: MatchPrefix, Category: "common", Description: "JSR-330"},
+		// Widely shipped OSS libraries. Their generic API mix (HTTP + JSON +
+		// background work, sockets + streams) satisfied malware combo rules on
+		// clean apps (K-9 Mail: net/openid/appauth → "C2 JSON command handler").
+		{Pattern: "net/openid/appauth/", MatchType: MatchPrefix, Category: "auth", Description: "AppAuth OAuth client"},
+		{Pattern: "org/jsoup/", MatchType: MatchPrefix, Category: "common", Description: "jsoup HTML parser"},
+		{Pattern: "org/mozilla/javascript/", MatchType: MatchPrefix, Category: "common", Description: "Mozilla Rhino"},
+		{Pattern: "org/greenrobot/", MatchType: MatchPrefix, Category: "common", Description: "greenrobot EventBus"},
+		{Pattern: "org/slf4j/", MatchType: MatchPrefix, Category: "common", Description: "SLF4J"},
+		{Pattern: "timber/log/", MatchType: MatchPrefix, Category: "common", Description: "Timber"},
+		{Pattern: "coil/", MatchType: MatchPrefix, Category: "common", Description: "Coil image loader"},
+		{Pattern: "coil3/", MatchType: MatchPrefix, Category: "common", Description: "Coil 3 image loader"},
+		{Pattern: "com/github/bumptech/", MatchType: MatchPrefix, Category: "common", Description: "Glide (legacy namespace)"},
+		{Pattern: "org/acra/", MatchType: MatchPrefix, Category: "analytics", Description: "ACRA crash reporter"},
+		{Pattern: "ch/acra/", MatchType: MatchPrefix, Category: "analytics", Description: "ACRA crash reporter"},
+		{Pattern: "org/koin/", MatchType: MatchPrefix, Category: "common", Description: "Koin DI"},
+		{Pattern: "org/jetbrains/", MatchType: MatchPrefix, Category: "kotlin", Description: "JetBrains annotations/libraries"},
+		{Pattern: "io/ktor/", MatchType: MatchPrefix, Category: "network", Description: "Ktor"},
+		{Pattern: "org/apache/james/mime4j/", MatchType: MatchPrefix, Category: "common", Description: "Apache James Mime4j"},
+		{Pattern: "com/sun/mail/", MatchType: MatchPrefix, Category: "network", Description: "JavaMail"},
+		{Pattern: "javax/mail/", MatchType: MatchPrefix, Category: "network", Description: "JavaMail API"},
+		{Pattern: "org/videolan/libvlc/", MatchType: MatchPrefix, Category: "engine", Description: "libVLC"},
+		{Pattern: "org/webrtc/", MatchType: MatchPrefix, Category: "network", Description: "WebRTC"},
+		{Pattern: "io/grpc/", MatchType: MatchPrefix, Category: "network", Description: "gRPC"},
+		{Pattern: "org/signal/libsignal/", MatchType: MatchPrefix, Category: "crypto", Description: "libsignal"},
+		{Pattern: "com/airbnb/lottie/", MatchType: MatchPrefix, Category: "common", Description: "Lottie"},
+		{Pattern: "com/journeyapps/barcodescanner/", MatchType: MatchPrefix, Category: "common", Description: "ZXing Android Embedded"},
+		{Pattern: "com/google/zxing/", MatchType: MatchPrefix, Category: "common", Description: "ZXing"},
+		{Pattern: "com/github/chrisbanes/", MatchType: MatchPrefix, Category: "common", Description: "PhotoView"},
+		{Pattern: "com/davemorrissey/labs/subscaleview/", MatchType: MatchPrefix, Category: "common", Description: "Subsampling Scale ImageView"},
+		{Pattern: "pl/droidsonroids/", MatchType: MatchPrefix, Category: "common", Description: "android-gif-drawable / ReLinker"},
+		{Pattern: "com/getkeepsafe/relinker/", MatchType: MatchPrefix, Category: "common", Description: "ReLinker"},
 
 		// Crypto
 		{Pattern: "org/bouncycastle/", MatchType: MatchPrefix, Category: "crypto", Description: "BouncyCastle", Dampening: ptrFloat64(0.6)},

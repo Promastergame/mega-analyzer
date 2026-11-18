@@ -33,7 +33,7 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	var timeout time.Duration
 	fs.StringVar(&opts.OutputDir, "o", "", "Output directory (default decoded_<name>)")
 	fs.StringVar(&opts.OutputDir, "output", "", "Output directory")
-	fs.StringVar(&backend, "backend", "native", "Decode backend: native, auto, baksmali")
+	fs.StringVar(&backend, "backend", "native", "Decode backend: native, auto")
 	fs.BoolVar(&opts.Standalone, "standalone", false, "Forbid external tools for this invocation")
 	fs.BoolVar(&opts.NoResources, "no-resources", false, "Keep Android resources in their original binary form")
 	fs.BoolVar(&opts.NoSmali, "no-smali", false, "Keep DEX files without generating Smali")
@@ -41,10 +41,6 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 	fs.BoolVar(&opts.JavaView, "java-view", false, "Emit per-class .java pseudocode next to smali")
 	fs.BoolVar(&opts.ClassCache, "class-cache", true, "Cache native Smali generation")
 	fs.BoolVar(&opts.CopyOriginal, "copy-original", false, "Preserve META-INF in original/ for rebuilding")
-	fs.StringVar(&opts.Baksmali.JarPath, "baksmali-jar", "", "Explicit baksmali JAR (baksmali backend only)")
-	fs.StringVar(&opts.Baksmali.JavaPath, "java", "", "Java executable (baksmali backend only)")
-	fs.IntVar(&opts.Baksmali.APILevel, "api", 0, "Android API level (baksmali backend only)")
-	fs.IntVar(&opts.Baksmali.Jobs, "jobs", 0, "Worker count (baksmali backend only)")
 	fs.DurationVar(&timeout, "timeout", 0, "Time limit, e.g. 30s or 2m (0 = unlimited)")
 	fs.BoolVar(&jsonOutput, "json", false, "Write one JSON result to stdout, including failures")
 	fs.BoolVar(&version, "version", false, "Print version")
@@ -68,8 +64,8 @@ func run(ctx context.Context, args []string, stdout, stderr io.Writer) int {
 		fs.Usage()
 		return 2
 	}
-	if timeout < 0 || opts.Baksmali.APILevel < 0 || opts.Baksmali.Jobs < 0 {
-		fmt.Fprintln(stderr, "Timeout, API level and jobs must be non-negative.")
+	if timeout < 0 {
+		fmt.Fprintln(stderr, "Timeout must be non-negative.")
 		return 2
 	}
 	opts.Backend = decompiler.Backend(backend)

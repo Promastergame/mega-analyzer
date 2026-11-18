@@ -183,6 +183,13 @@ func scanFirmwareSecrets(report *FirmwareReport, f ScannedFile, lowerPath string
 }
 
 func scanFirmwarePackages(report *FirmwareReport, f ScannedFile, lowerPath string, lowerData []byte) {
+	// Image metadata and DEX string pools are not installed-package evidence.
+	if !bytes.HasPrefix(f.Data, []byte{0x7f, 'E', 'L', 'F'}) {
+		switch strings.ToLower(filepath.Ext(lowerPath)) {
+		case ".dex", ".svg", ".png", ".jpg", ".jpeg", ".webp":
+			return
+		}
+	}
 	if strings.Contains(lowerPath, "busybox") || bytes.Contains(lowerData, []byte("busybox v")) {
 		version := extractBusyBoxVersion(string(f.Data))
 		sev := "low"
@@ -192,10 +199,29 @@ func scanFirmwarePackages(report *FirmwareReport, f ScannedFile, lowerPath strin
 		report.Packages = append(report.Packages, FirmwareItem{Name: "BusyBox", Path: f.Path, Severity: sev, Detail: version})
 	}
 	for _, token := range []string{"openssl", "uhttpd", "lighttpd", "boa", "mini_httpd"} {
-		if strings.Contains(lowerPath, token) || bytes.Contains(lowerData, []byte(token)) {
+		if containsFirmwareToken([]byte(filepath.Base(lowerPath)), token) || containsFirmwareToken(lowerData, token) {
 			report.Packages = append(report.Packages, FirmwareItem{Name: token, Path: f.Path, Severity: "low"})
 		}
 	}
+}
+
+func containsFirmwareToken(data []byte, token string) bool {
+	word := func(c byte) bool {
+		return c >= 'a' && c <= 'z' || c >= '0' && c <= '9' || c == '_' || c == '+' || c == '/'
+	}
+	for offset := 0; offset < len(data); {
+		rel := bytes.Index(data[offset:], []byte(token))
+		if rel < 0 {
+			return false
+		}
+		idx := offset + rel
+		end := idx + len(token)
+		if (idx == 0 || !word(data[idx-1])) && (end == len(data) || !word(data[end])) {
+			return true
+		}
+		offset = end
+	}
+	return false
 }
 
 func extractBusyBoxVersion(s string) string {

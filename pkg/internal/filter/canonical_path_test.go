@@ -30,3 +30,21 @@ func TestIsAppCode_MultidexKnownSDKs(t *testing.T) {
 		}
 	}
 }
+
+// The play_billing AIDL implementation under gms internals carries "billing"
+// in its own paths. A high-value keyword match inside a vendored SDK's
+// namespace must not promote the SDK to app code; otherwise the payment and
+// subscription detectors scanned the library's own classes and reported
+// "Payment Provider: Google Play Billing" against Play Billing itself.
+func TestIsAppCode_PlayBillingInternals(t *testing.T) {
+	f := NewFilter()
+	for _, path := range []string{
+		"smali/com/google/android/gms/internal/play_billing/p.smali",
+		"smali_classes2/com/google/android/gms/internal/play_billing/s1.smali",
+		"smali/com/android/billingclient/api/Purchase.smali",
+	} {
+		if f.IsAppCode(path) {
+			t.Errorf("IsAppCode(%q) = true, want false (vendored billing SDK)", path)
+		}
+	}
+}

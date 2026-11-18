@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"unicode"
+	"unicode/utf8"
 )
 
 // Transform jobs have narrower options than analysis jobs. Keep the input and
@@ -53,9 +55,42 @@ func validateWebModeFlags(mode string, args []string) ([]string, error) {
 				continue
 			}
 		}
+		if mode == "build" && key == "-apk-name" && i+1 < len(args) {
+			i++
+			value := args[i]
+			if validAPKResultName(value) {
+				out = append(out, key, value)
+				continue
+			}
+			return nil, fmt.Errorf("invalid apk name for %s", mode)
+		}
 		return nil, fmt.Errorf("unsupported web %s option %s", mode, key)
 	}
 	return out, nil
+}
+
+func validAPKResultName(name string) bool {
+	lower := strings.ToLower(name)
+	ext := ".apk"
+	if strings.HasSuffix(lower, ".xapk") {
+		ext = ".xapk"
+	} else if !strings.HasSuffix(lower, ext) {
+		return false
+	}
+	base := name[:len(name)-len(ext)]
+	if base == "" || !utf8.ValidString(base) || len(base) > 160 || utf8.RuneCountInString(base) > 80 {
+		return false
+	}
+	for _, c := range base {
+		if !unicode.IsLetter(c) && !unicode.IsNumber(c) && c != '_' && c != '-' {
+			return false
+		}
+	}
+	switch strings.ToLower(base) {
+	case "con", "prn", "aux", "nul", "com0", "com1", "com2", "com3", "com4", "com5", "com6", "com7", "com8", "com9", "lpt0", "lpt1", "lpt2", "lpt3", "lpt4", "lpt5", "lpt6", "lpt7", "lpt8", "lpt9":
+		return false
+	}
+	return true
 }
 
 // Web inputs are not arbitrary CLI arguments. In particular -output/-o,

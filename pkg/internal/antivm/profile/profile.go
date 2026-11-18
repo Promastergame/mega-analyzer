@@ -18,6 +18,8 @@ type DeviceProfile struct {
 	Manufacturer string `json:"manufacturer"`
 	Device       string `json:"device"`
 	Product      string `json:"product"`
+	Hardware     string `json:"hardware,omitempty"`
+	Board        string `json:"board,omitempty"`
 
 	// ── Build ────────────────────────────────────────────────
 	AndroidVersion string `json:"android_version"`
@@ -57,11 +59,18 @@ type BatteryProfile struct {
 	Plugged     string `json:"plugged"`     // none|ac|usb|wireless
 }
 
+// ThermalTemperatureMilliC is the fixed 28 degree C reading for analysis AVDs.
+const ThermalTemperatureMilliC = 28_000
+
 // SensorProfile describes mock sensor readings the device should expose.
+// Enabled also enables the fixed thermal_zone0 temperature fixture.
 type SensorProfile struct {
-	Enabled       bool `json:"enabled"`
-	Accelerometer bool `json:"accelerometer"`
-	Gyroscope     bool `json:"gyroscope"`
+	Enabled               bool   `json:"enabled"`
+	Accelerometer         bool   `json:"accelerometer"`
+	Gyroscope             bool   `json:"gyroscope"`
+	MotionSeed            uint64 `json:"motion_seed,omitempty"`
+	MotionIntervalMillis  int    `json:"motion_interval_millis,omitempty"`
+	MotionDurationSeconds int    `json:"motion_duration_seconds,omitempty"`
 }
 
 // OperatorProfile describes the expected mobile operator / SIM identity.

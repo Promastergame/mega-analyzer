@@ -617,10 +617,9 @@ func (m *Memo) Unique() int {
 	return len(m.entries)
 }
 
-// weightsFileNames are the auto-discovered GNN weight files, in preference
-// order. The compact binary encoding is tried first because it is ~5x smaller
-// and parses without a JSON pass; both are accepted by the native loader.
-var weightsFileNames = []string{"gnn_weights.gnnbuf", "gnn_weights.json"}
+// Auto-discovery selects the format supported by both the Go validator and
+// native loader. The native-only compact container cannot bypass validation.
+var weightsFileNames = []string{"gnn_weights.json"}
 
 // AnalyzerHome returns the per-user analyzer directory (~/.analyzer, i.e.
 // C:\Users\<name>\.analyzer on Windows), where the analyzer keeps its

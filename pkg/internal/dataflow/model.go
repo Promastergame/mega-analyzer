@@ -32,6 +32,12 @@ type Config struct {
 	MaxSliceSteps        int // whole-run backward-state budget; <=0 uses default
 	MaxSliceDepth        int // recursion budget; <=0 uses default
 	MaxSliceStepsPerSink int // fairness budget; a single sink cannot consume the entire run
+	// AppPackage prioritizes the application's own classes when the method
+	// budget truncates the slice set: app code is sliced before libraries.
+	AppPackage string
+	// ExportedComponents are the dotted names of manifest components with
+	// effective export; entry-point taint labels depend on them.
+	ExportedComponents map[string]struct{}
 }
 
 func DefaultConfig() Config {

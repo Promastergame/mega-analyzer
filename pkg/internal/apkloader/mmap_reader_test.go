@@ -4,11 +4,13 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestMmapDEXReader_SmallFile(t *testing.T) {
 	// Create a temporary DEX file
-	tmpDir := t.TempDir()
+	tmpDir := testutil.TempDir(t)
 	dexPath := filepath.Join(tmpDir, "test.dex")
 
 	// Create minimal valid DEX
@@ -45,7 +47,7 @@ func TestMmapDEXReader_SmallFile(t *testing.T) {
 }
 
 func TestMmapDEXReader_MapSection(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.TempDir(t)
 	dexPath := filepath.Join(tmpDir, "test.dex")
 
 	dexData := makeMinimalDEX()
@@ -76,7 +78,7 @@ func TestMmapDEXReader_MapSection(t *testing.T) {
 }
 
 func TestMmapDEXReader_OutOfBounds(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.TempDir(t)
 	dexPath := filepath.Join(tmpDir, "test.dex")
 
 	dexData := makeMinimalDEX()
@@ -98,7 +100,7 @@ func TestMmapDEXReader_OutOfBounds(t *testing.T) {
 }
 
 func TestMmapDEXReader_Close(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.TempDir(t)
 	dexPath := filepath.Join(tmpDir, "test.dex")
 
 	dexData := makeMinimalDEX()
@@ -124,7 +126,7 @@ func TestMmapDEXReader_Close(t *testing.T) {
 
 // TestParseDEX_WithFile проверяет парсинг DEX из файла
 func TestParseDEX_WithFile(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.TempDir(t)
 	dexPath := filepath.Join(tmpDir, "test.dex")
 
 	dexData := makeMinimalDEX()
@@ -146,7 +148,7 @@ func TestParseDEX_WithFile(t *testing.T) {
 }
 
 func TestMmapDEXReader_EmptyFile(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.TempDir(t)
 	dexPath := filepath.Join(tmpDir, "empty.dex")
 
 	// Create empty file

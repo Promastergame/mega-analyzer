@@ -1,15 +1,17 @@
 package apkloader
 
 import (
-	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
-func TestDecodeExplicitBaksmaliFailureDoesNotFallback(t *testing.T) {
+func TestDecodeRetiredBackendDoesNotFallback(t *testing.T) {
 	t.Setenv("MEGA_STANDALONE", "")
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	dex, _, err := AssembleSmaliText("Hello.smali", nativeHelloSmali, 0)
 	if err != nil {
 		t.Fatal(err)
@@ -20,16 +22,13 @@ func TestDecodeExplicitBaksmaliFailureDoesNotFallback(t *testing.T) {
 	}
 	out := filepath.Join(dir, "out")
 	_, err = NewExtractor().DecodeDEX(t.Context(), input, DecodeOptions{
-		OutputDir: out, DexBackend: DecompileBackendBaksmali,
-		// Missing tools must be reported even though the native parser could
-		// decode this DEX successfully. No subprocess is needed for this test.
-		SmaliCfg: SmaliToolConfig{},
+		OutputDir: out, DexBackend: "baksmali",
 	})
-	if !errors.Is(err, ErrSmaliToolNotFound) {
+	if err == nil || !strings.Contains(err.Error(), "unknown decode backend") {
 		t.Fatalf("explicit backend error was lost: %v", err)
 	}
 	if hasSmaliFiles(out) {
-		t.Fatal("an explicit baksmali failure silently used the native backend")
+		t.Fatal("a retired backend silently used the native backend")
 	}
 	if _, err := os.Stat(filepath.Join(out, decodeCacheFile)); !os.IsNotExist(err) {
 		t.Fatalf("failed decode wrote success metadata: %v", err)
@@ -38,7 +37,7 @@ func TestDecodeExplicitBaksmaliFailureDoesNotFallback(t *testing.T) {
 
 func TestLegacySmaliWriterPreservesCaseCollisions(t *testing.T) {
 	p := &DEXParser{classes: []*ClassDef{{ClassName: "La/A;"}, {ClassName: "La/a;"}}}
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	if err := NewExtractor().generateSmaliInto(p, dir, 2); err != nil {
 		t.Fatal(err)
 	}

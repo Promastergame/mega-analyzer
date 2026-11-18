@@ -21,8 +21,10 @@ func testProfile(t *testing.T) profile.DeviceProfile {
 func TestIdentityModule_ApplyThenVerifyPasses(t *testing.T) {
 	p := testProfile(t)
 	dev := adapter.NewMockAdapter()
-	// Environment prop qemu must be present for the environment check; identity
-	// module only verifies identity/build, so this is fine.
+	// Build runtime properties are read-only observations, not identity writes.
+	dev.State.Props["ro.build.version.release"] = p.AndroidVersion
+	dev.State.Props["ro.build.version.sdk"] = "35"
+	dev.State.Props["ro.product.cpu.abi"] = p.ABI
 	m := NewIdentityModule(p)
 	ctx := context.Background()
 

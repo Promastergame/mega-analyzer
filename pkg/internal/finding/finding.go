@@ -26,9 +26,20 @@ type Finding struct {
 	MASVS         []string     `json:"masvs,omitempty"`
 	Locations     []Location   `json:"locations,omitempty"`
 	Evidence      []Evidence   `json:"evidence,omitempty"`
+	Explanation   *Explanation `json:"explanation,omitempty"`
 	Steps         []Step       `json:"steps,omitempty"`
 	Provenance    []Provenance `json:"provenance,omitempty"`
 	Occurrences   int          `json:"occurrences"`
+}
+
+// Explanation separates what the input establishes from conditions that still
+// need checking. Status describes the evidence, not observed device execution.
+type Explanation struct {
+	Status      string   `json:"status"`
+	Summary     string   `json:"summary"`
+	Conditions  []string `json:"conditions,omitempty"`
+	Limitations []string `json:"limitations,omitempty"`
+	NextChecks  []string `json:"next_checks,omitempty"`
 }
 
 type Location struct {

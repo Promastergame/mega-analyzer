@@ -7,6 +7,7 @@ import (
 	"sort"
 	"strings"
 
+	"mega-analyzer/pkg/internal/decisionai"
 	"mega-analyzer/pkg/media"
 )
 
@@ -86,6 +87,7 @@ func (r *HTMLReporter) buildMediaForensicsSection(sb htmlWriter, view HTMLReport
 	sb.WriteString(`<p class="section-desc">Analysis of embedded threats, polyglots, and recovered data in media files (Images, Audio, PDF)</p>`)
 
 	sb.WriteString(`<div class="media-container">`)
+	sb.WriteString(`<style>#media-forensics .media-thumb.is-sensitive-hidden img{filter:blur(24px);opacity:.45}#media-forensics .media-preview-toggle{cursor:pointer;padding:6px 12px;border:1px solid var(--border-default);border-radius:6px;background:var(--bg-secondary);color:var(--text-primary)}</style>`)
 
 	for _, md := range view.Report.MediaReports {
 		sb.WriteString(fmt.Sprintf(`<div class="media-card border-%s">`, md.SeverityClass))
@@ -149,7 +151,7 @@ func (r *HTMLReporter) buildMediaForensicsSection(sb htmlWriter, view HTMLReport
 		// even for files that scored 0 risk, since a full metadata picture
 		// (e.g. "which camera took this") is useful on its own.
 		if md.Extra != nil {
-			writeMediaThumbnail(sb, md.Extra)
+			writeMediaThumbnailWithPreview(sb, md.Extra, md.ThumbnailPreview, md.NoImageBlur)
 			writeMediaTrailingData(sb, md.Extra)
 			writeMediaICCProfile(sb, md.Extra)
 			writeMediaXMP(sb, md.Extra)
@@ -160,7 +162,7 @@ func (r *HTMLReporter) buildMediaForensicsSection(sb htmlWriter, view HTMLReport
 		sb.WriteString(`</div>`) // end media-card
 	}
 
-	sb.WriteString(`</div></section>`)
+	sb.WriteString(`</div><script>(function(){var section=document.getElementById('media-forensics');if(!section)return;section.addEventListener('click',function(event){var button=event.target.closest('[data-thumbnail-toggle]');if(!button||!section.contains(button))return;var thumb=button.closest('.media-thumb');var hidden=thumb.classList.toggle('is-sensitive-hidden');button.textContent=hidden?'Показать':'Скрыть';button.setAttribute('aria-expanded',String(!hidden));});})();</script></section>`)
 }
 
 // writeMediaThumbnail renders the embedded EXIF thumbnail (IFD1), if any, as
@@ -168,17 +170,29 @@ func (r *HTMLReporter) buildMediaForensicsSection(sb htmlWriter, view HTMLReport
 // pre-encoded, so the size cap on the raw bytes (see media.maxThumbnailBytes)
 // is what actually bounds memory/report size.
 func writeMediaThumbnail(sb htmlWriter, extra *media.MediaMetadata) {
+	writeMediaThumbnailWithPreview(sb, extra, nil, false)
+}
+
+func writeMediaThumbnailWithPreview(sb htmlWriter, extra *media.MediaMetadata, preview *decisionai.ImagePreview, noBlur bool) {
 	if len(extra.Thumbnail) == 0 {
 		return
 	}
 	mime := extra.ThumbnailMime
-	if mime == "" {
+	if mime != "image/jpeg" && mime != "image/png" && mime != "image/gif" {
 		mime = "image/jpeg"
 	}
 	dataURI := "data:" + mime + ";base64," + base64.StdEncoding.EncodeToString(extra.Thumbnail)
-	sb.WriteString(`<div class="media-thumb">`)
+	hidePreview := preview != nil && !noBlur && (preview.Blur || preview.Status != "checked")
+	if hidePreview {
+		sb.WriteString(`<div class="media-thumb is-sensitive-hidden">`)
+	} else {
+		sb.WriteString(`<div class="media-thumb">`)
+	}
 	sb.WriteString(fmt.Sprintf(`<img src="%s" alt="Embedded EXIF thumbnail" loading="lazy" />`, dataURI))
 	sb.WriteString(fmt.Sprintf(`<span class="media-thumb-caption">%s Embedded thumbnail (%s)</span>`, icon("image"), humanSize(int64(extra.ThumbnailSizeBytes))))
+	if hidePreview {
+		sb.WriteString(`<button type="button" class="media-preview-toggle" data-thumbnail-toggle aria-expanded="false">Показать</button>`)
+	}
 	sb.WriteString(`</div>`)
 }
 

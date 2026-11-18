@@ -148,3 +148,42 @@ func TestDynLoad_SystemLoadExternalSo(t *testing.T) {
 		t.Fatalf("System.load from external storage must be critical, got %v", matches)
 	}
 }
+
+// ReLinker (and Unity's bundled copy of it) extracts the .so out of the app's
+// own APK into private storage and then calls System.load on the resulting
+// absolute path. That operand is computed, but its origin is the signed APK,
+// so it must not be reported as an unverifiable-path (CWE-427) finding.
+func TestDynLoad_RelinkerPrivateExtractionNotFlagged(t *testing.T) {
+	matches := runDynLoadAST(t, `
+.class public Lcom/app/Engine;
+.method public load(Landroid/content/Context;)V
+    .locals 4
+    invoke-virtual {p1, v0, v1}, Landroid/content/Context;->getDir(Ljava/lang/String;I)Ljava/io/File;
+    move-result-object v0
+    new-instance v1, Ljava/util/zip/ZipFile;
+    invoke-virtual {v1, v2}, Ljava/util/zip/ZipFile;->getInputStream(Ljava/util/zip/ZipEntry;)Ljava/io/InputStream;
+    invoke-virtual {v0}, Ljava/io/File;->getAbsolutePath()Ljava/lang/String;
+    move-result-object v0
+    invoke-static {v0}, Ljava/lang/System;->load(Ljava/lang/String;)V
+    return-void
+.end method
+`)
+	if len(matches) != 0 {
+		t.Fatalf("APK-private re-link must not be reported as CWE-427, got %v", matches)
+	}
+}
+
+// The exemption needs BOTH halves: a computed path in a method that merely
+// touches a ZIP somewhere is still an unverifiable load.
+func TestDynLoad_ComputedSystemLoadWithoutPrivateExtractionFlagged(t *testing.T) {
+	matches := runDynLoadAST(t, `
+.class public Lcom/app/Engine;
+.method public load(Ljava/lang/String;)V
+    invoke-static {p1}, Ljava/lang/System;->load(Ljava/lang/String;)V
+    return-void
+.end method
+`)
+	if len(matches) != 1 || matches[0].Severity != types.SeverityHigh {
+		t.Fatalf("computed System.load path must stay HIGH without private extraction, got %v", matches)
+	}
+}

@@ -8,15 +8,17 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestExportBundleHermes96IsNotFakeJavaScript(t *testing.T) {
-	input := filepath.Join(t.TempDir(), "index.android.bundle")
+	input := filepath.Join(testutil.TempDir(t), "index.android.bundle")
 	data := buildTestHBC(t, 96, []string{"main", "moduleA", "https://example.com/api"})
 	if err := os.WriteFile(input, data, 0600); err != nil {
 		t.Fatal(err)
 	}
-	out := t.TempDir()
+	out := testutil.TempDir(t)
 	coverage, err := ExportBundle(context.Background(), input, out)
 	if err != nil || coverage.Version != 96 || coverage.Status != "complete" {
 		t.Fatalf("coverage=%+v error=%v", coverage, err)
@@ -46,9 +48,9 @@ func TestExportBundleTextJSAndBinary(t *testing.T) {
 		{"bad.hbc", HermesMagicLE, "failed", false},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			input := filepath.Join(t.TempDir(), tc.name)
+			input := filepath.Join(testutil.TempDir(t), tc.name)
 			os.WriteFile(input, tc.data, 0600)
-			out := t.TempDir()
+			out := testutil.TempDir(t)
 			coverage, err := ExportBundle(context.Background(), input, out)
 			if err != nil || coverage.Status != tc.status {
 				t.Fatalf("%+v %v", coverage, err)
@@ -77,15 +79,15 @@ func TestExportBundleTextJSAndBinary(t *testing.T) {
 func TestExportBundleUnknownVersionAndCancellation(t *testing.T) {
 	data := buildTestHBC(t, 96, []string{"main", "moduleA", "url"})
 	binary.LittleEndian.PutUint32(data[8:12], 999)
-	input := filepath.Join(t.TempDir(), "v999.hbc")
+	input := filepath.Join(testutil.TempDir(t), "v999.hbc")
 	os.WriteFile(input, data, 0600)
-	coverage, err := ExportBundle(context.Background(), input, t.TempDir())
+	coverage, err := ExportBundle(context.Background(), input, testutil.TempDir(t))
 	if err != nil || coverage.Status != "unsupported" || len(coverage.Diagnostics) == 0 {
 		t.Fatalf("%+v %v", coverage, err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
-	coverage, err = ExportBundle(ctx, input, t.TempDir())
+	coverage, err = ExportBundle(ctx, input, testutil.TempDir(t))
 	if err == nil || coverage.Status != "partial" {
 		t.Fatal("cancellation must be visible")
 	}

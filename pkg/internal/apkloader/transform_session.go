@@ -144,8 +144,11 @@ func normalizeCFG(cfg *CFG) {
 		return
 	}
 	present := make(map[*BasicBlock]bool, len(cfg.Blocks))
-	for _, b := range cfg.Blocks {
+	for id, b := range cfg.Blocks {
 		present[b] = true
+		// Dominance and SSA use dense block indexes. Dead-code removal keeps
+		// original IDs, so compact them before rebuilding those analyses.
+		b.ID = id
 		b.Preds = nil
 		b.IsReachable = false
 		b.IDom = nil
@@ -164,6 +167,21 @@ func normalizeCFG(cfg *CFG) {
 		}
 		b.Succs = out
 	}
+	// Removed blocks must not remain reachable through stale handler edges.
+	exceptionEdges := cfg.ExceptionEdges[:0]
+	for _, edge := range cfg.ExceptionEdges {
+		if edge != nil && present[edge.From] && present[edge.To] {
+			exceptionEdges = append(exceptionEdges, edge)
+		}
+	}
+	cfg.ExceptionEdges = exceptionEdges
+	handlers := cfg.HandlerBlocks[:0]
+	for _, handler := range cfg.HandlerBlocks {
+		if present[handler] {
+			handlers = append(handlers, handler)
+		}
+	}
+	cfg.HandlerBlocks = handlers
 	cfg.markReachable()
 }
 

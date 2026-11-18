@@ -43,7 +43,7 @@ func operandRegisters(line string) string {
 
 // ValidateSmaliTree performs a fast, deterministic preflight over all Apktool
 // smali directories under sourceDir. It catches the common rebuild killers
-// before spawning smali.jar, which makes errors faster and far more readable.
+// before native assembly, which makes errors faster and more readable.
 //
 // Files are validated in parallel (a full APK tree is tens of thousands of
 // smali files, so a serial scan dominates the preflight) and the resulting

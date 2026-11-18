@@ -1,0 +1,10 @@
+{
+  "server":{"command":".tmp/arena-mcp.exe"},
+  "game":"tetris",
+  "observation_mode":"image",
+  "observe":{"name":"observe","arguments":{}},
+  "move_tool":"apply",
+  "image_layout":{"profile":"arena_tetris_v1","rows":20,"columns":10},
+  "max_steps":20,
+  "min_step_interval_ms":500
+}

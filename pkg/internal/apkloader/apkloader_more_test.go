@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 // ---------------------------------------------------------------------------
@@ -188,7 +190,7 @@ func TestNewCacheAnalyzer(t *testing.T) {
 }
 
 func TestCacheAnalyzer_Scan_EmptyDir(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	ca := NewCacheAnalyzer("com.test", dir)
 	if err := ca.Scan(); err != nil {
 		t.Errorf("Scan on empty dir: %v", err)
@@ -220,7 +222,7 @@ func TestCacheAnalyzer_Scan_NotADir(t *testing.T) {
 }
 
 func TestCacheAnalyzer_Scan_JSONWithAPIKey(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	content := `{"api_key": "secret123", "version": 1}`
 	if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
@@ -241,7 +243,7 @@ func TestCacheAnalyzer_Scan_JSONWithAPIKey(t *testing.T) {
 }
 
 func TestCacheAnalyzer_Scan_JSONWithGameSave(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	content := `{"coins": 100, "gems": 50, "level": 3}`
 	if err := os.WriteFile(filepath.Join(dir, "save.json"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
@@ -262,7 +264,7 @@ func TestCacheAnalyzer_Scan_JSONWithGameSave(t *testing.T) {
 }
 
 func TestCacheAnalyzer_Scan_JSONWithTracker(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	content := `{"sdk": "googleads", "version": "1.0"}`
 	if err := os.WriteFile(filepath.Join(dir, "ads.json"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
@@ -283,7 +285,7 @@ func TestCacheAnalyzer_Scan_JSONWithTracker(t *testing.T) {
 }
 
 func TestCacheAnalyzer_Scan_XMLFile(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	// XML with a password field
 	content := `<config><password>topsecret</password></config>`
 	if err := os.WriteFile(filepath.Join(dir, "prefs.xml"), []byte(content), 0644); err != nil {
@@ -297,7 +299,7 @@ func TestCacheAnalyzer_Scan_XMLFile(t *testing.T) {
 }
 
 func TestCacheAnalyzer_Scan_LogFile(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	content := "2024-01-01 ERROR: something bad happened\nWARN: another thing"
 	if err := os.WriteFile(filepath.Join(dir, "app.log"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
@@ -309,7 +311,7 @@ func TestCacheAnalyzer_Scan_LogFile(t *testing.T) {
 }
 
 func TestCacheAnalyzer_Scan_BinFile(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	content := []byte{0x01, 0x02, 0x03, 0x04}
 	if err := os.WriteFile(filepath.Join(dir, "data.dat"), content, 0644); err != nil {
 		t.Fatal(err)
@@ -472,13 +474,13 @@ func TestNameRanker(t *testing.T) {
 // ---------------------------------------------------------------------------
 
 func TestWriteReport(t *testing.T) {
-	ca := NewCacheAnalyzer("com.test", t.TempDir())
+	ca := NewCacheAnalyzer("com.test", testutil.TempDir(t))
 	ca.Findings = []CacheFinding{
 		{Path: "a.json", Type: "api_key", Severity: "critical", Description: "Key found"},
 	}
 	ca.Warnings = []string{"large file skipped"}
 
-	outDir := t.TempDir()
+	outDir := testutil.TempDir(t)
 	if err := ca.WriteReport(outDir); err != nil {
 		t.Fatalf("WriteReport: %v", err)
 	}
@@ -1084,7 +1086,7 @@ func TestDecodeInsn_InvokeRange(t *testing.T) {
 
 func TestCacheAnalyzer_AnalyzeDatabase(t *testing.T) {
 	// analyzeDatabase always adds a finding for .db files
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	if err := os.WriteFile(filepath.Join(dir, "app.db"), []byte("SQLite format 3"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -1105,7 +1107,7 @@ func TestCacheAnalyzer_AnalyzeDatabase(t *testing.T) {
 
 func TestCacheAnalyzer_AnalyzeSQLite(t *testing.T) {
 	// .sqlite extension
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	if err := os.WriteFile(filepath.Join(dir, "cache.sqlite"), []byte("data"), 0644); err != nil {
 		t.Fatal(err)
 	}
@@ -1125,7 +1127,7 @@ func TestCacheAnalyzer_AnalyzeSQLite(t *testing.T) {
 }
 
 func TestCacheAnalyzer_AnalyzeXMLConfig_WithURL(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	content := `<config><server>https://api.example.com/v1</server></config>`
 	if err := os.WriteFile(filepath.Join(dir, "config.xml"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
@@ -1146,7 +1148,7 @@ func TestCacheAnalyzer_AnalyzeXMLConfig_WithURL(t *testing.T) {
 }
 
 func TestCacheAnalyzer_AnalyzeXMLConfig_NoURL(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	content := `<config><value>plain text only</value></config>`
 	if err := os.WriteFile(filepath.Join(dir, "prefs.xml"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
@@ -1163,7 +1165,7 @@ func TestCacheAnalyzer_AnalyzeXMLConfig_NoURL(t *testing.T) {
 }
 
 func TestCacheAnalyzer_AnalyzeLogFile_WithCredentials(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	content := "DEBUG: user token=abc123 found\nINFO: connected"
 	if err := os.WriteFile(filepath.Join(dir, "debug.log"), []byte(content), 0644); err != nil {
 		t.Fatal(err)
@@ -1185,7 +1187,7 @@ func TestCacheAnalyzer_AnalyzeLogFile_WithCredentials(t *testing.T) {
 
 func TestCacheAnalyzer_AnalyzeLogFile_TooLarge(t *testing.T) {
 	// Log file > 1 MB should be skipped
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	// Write a 1MB + 1 byte file containing "token"
 	data := make([]byte, (1<<20)+1)
 	copy(data, []byte("token=secret"))
@@ -1205,7 +1207,7 @@ func TestCacheAnalyzer_AnalyzeLogFile_TooLarge(t *testing.T) {
 
 func TestCacheAnalyzer_AnalyzeRawData_PrintableText(t *testing.T) {
 	// Create a .dat file that is mostly printable ASCII → weak_crypto
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	// > 75% printable: fill with ASCII 'A'
 	data := make([]byte, 100)
 	for i := range data {
@@ -1230,7 +1232,7 @@ func TestCacheAnalyzer_AnalyzeRawData_PrintableText(t *testing.T) {
 }
 
 func TestCacheAnalyzer_AnalyzeRawData_EmbeddedJSON(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	// Binary prefix + JSON payload (mostly printable due to JSON)
 	data := []byte(`{"key":"val"}`)
 	if err := os.WriteFile(filepath.Join(dir, "state.bin"), data, 0644); err != nil {
@@ -1259,11 +1261,11 @@ func TestCacheAnalyzer_AnalyzeRawData_EmbeddedJSON(t *testing.T) {
 }
 
 func TestCacheAnalyzer_WriteReport_CreatesFile(t *testing.T) {
-	ca := NewCacheAnalyzer("com.example", t.TempDir())
+	ca := NewCacheAnalyzer("com.example", testutil.TempDir(t))
 	ca.Findings = []CacheFinding{
 		{Path: "test.db", Type: "unencrypted_save", Severity: "medium", Description: "SQLite found"},
 	}
-	outDir := t.TempDir()
+	outDir := testutil.TempDir(t)
 	if err := ca.WriteReport(outDir); err != nil {
 		t.Fatalf("WriteReport: %v", err)
 	}

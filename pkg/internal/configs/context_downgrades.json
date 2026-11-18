@@ -45,6 +45,56 @@
         "bank_overlay_a11y_modern"
       ],
       "reason": "MDM agents are device administrators by design and combine overlay, accessibility and INTERNET for management. Permission context is declarable by any app, so findings are downgraded (kept visible), never suppressed."
+    },
+    {
+      "id": "ctx-vendor-sdk",
+      "name": "Vendor, ad and analytics SDK code (generic network/media APIs by design)",
+      "description": "Ad and vendor SDKs (Unity Ads, Huawei Mobile Services, Google Play services, Facebook Audience Network, AppLovin, ironSource, Vungle, MoPub, XQRCode) and embedded scripting/app-builder runtimes (BeanShell, iApp) open sockets, stream bytes, capture screens and play media by design. Raw socket/stream combos and media playback inside these namespaces match generic RAT/call rules without being operator code.",
+      "category": "context",
+      "severity": "info",
+      "score": 0,
+      "enabled": true,
+      "kind": "context",
+      "logic": "or",
+      "conditions": [
+        { "type": "class", "value": "com.unity3d" },
+        { "type": "class", "value": "com/unity3d" },
+        { "type": "class", "value": "com.huawei" },
+        { "type": "class", "value": "com/huawei" },
+        { "type": "class", "value": "com.google.android.gms" },
+        { "type": "class", "value": "com/google/android/gms" },
+        { "type": "class", "value": "com.facebook.ads" },
+        { "type": "class", "value": "com/facebook/ads" },
+        { "type": "class", "value": "com.applovin" },
+        { "type": "class", "value": "com/applovin" },
+        { "type": "class", "value": "com.ironsource" },
+        { "type": "class", "value": "com/ironsource" },
+        { "type": "class", "value": "com.vungle" },
+        { "type": "class", "value": "com/vungle" },
+        { "type": "class", "value": "com.mopub" },
+        { "type": "class", "value": "com/mopub" },
+        { "type": "class", "value": "com.ailiwean" },
+        { "type": "class", "value": "com/ailiwean" },
+        { "type": "class", "value": "bsh." },
+        { "type": "class", "value": "bsh/" },
+        { "type": "class", "value": "com.iapp" },
+        { "type": "class", "value": "com/iapp" }
+      ],
+      "downgrades": [
+        "rat_reverse_connection",
+        "rat_remote_shell",
+        "bank_call_fake_ivr",
+        "bank_combo_fakecalls_vishing",
+        "bank_cred_form_injection",
+        "bank_2fa_a11y_totp_reader",
+        "bank_card_a11y_scrape",
+        "c2_http_communication",
+        "bank_c2_json_command_handler",
+        "spyware_screen_recording",
+        "bank_cred_screenshot_capture",
+        "adware_hidden_browser"
+      ],
+      "reason": "Vendor and ad SDK namespaces legitimately use raw sockets, streaming, JSON marshalling and media APIs that overlap generic RAT, fake-call and C2 patterns. Namespace context is spoofable, so findings are downgraded (kept visible), never suppressed."
     }
   ]
 }

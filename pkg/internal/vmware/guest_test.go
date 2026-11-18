@@ -10,12 +10,13 @@ import (
 	"time"
 
 	"mega-analyzer/pkg/internal/sandbox"
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func guestFixture(t *testing.T) (string, GuestRequest) {
 	t.Helper()
 	id := "0123456789abcdef01234567"
-	dir := filepath.Join(t.TempDir(), "mega-session-"+id)
+	dir := filepath.Join(testutil.TempDir(t), "mega-session-"+id)
 	if err := os.Mkdir(dir, 0700); err != nil {
 		t.Fatal(err)
 	}
@@ -113,26 +114,40 @@ func TestGuestSampleNameValidation(t *testing.T) {
 	_, req := guestFixture(t)
 	for _, name := range []string{"fixture.exe", "Мой файл.EXE", "collector.exe", "app-v1.2_test.exe"} {
 		req.SampleName = name
-		if err := req.validate(); err != nil { t.Fatalf("valid name %q rejected: %v", name, err) }
+		if err := req.validate(); err != nil {
+			t.Fatalf("valid name %q rejected: %v", name, err)
+		}
 	}
 	for _, name := range []string{"../bad.exe", `C:\bad.exe`, `a\bad.exe`, "a.exe:stream", "CON.exe", "COM1.exe", "LPT9.exe", "a.exe ", "a.exe.", "bad.bat", "a\n.exe"} {
 		req.SampleName = name
-		if err := req.validate(); err == nil { t.Fatalf("unsafe name %q accepted", name) }
+		if err := req.validate(); err == nil {
+			t.Fatalf("unsafe name %q accepted", name)
+		}
 	}
 }
 
 func TestGuestRunsOriginalNameInInputDirectory(t *testing.T) {
 	dir, req := guestFixture(t)
 	req.SampleName = "Мой файл.exe"
-	if err := os.Mkdir(filepath.Join(dir, "input"), 0700); err != nil { t.Fatal(err) }
+	if err := os.Mkdir(filepath.Join(dir, "input"), 0700); err != nil {
+		t.Fatal(err)
+	}
 	target := filepath.Join(dir, "input", req.SampleName)
-	if err := os.Rename(filepath.Join(dir, "sample.exe"), target); err != nil { t.Fatal(err) }
-	if err := atomicJSON(filepath.Join(dir, "request.json"), req, 16<<10); err != nil { t.Fatal(err) }
+	if err := os.Rename(filepath.Join(dir, "sample.exe"), target); err != nil {
+		t.Fatal(err)
+	}
+	if err := atomicJSON(filepath.Join(dir, "request.json"), req, 16<<10); err != nil {
+		t.Fatal(err)
+	}
 	called := false
 	err := runGuest(context.Background(), dir, func(ctx context.Context, cfg sandbox.Config) (*sandbox.Report, error) {
 		called = true
-		if cfg.TargetPath != target { t.Fatalf("wrong target %q", cfg.TargetPath) }
+		if cfg.TargetPath != target {
+			t.Fatalf("wrong target %q", cfg.TargetPath)
+		}
 		return &sandbox.Report{Executed: true, SHA256: req.SHA256}, nil
 	}, time.Second)
-	if err != nil || !called { t.Fatalf("run failed: %v", err) }
+	if err != nil || !called {
+		t.Fatalf("run failed: %v", err)
+	}
 }

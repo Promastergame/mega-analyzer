@@ -62,6 +62,30 @@ func TestTriageUnavailableStopsRequests(t *testing.T) {
 	}
 }
 
+func TestTriageCompleteWhenOnlyObservationsAreSkipped(t *testing.T) {
+	calls := 0
+	s := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		fmt.Fprint(w, strings.ReplaceAll(noulResponse, `"fp":`, `"false_positive":`))
+	}))
+	defer s.Close()
+	c, _ := New(s.URL, "")
+	defer c.Close()
+	findings := []finding.Finding{
+		{ID: "risk", Kind: finding.KindVulnerability},
+		{ID: "api", Kind: finding.KindInventory},
+		{ID: "guard", Kind: finding.KindHardening},
+	}
+	r := Triage(context.Background(), c, findings, 3)
+	if r.Status != "complete" || r.Processed != 1 || r.Reviewable != 1 || r.Observations != 2 || r.Skipped != 2 || calls != 1 {
+		t.Fatalf("excluded observations were reported as missing risk review: %+v", r)
+	}
+	r = Triage(context.Background(), c, findings[1:], 3)
+	if r.Status != "complete" || r.Processed != 0 || r.Reviewable != 0 || r.Observations != 2 || calls != 1 {
+		t.Fatalf("observation-only scan should not need a service request: %+v", r)
+	}
+}
+
 func TestFindingContextBoundedWithoutMutatingEvidence(t *testing.T) {
 	text := strings.Repeat("Я", 6000)
 	f := finding.Finding{RuleID: "test", Description: text, Evidence: []finding.Evidence{{Snippet: text}}}
@@ -88,5 +112,21 @@ func TestTriageNoEvidenceRequiresHuman(t *testing.T) {
 	r := Triage(context.Background(), c, []finding.Finding{{ID: "test"}}, 1)
 	if r.Processed != 1 || r.Entries[0].ReviewRoute != "human" {
 		t.Fatalf("unsupported certainty accepted: %+v", r)
+	}
+}
+
+func TestTriageTextAbstentionDoesNotDisplayNeutralScore(t *testing.T) {
+	score := .5
+	for _, abstained := range []bool{true, false} {
+		r := Report{Entries: []Entry{{Response: Response{Answers: map[string]Answer{
+			"false_positive": {Noul: &score, Abstained: abstained, Reason: "unlinked_behavior_evidence"},
+		}}}}}
+		output := r.Text()
+		if strings.Contains(output, "Оценка ложного срабатывания: 0.5000") == abstained {
+			t.Fatalf("score visibility disagrees with abstained=%t", abstained)
+		}
+		if abstained && (!strings.Contains(output, "Оценка ложного срабатывания недоступна") || !strings.Contains(output, "Недостаточно данных: unlinked_behavior_evidence")) {
+			t.Fatal("text report lost the abstention")
+		}
 	}
 }

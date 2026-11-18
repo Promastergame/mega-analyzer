@@ -30,6 +30,8 @@ func (r *Report) RenderMarkdown() string {
 	b.WriteString(fmt.Sprintf("- **Passed**: %d\n", r.Passed))
 	b.WriteString(fmt.Sprintf("- **Failed**: %d\n", r.Failed))
 	b.WriteString(fmt.Sprintf("- **Manual review**: %d\n", r.ManualReview))
+	b.WriteString(fmt.Sprintf("- **Code files scanned**: %d\n", r.CodeFilesScanned))
+	b.WriteString(fmt.Sprintf("- **Unsupported code files**: %d\n", r.UnsupportedCode))
 	b.WriteString(fmt.Sprintf("- **Score**: %d\n", r.Score))
 	b.WriteString(fmt.Sprintf("- **Verdict**: %s\n\n", r.Verdict))
 	if len(r.Matches) > 0 {

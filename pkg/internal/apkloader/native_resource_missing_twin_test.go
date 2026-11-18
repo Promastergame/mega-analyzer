@@ -8,10 +8,12 @@ import (
 	"testing"
 
 	"mega-analyzer/pkg/internal/apkloader/axml"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestNativeExistingResourcesCompileMissingXMLTwins(t *testing.T) {
-	source := t.TempDir()
+	source := testutil.TempDir(t)
 	files := map[string]string{
 		"AndroidManifest.xml":    `<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="example.twin"><application android:label="@string/title"/></manifest>`,
 		"res/values/strings.xml": `<resources><string name="title">Title</string></resources>`,

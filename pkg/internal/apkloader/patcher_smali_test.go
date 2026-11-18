@@ -4,6 +4,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestSmaliRelPathForClass(t *testing.T) {
@@ -29,7 +31,7 @@ func TestSmaliRelPathForClass(t *testing.T) {
 }
 
 func TestHasSmaliFilesAndFindDEXFiles(t *testing.T) {
-	root := t.TempDir()
+	root := testutil.TempDir(t)
 	if HasSmaliFiles(root) {
 		t.Fatal("empty dir reports smali files")
 	}
@@ -56,7 +58,7 @@ func TestHasSmaliFilesAndFindDEXFiles(t *testing.T) {
 }
 
 func TestMaterializeSmaliTreeNoDEX(t *testing.T) {
-	n, err := MaterializeSmaliTree(t.Context(), nil, filepath.Join(t.TempDir(), "out"))
+	n, err := MaterializeSmaliTree(t.Context(), nil, filepath.Join(testutil.TempDir(t), "out"))
 	if err != nil || n != 0 {
 		t.Fatalf("empty input = (%d, %v), want (0, nil)", n, err)
 	}
@@ -89,7 +91,7 @@ func TestPlanMaterializeClassSkip(t *testing.T) {
 }
 
 func TestPruneSkippedSmali(t *testing.T) {
-	root := t.TempDir()
+	root := testutil.TempDir(t)
 	lib := filepath.Join(root, "com", "unity3d")
 	app := filepath.Join(root, "com", "kiloo")
 	if err := os.MkdirAll(lib, 0755); err != nil {

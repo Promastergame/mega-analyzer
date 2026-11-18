@@ -377,7 +377,7 @@ func TestSVGActiveContentDetection(t *testing.T) {
 		`<svg><script>evil()</script></svg>`,
 		`<svg><set attributeName="href" onbegin="x()"/></svg>`,
 		`<svg><foreignObject><body/></foreignObject></svg>`,
-		`<svg><animate attributeName="href"/></svg>`,
+		`<svg><animate attributeName="href" values="#ok;javascript:x()"/></svg>`,
 	}
 	for _, s := range active {
 		if !svgActiveContent("a.svg", []byte(s)) {

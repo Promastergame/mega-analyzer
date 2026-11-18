@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"mega-analyzer/pkg/internal/apkloader/axml"
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 const miniSandboxSmali = `.class public Lcom/example/Mini;
@@ -27,7 +28,7 @@ const miniSandboxSmali = `.class public Lcom/example/Mini;
 func writeMiniSandbox(t *testing.T) string {
 	t.Helper()
 
-	root := t.TempDir()
+	root := testutil.TempDir(t)
 	directories := []string{
 		"res/values",
 		"smali/com/example",

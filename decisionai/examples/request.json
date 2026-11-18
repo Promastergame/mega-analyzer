@@ -1,0 +1,51 @@
+{
+  "id": "local-limit-demo",
+  "scope": "test_fixture",
+  "code": ".method public static limit()I\n.registers 1\nconst/16 v0, 10\nreturn v0\n.end method",
+  "state": {
+    "tests": {
+      "passed": true
+    },
+    "local_only": true
+  },
+  "questions": [
+    {
+      "question": "Подтверждён ли локальный тест?",
+      "true_when": [
+        {
+          "field": "tests.passed",
+          "op": "eq",
+          "value": true
+        },
+        {
+          "field": "local_only",
+          "op": "eq",
+          "value": true
+        }
+      ],
+      "false_when": [
+        {
+          "field": "tests.passed",
+          "op": "eq",
+          "value": false
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "app_owned": true,
+    "library": false,
+    "server_dependency": false,
+    "evidence": []
+  },
+  "threshold": {
+    "finding": 0.65,
+    "patch": 0.85
+  },
+  "patch": {
+    "line": 3,
+    "expected": 10,
+    "replacement": 20,
+    "target": "локальный лимит элементов"
+  }
+}

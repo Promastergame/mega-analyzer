@@ -36,11 +36,6 @@ func (a *App) handleDecode() error {
 		Standalone: a.opts.Standalone, NoResources: a.opts.NoResources, NoSmali: a.opts.NoSmali,
 		Headers: a.opts.SmaliHeaders && !a.opts.NoSmaliHeaders, JavaView: a.opts.JavaView,
 		FrameworkDir: a.opts.FrameworkDir, CopyOriginal: a.opts.CopyOriginal, ClassCache: a.opts.ClassCache,
-		Baksmali: decompiler.BaksmaliOptions{
-			JarPath: a.opts.BaksmaliJar, APILevel: a.opts.SmaliAPI, Jobs: a.opts.SmaliJobs,
-			JavaHeapMB: a.opts.SmaliHeapMB, UseLocals: a.opts.BaksmaliUseLocals,
-			SequentialLabels: a.opts.BaksmaliSeqLabels, NoParameterRegisters: a.opts.BaksmaliNoParamRegs,
-		},
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
@@ -114,8 +109,8 @@ func (a *App) handleRebuild() error {
 	startTime := time.Now()
 
 	if !a.opts.AllowExternalTools || a.opts.Standalone || apkloader.Standalone() {
-		if a.opts.SmaliJar != "" || a.opts.BaksmaliJar != "" || a.opts.Aapt2Path != "" || a.opts.KsPath != "" {
-			return fmt.Errorf("native build does not run --smali-jar/--baksmali-jar/--aapt2/--ks; use --allow-external-tools explicitly for these compatibility options")
+		if a.opts.Aapt2Path != "" || a.opts.KsPath != "" {
+			return fmt.Errorf("native build does not run --aapt2/--ks; use --allow-external-tools explicitly for these compatibility options")
 		}
 		previousStandalone := apkloader.Standalone()
 		apkloader.SetStandalone(true)
@@ -146,12 +141,6 @@ func (a *App) handleRebuild() error {
 	// Wire in tool overrides from CLI
 	rebuilder.UseSmali = a.opts.UseSmali
 	rebuilder.UseAapt2 = a.opts.UseAapt2
-	if a.opts.SmaliJar != "" {
-		rebuilder.SmaliCfg.SmaliJar = a.opts.SmaliJar
-	}
-	if a.opts.BaksmaliJar != "" {
-		rebuilder.SmaliCfg.BaksmaliJar = a.opts.BaksmaliJar
-	}
 	if a.opts.Aapt2Path != "" {
 		rebuilder.Aapt2Cfg.Aapt2Path = a.opts.Aapt2Path
 	}
@@ -161,10 +150,6 @@ func (a *App) handleRebuild() error {
 	if a.opts.SmaliJobs > 0 {
 		rebuilder.SmaliCfg.Jobs = a.opts.SmaliJobs
 	}
-	if a.opts.SmaliHeapMB > 0 {
-		rebuilder.SmaliCfg.JavaHeapMB = a.opts.SmaliHeapMB
-	}
-	rebuilder.SmaliCfg.Verbose = a.opts.SmaliVerbose
 
 	// Log package meta if available
 	if meta := rebuilder.GetMeta(); meta != nil && meta.Package != "" {

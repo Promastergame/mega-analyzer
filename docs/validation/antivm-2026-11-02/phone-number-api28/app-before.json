@@ -1,0 +1,31 @@
+{
+  "capture_id": "3de50a7437294a2684a3d2c463817793",
+  "model": "Android SDK built for x86_64",
+  "brand": "Android",
+  "manufacturer": "unknown",
+  "device": "generic_x86_64",
+  "product": "sdk_phone_x86_64",
+  "hardware": "ranchu",
+  "board": "goldfish_x86_64",
+  "fingerprint": "Android\/sdk_phone_x86_64\/generic_x86_64:9\/PSR1.180720.012\/4923214:userdebug\/test-keys",
+  "build_id": "PSR1.180720.012",
+  "display_id": "sdk_phone_x86_64-userdebug 9 PSR1.180720.012 4923214 test-keys",
+  "security_patch": "2018-08-05",
+  "device_name": "Android SDK built for x86_64",
+  "build_type": "userdebug",
+  "build_tags": "test-keys",
+  "android_version": "9",
+  "api_level": 28,
+  "abis": [
+    "x86_64",
+    "x86"
+  ],
+  "qemu_pipe_present": true,
+  "goldfish_pipe_present": true,
+  "phone_number": "+12025550123",
+  "adb_enabled": 1,
+  "usb_state_available": false,
+  "usb_connected": null,
+  "usb_configured": null,
+  "usb_adb": null
+}

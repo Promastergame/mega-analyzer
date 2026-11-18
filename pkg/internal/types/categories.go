@@ -171,9 +171,10 @@ const (
 	CategoryAntiXposed    Category = "ANTI_XPOSED"
 
 	// ── Threat Rules ─────────────────────────────────────────────────────────
-	CategoryPermissionRule Category = "PERMISSION_RULE"
-	CategoryMalwareCombo   Category = "MALWARE_COMBO"
-	CategoryBankingThreat  Category = "BANKING_THREAT"
+	CategoryPermissionRule          Category = "PERMISSION_RULE"
+	CategoryMalwareCombo            Category = "MALWARE_COMBO"
+	CategoryBankingThreat           Category = "BANKING_THREAT"
+	CategoryAccessibilityCapability Category = "ACCESSIBILITY_CAPABILITY"
 
 	// ── Obfuscation ──────────────────────────────────────────────────────────
 	CategoryObfuscatedString Category = "OBFUSCATED_STRING"
@@ -190,6 +191,7 @@ const (
 	CategoryServerCheck     Category = "SERVER_CHECK"
 	CategoryNetworkCall     Category = "NETWORK_CALL"
 	CategoryNetworkEndpoint Category = "NETWORK_ENDPOINT"
+	CategoryDataFlow        Category = "DATAFLOW"
 	CategoryHardcodedIP     Category = "HARDCODED_IP"
 	CategorySuspiciousURL   Category = "SUSPICIOUS_URL"
 
@@ -225,28 +227,31 @@ const (
 	CategoryRootBypass    Category = "root_bypass"
 
 	// ── Vulnerability classes — new detectors (plan §3) ──────────────────────
-	CategoryWeakCrypto           Category = "weak_crypto"
-	CategoryHardcodedSecret      Category = "hardcoded_secret"
-	CategoryCleartextTraffic     Category = "cleartext_traffic"
-	CategoryInsecureTLS          Category = "insecure_tls"
-	CategoryExportedComponent    Category = "exported_component"
-	CategoryPendingIntentVuln    Category = "pending_intent_vuln"
-	CategoryDeepLinkVuln         Category = "deep_link_vuln"
-	CategoryJanusVuln            Category = "janus_vuln"
-	CategoryStrandHogg           Category = "strand_hogg"
-	CategoryZipSlip              Category = "zip_slip"
-	CategoryDlopenObfuscation    Category = "dlopen_obfuscation"
-	CategoryInsecureBackup       Category = "insecure_backup"
-	CategoryPrivilegedPermission Category = "privileged_permission"
-	CategoryWebViewFileAccess    Category = "webview_file_access"
-	CategoryWebViewJSBridge      Category = "webview_js_bridge"
-	CategoryResourceIntegrity    Category = "resource_integrity"
-	CategoryStagingEndpoint      Category = "staging_endpoint"
-	CategoryIl2cppMetadata       Category = "il2cpp_metadata"
-	CategoryWeakSaveIntegrity    Category = "weak_save_integrity"
-	CategoryDataPlaintextId      Category = "data_plaintext_id"
-	CategoryModMenuInjection     Category = "mod_menu_injection"
-	CategoryInsecureStorage      Category = "insecure_storage"
+	CategoryWeakCrypto            Category = "weak_crypto"
+	CategoryHardcodedSecret       Category = "hardcoded_secret"
+	CategoryCleartextTraffic      Category = "cleartext_traffic"
+	CategoryInsecureTLS           Category = "insecure_tls"
+	CategoryExportedComponent     Category = "exported_component"
+	CategoryPendingIntentVuln     Category = "pending_intent_vuln"
+	CategoryPendingIntentReview   Category = "pending_intent_review"
+	CategoryNamespaceObservation  Category = "namespace_observation"
+	CategoryVocabularyObservation Category = "vocabulary_observation"
+	CategoryDeepLinkVuln          Category = "deep_link_vuln"
+	CategoryJanusVuln             Category = "janus_vuln"
+	CategoryStrandHogg            Category = "strand_hogg"
+	CategoryZipSlip               Category = "zip_slip"
+	CategoryDlopenObfuscation     Category = "dlopen_obfuscation"
+	CategoryInsecureBackup        Category = "insecure_backup"
+	CategoryPrivilegedPermission  Category = "privileged_permission"
+	CategoryWebViewFileAccess     Category = "webview_file_access"
+	CategoryWebViewJSBridge       Category = "webview_js_bridge"
+	CategoryResourceIntegrity     Category = "resource_integrity"
+	CategoryStagingEndpoint       Category = "staging_endpoint"
+	CategoryIl2cppMetadata        Category = "il2cpp_metadata"
+	CategoryWeakSaveIntegrity     Category = "weak_save_integrity"
+	CategoryDataPlaintextId       Category = "data_plaintext_id"
+	CategoryModMenuInjection      Category = "mod_menu_injection"
+	CategoryInsecureStorage       Category = "insecure_storage"
 
 	// ── Low-noise informational categories ───────────────────────────────────
 	// MediaAnomaly: a resource file (image/audio) shows a single weak forensic
@@ -303,11 +308,14 @@ var categoryRegistry = map[Category]ci{
 	CategoryLicenseStorage:  {"License Storage", "License state persistence", GroupLicense, "💾", "orange", 7, true},
 	CategoryLicenseCallback: {"License Callback", "License check result handler", GroupLicense, "📞", "orange", 8, true},
 
-	// BILLING
-	CategoryBillingClient:   {"Billing Client", "Google Play Billing integration", GroupBilling, "💳", "red", 9, true},
-	CategoryPurchaseVerify:  {"Purchase Verify", "Purchase validation logic", GroupBilling, "✅", "red", 9, true},
-	CategoryPurchaseToken:   {"Purchase Token", "Purchase token handling", GroupBilling, "🎫", "orange", 8, true},
-	CategoryBillingCallback: {"Billing Callback", "Billing result handler", GroupBilling, "🔔", "orange", 8, true},
+	// BILLING — inventory. Shipping Google Play Billing (or verifying a
+	// purchase) is normal app behaviour, so these categories must not raise the
+	// risk matrix to CRITICAL/HIGH on their own. Actual billing abuse is a
+	// separate, behavioural finding.
+	CategoryBillingClient:   {"Billing Client", "Google Play Billing integration", GroupBilling, "💳", "gray", 9, false},
+	CategoryPurchaseVerify:  {"Purchase Verify", "Purchase validation logic", GroupBilling, "✅", "gray", 9, false},
+	CategoryPurchaseToken:   {"Purchase Token", "Purchase token handling", GroupBilling, "🎫", "gray", 8, false},
+	CategoryBillingCallback: {"Billing Callback", "Billing result handler", GroupBilling, "🔔", "gray", 8, false},
 	CategoryDonation:        {"Donation", "Donations / support payments", GroupBilling, "💝", "gray", 3, false},
 
 	// PREMIUM
@@ -359,28 +367,31 @@ var categoryRegistry = map[Category]ci{
 	CategoryFlurry:            {"Flurry", "Yahoo Flurry Analytics", GroupAnalytics, "❄️", "gray", 3, false},
 
 	// VULNERABILITY — new detector classes (plan §3)
-	CategoryWeakCrypto:           {"Weak Crypto", "Weak or insecure cryptographic algorithm/config (ECB, static IV, MD5 for hashing passwords)", GroupSecurity, "🔓", "orange", 8, true},
-	CategoryHardcodedSecret:      {"Hardcoded Secret", "API key, private key, or credential hardcoded in the APK", GroupSecurity, "🗝️", "red", 9, true},
-	CategoryCleartextTraffic:     {"Cleartext Traffic", "HTTP (non-TLS) endpoint or usesCleartextTraffic=true", GroupNetwork, "🌐", "orange", 7, true},
-	CategoryInsecureTLS:          {"Insecure TLS", "TrustManager/HostnameVerifier that accepts all certificates", GroupSecurity, "🔓", "red", 9, true},
-	CategoryExportedComponent:    {"Exported Component", "Activity/Service/Provider exported without android:permission", GroupSecurity, "📤", "orange", 8, true},
-	CategoryPendingIntentVuln:    {"Mutable PendingIntent", "PendingIntent created without FLAG_IMMUTABLE (API ≥ 23 intent-redirection)", GroupSecurity, "📬", "orange", 7, true},
-	CategoryDeepLinkVuln:         {"Deep Link Hijack", "Unvalidated deep-link / implicit intent that could be hijacked", GroupSecurity, "🔗", "orange", 7, true},
-	CategoryJanusVuln:            {"Janus Vuln", "APK likely signed with v1-only scheme (Janus bypass risk)", GroupSecurity, "⚠️", "red", 8, true},
-	CategoryStrandHogg:           {"StrandHogg", "taskAffinity + allowTaskReparenting pattern (task-hijacking risk)", GroupSecurity, "🪝", "orange", 8, true},
-	CategoryInsecureBackup:       {"Insecure Backup", "android:allowBackup=true — private app data extractable via adb backup (CWE-312/530)", GroupSecurity, "🔒", "yellow", 5, false},
-	CategoryPrivilegedPermission: {"Privileged Permission", "Declares a signature/privileged permission (e.g. DUMP) not grantable to normal apps", GroupSecurity, "🔑", "yellow", 4, false},
-	CategoryWebViewFileAccess:    {"WebView File Access", "WebView lets file:// pages read local files / any origin (CWE-200)", GroupSecurity, "🗂", "orange", 8, false},
-	CategoryWebViewJSBridge:      {"WebView JS Bridge", "addJavascriptInterface exposes a native bridge to loaded pages", GroupSecurity, "🌉", "orange", 7, false},
-	CategoryResourceIntegrity:    {"Resource Integrity", "Security-sensitive trust material shipped as a modifiable resource (repackaging enables MITM)", GroupSecurity, "🛡", "orange", 7, false},
-	CategoryStagingEndpoint:      {"Staging Endpoint", "Non-production (staging/pre-prod/UAT) endpoint shipped in a release build (CWE-200 info exposure / widened attack surface)", GroupNetwork, "🧪", "yellow", 6, false},
-	CategoryIl2cppMetadata:       {"Unencrypted IL2CPP Metadata", "IL2CPP global-metadata.dat shipped in cleartext (type/method/field names + string literals), enabling trivial reverse engineering, cheating and asset extraction", GroupSecurity, "🧩", "orange", 6, false},
-	CategoryWeakSaveIntegrity:    {"Weak Save-File Integrity", "Save file stored in plaintext or reversibly obfuscated with no integrity protection (CWE-311/312) - trivially tampered to cheat or manipulate progress", GroupSecurity, "💾", "orange", 8, false},
-	CategoryDataPlaintextId:      {"Plaintext Data Identifier", "Persistent device/user identifier stored in cleartext or analytics tracking enabled-by-default (privacy exposure, CWE-359)", GroupSecurity, "🕵️", "yellow", 4, false},
-	CategoryModMenuInjection:     {"Injected Mod-Menu / Hook", "Injected native mod-menu or inline-hooking engine (e.g. Substrate/Dobby, FloatingModMenuService) not present in the original app - hallmark of a repacked cheat/mod build and an embedded-code-injection risk (CWE-506)", GroupSecurity, "🎛️", "red", 10, true},
-	CategoryZipSlip:              {"Zip-Slip", "Zip entry extracted to a file path without traversal sanitization (../ path injection)", GroupSecurity, "🗜️", "red", 9, true},
-	CategoryDlopenObfuscation:    {"Obfuscated Native Load", "Native library name assembled via string concatenation before dlopen/System.loadLibrary", GroupObfuscation, "🧵", "orange", 7, true},
-	CategoryInsecureStorage:      {"Insecure Storage", "Data written to world-readable storage: MODE_WORLD_READABLE/WRITEABLE prefs or files on shared external storage (CWE-312/732)", GroupSecurity, "🗃️", "orange", 8, false},
+	CategoryWeakCrypto:            {"Weak Crypto", "Weak or insecure cryptographic algorithm/config (ECB, static IV, MD5 for hashing passwords)", GroupSecurity, "🔓", "orange", 8, true},
+	CategoryHardcodedSecret:       {"Hardcoded Secret", "API key, private key, or credential hardcoded in the APK", GroupSecurity, "🗝️", "red", 9, true},
+	CategoryCleartextTraffic:      {"Cleartext Traffic", "HTTP (non-TLS) endpoint or usesCleartextTraffic=true", GroupNetwork, "🌐", "orange", 7, true},
+	CategoryInsecureTLS:           {"Insecure TLS", "TrustManager/HostnameVerifier that accepts all certificates", GroupSecurity, "🔓", "red", 9, true},
+	CategoryExportedComponent:     {"Exported Component", "Activity/Service/Provider exported without android:permission", GroupSecurity, "📤", "orange", 8, true},
+	CategoryPendingIntentVuln:     {"Mutable PendingIntent surface", "Resolved mutable flags; risk depends on intent fields and who receives the token", GroupSecurity, "📬", "orange", 7, false},
+	CategoryPendingIntentReview:   {"PendingIntent flags unresolved", "Flags could not be resolved; manual review, no confirmed mutability or vulnerability", GroupTechnical, "📬", "gray", 3, false},
+	CategoryNamespaceObservation:  {"System-like internal namespace", "Internal class naming resembles system components; application identity and privileges are separate", GroupTechnical, "📦", "gray", 3, false},
+	CategoryVocabularyObservation: {"Unresolved vocabulary", "A word or resource name whose behavioral role is not established", GroupTechnical, "📝", "gray", 2, false},
+	CategoryDeepLinkVuln:          {"Deep Link Hijack", "Unvalidated deep-link / implicit intent that could be hijacked", GroupSecurity, "🔗", "orange", 7, true},
+	CategoryJanusVuln:             {"Janus Vuln", "APK likely signed with v1-only scheme (Janus bypass risk)", GroupSecurity, "⚠️", "red", 8, true},
+	CategoryStrandHogg:            {"StrandHogg", "taskAffinity + allowTaskReparenting pattern (task-hijacking risk)", GroupSecurity, "🪝", "orange", 8, true},
+	CategoryInsecureBackup:        {"Insecure Backup", "android:allowBackup=true — private app data extractable via adb backup (CWE-312/530)", GroupSecurity, "🔒", "yellow", 5, false},
+	CategoryPrivilegedPermission:  {"Privileged Permission", "Declares a signature/privileged permission (e.g. DUMP) not grantable to normal apps", GroupSecurity, "🔑", "yellow", 4, false},
+	CategoryWebViewFileAccess:     {"WebView File Access", "WebView lets file:// pages read local files / any origin (CWE-200)", GroupSecurity, "🗂", "orange", 8, false},
+	CategoryWebViewJSBridge:       {"WebView JS Bridge", "addJavascriptInterface exposes a native bridge to loaded pages", GroupSecurity, "🌉", "orange", 7, false},
+	CategoryResourceIntegrity:     {"Resource Integrity", "Security-sensitive trust material shipped as a modifiable resource (repackaging enables MITM)", GroupSecurity, "🛡", "orange", 7, false},
+	CategoryStagingEndpoint:       {"Staging Endpoint", "Non-production (staging/pre-prod/UAT) endpoint shipped in a release build (CWE-200 info exposure / widened attack surface)", GroupNetwork, "🧪", "yellow", 6, false},
+	CategoryIl2cppMetadata:        {"Unencrypted IL2CPP Metadata", "IL2CPP global-metadata.dat shipped in cleartext (type/method/field names + string literals), enabling trivial reverse engineering, cheating and asset extraction", GroupSecurity, "🧩", "orange", 6, false},
+	CategoryWeakSaveIntegrity:     {"Weak Save-File Integrity", "Save file stored in plaintext or reversibly obfuscated with no integrity protection (CWE-311/312) - trivially tampered to cheat or manipulate progress", GroupSecurity, "💾", "orange", 8, false},
+	CategoryDataPlaintextId:       {"Plaintext Data Identifier", "Persistent device/user identifier stored in cleartext or analytics tracking enabled-by-default (privacy exposure, CWE-359)", GroupSecurity, "🕵️", "yellow", 4, false},
+	CategoryModMenuInjection:      {"Injected Mod-Menu / Hook", "Injected native mod-menu or inline-hooking engine (e.g. Substrate/Dobby, FloatingModMenuService) not present in the original app - hallmark of a repacked cheat/mod build and an embedded-code-injection risk (CWE-506)", GroupSecurity, "🎛️", "red", 10, true},
+	CategoryZipSlip:               {"Zip-Slip", "Zip entry extracted to a file path without traversal sanitization (../ path injection)", GroupSecurity, "🗜️", "red", 9, true},
+	CategoryDlopenObfuscation:     {"Obfuscated Native Load", "Native library name assembled via string concatenation before dlopen/System.loadLibrary", GroupObfuscation, "🧵", "orange", 7, true},
+	CategoryInsecureStorage:       {"Insecure Storage", "Data written to world-readable storage: MODE_WORLD_READABLE/WRITEABLE prefs or files on shared external storage (CWE-312/732)", GroupSecurity, "🗃️", "orange", 8, false},
 
 	// CRASH REPORTING — legitimate observability, not privacy tracking (plan §1.3)
 	CategoryCrashlytics:    {"Crashlytics", "Firebase Crashlytics", GroupCrashReport, "💥", "gray", 2, false},
@@ -411,18 +422,22 @@ var categoryRegistry = map[Category]ci{
 	CategoryAntiXposed:    {"Anti-Xposed", "Xposed framework detection", GroupSecurity, "⚔️", "red", 9, true},
 
 	// THREAT RULES
-	CategoryPermissionRule: {"Permission Risk", "Rule-based permission risk detection", GroupThreatRules, "⚠️", "orange", 8, true},
-	CategoryMalwareCombo:   {"Malware Combo", "Rule-based malware combination detection", GroupThreatRules, "☣️", "red", 9, true},
-	CategoryBankingThreat:  {"Banking Threat", "Rule-based banking threat detection", GroupThreatRules, "💳", "red", 9, true},
+	CategoryPermissionRule:          {"Permission Risk", "Rule-based permission risk detection", GroupThreatRules, "⚠️", "orange", 8, true},
+	CategoryMalwareCombo:            {"Malware Combo", "Rule-based malware combination detection", GroupThreatRules, "☣️", "red", 9, true},
+	CategoryBankingThreat:           {"Banking Threat", "Rule-based banking threat detection", GroupThreatRules, "💳", "red", 9, true},
+	CategoryAccessibilityCapability: {"Accessibility Capability", "Declared or referenced accessibility, screen capture and input capabilities; not proof of abuse", GroupThreatRules, "♿", "blue", 2, false},
 
 	// OBFUSCATION
 	CategoryObfuscatedString: {"Obfuscated String", "String obfuscation detected", GroupObfuscation, "🔤", "blue", 5, false},
-	CategoryObfuscatedCode:   {"Obfuscated Code", "Obfuscated/encoded payload indicators (e.g., Base64 decode)", GroupObfuscation, "🧩", "orange", 7, true},
-	CategoryEncryptedData:    {"Encrypted Data", "Encrypted data storage", GroupObfuscation, "🔐", "blue", 6, false},
-	CategoryDynamicLoad:      {"Dynamic Load", "Dynamic class/code loading", GroupObfuscation, "⚡", "orange", 7, true},
-	CategoryDexNetworkLoad:   {"DEX From Network", "DEX download + dynamic loading indicators", GroupObfuscation, "⚡", "red", 9, true},
-	CategoryPacker:           {"Packer", "Application packer/protector signature", GroupObfuscation, "📦", "red", 9, true},
-	CategoryObfuscator:       {"Obfuscator", "Code obfuscator signature", GroupObfuscation, "🔤", "yellow", 5, false},
+	// Obfuscation alone is not malicious: R8/ProGuard output and XOR-masked
+	// public keys look identical to a "payload". Actual code execution is
+	// covered by CategoryDynamicLoad / CategoryDexNetworkLoad.
+	CategoryObfuscatedCode: {"Obfuscated Code", "Obfuscated/encoded payload indicators (e.g., Base64 decode)", GroupObfuscation, "🧩", "orange", 7, false},
+	CategoryEncryptedData:  {"Encrypted Data", "Encrypted data storage", GroupObfuscation, "🔐", "blue", 6, false},
+	CategoryDynamicLoad:    {"Dynamic Load", "Dynamic class/code loading", GroupObfuscation, "⚡", "orange", 7, true},
+	CategoryDexNetworkLoad: {"DEX From Network", "DEX download + dynamic loading indicators", GroupObfuscation, "⚡", "red", 9, true},
+	CategoryPacker:         {"Packer", "Application packer/protector signature", GroupObfuscation, "📦", "red", 9, true},
+	CategoryObfuscator:     {"Obfuscator", "Code obfuscator signature", GroupObfuscation, "🔤", "yellow", 5, false},
 
 	// NETWORK
 	CategoryNetwork:         {"Network", "Network operations / connectivity signals", GroupNetwork, "🌐", "gray", 4, false},
@@ -430,7 +445,8 @@ var categoryRegistry = map[Category]ci{
 	CategoryServerCheck:     {"Server Check", "Server-side validation call", GroupNetwork, "🌐", "orange", 7, true},
 	CategoryNetworkCall:     {"Network Call", "HTTP/network request", GroupNetwork, "📡", "gray", 4, false},
 	CategoryNetworkEndpoint: {"Network Endpoint", "Hardcoded URL/endpoint (potential server)", GroupNetwork, "🔗", "yellow", 6, false},
-	CategoryHardcodedIP:     {"Hardcoded IP", "Hardcoded IPv4 address (potential endpoint/C2)", GroupNetwork, "📍", "orange", 8, true},
+	CategoryDataFlow:        {"Data-flow Finding", "Static data-flow path retained by the summary engine; reachability requires verification", GroupSecurity, "🔀", "yellow", 7, false},
+	CategoryHardcodedIP:     {"IP address reference", "Static numeric address; role and maliciousness require separate evidence", GroupNetwork, "📍", "gray", 4, false},
 	CategorySuspiciousURL:   {"Suspicious URL", "Suspicious URL/C2 indicator (TLD/webhook/etc.)", GroupNetwork, "🕸️", "red", 9, true},
 
 	// MANIFEST & CUSTOM

@@ -1,11 +1,16 @@
 package gnn
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"math"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 // ExpectedFeatureDim is the per-node feature width the Go graph builder
@@ -28,8 +33,10 @@ type layerCfgJSON struct {
 
 // layerWeightsJSON is one entry of the weight file's parameter store.
 type layerWeightsJSON struct {
-	Weights []float64 `json:"weights"`
-	Bias    []float64 `json:"bias"`
+	Weights   []float64 `json:"weights"`
+	Bias      []float64 `json:"bias"`
+	NormGamma []float64 `json:"norm_gamma"`
+	NormBeta  []float64 `json:"norm_beta"`
 }
 
 // weightFile is the subset of the Rust `WeightStore` JSON that the Go side
@@ -40,6 +47,7 @@ type weightFile struct {
 	Config        struct {
 		Layers     []layerCfgJSON `json:"layers"`
 		NumClasses int            `json:"num_classes"`
+		Readout    string         `json:"readout"`
 	} `json:"config"`
 	LayerData         []layerWeightsJSON `json:"layer_data"`
 	ClassifierWeights []float64          `json:"classifier_weights"`
@@ -59,6 +67,7 @@ type weightFile struct {
 // provenance. The calibration fields are surfaced so runners can report
 // whether the model carries calibration metadata without a second read.
 type ModelMetadata struct {
+	SHA256               string
 	TrainerVersion       string
 	ClassNames           []string
 	FeatureSchemaVersion int
@@ -85,9 +94,22 @@ func ValidateModelFile(path string) (*ModelMetadata, error) {
 	if path == "" || path == "__dummy__" {
 		return nil, errors.New("gnn validate: no weight file to validate (dummy model requested)")
 	}
-	data, err := os.ReadFile(path)
+	if strings.EqualFold(filepath.Ext(path), ".gnnbuf") {
+		return nil, errors.New("gnn validate: compact .gnnbuf is not supported by the Go validation contract; export gnn_weights.json")
+	}
+	f, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("gnn validate: read weight file: %w", err)
+	}
+	defer f.Close()
+	const maxWeightBytes = 64 << 20
+	info, err := f.Stat()
+	if err != nil || !info.Mode().IsRegular() || info.Size() > maxWeightBytes {
+		return nil, errors.New("gnn validate: weights must be a regular file of at most 64 MiB")
+	}
+	data, err := io.ReadAll(io.LimitReader(f, maxWeightBytes+1))
+	if err != nil || len(data) > maxWeightBytes {
+		return nil, errors.New("gnn validate: weight file exceeds read budget")
 	}
 	var wf weightFile
 	if err := json.Unmarshal(data, &wf); err != nil {
@@ -106,8 +128,24 @@ func ValidateModelFile(path string) (*ModelMetadata, error) {
 	if wf.Config.NumClasses != NumVulnClasses {
 		return nil, fmt.Errorf("gnn validate: model declares %d classes, runtime maps %d", wf.Config.NumClasses, NumVulnClasses)
 	}
-	if len(wf.ClassifierWeights) != NumVulnClasses || len(wf.ClassifierBias) != NumVulnClasses {
-		return nil, fmt.Errorf("gnn validate: classifier shape mismatch: weights=%d bias=%d, want %d each", len(wf.ClassifierWeights), len(wf.ClassifierBias), NumVulnClasses)
+	// The native head is a class-by-embedding matrix. MeanMax concatenates
+	// the mean and maximum embeddings, doubling the final layer's width.
+	readoutMultiplier := 1
+	switch wf.Config.Readout {
+	case "", "mean", "max":
+	case "meanmax":
+		readoutMultiplier = 2
+	default:
+		return nil, fmt.Errorf("gnn validate: unsupported readout %q", wf.Config.Readout)
+	}
+	lastWidth := wf.Config.Layers[len(wf.Config.Layers)-1].FeaturesOut
+	maxInt := int(^uint(0) >> 1)
+	if lastWidth <= 0 || lastWidth > maxInt/(readoutMultiplier*NumVulnClasses) {
+		return nil, fmt.Errorf("gnn validate: invalid final layer width %d", lastWidth)
+	}
+	classifierSize := lastWidth * readoutMultiplier * NumVulnClasses
+	if len(wf.ClassifierWeights) != classifierSize || len(wf.ClassifierBias) != NumVulnClasses {
+		return nil, fmt.Errorf("gnn validate: classifier shape mismatch: weights=%d bias=%d, want %d weights and %d biases", len(wf.ClassifierWeights), len(wf.ClassifierBias), classifierSize, NumVulnClasses)
 	}
 
 	// Taxonomy: the class index order is an ABI contract between the Rust
@@ -131,6 +169,12 @@ func ValidateModelFile(path string) (*ModelMetadata, error) {
 	}
 
 	for i, layer := range wf.Config.Layers {
+		if layer.FeaturesIn <= 0 || layer.FeaturesOut <= 0 || layer.FeaturesIn > maxInt/layer.FeaturesOut {
+			return nil, fmt.Errorf("gnn validate: layer %d has invalid or overflowing dimensions", i)
+		}
+		if i > 0 && layer.FeaturesIn != wf.Config.Layers[i-1].FeaturesOut {
+			return nil, fmt.Errorf("gnn validate: layer %d input differs from previous output", i)
+		}
 		if i >= len(wf.LayerData) {
 			return nil, fmt.Errorf("gnn validate: layer %d has no weight data", i)
 		}
@@ -142,14 +186,33 @@ func ValidateModelFile(path string) (*ModelMetadata, error) {
 		if len(lw.Bias) != layer.FeaturesOut {
 			return nil, fmt.Errorf("gnn validate: layer %d has %d bias values, architecture declares %d", i, len(lw.Bias), layer.FeaturesOut)
 		}
-		for _, v := range lw.Weights {
-			if math.IsNaN(v) || math.IsInf(v, 0) {
-				return nil, fmt.Errorf("gnn validate: layer %d contains non-finite weights", i)
+		if (lw.NormGamma == nil) != (lw.NormBeta == nil) ||
+			(lw.NormGamma != nil && (len(lw.NormGamma) != layer.FeaturesOut || len(lw.NormBeta) != layer.FeaturesOut)) {
+			return nil, fmt.Errorf("gnn validate: layer %d has invalid normalization vectors", i)
+		}
+		for _, values := range [][]float64{lw.Weights, lw.Bias, lw.NormGamma, lw.NormBeta} {
+			if !finiteNativeWeights(values) {
+				return nil, fmt.Errorf("gnn validate: layer %d contains non-finite or out-of-range parameters", i)
 			}
 		}
 	}
+	if !finiteNativeWeights(wf.ClassifierWeights) || !finiteNativeWeights(wf.ClassifierBias) {
+		return nil, errors.New("gnn validate: classifier contains non-finite or out-of-range parameters")
+	}
+	if math.IsNaN(wf.Metadata.ValAccuracy) || math.IsInf(wf.Metadata.ValAccuracy, 0) || wf.Metadata.ValAccuracy < 0 || wf.Metadata.ValAccuracy > 1 {
+		return nil, errors.New("gnn validate: validation accuracy must be in 0..1")
+	}
+	for _, value := range []*float64{wf.Metadata.ConformalQ90, wf.Metadata.OODThreshold} {
+		if value != nil && (math.IsNaN(*value) || math.IsInf(*value, 0) || *value < 0 || *value > 1) {
+			if value == wf.Metadata.ConformalQ90 || math.IsNaN(*value) || math.IsInf(*value, 0) || *value < 0 {
+				return nil, errors.New("gnn validate: invalid calibration metadata")
+			}
+		}
+	}
+	digest := sha256.Sum256(data)
 
 	meta := &ModelMetadata{
+		SHA256:               hex.EncodeToString(digest[:]),
 		TrainerVersion:       wf.Metadata.Version,
 		ClassNames:           append([]string(nil), wf.Metadata.ClassNames...),
 		FeatureSchemaVersion: wf.Metadata.FeatureSchemaVersion,
@@ -164,4 +227,13 @@ func ValidateModelFile(path string) (*ModelMetadata, error) {
 		meta.OODThreshold = *wf.Metadata.OODThreshold
 	}
 	return meta, nil
+}
+
+func finiteNativeWeights(values []float64) bool {
+	for _, v := range values {
+		if math.IsNaN(v) || math.IsInf(v, 0) || math.Abs(v) > math.MaxFloat32 {
+			return false
+		}
+	}
+	return true
 }

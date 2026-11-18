@@ -1,0 +1,13 @@
+{
+  "server": {"command":"bin/game-mcp.exe"},
+  "game":"maze",
+  "observation_mode":"structured",
+  "max_steps":16,
+  "observe":{"name":"observe","arguments":{}},
+  "actions":{
+    "up":{"name":"move","arguments":{"direction":"up"}},
+    "right":{"name":"move","arguments":{"direction":"right"}},
+    "down":{"name":"move","arguments":{"direction":"down"}},
+    "left":{"name":"move","arguments":{"direction":"left"}}
+  }
+}

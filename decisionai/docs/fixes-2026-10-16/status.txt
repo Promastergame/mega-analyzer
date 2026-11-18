@@ -1,0 +1,1 @@
+go_test=0 vet=0 race=0 native_release=0 windows_cross_compile=0

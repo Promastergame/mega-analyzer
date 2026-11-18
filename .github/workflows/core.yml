@@ -25,6 +25,8 @@ jobs:
           node scripts/test-workspace-ui.cjs
           node scripts/test-scan-ui.cjs
           node scripts/test-vmware-ui.cjs
+          node scripts/test-android-screen.cjs
+          node scripts/test-vmware-screen.cjs
 
   public-source:
     name: Build the public source export

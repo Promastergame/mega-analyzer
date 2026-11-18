@@ -2,6 +2,7 @@ package types
 
 import (
 	"mega-analyzer/pkg/internal/cfg"
+	"mega-analyzer/pkg/internal/finding"
 	"mega-analyzer/pkg/media"
 )
 
@@ -14,21 +15,23 @@ type Match struct {
 	SourceLocation
 	Categorized
 	Scored
-	Text                 string            `json:"text"`
-	Pattern              string            `json:"pattern"`
-	Context              string            `json:"context,omitempty"`
-	ResolvedContext      string            `json:"resolved_context,omitempty"`
-	Strings              []string          `json:"strings,omitempty"`
-	Metadata             map[string]string `json:"metadata,omitempty"`
-	MethodName           string            `json:"method_name,omitempty"`
-	ClassName            string            `json:"class_name,omitempty"`
-	IsCritical           bool              `json:"is_critical,omitempty"`
-	Severity             Severity          `json:"severity,omitempty"`
-	EvidenceType         string            `json:"evidence_type,omitempty"`
-	Confidence           string            `json:"confidence,omitempty"`
-	ReasonForSeverity    string            `json:"reason_for_severity,omitempty"`
-	FalsePositiveHints   string            `json:"false_positive_hints,omitempty"`
-	RequiredNextEvidence string            `json:"required_next_evidence,omitempty"`
+	Text                 string               `json:"text"`
+	Pattern              string               `json:"pattern"`
+	Context              string               `json:"context,omitempty"`
+	ResolvedContext      string               `json:"resolved_context,omitempty"`
+	Strings              []string             `json:"strings,omitempty"`
+	Metadata             map[string]string    `json:"metadata,omitempty"`
+	MethodName           string               `json:"method_name,omitempty"`
+	ClassName            string               `json:"class_name,omitempty"`
+	IsCritical           bool                 `json:"is_critical,omitempty"`
+	Severity             Severity             `json:"severity,omitempty"`
+	EvidenceType         string               `json:"evidence_type,omitempty"`
+	Confidence           string               `json:"confidence,omitempty"`
+	ReasonForSeverity    string               `json:"reason_for_severity,omitempty"`
+	FalsePositiveHints   string               `json:"false_positive_hints,omitempty"`
+	RequiredNextEvidence string               `json:"required_next_evidence,omitempty"`
+	Evidence             []finding.Evidence   `json:"evidence,omitempty"`
+	Explanation          *finding.Explanation `json:"explanation,omitempty"`
 }
 
 func (m Match) TotalImportance() int {
@@ -61,6 +64,7 @@ type FileAnalysis struct {
 	SmaliClass      *SmaliClass           `json:"smali_class,omitempty"`
 	XMLData         *XMLAnalysis          `json:"xml_data,omitempty"`
 	IsAppCode       bool                  `json:"is_app_code,omitempty"`
+	IsLibrary       bool                  `json:"is_library,omitempty"`
 	Importance      int                   `json:"importance,omitempty"`
 	CFG             *cfg.ControlFlowGraph `json:"cfg,omitempty"`
 	// MethodCFGs caches immutable per-method graphs in the same order as
@@ -197,11 +201,15 @@ func (f *FileAnalysis) DeepCopy() *FileAnalysis {
 
 // XMLAnalysis — результат анализа XML.
 type XMLAnalysis struct {
-	Permissions []string          `json:"permissions,omitempty"`
-	Activities  []string          `json:"activities,omitempty"`
-	Services    []string          `json:"services,omitempty"`
-	Receivers   []string          `json:"receivers,omitempty"`
-	Providers   []string          `json:"providers,omitempty"`
-	MetaData    map[string]string `json:"meta_data,omitempty"`
-	Suspicious  []string          `json:"suspicious,omitempty"`
+	// Retained manifest text is internal source context, not a new detector.
+	// Whole snapshots are bounded and hashed before optional AI review.
+	ManifestSource          string            `json:"-"`
+	ManifestSourceTruncated bool              `json:"-"`
+	Permissions             []string          `json:"permissions,omitempty"`
+	Activities              []string          `json:"activities,omitempty"`
+	Services                []string          `json:"services,omitempty"`
+	Receivers               []string          `json:"receivers,omitempty"`
+	Providers               []string          `json:"providers,omitempty"`
+	MetaData                map[string]string `json:"meta_data,omitempty"`
+	Suspicious              []string          `json:"suspicious,omitempty"`
 }

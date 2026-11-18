@@ -86,6 +86,12 @@ func (d *SemanticMethodDetector) Detect(ctx *FileDetectContext, analysis *types.
 func (d *SemanticMethodDetector) detectAccessMethods(ctx *FileDetectContext, analysis *types.FileAnalysis) {
 	for _, sp := range d.accessPatterns {
 		if idx := bytes.Index(ctx.ContentLower, sp.patternLow); idx >= 0 {
+			if sp.pattern == "hasaccess" || sp.pattern == "canaccess" {
+				window := getSurrounding(ctx.ContentLower, idx, billingEvidenceWindow)
+				if !hasBillingMachinery(window) && !bytes.Contains(window, []byte("premium")) && !bytes.Contains(window, []byte("entitlement")) {
+					continue
+				}
+			}
 			// Android accessibility APIs (hasAccessibility*, AccessibilityService,
 			// Daltonizer, etc.) contain "hasaccess"/"access..." as substrings but
 			// are OS accessibility probes — never premium/entitlement gates.

@@ -405,7 +405,7 @@ type asmMethodOut struct {
 	paramListOff uint32
 }
 
-// nativeUnsupportedError marks constructs needing smali.jar fallback.
+// nativeUnsupportedError identifies constructs the native writer cannot represent.
 type nativeUnsupportedError struct{ msg string }
 
 func (e *nativeUnsupportedError) Error() string { return e.msg }

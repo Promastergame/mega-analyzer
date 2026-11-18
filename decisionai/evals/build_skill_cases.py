@@ -1,0 +1,98 @@
+"""Builds evals/skill-routing.jsonl: queries -> acceptable skills ("other" = no skill fits)."""
+import json
+F, A, C, T, B = "frontend-design", "artifact-design", "canvas-design", "theme-factory", "brand-guidelines"
+cases = [
+ # дизайн
+ ("design", "найди скилл для ИИ который делает дизайн лучше", [F, A]),
+ ("design", "найди скил чтобы ИИ лучше делал дизайн", [F, A]),
+ ("design", "хочу чтобы сайт выглядел красиво а не как типичный ИИ шаблон", [F]),
+ ("design", "сделай лендинг стильным, поправь шрифты и отступы", [F]),
+ ("design", "make my react dashboard look less generic", [F]),
+ ("design", "improve the UI design of this web page", [F]),
+ ("design", "красивый интерфейс для веб-приложения", [F]),
+ ("design", "нужен постер для мероприятия", [C, A]),
+ ("design", "сделай красивый one-pager отчёт в html", [A]),
+ ("design", "применить цвета и логотип нашей компании к презентации", [B]),
+ ("design", "оформи документ в фирменном стиле", [B]),
+ ("design", "подбери тему оформления со шрифтами и палитрой для слайдов", [T]),
+ ("design", "apply a preset color theme to my report", [T]),
+ ("design", "дизайн плохой, переделай вёрстку", [F]),
+ ("design", "ui выглядит убого", [F]),
+ ("design", "какой скилл отвечает за дизайн?", [F, A]),
+ # офис
+ ("office", "сделай презентацию на 10 слайдов про продажи", ["pptx"]),
+ ("office", "нужно открыть pptx и поменять текст на втором слайде", ["pptx"]),
+ ("office", "make a slide deck for the board meeting", ["pptx"]),
+ ("office", "отредактируй ворд документ, включи режим правок", ["docx"]),
+ ("office", "create a word document with a table of contents", ["docx"]),
+ ("office", "посчитай формулы в экселе и сделай сводную таблицу", ["xlsx"]),
+ ("office", "open this csv and add a pivot table", ["xlsx"]),
+ ("office", "вытащи таблицы из пдф", ["pdf"]),
+ ("office", "merge these two PDFs and fill the form", ["pdf"]),
+ ("office", "распознай текст со сканов pdf", ["pdf"]),
+ # тексты
+ ("writing", "текст звучит как будто его написал чатгпт, сделай по-человечески", ["humanizer"]),
+ ("writing", "убери следы ИИ из статьи", ["humanizer"]),
+ ("writing", "make this essay sound less robotic", ["humanizer"]),
+ ("writing", "переведи письмо на английский", ["translator"]),
+ ("writing", "translate the docs to German keeping terminology", ["translator"]),
+ ("writing", "напиши ответ клиенту на почту, вежливо", ["email-writer"]),
+ ("writing", "draft a cold outreach email", ["email-writer"]),
+ ("writing", "сделай выжимку встречи: решения и задачи", ["meeting-notes"]),
+ ("writing", "summarize this call transcript into action items", ["meeting-notes"]),
+ ("writing", "напиши апдейт для руководства о статусе проекта", ["internal-comms"]),
+ ("writing", "помоги написать техническую спецификацию", ["doc-coauthoring"]),
+ ("writing", "улучши мой системный промпт для бота", ["prompt-engineering"]),
+ ("writing", "how do I write better prompts for GPT", ["prompt-engineering"]),
+ # код
+ ("code", "тест падает, не понимаю почему", ["systematic-debugging"]),
+ ("code", "there's a weird bug in production, help me find the root cause", ["systematic-debugging"]),
+ ("code", "сначала напиши тест, потом код", ["test-driven-development"]),
+ ("code", "посмотри мой пулл реквест", ["code-review"]),
+ ("code", "review this diff for security issues and style", ["code-review", "security-audit"]),
+ ("code", "напиши нормальное сообщение коммита", ["git-commit"]),
+ ("code", "резолвни конфликт при мердже", ["git-commit"]),
+ ("code", "оптимизируй медленный sql запрос", ["sql-expert"]),
+ ("code", "which index should I add to this postgres table", ["sql-expert"]),
+ ("code", "проверь код на уязвимости и утечки ключей", ["security-audit"]),
+ ("code", "засунь приложение в докер и задеплой", ["docker-deploy"]),
+ ("code", "write a Dockerfile and docker-compose for my api", ["docker-deploy"]),
+ ("code", "хочу сделать mcp сервер для своего api", ["mcp-builder"]),
+ ("code", "декомпилируй apk и найди где лимит монет", ["apk-reverse"]),
+ ("code", "пропатчить smali и пересобрать apk", ["apk-reverse"]),
+ # веб
+ ("web", "открой сайт и нажми кнопку войти", ["agent-browser"]),
+ ("web", "заполни форму на сайте за меня", ["agent-browser"]),
+ ("web", "scrape the prices from this website", ["agent-browser"]),
+ ("web", "найди в интернете свежие новости про nvidia", ["web-search"]),
+ ("web", "погугли кто сейчас CEO OpenAI", ["web-search"]),
+ ("web", "протестируй мое веб-приложение через playwright", ["webapp-testing"]),
+ # данные
+ ("data", "проанализируй продажи по месяцам и найди тренды", ["data-analysis"]),
+ ("data", "why did churn go up last quarter? here is the data", ["data-analysis"]),
+ ("data", "построй график выручки", ["inline-charts"]),
+ ("data", "plot a bar chart of these numbers", ["inline-charts"]),
+ # медиа
+ ("media", "нарисуй картинку кота в космосе", ["image-generation"]),
+ ("media", "generate a logo for my startup", ["image-generation"]),
+ ("media", "сделай гифку для слака", ["slack-gif-creator"]),
+ ("media", "генеративное искусство на p5js", ["algorithmic-art"]),
+ ("media", "смонтируй видео с субтитрами на remotion", ["video-remotion"]),
+ ("media", "сделай анимированный ролик программно", ["video-remotion"]),
+ # мета
+ ("meta", "хочу создать новый скилл", ["skill-creator"]),
+ ("meta", "мой скилл не срабатывает, улучши описание", ["skill-creator"]),
+ # ничего не подходит
+ ("other", "какая погода завтра в Омске", ["other"]),
+ ("other", "расскажи анекдот", ["other"]),
+ ("other", "сколько будет 2+2", ["other"]),
+ ("other", "привет, как дела?", ["other"]),
+ ("other", "закажи пиццу домой", ["other"]),
+ ("other", "what's the capital of France", ["other"]),
+ ("other", "напомни мне позвонить маме в 18:00", ["other"]),
+ ("other", "посоветуй фильм на вечер", ["other"]),
+]
+with open("skill-routing.jsonl", "w", encoding="utf-8") as f:
+    for g, q, acc in cases:
+        f.write(json.dumps({"group": g, "state": q, "accept": acc}, ensure_ascii=False) + "\n")
+print(len(cases))

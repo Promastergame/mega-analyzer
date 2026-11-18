@@ -1,0 +1,423 @@
+{
+  "before": "F:\\PROJECTS\\mega-analyzer\\.tmp\\android-lab\\identity-20261102-111216-028\\sessions\\2026-11-02T111220-PromasterPhone-1---API-28-x86_64-AVD\\before.json",
+  "after": "F:\\PROJECTS\\mega-analyzer\\.tmp\\android-lab\\identity-20261102-111216-028\\sessions\\2026-11-02T111220-PromasterPhone-1---API-28-x86_64-AVD\\after.json",
+  "diff": {
+    "added": [
+      {
+        "path": "props.ro.boot.qemu",
+        "value": "0"
+      },
+      {
+        "path": "props.ro.hardware.camera",
+        "value": "ranchu"
+      },
+      {
+        "path": "props.ro.hardware.fingerprint",
+        "value": "ranchu"
+      },
+      {
+        "path": "props.ro.hardware.gatekeeper",
+        "value": "ranchu"
+      },
+      {
+        "path": "props.ro.hardware.gps",
+        "value": "ranchu"
+      },
+      {
+        "path": "props.ro.hardware.gralloc",
+        "value": "ranchu"
+      },
+      {
+        "path": "props.ro.hardware.hwcomposer",
+        "value": "ranchu"
+      },
+      {
+        "path": "props.ro.hardware.power",
+        "value": "ranchu"
+      },
+      {
+        "path": "props.ro.hardware.sensors",
+        "value": "ranchu"
+      },
+      {
+        "path": "props.ro.odm.build.fingerprint",
+        "value": "promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys"
+      },
+      {
+        "path": "props.ro.product.build.fingerprint",
+        "value": "promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys"
+      },
+      {
+        "path": "props.ro.product.odm.brand",
+        "value": "promaster"
+      },
+      {
+        "path": "props.ro.product.odm.device",
+        "value": "promasterphone1"
+      },
+      {
+        "path": "props.ro.product.odm.manufacturer",
+        "value": "Promaster"
+      },
+      {
+        "path": "props.ro.product.odm.model",
+        "value": "PromasterPhone 1"
+      },
+      {
+        "path": "props.ro.product.odm.name",
+        "value": "promasterphone1"
+      },
+      {
+        "path": "props.ro.product.product.brand",
+        "value": "promaster"
+      },
+      {
+        "path": "props.ro.product.product.device",
+        "value": "promasterphone1"
+      },
+      {
+        "path": "props.ro.product.product.manufacturer",
+        "value": "Promaster"
+      },
+      {
+        "path": "props.ro.product.product.model",
+        "value": "PromasterPhone 1"
+      },
+      {
+        "path": "props.ro.product.product.name",
+        "value": "promasterphone1"
+      },
+      {
+        "path": "props.ro.product.system.brand",
+        "value": "promaster"
+      },
+      {
+        "path": "props.ro.product.system.device",
+        "value": "promasterphone1"
+      },
+      {
+        "path": "props.ro.product.system.manufacturer",
+        "value": "Promaster"
+      },
+      {
+        "path": "props.ro.product.system.model",
+        "value": "PromasterPhone 1"
+      },
+      {
+        "path": "props.ro.product.system.name",
+        "value": "promasterphone1"
+      },
+      {
+        "path": "props.ro.product.system_ext.brand",
+        "value": "promaster"
+      },
+      {
+        "path": "props.ro.product.system_ext.device",
+        "value": "promasterphone1"
+      },
+      {
+        "path": "props.ro.product.system_ext.manufacturer",
+        "value": "Promaster"
+      },
+      {
+        "path": "props.ro.product.system_ext.model",
+        "value": "PromasterPhone 1"
+      },
+      {
+        "path": "props.ro.product.system_ext.name",
+        "value": "promasterphone1"
+      },
+      {
+        "path": "props.ro.system.build.fingerprint",
+        "value": "promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys"
+      },
+      {
+        "path": "props.ro.system_ext.build.fingerprint",
+        "value": "promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys"
+      }
+    ],
+    "removed": null,
+    "changed": [
+      {
+        "path": "battery.level",
+        "before": "100",
+        "after": "71"
+      },
+      {
+        "path": "battery.plugged",
+        "before": "ac",
+        "after": "none"
+      },
+      {
+        "path": "battery.status",
+        "before": "charging",
+        "after": "discharging"
+      },
+      {
+        "path": "battery.temperature",
+        "before": "0",
+        "after": "315"
+      },
+      {
+        "path": "props.persist.sys.timezone",
+        "before": "GMT",
+        "after": "America/New_York"
+      },
+      {
+        "path": "props.ro.bootimage.build.fingerprint",
+        "before": "Android/sdk_phone_x86_64/generic_x86_64:9/PSR1.180720.012/4923214:userdebug/test-keys",
+        "after": "promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys"
+      },
+      {
+        "path": "props.ro.build.description",
+        "before": "sdk_phone_x86_64-userdebug 9 PSR1.180720.012 4923214 test-keys",
+        "after": "promasterphone1-user 9 PQ3A.190801.101 release-keys"
+      },
+      {
+        "path": "props.ro.build.display.id",
+        "before": "sdk_phone_x86_64-userdebug 9 PSR1.180720.012 4923214 test-keys",
+        "after": "PQ3A.190801.101"
+      },
+      {
+        "path": "props.ro.build.fingerprint",
+        "before": "Android/sdk_phone_x86_64/generic_x86_64:9/PSR1.180720.012/4923214:userdebug/test-keys",
+        "after": "promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys"
+      },
+      {
+        "path": "props.ro.build.id",
+        "before": "PSR1.180720.012",
+        "after": "PQ3A.190801.101"
+      },
+      {
+        "path": "props.ro.build.product",
+        "before": "generic_x86_64",
+        "after": "promasterphone1"
+      },
+      {
+        "path": "props.ro.build.tags",
+        "before": "test-keys",
+        "after": "release-keys"
+      },
+      {
+        "path": "props.ro.build.type",
+        "before": "userdebug",
+        "after": "user"
+      },
+      {
+        "path": "props.ro.build.version.security_patch",
+        "before": "2018-08-05",
+        "after": "2019-08-01"
+      },
+      {
+        "path": "props.ro.debuggable",
+        "before": "1",
+        "after": "0"
+      },
+      {
+        "path": "props.ro.hardware",
+        "before": "ranchu",
+        "after": "qcom"
+      },
+      {
+        "path": "props.ro.kernel.qemu",
+        "before": "1",
+        "after": "0"
+      },
+      {
+        "path": "props.ro.product.board",
+        "before": "goldfish_x86_64",
+        "after": "sdm845"
+      },
+      {
+        "path": "props.ro.product.brand",
+        "before": "Android",
+        "after": "promaster"
+      },
+      {
+        "path": "props.ro.product.device",
+        "before": "generic_x86_64",
+        "after": "promasterphone1"
+      },
+      {
+        "path": "props.ro.product.manufacturer",
+        "before": "unknown",
+        "after": "Promaster"
+      },
+      {
+        "path": "props.ro.product.model",
+        "before": "Android SDK built for x86_64",
+        "after": "PromasterPhone 1"
+      },
+      {
+        "path": "props.ro.product.name",
+        "before": "sdk_phone_x86_64",
+        "after": "promasterphone1"
+      },
+      {
+        "path": "props.ro.product.vendor.brand",
+        "before": "Android",
+        "after": "promaster"
+      },
+      {
+        "path": "props.ro.product.vendor.device",
+        "before": "generic_x86_64",
+        "after": "promasterphone1"
+      },
+      {
+        "path": "props.ro.product.vendor.manufacturer",
+        "before": "unknown",
+        "after": "Promaster"
+      },
+      {
+        "path": "props.ro.product.vendor.model",
+        "before": "Android SDK built for x86_64",
+        "after": "PromasterPhone 1"
+      },
+      {
+        "path": "props.ro.product.vendor.name",
+        "before": "sdk_phone_x86_64",
+        "after": "promasterphone1"
+      },
+      {
+        "path": "props.ro.vendor.build.fingerprint",
+        "before": "Android/sdk_phone_x86_64/generic_x86_64:9/PSR1.180720.012/4923214:userdebug/test-keys",
+        "after": "promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys"
+      },
+      {
+        "path": "props.sys.logbootcomplete",
+        "before": "1",
+        "after": "0"
+      },
+      {
+        "path": "props.sys.rescue_boot_count",
+        "before": "1",
+        "after": "3"
+      }
+    ]
+  },
+  "scanned": true,
+  "residue": [
+    {
+      "path": "extra.file:/dev/goldfish_pipe",
+      "value": "yes",
+      "indicator": "QEMU goldfish kernel",
+      "severity": 0.9
+    },
+    {
+      "path": "extra.file:/dev/qemu_pipe",
+      "value": "yes",
+      "indicator": "QEMU pipe device",
+      "severity": 0.95
+    },
+    {
+      "path": "props.init.svc.goldfish-logcat",
+      "value": "running",
+      "indicator": "running emulator service",
+      "severity": 0.85
+    },
+    {
+      "path": "props.qemu.cmdline",
+      "value": "androidboot.logcat=*:V androidboot.consolepipe=qemu_pipe,pipe:logcat",
+      "indicator": "QEMU artifact",
+      "severity": 0.8
+    },
+    {
+      "path": "props.ro.boot.hardware",
+      "value": "ranchu",
+      "indicator": "QEMU ranchu kernel",
+      "severity": 0.9
+    },
+    {
+      "path": "props.ro.boot.serialno",
+      "value": "EMULATOR37X2X12X0",
+      "indicator": "emulator string",
+      "severity": 0.7
+    },
+    {
+      "path": "props.ro.build.characteristics",
+      "value": "emulator",
+      "indicator": "emulator string",
+      "severity": 0.7
+    },
+    {
+      "path": "props.ro.hardware.audio.primary",
+      "value": "goldfish",
+      "indicator": "QEMU goldfish kernel",
+      "severity": 0.9
+    },
+    {
+      "path": "props.ro.hardware.camera",
+      "value": "ranchu",
+      "indicator": "QEMU ranchu kernel",
+      "severity": 0.9
+    },
+    {
+      "path": "props.ro.hardware.fingerprint",
+      "value": "ranchu",
+      "indicator": "QEMU ranchu kernel",
+      "severity": 0.9
+    },
+    {
+      "path": "props.ro.hardware.gatekeeper",
+      "value": "ranchu",
+      "indicator": "QEMU ranchu kernel",
+      "severity": 0.9
+    },
+    {
+      "path": "props.ro.hardware.gps",
+      "value": "ranchu",
+      "indicator": "QEMU ranchu kernel",
+      "severity": 0.9
+    },
+    {
+      "path": "props.ro.hardware.gralloc",
+      "value": "ranchu",
+      "indicator": "QEMU ranchu kernel",
+      "severity": 0.9
+    },
+    {
+      "path": "props.ro.hardware.hwcomposer",
+      "value": "ranchu",
+      "indicator": "QEMU ranchu kernel",
+      "severity": 0.9
+    },
+    {
+      "path": "props.ro.hardware.power",
+      "value": "ranchu",
+      "indicator": "QEMU ranchu kernel",
+      "severity": 0.9
+    },
+    {
+      "path": "props.ro.hardware.sensors",
+      "value": "ranchu",
+      "indicator": "QEMU ranchu kernel",
+      "severity": 0.9
+    },
+    {
+      "path": "props.ro.kernel.androidboot.hardware",
+      "value": "ranchu",
+      "indicator": "QEMU ranchu kernel",
+      "severity": 0.9
+    },
+    {
+      "path": "props.ro.kernel.androidboot.serialno",
+      "value": "EMULATOR37X2X12X0",
+      "indicator": "emulator string",
+      "severity": 0.7
+    },
+    {
+      "path": "props.ro.serialno",
+      "value": "EMULATOR37X2X12X0",
+      "indicator": "emulator string",
+      "severity": 0.7
+    },
+    {
+      "path": "props.vendor.rild.libpath",
+      "value": "/vendor/lib64/libgoldfish-ril.so",
+      "indicator": "QEMU goldfish kernel",
+      "severity": 0.9
+    }
+  ],
+  "exposure_score": 100,
+  "verdict": "HIGH — VM indicators remain in captured state"
+}

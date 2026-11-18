@@ -19,6 +19,7 @@ type paletteItem struct {
 	onSelect  func()
 	suggested bool
 	getBool   func() bool // for toggle items: current state
+	flag      string
 }
 
 // paletteState is a transient overlay inside the TUI.
@@ -66,7 +67,8 @@ func (p *paletteState) refresh() {
 			items = append(items, paletteItem{
 				label:    r.label,
 				desc:     r.hint,
-				category: "Settings",
+				category: r.section,
+				flag:     r.flag,
 				getBool:  r.getBool,
 				onSelect: func(row menuRow) func() {
 					return func() {
@@ -83,14 +85,29 @@ func (p *paletteState) refresh() {
 				}(r),
 			})
 		}
-		if r.kind == "action" && r.run != nil {
+		if r.kind == "text" || r.kind == "int" || r.kind == "choice" {
+			row := r
+			items = append(items, paletteItem{label: row.label, desc: row.hint, category: row.section, flag: row.flag, onSelect: func() {
+				p.hide()
+				p.t.selectSection(row.section)
+				p.t.screen = "settings"
+				for i, candidate := range p.t.sectionRows() {
+					if candidate.label == row.label {
+						p.t.cursor = i
+						break
+					}
+				}
+			}})
+		}
+		if r.kind == "action" && r.run != nil && r.label != "─ start analysis" && r.label != "─ quit" {
 			items = append(items, paletteItem{
 				label:    r.label,
 				desc:     "run action",
-				category: "Actions",
+				category: r.section,
 				onSelect: func(row menuRow) func() {
 					return func() {
-						_ = row.run()
+						p.hide()
+						p.t.pendingAction = row.run()
 					}
 				}(r),
 			})
@@ -99,19 +116,21 @@ func (p *paletteState) refresh() {
 
 	// static commands
 	items = append(items, []paletteItem{
-		{label: "Start analysis", desc: "run full scan", category: "Actions", suggested: true, onSelect: func() {
-			for _, r := range p.t.allRows() {
-				if r.kind == "action" && r.label == "─ start analysis" {
-					_ = r.run()
-					return
-				}
-			}
+		{label: "Start analysis", desc: "run with current settings", category: "Actions", keybind: "Ctrl+S", suggested: true, onSelect: func() {
+			p.hide()
+			p.t.pendingAction = p.t.startAnalysis()
 		}},
-		{label: "Open help", desc: "keybind reference", category: "Navigation", keybind: "?", onSelect: func() {
+		{label: "Open settings", desc: "browse flags by section", category: "Navigation", keybind: "Tab", onSelect: func() {
+			p.hide()
+			p.t.screen = "settings"
+		}},
+		{label: "Open help", desc: "keybind reference", category: "Navigation", keybind: "F1", onSelect: func() {
+			p.hide()
 			p.t.screen = "help"
 		}},
 		{label: "Quit", desc: "exit wizard", category: "System", keybind: "Q", onSelect: func() {
-			p.t.quit = true
+			p.hide()
+			p.t.confirmQuit()
 		}},
 	}...)
 
@@ -120,7 +139,7 @@ func (p *paletteState) refresh() {
 		f := strings.ToLower(p.filter)
 		filtered := []paletteItem{}
 		for _, it := range items {
-			if fuzzyMatch(it.label, f) || fuzzyMatch(it.desc, f) || fuzzyMatch(it.category, f) {
+			if fuzzyMatch(it.label, f) || fuzzyMatch(it.desc, f) || fuzzyMatch(it.category, f) || fuzzyMatch("--"+it.flag, f) {
 				filtered = append(filtered, it)
 			}
 		}
@@ -138,13 +157,14 @@ func (p *paletteState) refresh() {
 
 func fuzzyMatch(s, filter string) bool {
 	s = strings.ToLower(s)
+	query := []rune(strings.ToLower(filter))
 	fi := 0
 	for _, r := range s {
-		if fi < len(filter) && rune(filter[fi]) == r {
+		if fi < len(query) && query[fi] == r {
 			fi++
 		}
 	}
-	return fi == len(filter)
+	return fi == len(query)
 }
 
 func (p *paletteState) handleKey(ev keyEvent) bool {
@@ -207,10 +227,22 @@ func (p *paletteState) handleKey(ev keyEvent) bool {
 		}
 		return true
 	case keyChar:
-		if ev.r == '/' && p.filter == "" {
-			// slash prefix for commands, keep it as part of filter
+		if ev.r == 0x0b {
+			p.hide()
+			return true
+		}
+		if ev.r < 0x20 {
+			return true
 		}
 		p.filter += string(ev.r)
+		p.selected, p.vpStart = 0, 0
+		p.refresh()
+		return true
+	case keyPaste:
+		e := newTextEdit(p.filter)
+		e.handleKey(ev, false)
+		p.filter = e.text
+		p.selected, p.vpStart = 0, 0
 		p.refresh()
 		return true
 	case keyTab:
@@ -270,10 +302,10 @@ func (p *paletteState) render(width, edge int, windowed bool) []string {
 
 	// title bar
 	out = append(out, fmt.Sprintf("%s%s Actions %s",
-		th.Bold+th.Primary, strings.Repeat("─", width-11), th.Reset))
+		th.Bold+th.Primary, strings.Repeat("─", width-18), th.Reset))
 
 	// input line
-	prompt := "> " + p.filter
+	prompt := "> " + truncateVisible(p.filter, width-3)
 	cursor := "_"
 	if len(p.filter) > 0 {
 		cursor = ""
@@ -299,13 +331,11 @@ func (p *paletteState) render(width, edge int, windowed bool) []string {
 		it := p.items[i]
 		marker := "  "
 		labelCol := th.Text
-		descCol := th.Muted
 		if i == p.selected {
 			marker = th.Primary + "▶ " + th.Reset
 			labelCol = th.Bold + th.Primary
-			descCol = th.Reset
 		}
-		state := ""
+		state := "      "
 		if it.getBool != nil {
 			if it.getBool() {
 				state = th.Success + "[on] " + th.Reset
@@ -313,14 +343,17 @@ func (p *paletteState) render(width, edge int, windowed bool) []string {
 				state = th.Muted + "[off]" + th.Reset
 			}
 		}
-		cat := fmt.Sprintf("%s[%s]%s ", th.Muted, it.category, th.Reset)
-		labelW := 20
-		if state != "" {
-			labelW = 14
+		labelW := width / 3
+		if labelW > 28 {
+			labelW = 28
+		}
+		detail := it.category
+		if it.flag != "" {
+			detail += "  --" + it.flag
 		}
 		line := fmt.Sprintf("%s%s%s%s %s %s%s%s",
-			marker, labelCol, padRight(it.label, labelW), th.Reset,
-			state, descCol, truncate(it.desc, width-36-len(cat)), th.Reset)
+			marker, labelCol, padRight(truncateVisible(it.label, labelW), labelW), th.Reset,
+			state, th.Muted, truncateVisible(detail, width-labelW-11), th.Reset)
 		out = append(out, line)
 	}
 	if end < len(p.items) {
@@ -328,6 +361,9 @@ func (p *paletteState) render(width, edge int, windowed bool) []string {
 	}
 	if len(p.items) == 0 {
 		out = append(out, th.Muted+"  no matches"+th.Reset)
+	}
+	if p.selected >= 0 && p.selected < len(p.items) {
+		out = append(out, th.Muted+truncateVisible(p.items[p.selected].desc, width)+th.Reset)
 	}
 
 	// footer

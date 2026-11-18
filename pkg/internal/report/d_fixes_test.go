@@ -56,7 +56,7 @@ func TestSVGHasActiveContent_Canonical(t *testing.T) {
 		`<svg onfocusin="x()"/>`,
 		`<svg><set attributeName="href" onbegin="x()"/></svg>`,
 		`<svg><foreignObject><body/></foreignObject></svg>`,
-		`<svg><animate attributeName="href"/></svg>`,
+		`<svg><animate attributeName="href" values="#ok;javascript:x()"/></svg>`,
 		`<svg><a href="javascript:x()">go</a></svg>`,
 	}
 	for _, s := range active {

@@ -9,9 +9,7 @@ import (
 	"mega-analyzer/pkg/internal/antivm/verifier"
 )
 
-// SensorsModule ensures sensor subsystems are available and reports their mock state.
-// On real devices this is a no-op (sensors are always there); on emulators this may
-// involve enabling sensor HALs or configuring mock sensor providers.
+// SensorsModule applies a thermal fixture and bounded emulator sensor playback.
 type SensorsModule struct {
 	profile profile.DeviceProfile
 }
@@ -24,19 +22,21 @@ func NewSensorsModule(p profile.DeviceProfile) *SensorsModule {
 func (m *SensorsModule) Name() string { return "sensors" }
 
 // Validate checks that the profile has sensor configuration.
-func (m *SensorsModule) Validate(p profile.DeviceProfile) error { return nil }
+func (m *SensorsModule) Validate(p profile.DeviceProfile) error {
+	return validateMotionProfile(p.Sensor)
+}
 
 func (m *SensorsModule) Plan(p profile.DeviceProfile) []Operation {
 	if !p.Sensor.Enabled {
 		return nil
 	}
 	return []Operation{{
-		Name:       "sensors.verify",
+		Name:       "sensors.thermal",
 		Module:     m.Name(),
 		Critical:   false,
-		Timeout:    20 * time.Second,
+		Timeout:    60 * time.Second,
 		RetryCount: 0,
-		Config:     adapter.TestConfig{},
+		Config:     m.config(),
 	}}
 }
 
@@ -44,7 +44,20 @@ func (m *SensorsModule) Apply(ctx context.Context, dev adapter.DeviceAdapter) (a
 	if !m.profile.Sensor.Enabled {
 		return adapter.ApplyResult{}, nil
 	}
-	return adapter.ApplyResult{Succeeded: []string{"sensors.check"}}, nil
+	return dev.ApplyTestConfig(ctx, m.config())
+}
+
+func (m *SensorsModule) config() adapter.TestConfig {
+	cfg := thermalConfig()
+	cfg.Motion = motionConfig(m.profile.Sensor)
+	return cfg
+}
+
+func thermalConfig() adapter.TestConfig {
+	return adapter.TestConfig{
+		EmulatorOnly: true,
+		Commands:     []adapter.ShellCmd{{Cmd: thermalTemperatureCommand()}},
+	}
 }
 
 func (m *SensorsModule) Verify(ctx context.Context, dev adapter.DeviceAdapter) (verifier.Report, error) {

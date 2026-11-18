@@ -148,7 +148,7 @@ func (s *SubscriptionPattern) Compile() {
 }
 
 var DefaultSubscriptionPatterns = []SubscriptionPattern{
-	{Name: "Google Play Subscription", Type: "google_play", Patterns: []string{"SkuType.SUBS", "BillingClient.SkuType.SUBS", "subscription"}, Methods: []string{"querySubscriptions", "isSubscribed", "checkSubscription"}},
+	{Name: "Google Play Subscription", Type: "google_play", Patterns: []string{"SkuType.SUBS", "BillingClient.SkuType.SUBS"}, Methods: []string{"querySubscriptions", "isSubscribed", "checkSubscription"}},
 	{Name: "Premium Subscription", Type: "premium", Patterns: []string{"isPremium", "hasPremium", "premiumUser"}, Methods: []string{"isPremiumUser", "checkPremium", "getPremiumStatus"}},
 	{Name: "Trial Period", Type: "trial", Patterns: []string{"trial", "trialPeriod", "trialDays"}, Methods: []string{"isTrialActive", "getTrialDaysLeft", "startTrial"}},
 	{Name: "Recurring Payment", Type: "recurring", Patterns: []string{"recurring", "autoRenew", "renewSubscription"}, Methods: []string{"isAutoRenewEnabled", "getNextBillingDate"}},

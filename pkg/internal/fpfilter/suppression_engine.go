@@ -50,6 +50,8 @@ func (e *SuppressionEngine) Process(findings []types.ClassifiedFinding) *types.F
 			out.Stats.GenericNoiseSuppressed++
 		case types.VerdictNeedsContext:
 			out.Stats.NeedsContext++
+		case types.VerdictObservation:
+			out.Stats.Observations++
 		}
 
 		if !e.config.Enabled {
@@ -105,7 +107,7 @@ func (e *SuppressionEngine) Process(findings []types.ClassifiedFinding) *types.F
 		if cf.Original != nil && cf.Original.Pattern != "" {
 			patKey = cf.Original.Pattern
 		}
-		if patKey != "" {
+		if e.config.Enabled && patKey != "" && cf.Verdict != types.VerdictConfirmedSDKRisk && cf.Verdict != types.VerdictConfirmedAppRisk {
 			patternSeenCount[patKey]++
 			if patternSeenCount[patKey] > 5 {
 				cf.Verdict = types.VerdictGenericNoiseSuppressed

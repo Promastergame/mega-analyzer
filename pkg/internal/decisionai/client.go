@@ -55,6 +55,7 @@ type Reference struct {
 }
 
 type Answer struct {
+	Neural        *NeuralInference   `json:"neural,omitempty"`
 	Type          string             `json:"type"`
 	Noul          *float64           `json:"noul,omitempty"`
 	Choice        string             `json:"choice,omitempty"`
@@ -244,6 +245,15 @@ func validateResponse(req Request, resp Response) error {
 		}
 		if a.Confidence != nil && !probability(*a.Confidence) {
 			return fmt.Errorf("DecisionAI answer %q has invalid confidence", id)
+		}
+		if q.Task == NeuralRoleTask && a.Neural != nil && (a.Neural.Status == "skipped" || a.Neural.Status == "unavailable") {
+			n := a.Neural
+			if q.Type != "choice" || n.SchemaVersion != 1 || n.Task != q.Task || n.RuleVotesAdded || n.ForwardPasses != 0 ||
+				a.Source != "smalirole-neural" || !a.Abstained || a.Route != "human" || a.Choice != "" ||
+				a.Noul != nil || a.Score != nil || a.Confidence != nil || len(a.Probabilities) != 0 {
+				return fmt.Errorf("DecisionAI answer %q has invalid neural abstention", id)
+			}
+			continue
 		}
 		if q.Type == "noul" {
 			if a.Noul == nil || !probability(*a.Noul) || a.Score != nil || a.Choice != "" {

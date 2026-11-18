@@ -12,6 +12,8 @@
 // report lower confidence than flows from concrete source calls.
 package dataflow
 
+import "strings"
+
 type entryTaint struct {
 	param  int
 	labels Label
@@ -34,6 +36,10 @@ func entryPointTaints(method methodData) []entryTaint {
 	ipc := LabelIntent | LabelUserInput
 
 	switch method.Name {
+	case "onTransact":
+		if len(params) == 4 && has(0, "I") && has(1, "Landroid/os/Parcel;") && has(2, "Landroid/os/Parcel;") && has(3, "I") {
+			return []entryTaint{{1, ipc}}
+		}
 	// Intent-bearing lifecycle callbacks.
 	case "onNewIntent", "onHandleIntent", "onStartCommand", "onBind",
 		"onRebind", "onUnbind", "onTaskRemoved":
@@ -118,4 +124,23 @@ func paramDescriptors(descriptor string) []string {
 		out = append(out, descriptor[start:i])
 	}
 	return out
+}
+
+// entryPointLabel names the entry-point seed. A component known to be
+// effectively non-exported cannot receive intents from other apps; calling
+// it an IPC entry point overstates the surface. Unknown sets (nil) keep the
+// historical label.
+func entryPointLabel(signature string, exported map[string]struct{}) string {
+	if len(exported) == 0 {
+		return "[IPC entry point]"
+	}
+	class := signature
+	if idx := strings.Index(signature, "->"); idx >= 0 {
+		class = signature[:idx]
+	}
+	dotted := strings.ReplaceAll(strings.TrimSuffix(strings.TrimPrefix(class, "L"), ";"), "/", ".")
+	if _, ok := exported[dotted]; ok {
+		return "[IPC entry point]"
+	}
+	return "[app-internal entry point]"
 }

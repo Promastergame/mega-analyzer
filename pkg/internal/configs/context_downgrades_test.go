@@ -97,12 +97,12 @@ func TestPasswordManagerDowngradesOverlay(t *testing.T) {
 	if found.DowngradedBy != "ctx-password-manager" {
 		t.Fatalf("want downgrade by ctx-password-manager, got %+v", *found)
 	}
-	if found.Severity != "high" {
-		t.Fatalf("critical must drop exactly one step to high, got %q", found.Severity)
+	if found.Severity != "info" || found.Score != 0 || found.FindingKind != "inventory" {
+		t.Fatalf("generic accessibility APIs must remain an inventory observation, got %+v", *found)
 	}
 }
 
-func TestOverlayWithoutBenignContextStaysCritical(t *testing.T) {
+func TestAccessibilityAPIsWithoutBenignContextRemainInventory(t *testing.T) {
 	e := loadShippedEngine(t)
 	ctx := &rules.ConditionContext{
 		Permissions: []string{
@@ -129,8 +129,8 @@ func TestOverlayWithoutBenignContextStaysCritical(t *testing.T) {
 	if found.DowngradedBy != "" {
 		t.Fatalf("must not be downgraded without context, got %+v", *found)
 	}
-	if found.Severity != "critical" {
-		t.Fatalf("must stay critical, got %q", found.Severity)
+	if found.Severity != "info" || found.Score != 0 || found.FindingKind != "inventory" {
+		t.Fatalf("a namespace without benign context is not proof of an overlay attack: %+v", *found)
 	}
 }
 

@@ -54,6 +54,8 @@ func Normalize(p *DeviceProfile) {
 	p.Brand = strings.TrimSpace(p.Brand)
 	p.Device = strings.TrimSpace(p.Device)
 	p.Product = strings.TrimSpace(p.Product)
+	p.Hardware = strings.TrimSpace(p.Hardware)
+	p.Board = strings.TrimSpace(p.Board)
 	p.AndroidVersion = strings.TrimSpace(p.AndroidVersion)
 	p.Network.MACAddress = strings.ToUpper(strings.TrimSpace(p.Network.MACAddress))
 	p.Battery.Status = strings.ToLower(strings.TrimSpace(p.Battery.Status))
@@ -156,6 +158,12 @@ func Validate(p DeviceProfile) ValidationResult {
 	}
 
 	// Operator: numeric == MCC+MNC, and digit-shaped.
+	if p.Sensor.MotionIntervalMillis != 0 && (p.Sensor.MotionIntervalMillis < 100 || p.Sensor.MotionIntervalMillis > 5000) {
+		add("sensor.motion_interval_millis", "must be between 100 and 5000")
+	}
+	if p.Sensor.MotionDurationSeconds != 0 && (p.Sensor.MotionDurationSeconds < 5 || p.Sensor.MotionDurationSeconds > 900) {
+		add("sensor.motion_duration_seconds", "must be between 5 and 900")
+	}
 	if p.Operator.Numeric != "" {
 		if !isDigits(p.Operator.Numeric) {
 			add("operator.numeric", "must be digits (MCC+MNC)")

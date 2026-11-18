@@ -22,15 +22,29 @@ const context={document,AbortController,URL,EventSource,FormData:class{append(){
 vm.createContext(context);
 function section(start,end){vm.runInContext(source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start))),context);}
 section('function preferredScrollBehavior()','function uiText(');
+section('var MAX_UPLOAD_BYTES=','// Validates a candidate file');
 section('function scanIsCurrent','var curEnv=');
 section('function run(){','// ── Sandbox Live Detonation Dashboard State');
 section('function bundleResultSummary','// ── live android view');
+section('function collectResultFindings','function bundleResultSummary');
+section('function safeResultBase(', 'function clearFile(');
 section('function loadArtifacts(id){','function syncStaticOutputFlags');
 const tick=()=>new Promise(r=>setImmediate(r));
 const answer=async(req,data)=>{req.resolve({ok:true,json:async()=>data});await tick();};
 const pending=url=>deferred.findLast(r=>r.url===url);
 const own=id=>{context.invalidateScanView();context.curMode='full';context.jid=id;context.curOut='output/'+id;};
 (async()=>{
+ const summary=context.staticResultSummary({run:{status:'incomplete',stop_reason:'timeout'},risk_profile:{overall_score:80,overall_level:'HIGH'},findings:[{kind:'inventory',severity:'CRITICAL'},{kind:'vulnerability',severity:'HIGH'}]});
+ assert.match(summary,/Incomplete analysis/);assert.match(summary,/Time limit reached/);assert.match(summary,/Overall risk: HIGH · 80\/100/);
+ assert.match(summary,/Malware indicators: 0/);assert.match(summary,/Vulnerabilities: 1/);assert.match(summary,/Inventory: 1/);
+ context.uiLang='ru';assert.match(context.staticResultSummary({run:{status:'incomplete'},findings:[{kind:'malware'}]}),/Признаки вредоносного поведения: 1/);context.uiLang='en';
+ assert.equal(context.staticResultSummary({findings:[]}), '');
+ const importFinding={kind:'inventory',severity:'info',title:'[import] Raw syscall use',locations:[{file:'libsand.so'}]};
+ const projected=context.collectResultFindings({findings:[importFinding],artifact_findings:[{severity:'medium',reason:'[import] Raw syscall use',path:'libsand.so'}]});
+ assert.equal(projected.length,1);assert.equal(projected[0].severity,'info');
+ assert.equal(context.collectResultFindings({artifact_findings:[{severity:'high',reason:'Untrusted archive write',path:'sample.zip'}]}).length,1);
+ const coverage=context.staticResultSummary({run:{status:'incomplete',stop_reason:'coverage_limits_or_errors',limitations:['71 truncated slices']},data_flow_stats:{slices_truncated:71}});
+ assert.match(coverage,/coverage_limits_or_errors/);assert.match(coverage,/analysis budget: 71/);assert.match(coverage,/71 truncated slices/);
  own('A');context.loadRes('A');const oldResult=pending('/api/result/A'),oldFiles=deferred.findLast(r=>r.url.startsWith('/api/artifacts/A'));
  own('B');context.loadRes('B');
  await answer(pending('/api/result/B'),{findings:[{severity:'HIGH',title:'Result B'}]});const expected=ids.fw.innerHTML;

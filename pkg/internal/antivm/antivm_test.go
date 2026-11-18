@@ -239,18 +239,6 @@ func TestEvasionEngineReport(t *testing.T) {
 	}
 }
 
-// ── Sensor Noise Script Tests ────────────────────────────────
-
-func TestBuildSensorNoiseScript(t *testing.T) {
-	script := buildSensorNoiseScript()
-	if !strings.Contains(script, "#!/system/bin/sh") {
-		t.Error("script should start with shebang")
-	}
-	if !strings.Contains(script, "sleep") {
-		t.Error("script should contain sleep loop")
-	}
-}
-
 // ── Helper Tests ─────────────────────────────────────────────
 
 func TestCryptoRandIntn(t *testing.T) {

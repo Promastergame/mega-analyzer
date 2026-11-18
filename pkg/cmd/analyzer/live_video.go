@@ -3,6 +3,8 @@ package main
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"encoding/binary"
 	"fmt"
 	"io"
 	"net"
@@ -11,7 +13,9 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"mega-analyzer/pkg/cmd/analyzer/web"
@@ -29,13 +33,10 @@ import (
 // installations still work.
 
 const (
-	scrcpyLocalPort      = 27183
 	scrcpyAudioLocalPort = 27184 // companion port for audio socket
 	scrcpyVersion        = "2.7" // fallback when the real version can't be detected
 
-	// Distinct session ids so the video and audio server processes bind
-	// different abstract sockets (scrcpy_<scid>) and never collide.
-	scrcpyVideoSCID = "1bad7e57"
+	// Video allocates its own port and session id for each connection.
 	scrcpyAudioSCID = "2bad7e57"
 )
 
@@ -78,11 +79,18 @@ func findScrcpyServerInfo() (string, string) {
 	return p, detectScrcpyVersion(p)
 }
 
+// scrcpy 4.0 added session packets, shifted the media flags down one bit,
+// and renamed send_codec_meta to send_stream_meta.
+func scrcpyUsesSessionPackets(version string) bool {
+	major, _ := strconv.Atoi(strings.SplitN(strings.TrimPrefix(version, "v"), ".", 2)[0])
+	return major >= 4
+}
+
 // handleLiveVideo upgrades the request to a WebSocket and streams H.264.
 // It tries scrcpy-server first for low latency; if that fails it falls back
 // to screenrecord.
 func handleLiveVideo(w http.ResponseWriter, r *http.Request) {
-	serial := web.LiveSerial()
+	serial := web.RequestDeviceSerial(r)
 	if serial == "" {
 		http.Error(w, "no device", http.StatusNotFound)
 		return
@@ -93,7 +101,7 @@ func handleLiveVideo(w http.ResponseWriter, r *http.Request) {
 	}
 	defer conn.Close()
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
 	go func() {
@@ -128,9 +136,8 @@ func handleLiveVideo(w http.ResponseWriter, r *http.Request) {
 //
 // version MUST match the installed server exactly — pass the value detected by
 // detectScrcpyVersion. The abstract socket the server binds is scrcpy_<scid>,
-// so the adb forward target and the scid arg must agree. raw_stream=true turns
-// off all framing (device/frame/codec meta + dummy byte), so the socket carries
-// a bare H.264 Annex-B stream with no header to strip.
+// so the adb forward target and the scid arg must agree. Frame metadata supplies
+// packet lengths and codec/keyframe flags, including on a still screen.
 func streamScrcpy(ctx context.Context, adb, serial, serverPath, version string, conn net.Conn) error {
 	// 1. Push the server JAR.
 	// MediaTek / some vendor ROMs return a spurious EOF on the copy-response even
@@ -143,73 +150,155 @@ func streamScrcpy(ctx context.Context, adb, serial, serverPath, version string, 
 	}
 
 	// 2. Forward a local port to the abstract socket the server will create.
-	socketName := "scrcpy_" + scrcpyVideoSCID
+	var session [4]byte
+	if _, err := rand.Read(session[:]); err != nil {
+		return err
+	}
+	scid := fmt.Sprintf("%08x", binary.BigEndian.Uint32(session[:])&0x7fffffff)
+	socketName := "scrcpy_" + scid
 	fwdCmd := exec.CommandContext(ctx, adb, "-s", serial,
-		"forward", fmt.Sprintf("tcp:%d", scrcpyLocalPort),
+		"forward", "tcp:0",
 		"localabstract:"+socketName)
-	if err := fwdCmd.Run(); err != nil {
+	portOut, err := fwdCmd.Output()
+	if err != nil {
 		return fmt.Errorf("forward: %w", err)
 	}
+	port, err := strconv.Atoi(strings.TrimSpace(string(portOut)))
+	if err != nil || port < 1 || port > 65535 {
+		return fmt.Errorf("invalid scrcpy forwarded port %q", portOut)
+	}
 	defer exec.Command(adb, "-s", serial, "forward", "--remove",
-		fmt.Sprintf("tcp:%d", scrcpyLocalPort)).Run() //nolint:errcheck
+		fmt.Sprintf("tcp:%d", port)).Run() //nolint:errcheck
 
 	// 3. Launch the server process on the device.
 	//    We use CLASSPATH trick — scrcpy-server is both a JAR and a DEX archive.
+	streamMetaOption := "send_codec_meta=false"
+	if scrcpyUsesSessionPackets(version) {
+		streamMetaOption = "send_stream_meta=false"
+	}
 	args := []string{
 		"-s", serial, "shell",
 		"CLASSPATH=/data/local/tmp/scrcpy-server",
 		"app_process", "/", "com.genymobile.scrcpy.Server",
 		version,
-		"scid=" + scrcpyVideoSCID,
+		"scid=" + scid,
 		"tunnel_forward=true",
 		"audio=false",
 		"control=false",
+		"video_codec=h264",
 		"max_size=1280",
 		fmt.Sprintf("max_fps=%d", 30),
 		fmt.Sprintf("video_bit_rate=%d", 6_000_000),
-		// Disable all framing headers individually — raw_stream=true is equivalent
-		// but these individual flags work across a wider range of server versions.
+		// Keep packet lengths; skip the device/codec headers and dummy byte.
 		"send_device_meta=false",
-		"send_frame_meta=false",
+		streamMetaOption,
+		"send_frame_meta=true",
 		"send_dummy_byte=false",
 	}
 	srvCmd := exec.CommandContext(ctx, adb, args...)
-	srvCmd.Stdout = io.Discard
+	srvCmd.WaitDelay = time.Second
 	var srvStderr bytes.Buffer
+	srvCmd.Stdout = &srvStderr
 	srvCmd.Stderr = &srvStderr
 	if err := srvCmd.Start(); err != nil {
 		return fmt.Errorf("server start: %w", err)
 	}
-	defer func() {
-		_ = srvCmd.Process.Kill()
-		_ = srvCmd.Wait()
-	}()
+	var stopServerOnce sync.Once
+	stopServer := func() { stopServerOnce.Do(func() { _ = srvCmd.Process.Kill(); _ = srvCmd.Wait() }) }
+	defer stopServer()
 
 	// 4. Connect to the forwarded port.  Real devices (especially MediaTek) can
 	// take several seconds to start the JVM; retry for up to 10 s.
-	var sock net.Conn
-	for i := 0; i < 50; i++ {
-		if ctx.Err() != nil {
-			return ctx.Err()
-		}
-		time.Sleep(200 * time.Millisecond)
-		c, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", scrcpyLocalPort), 500*time.Millisecond)
-		if err == nil {
-			sock = c
-			break
-		}
-	}
-	if sock == nil {
+	sock, firstHeader, err := connectScrcpyVideoSocket(ctx, port)
+	if err != nil {
+		stopServer() // Wait for the log writer before reading its buffer.
 		if srvStderr.Len() > 0 {
 			return fmt.Errorf("scrcpy socket timeout — server stderr: %s", strings.TrimSpace(srvStderr.String()))
 		}
-		return fmt.Errorf("could not connect to scrcpy socket after 10 s")
+		return err
 	}
 	defer sock.Close()
 
-	// 5. Forward raw H.264 Annex-B frames to the WebSocket (no dummy byte: we
-	//    disabled it above so the very first bytes are already the SPS NAL).
-	return forwardAccessUnits(ctx, sock, conn)
+	// 5. Each WebSocket message contains a complete Annex-B access unit.
+	return forwardScrcpyFrames(ctx, io.MultiReader(bytes.NewReader(firstHeader), sock), version, func(frame []byte) error {
+		return wsx.WriteServerBinary(conn, frame)
+	})
+}
+
+// ADB accepts TCP connections before the Android abstract socket is ready.
+// Wait for a packet header, retrying early EOFs during server startup.
+func connectScrcpyVideoSocket(ctx context.Context, port int) (net.Conn, []byte, error) {
+	deadline := time.Now().Add(10 * time.Second)
+	for time.Now().Before(deadline) {
+		select {
+		case <-ctx.Done():
+			return nil, nil, ctx.Err()
+		case <-time.After(200 * time.Millisecond):
+		}
+		c, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", port), 500*time.Millisecond)
+		if err != nil {
+			continue
+		}
+		stopClose := context.AfterFunc(ctx, func() { _ = c.Close() })
+		_ = c.SetReadDeadline(deadline)
+		header := make([]byte, 12)
+		if _, err := io.ReadFull(c, header); err == nil {
+			_ = c.SetReadDeadline(time.Time{})
+			return c, header, nil
+		}
+		stopClose()
+		_ = c.Close()
+	}
+	return nil, nil, fmt.Errorf("could not read a scrcpy packet after 10 s")
+}
+
+func forwardScrcpyFrames(ctx context.Context, r io.Reader, version string, emit func([]byte) error) error {
+	const maxPacket = 16 << 20
+	configFlag, keyFlag := uint64(1<<63), uint64(1<<62)
+	usesSessions := scrcpyUsesSessionPackets(version)
+	if usesSessions {
+		configFlag, keyFlag = 1<<62, 1<<61
+	}
+	var config []byte
+	var configPending bool
+	var header [12]byte
+	for ctx.Err() == nil {
+		if _, err := io.ReadFull(r, header[:]); err != nil {
+			return err
+		}
+		flags := binary.BigEndian.Uint64(header[:8])
+		if usesSessions && flags&(1<<63) != 0 {
+			// A session is only this header: width and height are not a
+			// payload length. New SPS/PPS follow when capture restarts.
+			config = nil
+			configPending = false
+			continue
+		}
+		size := binary.BigEndian.Uint32(header[8:])
+		if size == 0 || size > maxPacket {
+			return fmt.Errorf("invalid scrcpy packet size %d", size)
+		}
+		frame := make([]byte, size)
+		if _, err := io.ReadFull(r, frame); err != nil {
+			return err
+		}
+		if flags&configFlag != 0 {
+			config = frame
+			configPending = true
+			continue
+		}
+		if len(config) > 0 && (configPending || flags&keyFlag != 0) {
+			if len(config)+len(frame) > maxPacket {
+				return fmt.Errorf("scrcpy keyframe exceeds %d bytes", maxPacket)
+			}
+			frame = append(append(make([]byte, 0, len(config)+len(frame)), config...), frame...)
+			configPending = false
+		}
+		if err := emit(frame); err != nil {
+			return err
+		}
+	}
+	return ctx.Err()
 }
 
 // streamH264Once runs one screenrecord session and forwards its access units
@@ -232,6 +321,10 @@ func streamH264Once(ctx context.Context, adb, serial string, conn net.Conn) erro
 				dw = 720
 			}
 		}
+		// H.264 encoders require even dimensions (1080x1920 scales to
+		// 405x720 before alignment).
+		dw = max(2, dw&^1)
+		dh = max(2, dh&^1)
 		size = fmt.Sprintf("--size=%dx%d", dw, dh)
 	}
 

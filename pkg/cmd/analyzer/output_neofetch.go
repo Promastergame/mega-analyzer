@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"mega-analyzer/pkg/internal/report"
 	"mega-analyzer/pkg/internal/types"
 )
 
@@ -169,7 +170,15 @@ func (o *Output) systemCardModules(result *types.AnalysisResult) []string {
 
 	// GetGroupStats already aggregates categories into the groups defined in
 	// the category registry, so the CLI and the reports stay consistent.
-	stats := types.GetGroupStats(result.MatchesByCategory)
+	// Use the report's visible counts (deduplicated, app-code only) instead of
+	// the raw MatchesByCategory map: the raw map also counts library-file and
+	// duplicate matches, which made this card report "Billing 65" while the
+	// generated report listed 50 matches for the same scan.
+	counts := report.VisibleCategoryCounts(result)
+	if len(counts) == 0 {
+		counts = result.MatchesByCategory
+	}
+	stats := types.GetGroupStats(counts)
 	rows := make([]moduleRow, 0, len(stats))
 	total, maxCount := 0, 0
 	for _, gs := range stats {

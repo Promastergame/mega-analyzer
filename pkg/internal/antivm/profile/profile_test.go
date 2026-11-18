@@ -184,7 +184,7 @@ func TestNormalize_Idempotent(t *testing.T) {
 
 func TestMerge(t *testing.T) {
 	base, _ := Generate(GenSpec{Mode: ModeSeeded, Model: "Pixel 7", API: 34, Seed: 1})
-	over := DeviceProfile{Locale: "ru-RU", Density: 480}
+	over := DeviceProfile{Locale: "ru-RU", Density: 480, Hardware: "qcom", Board: "sdm845"}
 	got := Merge(base, over)
 	if got.Locale != "ru-RU" {
 		t.Errorf("Locale not overridden: %q", got.Locale)
@@ -195,4 +195,5 @@ func TestMerge(t *testing.T) {
 	if got.Model != base.Model {
 		t.Errorf("Model should be unchanged: %q", got.Model)
 	}
+	if got.Hardware != "qcom" || got.Board != "sdm845" { t.Fatal("hardware overrides were lost") }
 }

@@ -55,6 +55,9 @@ func (p *CLIParser) Parse(args []string) (*CLIOptions, error) {
 	p.fs.StringVar(&opts.DecisionAIInput, "decision-ai-input", "", "Send a System One request JSON file to local DecisionAI; print JSON without scanning or applying changes")
 	p.fs.IntVar(&opts.DecisionAIMaxFindings, "decision-ai-max-findings", 64, "Maximum findings reviewed by DecisionAI, highest severity first (1..512)")
 	p.fs.IntVar(&opts.DecisionAIBudget, "decision-ai-budget", 30, "Total DecisionAI time budget in seconds (1..300)")
+	p.fs.BoolVar(&opts.DecisionAIImages, "decision-ai-images", true, "Use configured local DecisionAI to filter image previews in HTML reports")
+	p.fs.IntVar(&opts.DecisionAIMaxImages, "decision-ai-max-images", 512, "Maximum unique image requests for report preview filtering (1..512)")
+	p.fs.IntVar(&opts.DecisionAIImageBudget, "decision-ai-image-budget", 240, "Separate total image preview review budget in seconds (1..300)")
 	p.fs.BoolVar(&opts.EnableCallGraph, "callgraph", false, "Enable call graph analysis")
 	p.fs.BoolVar(&opts.EnableCorrelations, "correlations", false, "Enable correlations")
 	p.fs.BoolVar(&opts.EnableDeepScan, "deep-scan", false, "Enable deep bytecode scanning")
@@ -69,6 +72,8 @@ func (p *CLIParser) Parse(args []string) (*CLIOptions, error) {
 	p.fs.BoolVar(&opts.NoColor, "no-color", false, "Disable colored output")
 	var tuiOpt bool
 	p.fs.BoolVar(&tuiOpt, "tui", false, "Enable fancy TUI panels")
+	p.fs.StringVar(&opts.TUISection, "tui-section", "", "Open TUI section: general|analysis|mobile|compliance|artifacts|cache|reports|toolkit|network")
+	p.fs.StringVar(&opts.TUISearch, "tui-search", "", "Open TUI flag search with this query")
 	// -no-tui is advertised in the help text and used by the web UI
 	// when it re-invokes this binary. CLI mode is already the default, so these
 	// are effectively no-ops — but they must be REGISTERED, otherwise flag.Parse
@@ -80,6 +85,8 @@ func (p *CLIParser) Parse(args []string) (*CLIOptions, error) {
 	p.fs.BoolVar(&opts.JSON, "json", false, "Output as JSON to stdout")
 	p.fs.BoolVar(&opts.NoHTML, "no-html", false, "Skip HTML report generation")
 	p.fs.BoolVar(&opts.NoJSON, "no-json", false, "Skip JSON report generation")
+	p.fs.BoolVar(&opts.JSONCompact, "json-compact", false,
+		"Write analysis.json without smali method bodies (compact daily-view export; matches and evidence are kept)")
 	p.fs.BoolVar(&opts.SARIF, "sarif", false, "Write analysis.sarif for GitHub/GitLab/Sonar-style code scanning")
 	p.fs.BoolVar(&opts.ExitCodes, "exit-codes", false,
 		"CI exit codes: 0 clean, 1 findings at -fail-on level, 2 one level below, 3 error, 4 incomplete analysis (parse failures, limits, degraded rules)")
@@ -250,7 +257,7 @@ func (p *CLIParser) Parse(args []string) (*CLIOptions, error) {
 	p.fs.BoolVar(&opts.NoAlign, "no-align", false, "Skip ZIP alignment")
 	p.fs.BoolVar(&opts.NoResources, "no-resources", false, "Skip resource decoding")
 	p.fs.BoolVar(&opts.NoSmali, "no-smali", false, "Skip smali generation")
-	p.fs.BoolVar(&opts.Standalone, "standalone", false, "Forbid external tools (Java/smali/aapt2/apksigner/zipalign); native Go only (or MEGA_STANDALONE=1)")
+	p.fs.BoolVar(&opts.Standalone, "standalone", false, "Forbid external tools (Java/aapt2/apksigner/zipalign); native Go only (or MEGA_STANDALONE=1)")
 	p.fs.BoolVar(&opts.AllowExternalTools, "allow-external-tools", false, "Allow build to discover and execute compatibility tools; disabled by default")
 	p.fs.BoolVar(&opts.JavaView, "java-view", false, "Emit per-class .java pseudocode next to smali")
 	p.fs.BoolVar(&opts.NoSmaliHeaders, "no-headers", false, "Omit # Disassembled from DEX comment headers from smali files")
@@ -258,22 +265,15 @@ func (p *CLIParser) Parse(args []string) (*CLIOptions, error) {
 	p.fs.BoolVar(&opts.SmaliHeaders, "headers", false, "Include source/hash comments in native Smali")
 	p.fs.StringVar(&opts.FrameworkDir, "framework-dir", "", "Framework directory for resource decoding")
 	p.fs.BoolVar(&opts.CopyOriginal, "copy-original", false, "Copy original META-INF and unknown files")
-	p.fs.StringVar(&opts.SmaliJar, "smali-jar", "", "Path to smali.jar for smali→dex assembly (auto-detect if unset)")
-	p.fs.StringVar(&opts.BaksmaliJar, "baksmali-jar", "", "Path to baksmali.jar for dex→smali disassembly (auto-detect if unset)")
 	p.fs.StringVar(&opts.Aapt2Path, "aapt2", "", "Path to aapt2 binary for resource compile+link (auto-detect if unset)")
 	p.fs.BoolVar(&opts.UseSmali, "use-smali", true, "Enable smali→dex assembly during rebuild (default: auto-detect)")
 	p.fs.BoolVar(&opts.UseAapt2, "use-aapt2", true, "Enable aapt2 resource compile+link during rebuild (default: auto-detect)")
-	// v1-v7 apkloader upgrades: decode backends, smali/baksmali tuning, rebuild zip
-	p.fs.StringVar(&opts.DexBackend, "dex-backend", "auto", "Decode backend: auto|native|baksmali (native avoids JVM + enables class cache)")
+	// v1-v7 apkloader upgrades: decode backends, native assembly tuning, rebuild zip
+	p.fs.StringVar(&opts.DexBackend, "dex-backend", "auto", "Decode backend: auto|native (both use the native Go decoder)")
 	p.fs.BoolVar(&opts.ClassCache, "class-cache", true, "Cache native DEX→Smali per class in .mega-analyzer-cache.db")
-	p.fs.IntVar(&opts.SmaliAPI, "smali-api", 0, "smali/baksmali API level (-a); 0 auto-matches tree dex version")
-	p.fs.IntVar(&opts.SmaliJobs, "smali-jobs", 0, "smali/baksmali workers (-j); 0 auto-limits per process")
-	p.fs.IntVar(&opts.SmaliHeapMB, "smali-heap-mb", 0, "JVM heap for smali/baksmali (-Xmx, MB); raise on commit_memory failures")
-	p.fs.BoolVar(&opts.SmaliVerbose, "smali-verbose", false, "Pass --verbose to smali for richer diagnostics")
+	p.fs.IntVar(&opts.SmaliAPI, "smali-api", 0, "Native assembler Android API level; 0 auto-matches tree dex version")
+	p.fs.IntVar(&opts.SmaliJobs, "smali-jobs", 0, "Native DEX assembly workers; 0 = automatic (up to 4)")
 	p.fs.BoolVar(&opts.SmaliIncremental, "smali-incremental", true, "Incremental smali→dex via .mega-analyzer-build-cache.json")
-	p.fs.BoolVar(&opts.BaksmaliUseLocals, "baksmali-use-locals", false, "Pass --use-locals to baksmali")
-	p.fs.BoolVar(&opts.BaksmaliSeqLabels, "baksmali-seq-labels", false, "Pass --sequential-labels to baksmali")
-	p.fs.BoolVar(&opts.BaksmaliNoParamRegs, "baksmali-no-param-regs", false, "Pass --parameter-registers=false to baksmali")
 	p.fs.StringVar(&opts.CompressionMode, "compression-mode", "balanced", "Rebuild ZIP mode: fast|balanced|best")
 	p.fs.IntVar(&opts.SpoolThresholdMB, "spool-threshold-mb", 0, "Spool ZIP entries larger than N MB to temp files (0 = default 128MB)")
 	p.fs.BoolVar(&opts.PreserveSignature, "preserve-signature", false, "Experimental: keep original META-INF/signing blocks, skip re-sign (valid only if signed bytes unchanged)")
@@ -577,7 +577,7 @@ func (p *CLIParser) Parse(args []string) (*CLIOptions, error) {
 
 	// Actions
 	p.fs.BoolVar(&opts.Version, "version", false, "Show version")
-	p.fs.BoolVar(&opts.ToolsInfo, "tools-info", false, "Show which external tools (java, smali, baksmali, aapt2) are available: bundled, cached or system")
+	p.fs.BoolVar(&opts.ToolsInfo, "tools-info", false, "Show which external tools (java for APK signing, aapt2) are available: bundled, cached or system")
 	p.fs.BoolVar(&opts.Version, "v", false, "Version (shorthand)")
 	p.fs.BoolVar(&opts.Help, "help", false, "Show help")
 	p.fs.BoolVar(&opts.LaunchDebugger, "debugger", false, "Launch interactive machine-code debugger (pass binary path as target)")
@@ -733,7 +733,19 @@ func (p *CLIParser) Parse(args []string) (*CLIOptions, error) {
 		return nil, err
 	}
 
-	if tuiOpt {
+	if opts.TUISection != "" {
+		valid := false
+		for _, section := range tuiSections {
+			if opts.TUISection == section {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			return nil, fmt.Errorf("invalid -tui-section %q (valid: %s)", opts.TUISection, strings.Join(tuiSections, ", "))
+		}
+	}
+	if tuiOpt || opts.TUISection != "" || opts.TUISearch != "" {
 		opts.NoTUI = false
 	}
 	// Explicitly asking for CLI mode wins over -tui, so an automated caller can
@@ -822,6 +834,12 @@ func (p *CLIParser) Parse(args []string) (*CLIOptions, error) {
 			opts.CallGraphExplicit = true
 		case "correlations":
 			opts.CorrelationsExplicit = true
+		case "enable-data-flow":
+			opts.DataFlowExplicit = true
+		case "crackpoint-analysis":
+			opts.CrackPointExplicit = true
+		case "anomaly-detection":
+			opts.AnomalyExplicit = true
 		case "deep-scan":
 			opts.DeepScanExplicit = true
 		case "max-file-size":

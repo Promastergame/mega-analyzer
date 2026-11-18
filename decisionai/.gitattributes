@@ -1,0 +1,3 @@
+# Model weights: enable Git LFS before pushing (git lfs install && git lfs track "*.dte")
+*.dte binary
+*.pt binary

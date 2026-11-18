@@ -125,18 +125,21 @@ func TestIsPublicIPHost(t *testing.T) {
 	}
 }
 
-func TestScanContent_PublicIPGetsHigherSeverity(t *testing.T) {
+func TestScanContent_PublicIPDoesNotEscalateAddressAlone(t *testing.T) {
 	data := []byte("endpoint=http://45.77.12.33/beacon")
 	result := ScanContent(data, "config.properties", types.FileTypeText, SourceKindAsset, 0)
 
-	foundHighIP := false
+	foundHTTP := false
 	for _, f := range result.Findings {
-		if strings.Contains(f.Pattern, "45.77.12.33") && f.Severity >= types.SeverityHigh {
-			foundHighIP = true
+		if strings.Contains(f.Pattern, "45.77.12.33") {
+			foundHTTP = true
+			if f.Severity >= types.SeverityHigh {
+				t.Error("numeric address alone escalated the HTTP-reference severity")
+			}
 		}
 	}
-	if !foundHighIP {
-		t.Error("expected HIGH severity finding for public IP endpoint")
+	if !foundHTTP {
+		t.Error("cleartext HTTP reference was lost")
 	}
 }
 

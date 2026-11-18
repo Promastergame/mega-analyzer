@@ -452,6 +452,19 @@ func IngestStatic(result *types.AnalysisResult) []*Signal {
 // mapStaticType picks a correlation Type from a static Match. Returning
 // "" means "skip this match" (it has no chain meaning).
 func mapStaticType(m types.Match) string {
+	switch m.Category {
+	case types.CategoryWeakCrypto, types.CategoryInsecureTLS:
+		return TypeWeakCrypto
+	case types.CategoryCleartextTraffic:
+		return TypeCleartextEndpoint
+	case types.CategoryHardcodedIP:
+		return TypeHardcodedIPEndpoint
+	}
+	// Long literals are often ciphertext or embedded data. Incidental text
+	// such as "rc4" inside their encoding does not identify an API or threat.
+	if len(m.Pattern) > 512 {
+		return ""
+	}
 	pat := strings.ToLower(m.Pattern)
 	if strings.Contains(pat, "private key") ||
 		strings.Contains(pat, "bearer token") ||
@@ -549,6 +562,9 @@ func isAccessibilityMatchTarget(text string) bool {
 }
 
 func staticTitle(typ string, m types.Match) string {
+	if len(m.Pattern) > 240 {
+		return strings.ReplaceAll(typ, "_", " ") + " (static indicator; full evidence in JSON)"
+	}
 	if m.Pattern != "" {
 		return m.Pattern
 	}

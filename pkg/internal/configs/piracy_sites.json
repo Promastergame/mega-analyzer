@@ -330,10 +330,9 @@
       "domains": ["an1.com", "an1.io"],
       "patterns": [
         {"value": "an1.com", "weight": 1.0},
-        {"value": "an1.io", "weight": 1.0},
-        {"value": "an1", "weight": 0.7, "mode": "word"}
+        {"value": "an1.io", "weight": 1.0}
       ],
-      "watermarks": [{"value": "an1", "confidence": 0.8}],
+      "watermarks": [{"value": "an1.com", "confidence": 0.8}],
       "confidence": 0.9,
       "risk_tags": ["mod"],
       "description": "MOD APK platform",
@@ -703,7 +702,7 @@
         {"value": "vanced", "weight": 0.85, "mode": "word"},
         {"value": "vancedapp", "weight": 1.0},
         {"value": "youtube_vanced", "weight": 1.0},
-        {"value": "microg", "weight": 0.8}
+        {"value": "microg", "weight": 0.8, "mode": "word"}
       ],
       "aliases": ["youtube_vanced", "yt_vanced"],
       "watermarks": [
@@ -1456,20 +1455,37 @@
       "region": "GLOBAL",
       "domains": [],
       "patterns": [
-        {"value": "click_injection", "weight": 1.0},
-        {"value": "fake_click", "weight": 0.95},
-        {"value": "ad_stacking", "weight": 0.9},
-        {"value": "click_flood", "weight": 0.95},
-        {"value": "invisible_ad", "weight": 0.9},
-        {"value": "hidden_webview", "weight": 0.85}
+        {
+          "value": "click_injection",
+          "weight": 1.0
+        },
+        {
+          "value": "ad_stacking",
+          "weight": 0.9
+        },
+        {
+          "value": "click_flood",
+          "weight": 0.95
+        },
+        {
+          "value": "invisible_ad",
+          "weight": 0.9
+        },
+        {
+          "value": "hidden_webview",
+          "weight": 0.85
+        }
       ],
       "patterns_regex": [
         "click[\\._-]?inject",
-        "fake[\\._-]?click",
         "ad[\\._-]?fraud"
       ],
       "confidence": 0.95,
-      "risk_tags": ["ad_fraud", "malware", "click_fraud"],
+      "risk_tags": [
+        "ad_fraud",
+        "malware",
+        "click_fraud"
+      ],
       "description": "Ad fraud/click injection code",
       "evidence_strength": "strong"
     },
@@ -1656,7 +1672,7 @@
         {"value": "spotify_mod", "weight": 1.0},
         {"value": "spotify_premium_mod", "weight": 1.0},
         {"value": "spotifymod", "weight": 1.0},
-        {"value": "xmanager", "weight": 0.95},
+        {"value": "xmanager", "weight": 0.95, "mode": "word"},
         {"value": "spotify_dogfood", "weight": 0.95}
       ],
       "patterns_regex": ["spotify[\\._-]?(mod|premium[\\._-]?mod|cracked)"],
@@ -1822,7 +1838,7 @@
     {"value": "drm_crack", "weight": 1.0},
     {"value": "drm_bypass", "weight": 1.0},
     {"value": "widevine_crack", "weight": 1.0},
-    {"value": "keygen", "weight": 0.95},
+    {"value": "keygen", "weight": 0.95, "mode": "word"},
     {"value": "serial_generator", "weight": 0.95},
     {"value": "activation_crack", "weight": 1.0},
     {"value": "trial_reset", "weight": 0.9},

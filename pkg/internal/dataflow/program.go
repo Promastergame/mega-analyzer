@@ -3,6 +3,7 @@ package dataflow
 import (
 	"context"
 	"encoding/json"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -12,15 +13,17 @@ import (
 )
 
 type methodData struct {
-	Signature string
-	Class     string
-	Name      string
-	Params    string
-	Body      []string
-	Path      string
-	LineStart int
-	IsStatic  bool
-	IsNative  bool // declared native (JNI): no body, opaque callee
+	Signature       string
+	Class           string
+	Name            string
+	Params          string
+	Body            []string
+	SourceBody      []string // retained representation, before parameter alias normalization
+	SourceAmbiguous bool     // conflicting definitions must not produce a source proof
+	Path            string
+	LineStart       int
+	IsStatic        bool
+	IsNative        bool // declared native (JNI): no body, opaque callee
 }
 
 // classData is the hierarchy fragment required to resolve app-owned virtual
@@ -71,6 +74,43 @@ func (p *Program) SetCache(cache SummaryCache) {
 	p.mu.Unlock()
 }
 
+// SetAppPackage prioritizes the application's own classes when the method
+// budget truncates the slice set: app code is sliced before library code,
+// so a budget hit costs library coverage first, not visibility into the
+// package under review.
+func (p *Program) SetAppPackage(pkg string) {
+	p.mu.Lock()
+	p.config.AppPackage = pkg
+	p.mu.Unlock()
+}
+
+// SetExportedComponents records the manifest's effectively exported
+// components; entry-point taint labels depend on them.
+func (p *Program) SetExportedComponents(set map[string]struct{}) {
+	p.mu.Lock()
+	p.config.ExportedComponents = set
+	p.mu.Unlock()
+}
+
+// prioritizeSignatures returns signatures ordered app-package first, each
+// group alphabetically. A budget truncation then trims libraries, not app code.
+func prioritizeSignatures(signatures []string, appPackage string) []string {
+	if appPackage == "" {
+		return signatures
+	}
+	prefix := "L" + strings.ReplaceAll(appPackage, ".", "/") + "/"
+	appFirst := make([]string, 0, len(signatures))
+	rest := make([]string, 0, len(signatures))
+	for _, s := range signatures {
+		if strings.HasPrefix(s, prefix) {
+			appFirst = append(appFirst, s)
+		} else {
+			rest = append(rest, s)
+		}
+	}
+	return append(appFirst, rest...)
+}
+
 func (p *Program) AddClass(path string, class *types.SmaliClass) {
 	if class == nil {
 		return
@@ -106,9 +146,17 @@ func (p *Program) AddClass(path string, class *types.SmaliClass) {
 			Path: path, LineStart: method.LineStart, IsStatic: method.Access.IsStatic(),
 			IsNative: native,
 		}
+		data.SourceBody = data.Body
 		data.Body = normalizeParameterAliases(data)
-		if existing, ok := p.methods[data.Signature]; !ok || data.Path < existing.Path {
+		existing, exists := p.methods[data.Signature]
+		if exists {
+			data.SourceAmbiguous = existing.SourceAmbiguous || !slices.Equal(existing.Body, data.Body) || existing.IsStatic != data.IsStatic || existing.IsNative != data.IsNative
+		}
+		if !exists || data.Path < existing.Path {
 			p.methods[data.Signature] = data
+		} else if data.SourceAmbiguous {
+			existing.SourceAmbiguous = true
+			p.methods[data.Signature] = existing
 		}
 	}
 }
@@ -139,6 +187,7 @@ func (p *Program) Analyze(ctx context.Context) Result {
 		signatures = append(signatures, signature)
 	}
 	sort.Strings(signatures)
+	signatures = prioritizeSignatures(signatures, p.config.AppPackage)
 	if len(signatures) > p.config.MaxMethods {
 		result.Stats.MethodsTruncated = len(signatures) - p.config.MaxMethods
 		result.Stats.LimitReached = true
@@ -306,8 +355,13 @@ func analyzeMethod(method methodData, summaries map[string]summary, fields map[s
 			// A signature can model several sinks (e.g. sendBroadcast is both
 			// data exposure and interception); evaluate every match.
 			for _, sink := range sinksFor(call.signature) {
-				if sink.param >= 0 && sink.param < len(args) {
-					value := args[sink.param]
+				if (sink.param >= 0 && sink.param < len(args)) || (sink.param == -1 && !call.isStatic) {
+					value := fact{}
+					if sink.param >= 0 {
+						value = args[sink.param]
+					} else if len(call.registers) > 0 {
+						value = registers[call.registers[0]]
+					}
 					value.Labels &= sink.labels
 					if value.Labels != 0 || value.Params != 0 {
 						if sink.sanitizer == SanitizerNone || value.Sanitized&sink.sanitizer == 0 {

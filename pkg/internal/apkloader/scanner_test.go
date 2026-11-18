@@ -10,6 +10,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestNewFileScanner(t *testing.T) {
@@ -47,7 +49,7 @@ func TestNewFileScanner(t *testing.T) {
 
 func TestFileScanner_ScanDirectory(t *testing.T) {
 	// Create temporary test directory
-	tempDir := t.TempDir()
+	tempDir := testutil.TempDir(t)
 
 	// Create test files
 	testFiles := []string{
@@ -97,7 +99,7 @@ func TestFileScanner_ScanDirectory(t *testing.T) {
 
 func TestFileScanner_ConcurrentProcessing(t *testing.T) {
 	// Create temporary test directory with many files
-	tempDir := t.TempDir()
+	tempDir := testutil.TempDir(t)
 
 	fileCount := 100
 	for i := 0; i < fileCount; i++ {
@@ -143,7 +145,7 @@ func TestFileScanner_ConcurrentProcessing(t *testing.T) {
 }
 
 func TestFileScanner_ContextCancellation(t *testing.T) {
-	tempDir := t.TempDir()
+	tempDir := testutil.TempDir(t)
 
 	// Create many files
 	for i := 0; i < 50; i++ {
@@ -186,7 +188,7 @@ func TestFileScanner_ContextCancellation(t *testing.T) {
 }
 
 func TestFileScanner_EmptyDirectory(t *testing.T) {
-	tempDir := t.TempDir()
+	tempDir := testutil.TempDir(t)
 
 	scanner := NewFileScanner(4)
 	ctx := context.Background()

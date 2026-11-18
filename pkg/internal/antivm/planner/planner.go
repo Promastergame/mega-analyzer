@@ -25,6 +25,10 @@ type Options struct {
 	Strict bool
 	// Only, when non-empty, restricts the run to modules whose Name() is listed.
 	Only map[string]bool
+	// ContinueOnFailure collects all module results but retains a failed outcome.
+	ContinueOnFailure bool
+	// VerifyOnly reads the device without executing configuration operations.
+	VerifyOnly bool
 }
 
 // ModuleResult captures one module's outcome.
@@ -40,6 +44,7 @@ type ModuleResult struct {
 // "applied: true" — the truth is Status plus the per-module results.
 type RunReport struct {
 	Status     verifier.Status `json:"status"`
+	VerifyOnly bool            `json:"verify_only"`
 	Modules    []ModuleResult  `json:"modules"`
 	Operations []PlannedOp     `json:"operations"`
 	Warnings   []string        `json:"warnings,omitempty"`
@@ -84,7 +89,7 @@ func (pl *Planner) Plan(opts Options) []PlannedOp {
 // Run executes the plan. now is injected so callers control timestamps
 // (keeps the function testable and free of ambient time in scripts).
 func (pl *Planner) Run(ctx context.Context, dev adapter.DeviceAdapter, opts Options, now func() time.Time) (RunReport, error) {
-	rep := RunReport{StartedAt: now(), Status: verifier.StatusPassed}
+	rep := RunReport{StartedAt: now(), Status: verifier.StatusPassed, VerifyOnly: opts.VerifyOnly}
 	rep.Operations = pl.Plan(opts)
 
 	// Step 1: validate the whole profile up front. A malformed profile aborts.
@@ -106,12 +111,17 @@ func (pl *Planner) Run(ctx context.Context, dev adapter.DeviceAdapter, opts Opti
 		if opts.Only != nil && !opts.Only[m.Name()] {
 			continue
 		}
-		mr := pl.runModule(ctx, dev, m)
+		mr := pl.runModule(ctx, dev, m, opts.VerifyOnly)
 		rep.Modules = append(rep.Modules, mr)
 
-		if mr.Err != "" || mr.Verify.Status == verifier.StatusFailed {
+		if mr.Err != "" || !mr.Applied.OK() || mr.Verify.Status == verifier.StatusFailed {
 			isCritical := mr.Critical || opts.Strict
 			if isCritical {
+				rep.Status = verifier.StatusFailed
+				if opts.ContinueOnFailure && !opts.Strict && ctx.Err() == nil {
+					rep.Warnings = append(rep.Warnings, fmt.Sprintf("%s: %s", m.Name(), moduleProblem(mr)))
+					continue
+				}
 				rep.Aborted = true
 				rep.AbortedBy = m.Name()
 				rep.Status = verifier.StatusFailed
@@ -127,24 +137,39 @@ func (pl *Planner) Run(ctx context.Context, dev adapter.DeviceAdapter, opts Opti
 	}
 
 	rep.FinishedAt = now()
+	if rep.Status == verifier.StatusFailed {
+		return rep, fmt.Errorf("one or more critical modules failed")
+	}
 	return rep, nil
 }
 
 // runModule validates, applies (with retries), and verifies one module.
-func (pl *Planner) runModule(ctx context.Context, dev adapter.DeviceAdapter, m modules.Module) ModuleResult {
+func (pl *Planner) runModule(ctx context.Context, dev adapter.DeviceAdapter, m modules.Module, verifyOnly bool) ModuleResult {
 	mr := ModuleResult{Module: m.Name(), Critical: moduleCritical(m, pl.profile)}
 
 	if err := m.Validate(pl.profile); err != nil {
 		mr.Err = err.Error()
 		return mr
 	}
+	var timeout time.Duration
+	for _, op := range m.Plan(pl.profile) {
+		timeout += op.Timeout * time.Duration(op.RetryCount+1)
+	}
+	if timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, timeout)
+		defer cancel()
+	}
 
 	// Apply with retries derived from the module's plan.
 	retries := maxRetries(m.Plan(pl.profile))
 	var applyErr error
-	for attempt := 0; attempt <= retries; attempt++ {
+	for attempt := 0; !verifyOnly && attempt <= retries; attempt++ {
 		mr.Applied, applyErr = m.Apply(ctx, dev)
 		if applyErr == nil {
+			break
+		}
+		if ctx.Err() != nil {
 			break
 		}
 	}
@@ -186,6 +211,9 @@ func maxRetries(ops []modules.Operation) int {
 func moduleProblem(mr ModuleResult) string {
 	if mr.Err != "" {
 		return mr.Err
+	}
+	if len(mr.Applied.Failed) > 0 {
+		return fmt.Sprintf("%d command(s) failed: %s", len(mr.Applied.Failed), mr.Applied.Failed[0].Err)
 	}
 	if len(mr.Verify.Mismatches) > 0 {
 		return fmt.Sprintf("%d verification mismatch(es)", len(mr.Verify.Mismatches))

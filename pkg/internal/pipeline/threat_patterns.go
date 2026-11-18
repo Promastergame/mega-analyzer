@@ -518,7 +518,7 @@ var NativePatterns = []PatternGroup{
 		Patterns: []SignalPattern{
 			{
 				Signal:   SignalFrida,
-				Patterns: [][]byte{[]byte("frida"), []byte("FRIDA"), []byte("gum-js-loop"), []byte("frida-agent")},
+				Patterns: [][]byte{[]byte("frida"), []byte("FRIDA"), []byte("gum-js-loop"), []byte("frida-agent"), []byte("libfrida")},
 				Context:  "Frida detection",
 			},
 			{

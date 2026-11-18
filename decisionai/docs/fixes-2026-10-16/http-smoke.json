@@ -1,0 +1,95 @@
+{
+  "health": {
+    "accel": "Nim+FASM",
+    "backend": "System One v1.17.0 · ансамбль из 2 моделей",
+    "calibration_issue": "legacy_calibration_unbound",
+    "configuration_fingerprint": "1a4e495522e751d01458f1df3cb757b4d625dadefa9c369d197d0c24715b6bfb",
+    "experts": [
+      "server-rule",
+      "checks-rule",
+      "finding-rule",
+      "smalirole",
+      "game-search",
+      "basics-rule",
+      "quantity-rule",
+      "math-rule",
+      "textai"
+    ],
+    "games": [
+      "tic_tac_toe",
+      "maze",
+      "tetris",
+      "russian_checkers"
+    ],
+    "model": "dai-s1-1.17.0",
+    "status": "ok",
+    "version": "1.17.0",
+    "vision_configured": true
+  },
+  "page_statuses": {
+    "/playground": 200,
+    "/collect": 200,
+    "/games": 200
+  },
+  "decision": {
+    "version": "1.17.0",
+    "model": "dai-s1-1.17.0",
+    "backend": "experts",
+    "answers": {
+      "q": {
+        "type": "noul",
+        "calculation": {
+          "facts": [
+            {
+              "value": 1000,
+              "role": "have",
+              "source": "Бюджет 1000 рублей"
+            },
+            {
+              "value": 900,
+              "role": "need",
+              "source": "Стоимость товара 900 рублей"
+            },
+            {
+              "value": 200,
+              "role": "extra",
+              "source": "Обязательная доставка 200 рублей"
+            }
+          ],
+          "initial_available": 1000,
+          "initial_required": 900,
+          "steps": [
+            {
+              "target": "required",
+              "operation": "add",
+              "operand": 200,
+              "result": 1100
+            }
+          ],
+          "available": 1000,
+          "required": 1100,
+          "shortfall": 100,
+          "unit": "RUB",
+          "enough": false,
+          "verified": true
+        },
+        "noul": 0.03,
+        "route": "auto",
+        "evidence": [
+          "Бюджет 1000 рублей",
+          "Стоимость товара 900 рублей",
+          "Обязательная доставка 200 рублей",
+          "После приведения единиц и всех операций: 1000 рублей доступно, 1100 рублей требуется; нехватка 100 рублей."
+        ],
+        "source": "quantity-rule"
+      }
+    },
+    "usage": {
+      "input_tokens": 0,
+      "output_tokens": 0,
+      "model_calls": 0,
+      "cache_hits": 0
+    },
+    "elapsed_ms": 0.5
+  }
+}

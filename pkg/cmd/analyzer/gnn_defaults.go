@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 
 	"mega-analyzer/pkg/ml/gnncache"
 )
@@ -16,13 +18,35 @@ const defaultContentCacheDir = ".analyzer-cache/content"
 // which weights. There is no enable flag by design: an explicit -gnn-model
 // always wins ("__dummy__" selects random weights for testing the
 // mechanics); otherwise weights dropped into
-// ~/.analyzer/models/gnn_weights.json are picked up automatically, and when
-// they are absent the stage is skipped entirely at zero cost.
+// ~/.analyzer/models/gnn_weights.json or a JSON model shipped with the binary
+// are picked up automatically. Only formats supported by the Go validation
+// contract are discovered.
 func resolveGNNModelPath(configured string) string {
 	if configured != "" {
 		return configured
 	}
-	return gnncache.DiscoverWeights()
+	if weights := gnncache.DiscoverWeights(); weights != "" {
+		return weights
+	}
+	executable, err := os.Executable()
+	if err != nil {
+		return ""
+	}
+	return discoverBundledGNNWeights(filepath.Dir(executable))
+}
+
+func discoverBundledGNNWeights(executableDir string) string {
+	for _, dir := range []string{
+		filepath.Join(executableDir, "models"), executableDir,
+		filepath.Join(executableDir, "rust"),
+		filepath.Join(executableDir, "..", "models"), filepath.Join(executableDir, "..", "rust"),
+	} {
+		path := filepath.Join(dir, "gnn_weights.json")
+		if info, err := os.Stat(path); err == nil && info.Mode().IsRegular() {
+			return filepath.Clean(path)
+		}
+	}
+	return ""
 }
 
 func gnnCacheDiskLimitBytes(megabytes int64) int64 {

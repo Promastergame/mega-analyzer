@@ -21,24 +21,9 @@ import (
 type Backend string
 
 const (
-	BackendAuto     Backend = "auto" // resolves to native, regardless of installed tools
-	BackendNative   Backend = "native"
-	BackendBaksmali Backend = "baksmali"
+	BackendAuto   Backend = "auto" // resolves to native, regardless of installed tools
+	BackendNative Backend = "native"
 )
-
-// BaksmaliOptions applies only to an explicitly selected baksmali backend.
-// Empty paths enable discovery for that backend. Native decoding never
-// discovers, unpacks or launches external tools.
-type BaksmaliOptions struct {
-	JarPath              string
-	JavaPath             string
-	APILevel             int
-	Jobs                 int
-	JavaHeapMB           int
-	UseLocals            bool
-	SequentialLabels     bool
-	NoParameterRegisters bool
-}
 
 type Options struct {
 	// OutputDir defaults to decoded_<input basename> in the working directory.
@@ -54,7 +39,6 @@ type Options struct {
 	ClassCache   bool
 	CopyOriginal bool
 	FrameworkDir string
-	Baksmali     BaksmaliOptions
 }
 
 // Result is also the JSON contract used by the standalone command.
@@ -100,12 +84,8 @@ func Decode(ctx context.Context, input string, opts Options) (Result, error) {
 	switch opts.Backend {
 	case "", BackendAuto, BackendNative:
 		result.Backend = BackendNative
-	case BackendBaksmali:
-		if opts.Standalone || apkloader.Standalone() {
-			return result, fmt.Errorf("standalone mode forbids the baksmali backend; use native")
-		}
 	default:
-		return result, fmt.Errorf("invalid backend %q: use auto, native or baksmali", opts.Backend)
+		return result, fmt.Errorf("invalid backend %q: use native or auto", opts.Backend)
 	}
 	output := opts.OutputDir
 	if output == "" {
@@ -119,27 +99,11 @@ func Decode(ctx context.Context, input string, opts Options) (Result, error) {
 		return result, fmt.Errorf("output directory must not contain the input file")
 	}
 
-	var cfg apkloader.SmaliToolConfig
-	if result.Backend == BackendBaksmali && !opts.NoSmali {
-		cfg = apkloader.DefaultSmaliConfig()
-		if opts.Baksmali.JarPath != "" {
-			cfg.BaksmaliJar = opts.Baksmali.JarPath
-		}
-		if opts.Baksmali.JavaPath != "" {
-			cfg.JavaBinary = opts.Baksmali.JavaPath
-		}
-		cfg.APILevel = opts.Baksmali.APILevel
-		cfg.Jobs = opts.Baksmali.Jobs
-		cfg.JavaHeapMB = opts.Baksmali.JavaHeapMB
-		cfg.UseLocals = opts.Baksmali.UseLocals
-		cfg.SequentialLabels = opts.Baksmali.SequentialLabels
-		cfg.NoParameterRegisters = opts.Baksmali.NoParameterRegisters
-	}
 	decodeOpts := apkloader.DecodeOptions{
 		OutputDir: absOutput, NoResources: opts.NoResources, NoSmali: opts.NoSmali,
 		SmaliHeaders: opts.Headers, Standalone: opts.Standalone,
 		FrameworkDir: opts.FrameworkDir, CopyOriginal: opts.CopyOriginal,
-		SmaliCfg: cfg, DexBackend: apkloader.DecompileBackend(result.Backend), ClassCache: opts.ClassCache,
+		DexBackend: apkloader.DecompileBackend(result.Backend), ClassCache: opts.ClassCache,
 		JavaView: opts.JavaView,
 	}
 	loader := apkloader.NewExtractor()

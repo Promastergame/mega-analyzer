@@ -72,8 +72,9 @@ func TestNativeSecretFindings(t *testing.T) {
 
 // TestNativeSecretFindings_NumericPin covers the short-PIN heuristic: a bare
 // digit run near a credential keyword ("password:") is Medium (matching the
-// Rust scan_numeric_candidates severity policy), the same shape far from any
-// keyword is only Low.
+// Rust scan_numeric_candidates severity policy); the same shape far from any
+// keyword is inventory (Info), because a numeric literal alone is not a
+// credential.
 func TestNativeSecretFindings_NumericPin(t *testing.T) {
 	var buf bytes.Buffer
 	buf.WriteString("password:\x00")
@@ -84,7 +85,7 @@ func TestNativeSecretFindings_NumericPin(t *testing.T) {
 
 	findings := NativeSecretFindings(data, "libfoo.so", false, true)
 
-	var gotMedium, gotLow bool
+	var gotMedium, gotInfo bool
 	for _, f := range findings {
 		if !strings.Contains(f.Reason, "PIN/password") {
 			continue
@@ -92,15 +93,15 @@ func TestNativeSecretFindings_NumericPin(t *testing.T) {
 		switch f.Severity {
 		case types.SeverityMedium:
 			gotMedium = true
-		case types.SeverityLow:
-			gotLow = true
+		case types.SeverityInfo:
+			gotInfo = true
 		}
 	}
 	if !gotMedium {
 		t.Error("expected a Medium numeric-PIN finding near the \"password:\" keyword")
 	}
-	if !gotLow {
-		t.Error("expected a Low numeric-PIN finding with no nearby keyword")
+	if !gotInfo {
+		t.Error("expected an Info numeric-literal finding with no nearby keyword")
 	}
 }
 
@@ -155,7 +156,9 @@ func TestNativeSecretFindings_NumericPinCap(t *testing.T) {
 	var buf bytes.Buffer
 	for i := 0; i < maxNumericPinFindings+5; i++ {
 		buf.WriteString("\x00")
-		fmt.Fprintf(&buf, "%03d", i%1000)
+		// 4-digit values with >=3 distinct digits are candidates; 3-digit
+		// runs and low-diversity literals are filtered before the cap.
+		fmt.Fprintf(&buf, "%04d", 1023+i)
 	}
 	data := buf.Bytes()
 

@@ -150,3 +150,27 @@ func TestResidueScore_CleanIsZero(t *testing.T) {
 		t.Errorf("clean score = %v, want 0", s)
 	}
 }
+
+func TestScanResidueRecognizesEnabledFlagsAndFilePresence(t *testing.T) {
+	flat := map[string]string{
+		"props.ro.kernel.qemu":                "1",
+		"props.ro.boot.qemu":                  "0",
+		"extra.file:/dev/qemu_pipe":           "yes",
+		"extra.file:/dev/socket/qemud":        "no",
+		"extra.unreadable:/dev/goldfish_pipe": "qemu probe failed",
+		"props.init.svc.goldfish-logcat": "running",
+		"props.init.svc.goldfish-setup": "stopped",
+	}
+	findings := scanResidue(flat)
+	if len(findings) != 3 {
+		t.Fatalf("findings=%+v", findings)
+	}
+}
+
+func TestSessionDiffRejectsInvalidThreshold(t *testing.T) {
+	for _, threshold := range []string{"-1", "101", "NaN", "+Inf"} {
+		if code := Run([]string{"session", "diff", "--residue-threshold", threshold}); code != 2 {
+			t.Fatalf("threshold %s returned %d", threshold, code)
+		}
+	}
+}

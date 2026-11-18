@@ -1,38 +1,38 @@
   // ──────────── IMAGE viewer ────────────
   function renderImageShell(item){
+    var hidePreview = shouldHideImage(item);
+    var sensitiveNotice = '';
+    if(hidePreview){
+      var message = item.image && item.image.preview && item.image.preview.status !== 'checked'
+        ? 'Превью не проверено' : 'Возможен чувствительный контент';
+      sensitiveNotice = '<div class="art-sensitive-notice" role="note"><span>' + message + '</span>'
+        + '<button type="button" data-sensitive-toggle aria-expanded="false">Показать</button></div>';
+    }
     var sub = (item.image && item.image.width ? item.image.width+' \\u00D7 '+item.image.height+' · ' : '')
             + escapeHtml(item.mime || 'image/*') + ' · ' + humanSize(item.size||0);
     var isSvg = (item.path && item.path.toLowerCase().endsWith('.svg')) || (item.mime && item.mime.indexOf('svg') !== -1);
     var svgNotice = '';
     if (isSvg) {
-      var hasScript = false;
-      if (item.embedded_data_uri) {
-        try {
-          var base64Part = item.embedded_data_uri.split(',')[1] || item.embedded_data_uri.split(',')[0];
-          var svgContent = atob(base64Part);
-          var lowerSvg = svgContent.toLowerCase();
-          if (lowerSvg.indexOf('<script') !== -1 || lowerSvg.indexOf('javascript:') !== -1 || lowerSvg.indexOf('<foreignobject') !== -1 || lowerSvg.indexOf('<set') !== -1 || lowerSvg.indexOf('<animate') !== -1 || lowerSvg.indexOf('onload=') !== -1 || lowerSvg.indexOf('onclick=') !== -1 || lowerSvg.indexOf('onerror=') !== -1 || lowerSvg.indexOf('onmouseover=') !== -1 || lowerSvg.indexOf('onfocusin=') !== -1 || lowerSvg.indexOf('onbegin=') !== -1) {
-            hasScript = true;
-          }
-        } catch(e) {}
-      }
+      var hasScript = !!(item.svg && item.svg.active);
+      var checked = !!(item.svg && item.svg.complete);
       if (hasScript) {
         svgNotice = '<div class="art-svg-notice" style="padding:10px 14px; background:rgba(255,107,107,.12); border:1px solid rgba(255,107,107,.25); border-radius:8px; display:flex; align-items:center; gap:10px; margin: 12px auto; width: min(560px, 90%); font-size:12px; color:#ff8787;">'
           + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>'
-          + '<span><strong>Vector Asset Security Risk:</strong> This SVG contains active script elements or event handlers. High risk of XSS execution in unsandboxed environments.</span>'
+          + '<span><strong>Active SVG content:</strong> Scripts, event handlers or executable references were found. This viewer loads SVG as an image; execution in other contexts depends on how it is embedded.</span>'
           + '</div>';
       } else {
         svgNotice = '<div class="art-svg-notice" style="padding:10px 14px; background:rgba(81,207,98,.12); border:1px solid rgba(81,207,98,.25); border-radius:8px; display:flex; align-items:center; gap:10px; margin: 12px auto; width: min(560px, 90%); font-size:12px; color:#69db7c;">'
           + '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex:0 0 auto;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>'
-          + '<span><strong>Vector Asset Security Check:</strong> Secure. No active scripting or event triggers found inside this SVG asset.</span>'
+          + '<span><strong>SVG inspection:</strong> ' + (checked ? 'No active content indicators found. This is not a safety guarantee.' : 'Inspection is incomplete or unavailable.') + '</span>'
           + '</div>';
       }
     }
     return '<div class="art-shell" data-kind="image">'
       + shellHead(item, sub)
       + svgNotice
+      + sensitiveNotice
       + '<div class="art-shell-body">'
-      +   '<div class="art-imgwrap" tabindex="0">'
+      +   '<div class="art-imgwrap' + (hidePreview ? ' is-sensitive-hidden' : '') + '" tabindex="0">'
       +     '<canvas class="art-canvas"></canvas>'
       +     '<canvas class="art-overlay"></canvas>'
       +     '<div class="art-zoom-badge"><span class="zv">100%</span></div>'
@@ -112,6 +112,14 @@
     var overlay = dlg.querySelector('.art-overlay');
     var zoomLbl = dlg.querySelector('.zv');
     if(!wrap || !canvas) return;
+    var sensitiveToggle = dlg.querySelector('[data-sensitive-toggle]');
+    if(sensitiveToggle){
+      sensitiveToggle.addEventListener('click', function(){
+        var hidden = wrap.classList.toggle('is-sensitive-hidden');
+        sensitiveToggle.textContent = hidden ? 'Показать' : 'Скрыть';
+        sensitiveToggle.setAttribute('aria-expanded', String(!hidden));
+      });
+    }
     var ctx  = canvas.getContext('2d', {willReadFrequently:true});
     var octx = overlay ? overlay.getContext('2d') : null;
     var src  = item.embedded_data_uri || item.external_path;

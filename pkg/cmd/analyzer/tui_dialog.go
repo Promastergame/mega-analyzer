@@ -64,7 +64,7 @@ func (d *dialogState) handleKey(ev keyEvent) bool {
 			return true
 		}
 	}
-	return false
+	return true // a modal must never pass keystrokes through to a text field
 }
 
 func (d *dialogState) render(width int) []string {

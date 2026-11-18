@@ -311,12 +311,12 @@ func (d *ManifestInfoDetector) extractPermissions(ctx *FileDetectContext, analys
 		line := lineAt(ctx.LineOffsets, m[0])
 
 		// Classify risk level
-		desc, suspicious := d.classifyPermission(perm)
+		desc, _ := d.classifyPermission(perm)
 
 		analysis.Matches = append(analysis.Matches, newMatch(
 			types.CategoryManifestPermission,
 			analysis.Path, line,
-			desc, perm, suspicious,
+			desc, perm, false,
 		))
 	}
 }

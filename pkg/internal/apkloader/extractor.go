@@ -6,11 +6,14 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"crypto/rand"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"mega-analyzer/pkg/internal/apkloader/axml"
 	"mega-analyzer/pkg/internal/apkloader/obb"
+	"mega-analyzer/pkg/internal/boundedfile"
 	"mega-analyzer/pkg/internal/configs"
 	"mega-analyzer/pkg/internal/jarloader"
 	"mega-analyzer/pkg/internal/types"
@@ -29,6 +32,8 @@ const (
 	maxSingleFile  = 3 * 1024 * 1024 * 1024
 	maxFileCount   = 200_000
 	maxZipRatio    = 10000.0
+	maxXMLBytes    = 64 << 20
+	maxARSCBytes   = 256 << 20
 	// heuristicScanLimit caps bytes read per artifact during pattern scanning.
 	// Injected payloads and loaders front-load their code, so 4 MB
 	// covers the relevant region without reading entire large files.
@@ -59,7 +64,6 @@ var suspiciousPatterns = [][]byte{
 	[]byte("reverse_tcp"),
 	[]byte("meterpreter"),
 	[]byte("metasploit"),
-	[]byte("payload"),
 	[]byte("/dev/tcp/"),
 	[]byte("keylogger"),
 	[]byte("android.permission.SEND_SMS"),
@@ -80,6 +84,10 @@ type Extractor struct {
 	NativeSoPaths []string           // cached paths to .so files found during extraction
 	CrackPoints   []types.CrackPoint // license/premium/tamper gates from JAR & native scans
 	nativeData    map[string][]byte  // bytes scanned by analyzeNativeSo, reused by runWeaponization
+	// seenNumericPin dedupes native numeric-literal findings across ABI copies
+	// of the same library: a string is a property of the binary, not of each
+	// lib/<abi>/ variant.
+	seenNumericPin map[string]bool
 }
 
 func NewExtractor() *Extractor {
@@ -105,6 +113,7 @@ func (e *Extractor) resetState() {
 	e.NativeSoPaths = e.NativeSoPaths[:0]
 	e.CrackPoints = e.CrackPoints[:0]
 	e.nativeData = nil
+	e.seenNumericPin = nil
 }
 
 func (e *Extractor) PrepareInput(ctx context.Context, inputPath string) (string, error) {
@@ -284,7 +293,15 @@ func (e *Extractor) extractZipBundle(ctx context.Context, archivePath, op string
 	return "", &LoaderError{Op: op, err: errArchiveNoSupportedFiles}
 }
 
-func (e *Extractor) extractZipSafe(ctx context.Context, zipPath, destDir string) error {
+func (e *Extractor) extractZipSafe(ctx context.Context, zipPath, destDir string) (resultErr error) {
+	defer func() {
+		switch {
+		case errors.Is(resultErr, errZipBomb):
+			e.addFinding(zipPath, types.SeverityCritical, "[ARCHIVE_RESOURCE_LIMIT] ZIP extraction limit exceeded; possible ZIP bomb: "+resultErr.Error())
+		case errors.Is(resultErr, zip.ErrFormat), errors.Is(resultErr, zip.ErrAlgorithm), errors.Is(resultErr, zip.ErrChecksum):
+			e.addFinding(zipPath, types.SeverityHigh, "[ARCHIVE_INVALID_DATA] ZIP headers, compression or checksum are invalid: "+resultErr.Error())
+		}
+	}()
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -306,6 +323,20 @@ func (e *Extractor) extractZipSafe(ctx context.Context, zipPath, destDir string)
 	jobsList, err := e.planZipExtraction(r.File, destDir)
 	if err != nil {
 		return err
+	}
+	if err := os.MkdirAll(destDir, 0755); err != nil {
+		return err
+	}
+	root, err := os.OpenRoot(destDir)
+	if err != nil {
+		return err
+	}
+	defer root.Close()
+	for i := range jobsList {
+		jobsList[i].path, err = filepath.Rel(destDir, jobsList[i].path)
+		if err != nil {
+			return err
+		}
 	}
 
 	var (
@@ -373,7 +404,7 @@ func (e *Extractor) extractZipSafe(ctx context.Context, zipPath, destDir string)
 				f := job.file
 				if job.isDir {
 					mkdirMu.Lock()
-					mkErr := os.MkdirAll(job.path, 0755)
+					mkErr := root.MkdirAll(job.path, 0755)
 					mkdirMu.Unlock()
 					if mkErr != nil {
 						fail(fmt.Errorf("create directory for %q: %w", f.Name, mkErr))
@@ -383,14 +414,14 @@ func (e *Extractor) extractZipSafe(ctx context.Context, zipPath, destDir string)
 				}
 
 				mkdirMu.Lock()
-				err := os.MkdirAll(filepath.Dir(job.path), 0755)
+				err := root.MkdirAll(filepath.Dir(job.path), 0755)
 				mkdirMu.Unlock()
 				if err != nil {
 					fail(fmt.Errorf("create parent for %q: %w", f.Name, err))
 					return
 				}
 
-				_, err = extractZipFile(f, job.path, copyBuf, &budget)
+				_, err = extractZipFile(ctx, root, f, job.path, copyBuf, &budget)
 				if err != nil {
 					fail(fmt.Errorf("extract %q: %w", f.Name, err))
 					return
@@ -433,49 +464,132 @@ type zipExtractJob struct {
 // planZipExtraction validates central-directory metadata before any file is
 // written and resolves every entry to an unambiguous destination path.
 func (e *Extractor) planZipExtraction(files []*zip.File, destDir string) ([]zipExtractJob, error) {
+	// Packers plant decoy primary files at rooted names ("/AndroidManifest.xml",
+	// "//classes.dex") AHEAD of the real entry, so naive path normalization
+	// hands the canonical name to the decoy and the OS-visible file ends up
+	// renamed to _dupN — the scanner then silently analyzes the decoy
+	// manifest (observed: 11 permissions missing, 60509→42742 bytes). Exact
+	// original names always win normalized collisions: within each
+	// normalized-name group, canonical entries sort first and rooted
+	// duplicates are disambiguated instead.
+	sortedFiles := make([]*zip.File, len(files))
+	copy(sortedFiles, files)
+	sort.SliceStable(sortedFiles, func(i, j int) bool {
+		ni, nj := normalizeZipEntryName(sortedFiles[i].Name), normalizeZipEntryName(sortedFiles[j].Name)
+		if ni != nj {
+			return ni < nj
+		}
+		return isExactZipEntryName(sortedFiles[i].Name) && !isExactZipEntryName(sortedFiles[j].Name)
+	})
+	files = sortedFiles
+
 	jobs := make([]zipExtractJob, 0, len(files))
 	seen := make(map[string]zipExtractJob, len(files))
 	var declaredTotal uint64
 
-	// Every directory an entry will require (itself for dirs, all ancestors
-	// for everything). A file sitting on one of those paths would make the
-	// later MkdirAll fail and abort the whole extraction, so such files are
-	// renamed _dup upfront (obfuscated APKs ship entries "a" and "a/b").
-	neededDirs := make(map[string]bool)
+	pathKey := func(p string) string {
+		p = filepath.Clean(p)
+		if runtime.GOOS == "windows" {
+			p = strings.ToLower(p)
+		}
+		return p
+	}
+	rootKey := pathKey(destDir)
+	originalJobs := make([]zipExtractJob, 0, len(files))
+	occupied := make(map[string]bool, len(files))
 	for _, f := range files {
-		if outPath, ok := safeZipOutputPath(destDir, f.Name); ok {
-			p := filepath.ToSlash(filepath.Clean(outPath))
-			if runtime.GOOS == "windows" {
-				p = strings.ToLower(p)
-			}
-			for {
-				idx := strings.LastIndexByte(p, '/')
-				if idx < 0 {
-					break
-				}
-				p = p[:idx]
-				neededDirs[p] = true
-			}
-			if f.Mode().IsDir() {
-				self := filepath.ToSlash(filepath.Clean(outPath))
-				if runtime.GOOS == "windows" {
-					self = strings.ToLower(self)
-				}
-				neededDirs[self] = true
-			}
+		outPath, ok := safeZipOutputPath(destDir, normalizeZipEntryName(f.Name))
+		if ok && (f.Mode().IsRegular() || f.Mode().IsDir()) {
+			originalJobs = append(originalJobs, zipExtractJob{file: f, path: outPath, isDir: f.Mode().IsDir()})
+			occupied[pathKey(outPath)] = true
 		}
 	}
+	// Use native paths consistently in both the directory pre-pass and the
+	// file collision lookup. Mixing slash and backslash keys missed every
+	// file/directory collision on Windows.
+	requiredDirectories := func(jobs []zipExtractJob) map[string]bool {
+		dirs := make(map[string]bool)
+		for _, job := range jobs {
+			p := job.path
+			if !job.isDir {
+				p = filepath.Dir(p)
+			}
+			for pathKey(p) != rootKey && filepath.Dir(p) != p {
+				dirs[pathKey(p)] = true
+				p = filepath.Dir(p)
+			}
+		}
+		return dirs
+	}
+	neededDirs := requiredDirectories(originalJobs)
+
+	// Protected APKs place resources below names that are also primary files,
+	// such as AndroidManifest.xml/anim/x.xml. Keep the manifest, DEX and ARSC
+	// at their expected names and relocate only those resource directories.
+	directoryAliases := make(map[string]string)
+	for _, job := range originalJobs {
+		key := pathKey(job.path)
+		rel, err := filepath.Rel(destDir, job.path)
+		if err != nil || job.isDir || !neededDirs[key] || !isPrimaryAPKRootFile(rel) {
+			continue
+		}
+		if _, exists := directoryAliases[key]; exists {
+			continue
+		}
+		for counter := 1; counter <= 1000; counter++ {
+			candidate := fmt.Sprintf("%s_resources%d", job.path, counter)
+			candidateKey := pathKey(candidate)
+			if !occupied[candidateKey] && !neededDirs[candidateKey] {
+				directoryAliases[key] = candidate
+				occupied[candidateKey] = true
+				e.warn("relocated ZIP resource directory: %q -> %q", rel, filepath.Base(candidate))
+				break
+			}
+		}
+		if _, found := directoryAliases[key]; !found {
+			return nil, fmt.Errorf("%w: cannot relocate directory for %q", errZipPathConflict, job.file.Name)
+		}
+	}
+	projectPath := func(outPath string, isDir bool) string {
+		rel, err := filepath.Rel(destDir, outPath)
+		if err != nil {
+			return outPath
+		}
+		parts := strings.SplitN(rel, string(os.PathSeparator), 2)
+		alias, exists := directoryAliases[pathKey(filepath.Join(destDir, parts[0]))]
+		if exists && (isDir || len(parts) == 2) {
+			if len(parts) == 1 {
+				return alias
+			}
+			return filepath.Join(alias, parts[1])
+		}
+		return outPath
+	}
+	for i := range originalJobs {
+		originalJobs[i].path = projectPath(originalJobs[i].path, originalJobs[i].isDir)
+	}
+	neededDirs = requiredDirectories(originalJobs)
 
 	for _, f := range files {
-		outPath, ok := safeZipOutputPath(destDir, f.Name)
+		normalName := normalizeZipEntryName(f.Name)
+		outPath, ok := safeZipOutputPath(destDir, normalName)
 		if !ok {
+			if normalName == "" {
+				// A name that is empty after normalization (e.g. a bare "\"
+				// entry) carries no path at all: skip it as junk without
+				// accusing the archive of traversal.
+				e.warn("skip empty ZIP entry name: %q", f.Name)
+				continue
+			}
 			e.warn("skip unsafe ZIP path: %q", f.Name)
+			e.addFinding(f.Name, types.SeverityCritical, "[ARCHIVE_PATH_TRAVERSAL] Unsafe archive entry path was blocked (CWE-22)")
 			continue
 		}
 
 		mode := f.Mode()
 		if mode&os.ModeSymlink != 0 {
 			e.warn("skip ZIP symlink: %q", f.Name)
+			e.addFinding(f.Name, types.SeverityHigh, "[ARCHIVE_SYMLINK] Archive symlink was blocked")
 			continue
 		}
 		if !mode.IsRegular() && !mode.IsDir() {
@@ -485,7 +599,10 @@ func (e *Extractor) planZipExtraction(files []*zip.File, destDir string) ([]zipE
 
 		isDir := mode.IsDir()
 		if !isDir {
-			if f.UncompressedSize64 > uint64(maxSingleFile) {
+			if f.Method != zip.Store && f.Method != zip.Deflate {
+				return nil, fmt.Errorf("%w: method %d in %q", zip.ErrAlgorithm, f.Method, f.Name)
+			}
+			if f.UncompressedSize64 > uint64(zipEntryLimit(f.Name)) {
 				return nil, fmt.Errorf("%w: %q is %d bytes", errZipBomb, f.Name, f.UncompressedSize64)
 			}
 			if f.UncompressedSize64 > uint64(maxExtractSize)-declaredTotal {
@@ -501,10 +618,8 @@ func (e *Extractor) planZipExtraction(files []*zip.File, destDir string) ([]zipE
 			}
 		}
 
-		key := filepath.Clean(outPath)
-		if runtime.GOOS == "windows" {
-			key = strings.ToLower(key)
-		}
+		outPath = projectPath(outPath, isDir)
+		key := pathKey(outPath)
 		needsRename := neededDirs[key] && !isDir
 		if previous, exists := seen[key]; exists {
 			if previous.isDir && isDir {
@@ -528,12 +643,15 @@ func (e *Extractor) planZipExtraction(files []*zip.File, destDir string) ([]zipE
 			base := strings.TrimSuffix(outPath, ext)
 			for counter := 1; counter <= 1000; counter++ {
 				newPath := fmt.Sprintf("%s_dup%d%s", base, counter, ext)
-				newKey := filepath.Clean(newPath)
-				if runtime.GOOS == "windows" {
-					newKey = strings.ToLower(newKey)
-				}
+				newKey := pathKey(newPath)
 				if _, dupExists := seen[newKey]; !dupExists && !neededDirs[newKey] {
 					e.warn("disambiguated ZIP path collision: %q -> %q", f.Name, filepath.Base(newPath))
+					// A rooted duplicate of a primary APK file losing its
+					// collision is a planted decoy, not a packer accident:
+					// make the anti-analysis behavior visible in the report.
+					if !isExactZipEntryName(f.Name) && isPrimaryAPKRootFile(normalizeZipEntryName(f.Name)) {
+						e.warn("packer decoy %q renamed; exact-name entry kept", f.Name)
+					}
 					outPath = newPath
 					key = newKey
 					break
@@ -548,10 +666,76 @@ func (e *Extractor) planZipExtraction(files []*zip.File, destDir string) ([]zipE
 	return jobs, nil
 }
 
-func safeZipOutputPath(destDir, name string) (string, bool) {
+func isPrimaryAPKRootFile(name string) bool {
+	if strings.ContainsAny(name, "/\\") {
+		return false
+	}
+	name = strings.ToLower(name)
+	if name == "androidmanifest.xml" || name == "resources.arsc" {
+		return true
+	}
+	if !strings.HasPrefix(name, "classes") || !strings.HasSuffix(name, ".dex") {
+		return false
+	}
+	index := strings.TrimSuffix(strings.TrimPrefix(name, "classes"), ".dex")
+	for _, digit := range index {
+		if digit < '0' || digit > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+// normalizeZipEntryName canonicalizes a ZIP entry name the way Info-ZIP and
+// Python's zipfile do: backslashes become slashes, a leading slash is treated
+// as root-relative and repeated slashes collapse. Packers and repack tools
+// routinely emit duplicate entries such as "/AndroidManifest.xml",
+// "//classes.dex" or a bare backslash alongside the plain root files; those
+// are rooted duplicates, not traversal attempts, so validation must run on the
+// normalized name instead of reporting a CWE-22 attack for every copy.
+func normalizeZipEntryName(name string) string {
 	name = strings.ReplaceAll(name, "\\", "/")
-	if name == "" || strings.IndexByte(name, 0) >= 0 || strings.HasPrefix(name, "/") {
+	name = strings.TrimLeft(name, "/")
+	for strings.Contains(name, "//") {
+		name = strings.ReplaceAll(name, "//", "/")
+	}
+	return name
+}
+
+// isExactZipEntryName reports whether an entry's original name is already
+// canonical — what Android's package installer reads. Rooted duplicates
+// ("/x", "//x", "a\\b", "a//b") are decoys by construction.
+func isExactZipEntryName(name string) bool {
+	return name == normalizeZipEntryName(name)
+}
+
+func safeZipOutputPath(destDir, name string) (string, bool) {
+	name = normalizeZipEntryName(name)
+	if name == "" || strings.IndexByte(name, 0) >= 0 {
 		return "", false
+	}
+	// Anti-analysis archives ship entries whose names approach the zip-format
+	// maximum (65535 bytes); the OS layer then fails the write and aborts the
+	// whole extraction. Windows caps each path component at 255 UTF-16 units
+	// and the whole path at 260 without the \\?\ prefix — reject overlong
+	// names up front so they are skipped like other decoys.
+	if len(name) > 240 {
+		return "", false
+	}
+	for _, part := range strings.Split(name, "/") {
+		if len(part) > 120 {
+			return "", false
+		}
+	}
+	// Reject every parent component, including a/../b that would otherwise
+	// normalize back inside the root, and Windows alternate data streams.
+	for _, part := range strings.Split(name, "/") {
+		if part == ".." || strings.Contains(part, ":") {
+			return "", false
+		}
+		if runtime.GOOS == "windows" && part != "" && part != "." && (strings.HasSuffix(part, ".") || strings.HasSuffix(part, " ")) {
+			return "", false
+		}
 	}
 
 	cleanName := pathpkg.Clean(name)
@@ -603,22 +787,22 @@ func (w extractionBudgetWriter) Write(p []byte) (int, error) {
 
 // extractZipFile writes through a shared extraction budget and only replaces
 // the destination after the entry has passed decompression and CRC checks.
-func extractZipFile(f *zip.File, outPath string, buf []byte, budget *atomic.Int64) (uint64, error) {
+func extractZipFile(ctx context.Context, root *os.Root, f *zip.File, outPath string, buf []byte, budget *atomic.Int64) (uint64, error) {
 	rc, err := f.Open()
 	if err != nil {
 		return 0, err
 	}
 	defer rc.Close()
 
-	out, err := os.CreateTemp(filepath.Dir(outPath), ".apkloader-*")
+	tmpPath := filepath.Join(filepath.Dir(outPath), ".apkloader-"+rand.Text())
+	out, err := root.OpenFile(tmpPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0644)
 	if err != nil {
 		return 0, err
 	}
-	tmpPath := out.Name()
 	keepTemp := false
 	defer func() {
 		if !keepTemp {
-			_ = os.Remove(tmpPath)
+			_ = root.Remove(tmpPath)
 		}
 	}()
 	if err := out.Chmod(0644); err != nil {
@@ -626,7 +810,8 @@ func extractZipFile(f *zip.File, outPath string, buf []byte, budget *atomic.Int6
 		return 0, err
 	}
 
-	limited := io.LimitReader(rc, int64(maxSingleFile)+1)
+	limit := zipEntryLimit(f.Name)
+	limited := io.LimitReader(extractionContextReader{ctx: ctx, reader: rc}, limit+1)
 	written, copyErr := io.CopyBuffer(extractionBudgetWriter{w: out, remaining: budget}, limited, buf)
 	closeErr := out.Close()
 
@@ -638,22 +823,26 @@ func extractZipFile(f *zip.File, outPath string, buf []byte, budget *atomic.Int6
 		budget.Add(written)
 		return 0, closeErr
 	}
-	if written > int64(maxSingleFile) {
+	if written > limit {
 		budget.Add(written)
 		return 0, errZipBomb
 	}
+	if uint64(written) != f.UncompressedSize64 {
+		budget.Add(written)
+		return 0, zip.ErrFormat
+	}
 
-	if err := os.Rename(tmpPath, outPath); err != nil {
+	if err := root.Rename(tmpPath, outPath); err != nil {
 		// Windows does not replace an existing destination with Rename.
-		if _, statErr := os.Lstat(outPath); statErr != nil {
+		if _, statErr := root.Lstat(outPath); statErr != nil {
 			budget.Add(written)
 			return 0, err
 		}
-		if removeErr := os.Remove(outPath); removeErr != nil && !os.IsNotExist(removeErr) {
+		if removeErr := root.Remove(outPath); removeErr != nil && !os.IsNotExist(removeErr) {
 			budget.Add(written)
 			return 0, removeErr
 		}
-		if err := os.Rename(tmpPath, outPath); err != nil {
+		if err := root.Rename(tmpPath, outPath); err != nil {
 			budget.Add(written)
 			return 0, err
 		}
@@ -661,6 +850,31 @@ func extractZipFile(f *zip.File, outPath string, buf []byte, budget *atomic.Int6
 	keepTemp = true
 
 	return uint64(written), nil
+}
+
+func zipEntryLimit(name string) int64 {
+	switch strings.ToLower(filepath.Ext(name)) {
+	case ".xml":
+		return maxXMLBytes
+	case ".svg":
+		return 8 << 20
+	case ".arsc":
+		return maxARSCBytes
+	default:
+		return int64(maxSingleFile)
+	}
+}
+
+type extractionContextReader struct {
+	ctx    context.Context
+	reader io.Reader
+}
+
+func (r extractionContextReader) Read(p []byte) (int, error) {
+	if err := r.ctx.Err(); err != nil {
+		return 0, err
+	}
+	return r.reader.Read(p)
 }
 
 // isUnknownFile returns true when a ZIP entry is outside the standard
@@ -993,6 +1207,13 @@ func (e *Extractor) analyzeNativeSo(path string) {
 		e.warn("failed to read .so file %s: %v", path, err)
 		return
 	}
+	// .bin is a common resource extension (kotlinx ships DebugProbesKt.bin).
+	// JVM classes share 0xCAFEBABE with Mach-O fat binaries, so hand them to
+	// the JVM artifact path instead of the machine-code parsers.
+	if isJavaClassFile(data) {
+		e.warn("[native] %s is a JVM class file, not machine code — skipped", path)
+		return
+	}
 	// Remember the bytes so the Aetrium weaponization pass reuses them
 	// instead of reading (and scanning) the same file a second time.
 	// The entry count is capped вЂ” see maxCachedNativeFiles вЂ” and
@@ -1228,8 +1449,29 @@ func (e *Extractor) addFinding(path string, severity types.Severity, reason stri
 // because two DecodeAPK/PrepareInput callers may share one Extractor.
 func (e *Extractor) addFindings(fs []types.ArtifactFinding) {
 	e.stateMu.Lock()
-	e.Findings = append(e.Findings, fs...)
-	e.stateMu.Unlock()
+	defer e.stateMu.Unlock()
+	for _, f := range fs {
+		if hasStage(f.Stages, "numeric-pin") {
+			key := f.Reason + "|" + f.Payload
+			if e.seenNumericPin == nil {
+				e.seenNumericPin = make(map[string]bool, 8)
+			}
+			if e.seenNumericPin[key] {
+				continue
+			}
+			e.seenNumericPin[key] = true
+		}
+		e.Findings = append(e.Findings, f)
+	}
+}
+
+func hasStage(stages []string, want string) bool {
+	for _, s := range stages {
+		if s == want {
+			return true
+		}
+	}
+	return false
 }
 
 func (e *Extractor) addCrackPoint(cp types.CrackPoint) {
@@ -1427,7 +1669,7 @@ func copyDir(src, dst string) error {
 // The structured Manifest is also returned so the caller can log it
 // or feed it into the privacy / threat pipelines without re-parsing.
 func decodeAndSaveManifest(path string) (*axml.Manifest, error) {
-	data, err := os.ReadFile(path)
+	data, err := boundedfile.ReadFile(path, maxXMLBytes)
 	if err != nil {
 		return nil, fmt.Errorf("read: %w", err)
 	}
@@ -1464,7 +1706,7 @@ func decodeAndSaveManifest(path string) (*axml.Manifest, error) {
 // write it as compact JSON because the typical table is hundreds of
 // kilobytes; pretty-printing roughly doubles that for no gain.
 func decodeAndSaveARSC(path string) error {
-	data, err := os.ReadFile(path)
+	data, err := boundedfile.ReadFile(path, maxARSCBytes)
 	if err != nil {
 		return fmt.Errorf("read: %w", err)
 	}
@@ -1477,7 +1719,7 @@ func decodeAndSaveARSC(path string) error {
 	// its references against this table. This catches manifests that
 	// were already extracted before the .arsc file in the zip walk.
 	manifestPath := filepath.Join(filepath.Dir(path), "AndroidManifest.xml")
-	if mdata, err := os.ReadFile(manifestPath); err == nil && axml.IsBinaryXML(mdata) {
+	if mdata, err := boundedfile.ReadFile(manifestPath, maxXMLBytes); err == nil && axml.IsBinaryXML(mdata) {
 		// Already-decoded text manifest produces IsBinaryXML=false, so
 		// this branch only fires on the rare fallback where the
 		// AXMLв†’XML pass hadn't run yet.
@@ -1547,7 +1789,7 @@ func isResourceXMLPath(zipPath string) bool {
 // XML text. On failure (unparseable or already plaintext) the file is
 // left as-is вЂ” this keeps the operation idempotent and safe to retry.
 func decodeAndSaveAXML(path string) error {
-	data, err := os.ReadFile(path)
+	data, err := boundedfile.ReadFile(path, maxXMLBytes)
 	if err != nil {
 		return fmt.Errorf("read: %w", err)
 	}

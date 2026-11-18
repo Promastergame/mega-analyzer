@@ -4,12 +4,14 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 // writeSmaliTree drops one .smali file under <tmp>/smali/ and returns the root.
 func writeSmaliTree(t *testing.T, name, body string) string {
 	t.Helper()
-	root := t.TempDir()
+	root := testutil.TempDir(t)
 	dir := filepath.Join(root, "smali", filepath.Dir(name))
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		t.Fatalf("mkdir: %v", err)

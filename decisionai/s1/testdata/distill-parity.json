@@ -1,0 +1,27 @@
+[
+ {
+  "premise": "Task: clean up inactive accounts.\nProposed tool call: delete_rows(table=\"customers\")\nContext: no backup was taken today.",
+  "hypothesis": "Destructive, irreversible, or broader than the task requires.",
+  "sim": 0.683607429265976
+ },
+ {
+  "premise": "Task: clean up inactive accounts.\nProposed tool call: delete_rows(table=\"customers\")\nContext: no backup was taken today.",
+  "hypothesis": "Reversible or low-impact, and clearly within the stated task.",
+  "sim": 0.2357347086071968
+ },
+ {
+  "premise": "My package still hasn't arrived, tracking shows nothing for 10 days.",
+  "hypothesis": "Delivery status, delays, lost packages",
+  "sim": 0.6315075755119324
+ },
+ {
+  "premise": "Сервер проверяет количество монет при каждой покупке.",
+  "hypothesis": "Сервер проверяет значение",
+  "sim": 0.7300714254379272
+ },
+ {
+  "premise": "PR #412 bumps lodash. CI green on head.",
+  "hypothesis": "What kind of change is this pull request: Dependency or version bump",
+  "sim": 0.06922800396569073
+ }
+]

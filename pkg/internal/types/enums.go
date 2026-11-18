@@ -2,6 +2,7 @@ package types
 
 import (
 	"encoding/json"
+	"strings"
 )
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -317,6 +318,15 @@ func (s Severity) String() string {
 		return severityNames[s]
 	}
 	return "unknown"
+}
+
+// ParseSeverity maps a severity string to the enum, defaulting to info for
+// unknown values.
+func ParseSeverity(value string) Severity {
+	if s, ok := severityByName[strings.ToLower(strings.TrimSpace(value))]; ok {
+		return s
+	}
+	return SeverityInfo
 }
 
 func (s Severity) ToRiskLevel() RiskLevel { return RiskLevel(s) }

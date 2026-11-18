@@ -3,6 +3,7 @@ package modules
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"mega-analyzer/pkg/internal/antivm/adapter"
@@ -32,16 +33,35 @@ func (m *IdentityModule) Validate(p profile.DeviceProfile) error {
 
 func (m *IdentityModule) props() []adapter.PropSet {
 	p := m.profile
-	return []adapter.PropSet{
+	props := []adapter.PropSet{
 		{Key: "ro.product.model", Value: p.Model},
 		{Key: "ro.product.brand", Value: p.Brand},
 		{Key: "ro.product.manufacturer", Value: p.Manufacturer},
 		{Key: "ro.product.device", Value: p.Device},
 		{Key: "ro.product.name", Value: p.Product},
 		{Key: "ro.build.fingerprint", Value: p.Fingerprint},
+		{Key: "ro.build.id", Value: p.BuildID},
 		{Key: "ro.build.display.id", Value: p.BuildID},
 		{Key: "ro.build.version.security_patch", Value: p.SecurityPatch},
+		{Key: "ro.build.product", Value: p.Device},
+		{Key: "ro.build.description", Value: strings.Join([]string{p.Product + "-user", p.AndroidVersion, p.BuildID, "release-keys"}, " ")},
 	}
+	if p.Hardware != "" {
+		props = append(props, adapter.PropSet{Key: "ro.hardware", Value: p.Hardware})
+	}
+	if p.Board != "" {
+		props = append(props, adapter.PropSet{Key: "ro.product.board", Value: p.Board})
+	}
+	// Partition aliases are independent on recent Android releases. Keep them
+	// consistent with the primary identity rather than leaving SDK aliases behind.
+	for _, partition := range []string{"system", "vendor", "product", "odm", "system_ext"} {
+		for _, field := range []adapter.PropSet{{Key: "model", Value: p.Model}, {Key: "brand", Value: p.Brand}, {Key: "manufacturer", Value: p.Manufacturer}, {Key: "device", Value: p.Device}, {Key: "name", Value: p.Product}} {
+			props = append(props, adapter.PropSet{Key: "ro.product." + partition + "." + field.Key, Value: field.Value})
+		}
+		props = append(props, adapter.PropSet{Key: "ro." + partition + ".build.fingerprint", Value: p.Fingerprint})
+	}
+	props = append(props, adapter.PropSet{Key: "ro.bootimage.build.fingerprint", Value: p.Fingerprint})
+	return props
 }
 
 func (m *IdentityModule) Plan(p profile.DeviceProfile) []Operation {
@@ -49,7 +69,7 @@ func (m *IdentityModule) Plan(p profile.DeviceProfile) []Operation {
 		Name:       "identity.properties",
 		Module:     m.Name(),
 		Critical:   true,
-		Timeout:    30 * time.Second,
+		Timeout:    90 * time.Second,
 		RetryCount: 1,
 		Config:     adapter.TestConfig{Props: m.props()},
 	}}

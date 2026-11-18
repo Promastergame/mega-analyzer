@@ -201,6 +201,27 @@ func NewDefaultMethodAnalyzer() *MethodAnalyzer {
 
 // Analyze выполняет полный анализ метода.
 func (a *MethodAnalyzer) Analyze(method *types.SmaliMethod, class *types.SmaliClass) *types.MethodAnalysis {
+	analysis := a.AnalyzeFeatures(method, class)
+	_, synergies := a.calculateSynergy(analysis)
+	analysis.Evidence = a.collectEvidence(method, analysis)
+	for _, syn := range synergies {
+		analysis.Evidence = append(analysis.Evidence, types.Evidence{
+			ID: "synergy_" + strings.ReplaceAll(syn.name, " ", "_"), Type: "synergy",
+			Title:       "Pattern synergy: " + syn.name,
+			Description: fmt.Sprintf("Bonus: +%.1f (features: %s)", syn.bonus, strings.Join(syn.required, ", ")),
+			Confidence:  0.9, Severity: types.SeverityHigh, Tags: []string{"synergy"},
+		})
+	}
+	analysis.Patterns = a.matchPatterns(method, class)
+	analysis.CFG = a.buildCFG(method)
+	a.setFlags(analysis)
+	analysis.Summary = a.generateSummary(method, analysis, synergies)
+	return analysis
+}
+
+// AnalyzeFeatures supplies the pipeline's role and cache inputs without
+// constructing a second, discarded CFG or standalone presentation evidence.
+func (a *MethodAnalyzer) AnalyzeFeatures(method *types.SmaliMethod, class *types.SmaliClass) *types.MethodAnalysis {
 	analysis := &types.MethodAnalysis{
 		Features:   make([]types.Feature, 0, len(orderedExtractors)/2),
 		FeatureMap: make(map[string]bool, len(orderedExtractors)/2),
@@ -227,39 +248,11 @@ func (a *MethodAnalyzer) Analyze(method *types.SmaliMethod, class *types.SmaliCl
 	baseScore := a.calculateScore(analysis)
 
 	// ── Phase 3: Synergy bonus ──
-	synergyBonus, synergies := a.calculateSynergy(analysis)
+	synergyBonus, _ := a.calculateSynergy(analysis)
 	analysis.WeightedScore = baseScore + synergyBonus
 
 	// ── Phase 4: Risk level ──
 	analysis.RiskLevel = a.determineRiskLevel(analysis.WeightedScore)
-
-	// ── Phase 5: Evidence ──
-	analysis.Evidence = a.collectEvidence(method, analysis)
-
-	// Add synergy evidence
-	for _, syn := range synergies {
-		analysis.Evidence = append(analysis.Evidence, types.Evidence{
-			ID:          "synergy_" + strings.ReplaceAll(syn.name, " ", "_"),
-			Type:        "synergy",
-			Title:       "Pattern synergy: " + syn.name,
-			Description: fmt.Sprintf("Bonus: +%.1f (features: %s)", syn.bonus, strings.Join(syn.required, ", ")),
-			Confidence:  0.9,
-			Severity:    types.SeverityHigh,
-			Tags:        []string{"synergy"},
-		})
-	}
-
-	// ── Phase 6: Patterns ──
-	analysis.Patterns = a.matchPatterns(method, class)
-
-	// ── Phase 7: CFG Analysis (control-flow graph) ──
-	analysis.CFG = a.buildCFG(method)
-
-	// ── Phase 8: Flags ──
-	a.setFlags(analysis)
-
-	// ── Phase 9: Summary ──
-	analysis.Summary = a.generateSummary(method, analysis, synergies)
 
 	return analysis
 }
@@ -416,6 +409,9 @@ func extractNameContainsLicense(m *types.SmaliMethod, c *types.SmaliClass, ctx *
 
 func extractNameContainsPremium(m *types.SmaliMethod, c *types.SmaliClass, ctx *extractorContext) *types.Feature {
 	for _, kw := range []string{"premium", "pro", "paid", "vip", "subscription", "subscribe"} {
+		if kw == "pro" && !isProPredicate(ctx.nameLower) {
+			continue
+		}
 		if strings.Contains(ctx.nameLower, kw) {
 			return &types.Feature{
 				Name: "Name contains premium keyword", Description: fmt.Sprintf("Method name contains '%s'", kw),
@@ -659,6 +655,9 @@ func extractHasPremiumStrings(m *types.SmaliMethod, c *types.SmaliClass, ctx *ex
 	for _, str := range m.StringConsts {
 		lower := strings.ToLower(str.Value)
 		for _, kw := range premiumKeywords {
+			if kw == "pro" && !proWord.MatchString(lower) {
+				continue
+			}
 			if strings.Contains(lower, kw) {
 				return &types.Feature{
 					SourceLocation: types.SourceLocation{Line: str.Line},

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -33,6 +34,9 @@ func (opts *CLIOptions) validateDecisionAIOptions() error {
 		}
 		if opts.DecisionAIBudget < 1 || opts.DecisionAIBudget > 300 {
 			return fmt.Errorf("--decision-ai-budget must be 1..300 seconds")
+		}
+		if opts.DecisionAIImages && (opts.DecisionAIMaxImages < 1 || opts.DecisionAIMaxImages > 512 || opts.DecisionAIImageBudget < 1 || opts.DecisionAIImageBudget > 300) {
+			return fmt.Errorf("--decision-ai-max-images must be 1..512 and --decision-ai-image-budget must be 1..300 seconds")
 		}
 	}
 	if opts.DecisionAIInput != "" {
@@ -97,7 +101,7 @@ func (opts *CLIOptions) Validate() error {
 		if opts.Target == "" {
 			return fmt.Errorf("firmware mode requires a target path\n\nUsage: analyzer --firmware -t <firmware.bin|rootfs_dir|archive>")
 		}
-		return nil
+		return validateFirmwareTarget(opts.Target)
 	}
 
 	if opts.IsMakeServerCommand() {
@@ -157,12 +161,12 @@ func (opts *CLIOptions) Validate() error {
 			return fmt.Errorf("decode requires output directory\n\nUsage: analyzer --decode -t <app.apk> -o <output_dir>")
 		}
 		switch opts.DexBackend {
-		case "", "auto", "native", "baksmali":
+		case "", "auto", "native":
 			if opts.DexBackend == "" {
 				opts.DexBackend = "auto"
 			}
 		default:
-			return fmt.Errorf("invalid --dex-backend %q (valid: auto, native, baksmali)", opts.DexBackend)
+			return fmt.Errorf("invalid --dex-backend %q (valid: auto, native)", opts.DexBackend)
 		}
 		return nil
 	}
@@ -415,6 +419,14 @@ func (opts *CLIOptions) Validate() error {
 		return err
 	}
 
+	return nil
+}
+
+func validateFirmwareTarget(target string) error {
+	switch strings.ToLower(filepath.Ext(cleanTUIPath(target))) {
+	case ".apk", ".apks", ".xapk", ".aab", ".dex", ".ipa":
+		return fmt.Errorf("%s is an app package, not a firmware image; use Start analysis", filepath.Base(cleanTUIPath(target)))
+	}
 	return nil
 }
 

@@ -11,6 +11,8 @@ import (
 	"context"
 	"path/filepath"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 // streamParityParser builds a synthetic parser with three classes: two with
@@ -187,7 +189,7 @@ func TestNativeDataCacheBounded(t *testing.T) {
 	if len(e.nativeData) > maxCachedNativeFiles {
 		t.Fatalf("nativeData holds %d entries, cap is %d", len(e.nativeData), maxCachedNativeFiles)
 	}
-	e.runWeaponization(t.TempDir())
+	e.runWeaponization(testutil.TempDir(t))
 	if e.nativeData != nil {
 		t.Fatalf("nativeData not freed after weaponization: %d entries", len(e.nativeData))
 	}

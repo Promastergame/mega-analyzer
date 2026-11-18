@@ -7,15 +7,17 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestJSExportPreservesSyntaxAndSeparatesDecodedText(t *testing.T) {
 	data := []byte("const quote = \"a\\x22b\";\nconst slash = '\\x5c';\nconst newline = '\\u000a';\nconst regex = /\\x22/;\nconst unicode = '\\uD83D\\uDE00';\nconst template = `\\x22${1}`;\n")
-	input := filepath.Join(t.TempDir(), "escapes.js")
+	input := filepath.Join(testutil.TempDir(t), "escapes.js")
 	if err := os.WriteFile(input, data, 0600); err != nil {
 		t.Fatal(err)
 	}
-	out := t.TempDir()
+	out := testutil.TempDir(t)
 	coverage, err := ExportBundle(context.Background(), input, out)
 	if err != nil || coverage.Status != "complete" || coverage.Mode != "original_and_decoded_strings" {
 		t.Fatalf("%+v %v", coverage, err)
@@ -36,7 +38,7 @@ func TestJSExportPreservesSyntaxAndSeparatesDecodedText(t *testing.T) {
 	}
 	opts, _ := BundleBudget("compact")
 	opts.MaxOutputBytes = 8
-	coverage, err = ExportBundleWithOptions(context.Background(), input, t.TempDir(), opts)
+	coverage, err = ExportBundleWithOptions(context.Background(), input, testutil.TempDir(t), opts)
 	if err != nil || coverage.Status != "partial" {
 		t.Fatalf("output limit hidden: %+v %v", coverage, err)
 	}

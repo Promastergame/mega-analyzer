@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 // These bytes use the upstream v96 opcode numbers, independently of generated
@@ -169,7 +171,7 @@ func TestHermesOverflowFunctionHeaders(t *testing.T) {
 }
 
 func TestBundleCoverageCancellationAndDiscovery(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	if err := os.WriteFile(filepath.Join(dir, "broken.hbc"), HermesMagicLE, 0600); err != nil {
 		t.Fatal(err)
 	}

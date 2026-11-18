@@ -28,22 +28,45 @@ func (m *BatteryModule) Validate(p profile.DeviceProfile) error {
 	if p.Battery.Level < 0 || p.Battery.Level > 100 {
 		return fmt.Errorf("battery: level %d out of range", p.Battery.Level)
 	}
+	if batteryStatusCode(p.Battery.Status) == "" {
+		return fmt.Errorf("battery: unsupported status %q", p.Battery.Status)
+	}
+	if batteryHealthCode(p.Battery.Health) == "" && p.Battery.Health != "" {
+		return fmt.Errorf("battery: unsupported health %q", p.Battery.Health)
+	}
+	switch p.Battery.Plugged {
+	case "", "none", "ac", "usb", "wireless":
+	default:
+		return fmt.Errorf("battery: unsupported power source %q", p.Battery.Plugged)
+	}
 	return nil
 }
 
 func (m *BatteryModule) commands() []adapter.ShellCmd {
 	b := m.profile.Battery
-	status := "3" // discharging
-	if b.Status == "charging" {
-		status = "2"
-	} else if b.Status == "full" {
-		status = "5"
-	}
-	return []adapter.ShellCmd{
+	commands := []adapter.ShellCmd{
 		{Cmd: "dumpsys battery unplug"},
 		{Cmd: fmt.Sprintf("dumpsys battery set level %d", b.Level)},
-		{Cmd: "dumpsys battery set status " + status},
+		{Cmd: "dumpsys battery set status " + batteryStatusCode(b.Status)},
 	}
+	if b.Temperature != 0 {
+		commands = append(commands, adapter.ShellCmd{Cmd: fmt.Sprintf("dumpsys battery set temp %d", b.Temperature)})
+	}
+	if health := batteryHealthCode(b.Health); health != "" {
+		commands = append(commands, adapter.ShellCmd{Cmd: "dumpsys battery set health " + health})
+	}
+	if b.Plugged != "" && b.Plugged != "none" {
+		commands = append(commands, adapter.ShellCmd{Cmd: "dumpsys battery set " + b.Plugged + " 1"})
+	}
+	return commands
+}
+
+func batteryStatusCode(status string) string {
+	return map[string]string{"charging": "2", "discharging": "3", "not-charging": "4", "full": "5"}[status]
+}
+
+func batteryHealthCode(health string) string {
+	return map[string]string{"unknown": "1", "good": "2", "overheat": "3", "dead": "4", "over-voltage": "5", "unspecified-failure": "6", "cold": "7"}[health]
 }
 
 func (m *BatteryModule) Plan(p profile.DeviceProfile) []Operation {

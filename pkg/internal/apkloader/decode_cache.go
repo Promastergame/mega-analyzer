@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	decodeCacheSchema = 4
+	decodeCacheSchema = 6 // revalidate archives with rooted writes and resource limits
 	decodeCacheFile   = ".mega-analyzer-decode-cache.json"
 )
 
@@ -25,13 +25,11 @@ type decodeCacheMetadata struct {
 	NoSmali        bool             `json:"no_smali"`
 	CopyOriginal   bool             `json:"copy_original"`
 	FrameworkDir   string           `json:"framework_dir,omitempty"`
-	BaksmaliJar    string           `json:"baksmali_jar,omitempty"`
 	DexBackend     DecompileBackend `json:"dex_backend,omitempty"`
 	NoSmaliHeaders bool             `json:"no_smali_headers"`
 	SmaliHeaders   bool             `json:"smali_headers"`
 	JavaView       bool             `json:"java_view,omitempty"`
 	EmitterVersion string           `json:"emitter_version"`
-	SmaliConfig    SmaliToolConfig  `json:"smali_config"`
 }
 
 func buildDecodeCacheMetadata(apkPath string, opts DecodeOptions) (decodeCacheMetadata, error) {
@@ -55,13 +53,11 @@ func buildDecodeCacheMetadataContext(ctx context.Context, apkPath string, opts D
 		NoSmali:        opts.NoSmali,
 		CopyOriginal:   opts.CopyOriginal,
 		FrameworkDir:   opts.FrameworkDir,
-		BaksmaliJar:    opts.SmaliCfg.BaksmaliJar,
 		DexBackend:     opts.DexBackend,
 		NoSmaliHeaders: opts.NoSmaliHeaders,
 		SmaliHeaders:   opts.SmaliHeaders,
 		JavaView:       opts.JavaView,
 		EmitterVersion: nativeSmaliEmitterVersion,
-		SmaliConfig:    opts.SmaliCfg,
 	}, nil
 }
 

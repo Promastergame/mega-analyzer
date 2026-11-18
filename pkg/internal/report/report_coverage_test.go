@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"mega-analyzer/pkg/internal/testutil"
 	"mega-analyzer/pkg/internal/types"
 )
 
@@ -632,7 +633,7 @@ func TestJSONReporter_Generate(t *testing.T) {
 	r := makeResultWithData()
 	reporter := NewJSONReporter(r)
 
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	err := reporter.Generate(dir)
 	if err != nil {
 		t.Fatalf("Generate failed: %v", err)
@@ -672,7 +673,7 @@ func TestHTMLReporter_Generate(t *testing.T) {
 	r := makeResultWithData()
 	reporter := NewHTMLReporter(r)
 
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	err := reporter.Generate(dir)
 	if err != nil {
 		t.Fatalf("Generate failed: %v", err)
@@ -984,7 +985,7 @@ func TestSortStringMap(t *testing.T) {
 
 func TestGenerateShortReport(t *testing.T) {
 	r := makeResultWithData()
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	err := GenerateShortReport(r, dir)
 	if err != nil {
 		t.Fatalf("GenerateShortReport failed: %v", err)
@@ -993,9 +994,43 @@ func TestGenerateShortReport(t *testing.T) {
 
 func TestGenerateFullReport(t *testing.T) {
 	r := makeResultWithData()
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	err := GenerateFullReport(r, dir)
 	if err != nil {
 		t.Fatalf("GenerateFullReport failed: %v", err)
+	}
+}
+
+// TestClassifySuspicionScoreBandsAlignedWithRating locks the verdict-band
+// alignment with the rating scale (CRITICAL level at >= 85). Measured
+// motivation (2026-11-04): a clean FOSS editor showed "HIGHLY SUSPICIOUS /
+// Do Not Install" at overall 80-100 driven by hygiene findings while its
+// malware category was LOW.
+func TestClassifySuspicionScoreBandsAlignedWithRating(t *testing.T) {
+	cases := []struct {
+		score int
+		label string
+		class string
+	}{
+		{100, "HIGHLY SUSPICIOUS", "critical"},
+		{85, "HIGHLY SUSPICIOUS", "critical"},
+		{84, "SUSPICIOUS", "high"},
+		{80, "SUSPICIOUS", "high"},
+		{65, "SUSPICIOUS", "high"},
+		{64, "MODERATE CONCERN", "medium"},
+		{40, "MODERATE CONCERN", "medium"},
+		{39, "LOW RISK", "low"},
+		{20, "LOW RISK", "low"},
+		{19, "CLEAN", "clean"},
+		{0, "CLEAN", "clean"},
+	}
+	for _, tc := range cases {
+		label, class, rec := classifySuspicionScore(tc.score)
+		if label != tc.label || class != tc.class {
+			t.Errorf("classifySuspicionScore(%d) = %q/%q, want %q/%q", tc.score, label, class, tc.label, tc.class)
+		}
+		if rec == "" {
+			t.Errorf("classifySuspicionScore(%d) returned empty recommendation", tc.score)
+		}
 	}
 }

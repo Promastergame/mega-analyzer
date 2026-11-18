@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func writeTinyAPK(t *testing.T, path string) {
@@ -18,8 +20,8 @@ func writeTinyAPK(t *testing.T, path string) {
 	}
 	w := zip.NewWriter(f)
 	for name, body := range map[string]string{
-		"classes.dex":         "dex\n035\x00",
-		"AndroidManifest.xml": "<?xml version=\"1.0\"?><manifest/>",
+		"classes.dex":            "dex\n035\x00",
+		"AndroidManifest.xml":    "<?xml version=\"1.0\"?><manifest/>",
 		"res/values/strings.xml": "<resources><string name=\"a\">b</string></resources>",
 	} {
 		entry, err := w.Create(name)
@@ -85,7 +87,7 @@ func TestPKCS7TamperDetected(t *testing.T) {
 }
 
 func TestFallbackSignOfflineRoundTrip(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	apkPath := filepath.Join(dir, "test.apk")
 	writeTinyAPK(t, apkPath)
 
@@ -119,7 +121,7 @@ func TestExplicitKeystoreWithoutApksignerFails(t *testing.T) {
 	if findApkSignerJar() != "" {
 		t.Skip("apksigner present: fail-closed path not exercisable here")
 	}
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	ksPath := filepath.Join(dir, "my.keystore")
 	if err := os.WriteFile(ksPath, []byte("fake"), 0600); err != nil {
 		t.Fatal(err)
@@ -134,7 +136,7 @@ func TestExplicitKeystoreWithoutApksignerFails(t *testing.T) {
 }
 
 func TestMissingKeystoreFails(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	apkPath := filepath.Join(dir, "test.apk")
 	writeTinyAPK(t, apkPath)
 	if _, err := SignAPKWithConfig(apkPath, SignConfig{KeystorePath: filepath.Join(dir, "nope.keystore")}); err == nil {
@@ -143,7 +145,7 @@ func TestMissingKeystoreFails(t *testing.T) {
 }
 
 func TestStrictVerifyUnsignedFails(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	apkPath := filepath.Join(dir, "unsigned.apk")
 	writeTinyAPK(t, apkPath)
 	if _, err := VerifySignatureStrict(apkPath); err == nil {
@@ -152,7 +154,7 @@ func TestStrictVerifyUnsignedFails(t *testing.T) {
 }
 
 func TestOriginalFingerprintMatchesOwnOutput(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	apkPath := filepath.Join(dir, "test.apk")
 	writeTinyAPK(t, apkPath)
 	outcome, err := SignAPKWithConfig(apkPath, SignConfig{})

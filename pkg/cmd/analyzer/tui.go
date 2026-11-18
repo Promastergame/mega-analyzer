@@ -31,14 +31,17 @@ type tuiState struct {
 	term    *rawTerm
 	started time.Time
 
-	cursor  int    // selected menu row (main menu)
-	flash   string // transient warning/error shown in status bar
-	vpStart int    // viewport start for main menu
+	section       int
+	pendingAction error
+	compatWarning string
+	cursor        int    // selected menu row (main menu)
+	flash         string // transient warning/error shown in status bar
+	vpStart       int    // viewport start for main menu
 
 	activity []activityEntry
 
-	// keyboard pump runs in a goroutine so the main loop can also
-	// re-render on a periodic tick (e.g. for live uptime).
+	// Optional event source for tests and embedded callers. In a terminal the
+	// event loop and value editor share one synchronous reader.
 	keyCh chan keyEvent
 	errCh chan error
 
@@ -78,6 +81,8 @@ type activityEntry struct {
 //	"action" — Enter triggers run()
 //	"sep"    — visual separator (not selectable)
 type menuRow struct {
+	section string
+	flag    string
 	label   string
 	hint    string
 	kind    string
@@ -104,29 +109,7 @@ var (
 )
 
 func (a *App) runTUIWizard(parsed *CLIOptions) (*CLIOptions, bool, error) {
-	opts := defaultCLIOptions()
-	opts.Target = parsed.Target
-	opts.NoColor = parsed.NoColor
-	// Preserve a few opt-in modes the user passed on the command line so the
-	// TUI doesn't silently drop them when the wizard opens.
-	opts.MachineCode = parsed.MachineCode
-	opts.EnableArtifacts = parsed.EnableArtifacts
-	opts.OBBScan = parsed.OBBScan
-	opts.CacheScan = parsed.CacheScan
-	opts.MLCacheScript = parsed.MLCacheScript
-	opts.EnableMobSFAll = parsed.EnableMobSFAll
-	opts.EnableSASTRules = parsed.EnableSASTRules
-	opts.EnableTrackers = parsed.EnableTrackers
-	opts.EnableNSCAudit = parsed.EnableNSCAudit
-	opts.EnableManifestAudit = parsed.EnableManifestAudit
-	opts.EnableAPKID = parsed.EnableAPKID
-	opts.EnableMediumAll = parsed.EnableMediumAll
-	opts.EnablePlayStore = parsed.EnablePlayStore
-	opts.EnableSBOM = parsed.EnableSBOM
-	opts.EnablePermMap = parsed.EnablePermMap
-	opts.EnableCertAudit = parsed.EnableCertAudit
-	opts.EnableMalwareDomains = parsed.EnableMalwareDomains
-	opts.EnableNIAP = parsed.EnableNIAP
+	opts := tuiOptions(parsed)
 
 	theme := DetectTheme(opts.NoColor)
 	out := NewOutput(theme, false)
@@ -144,8 +127,6 @@ func (a *App) runTUIWizard(parsed *CLIOptions) (*CLIOptions, bool, error) {
 		out:     out,
 		term:    term,
 		started: time.Now(),
-		keyCh:   make(chan keyEvent, 8),
-		errCh:   make(chan error, 1),
 		screen:  "home",
 	}
 	t.palette = newPalette(t)
@@ -154,6 +135,15 @@ func (a *App) runTUIWizard(parsed *CLIOptions) (*CLIOptions, bool, error) {
 	t.results = newResultsScreen(t)
 	t.intercept = newInterceptScreen(t)
 	t.home = newHomeScreen(t)
+	if opts.TUISection != "" {
+		t.selectSection(opts.TUISection)
+		t.screen = "settings"
+	}
+	if opts.TUISearch != "" {
+		t.palette.show()
+		t.palette.filter = opts.TUISearch
+		t.palette.refresh()
+	}
 	// Keep a reference so Run() can populate the Results screen with real
 	// data and briefly reopen the TUI to show it once analysis completes.
 	a.tui = t
@@ -162,36 +152,18 @@ func (a *App) runTUIWizard(parsed *CLIOptions) (*CLIOptions, bool, error) {
 	t.log("ok", "modules ready")
 	t.log("info", "ready for target selection")
 
-	defer term.Close()
+	defer func() { t.term.Close() }()
 	term.EnterAltScreen()
 	term.HideCursor()
 
-	// Keyboard pump
-	go func() {
-		for {
-			ev, err := term.ReadKey()
-			if err != nil {
-				t.errCh <- err
-				return
-			}
-			t.keyCh <- ev
-		}
-	}()
-
-	tick := time.NewTicker(time.Second)
-	defer tick.Stop()
-
 	for {
 		t.render()
-
-		var ev keyEvent
-		select {
-		case ev = <-t.keyCh:
-		case <-tick.C:
-			// just re-render so live values (uptime) stay current
-			continue
-		case rerr := <-t.errCh:
+		ev, rerr := t.term.PollKey(1000)
+		if rerr != nil {
 			return opts, false, rerr
+		}
+		if ev.kind == keyNone {
+			continue
 		}
 
 		err := t.handleKey(ev)
@@ -219,7 +191,7 @@ func (a *App) runTUIWizard(parsed *CLIOptions) (*CLIOptions, bool, error) {
 // MENU MODEL
 // ═══════════════════════════════════════════════════════════════════════════════
 
-func (t *tuiState) allRows() []menuRow {
+func (t *tuiState) baseRows() []menuRow {
 	rows := []menuRow{
 		{
 			label:  "target",
@@ -457,14 +429,6 @@ func (t *tuiState) allRows() []menuRow {
 		},
 		{label: "toolkit", kind: "sep"},
 		{
-			label:   "make-server",
-			hint:    "generate Elixir/OTP private server from target",
-			kind:    "bool",
-			value:   func() string { return onOff(t.opts.MakeServer) },
-			getBool: func() bool { return t.opts.MakeServer },
-			setBool: func(v bool) { t.opts.MakeServer = v },
-		},
-		{
 			label:   "jni bridge",
 			hint:    "Java ↔ Native JNI boundary analyzer",
 			kind:    "bool",
@@ -487,14 +451,6 @@ func (t *tuiState) allRows() []menuRow {
 			value:   func() string { return onOff(t.opts.EnableGraphExplorer) },
 			getBool: func() bool { return t.opts.EnableGraphExplorer },
 			setBool: func(v bool) { t.opts.EnableGraphExplorer = v },
-		},
-		{
-			label:   "firmware / IoT",
-			hint:    "firmware analyzer for .bin/rootfs/archives",
-			kind:    "bool",
-			value:   func() string { return onOff(t.opts.Firmware) },
-			getBool: func() bool { return t.opts.Firmware },
-			setBool: func(v bool) { t.opts.Firmware = v },
 		},
 		{label: "MobSF-derived analyzers", kind: "sep"},
 		{
@@ -565,10 +521,10 @@ func (t *tuiState) allRows() []menuRow {
 				t.opts.EnableSBOM = v
 				t.opts.EnablePermMap = v
 				t.opts.EnableCertAudit = v
-			t.opts.EnableMalwareDomains = v
-			t.opts.EnableNIAP = v
+				t.opts.EnableMalwareDomains = v
+				t.opts.EnableNIAP = v
+			},
 		},
-	},
 		{
 			label:   "playstore",
 			hint:    "Play Store metadata lookup",
@@ -623,16 +579,7 @@ func (t *tuiState) allRows() []menuRow {
 			kind:  "action",
 			value: func() string { return "" },
 			run: func() error {
-				if t.opts.Target == "" {
-					t.flash = "target is required before starting"
-					return nil
-				}
-				if _, err := os.Stat(t.opts.Target); err != nil {
-					t.flash = "target not found: " + t.opts.Target
-					return nil
-				}
-				t.log("ok", "starting analysis")
-				return errStartAnalysis
+				return t.startAnalysis()
 			},
 		},
 		{
@@ -649,6 +596,7 @@ func (t *tuiState) allRows() []menuRow {
 		},
 		{
 			label: "─ make-server (generate now)",
+			hint:  "Separate command: generate a private server instead of an analysis report",
 			kind:  "action",
 			value: func() string { return "" },
 			run: func() error {
@@ -667,6 +615,7 @@ func (t *tuiState) allRows() []menuRow {
 		},
 		{
 			label: "─ firmware analysis (run now)",
+			hint:  "Separate command for firmware images or rootfs; APK/DEX packages use normal analysis",
 			kind:  "action",
 			value: func() string { return "" },
 			run: func() error {
@@ -676,6 +625,10 @@ func (t *tuiState) allRows() []menuRow {
 				}
 				if _, err := os.Stat(t.opts.Target); err != nil {
 					t.flash = "target not found: " + t.opts.Target
+					return nil
+				}
+				if err := validateFirmwareTarget(t.opts.Target); err != nil {
+					t.flash = err.Error()
 					return nil
 				}
 				t.opts.Firmware = true
@@ -802,11 +755,29 @@ func (t *tuiState) allRows() []menuRow {
 }
 
 func (t *tuiState) handleKey(ev keyEvent) error {
-	// Overlay priority: palette > dialog > screen-specific handlers
-	if t.palette.handleKey(ev) {
+	// A modal owns all input. Editors receive text before letter shortcuts.
+	if t.dialog.open {
+		t.dialog.handleKey(ev)
 		return nil
 	}
-	if t.dialog.handleKey(ev) {
+	if ev.kind == keyInterrupt {
+		t.confirmQuit()
+		return nil
+	}
+	if t.palette.handleKey(ev) {
+		err := t.pendingAction
+		t.pendingAction = nil
+		return err
+	}
+	if ev.kind == keyChar && ev.r == 0x13 {
+		return t.startAnalysis()
+	}
+	if t.screen == "home" && ev.kind != keyF1 {
+		t.home.handleKey(ev)
+		if t.home.start {
+			t.home.start = false
+			return t.home.activate()
+		}
 		return nil
 	}
 
@@ -924,7 +895,24 @@ func (t *tuiState) handleNavScreen(ev keyEvent) error {
 }
 
 func (t *tuiState) handleSettingsKey(ev keyEvent) error {
-	rows := t.allRows()
+	if ev.kind == keyTab || ev.kind == keyShiftTab {
+		dir := 1
+		if ev.kind == keyShiftTab {
+			dir = -1
+		}
+		t.section = (t.section + dir + len(tuiSections)) % len(tuiSections)
+		t.cursor, t.vpStart = 0, 0
+		return nil
+	}
+	if ev.kind == keyChar && ev.r >= '1' && ev.r <= '9' {
+		t.section = int(ev.r - '1')
+		t.cursor, t.vpStart = 0, 0
+		return nil
+	}
+	rows := t.sectionRows()
+	if len(rows) == 0 {
+		return nil
+	}
 
 	if t.cursor >= len(rows) {
 		t.cursor = len(rows) - 1
@@ -987,7 +975,7 @@ func (t *tuiState) move(delta int, rows []menuRow) {
 	if n == 0 {
 		return
 	}
-	t.cursor = (t.cursor + delta + n) % n
+	t.cursor = ((t.cursor+delta)%n + n) % n
 	// Skip separator rows
 	for tries := 0; tries < n; tries++ {
 		if rows[t.cursor].kind != "sep" {
@@ -1051,7 +1039,7 @@ func (t *tuiState) activate(row menuRow) error {
 				return nil
 			}
 			// Trim quotes and surrounding spaces
-			val = strings.TrimSpace(strings.Trim(val, "\"'"))
+			val = cleanTUIPath(val)
 			if row.label == "target" && val != "" {
 				// Handle Windows paths starting with a slash (common when pasting from some shells)
 				if runtime.GOOS == "windows" && len(val) > 2 && val[0] == '/' && val[2] == ':' {
@@ -1062,6 +1050,9 @@ func (t *tuiState) activate(row menuRow) error {
 				}
 				// Set value FIRST so the user can see what we resolved it to, even if Stat fails
 				row.setStr(val)
+				if t.home != nil {
+					t.home.setPrompt(val)
+				}
 				if _, err := os.Stat(val); err != nil {
 					t.flash = "target not found: " + val
 					t.log("warn", "target not found: "+val)
@@ -1310,17 +1301,7 @@ func (t *tuiState) renderBody() {
 		case "intercept":
 			t.renderInterceptScreen(width, edge)
 		default:
-			// Settings (classic table)
-			rows := t.allRows()
-			if t.cursor >= len(rows) {
-				t.cursor = len(rows) - 1
-			}
-			wide := cols >= 110 && rowsTerm >= 30
-			if wide {
-				t.renderWide(width, edge, rows)
-			} else {
-				t.renderCompact(width, edge, rows, rowsTerm)
-			}
+			t.renderSettings(width, edge, rowsTerm)
 		}
 
 		// Tall mode overlays float on top (no blank-fill needed)
@@ -1980,46 +1961,32 @@ func (t *tuiState) inlinePrompt(label, initial string, intOnly bool) (string, bo
 	th := t.theme
 	pad := strings.Repeat(" ", t.out.uiEdge())
 
-	// Show cursor while typing.
-	t.term.ShowCursor()
-	defer t.term.HideCursor()
-
-	buf := []rune(initial)
+	e := newTextEdit(initial)
 	render := func() {
-		// Clear current line and redraw prompt
-		fmt.Fprint(t.out.writer, "\r\x1b[K")
-		fmt.Fprintf(t.out.writer, "%s%s>%s %s: %s%s%s",
-			pad,
-			th.Primary+th.Bold, th.Reset,
-			label,
-			th.Bold, string(buf), th.Reset)
+		cols := termCols()
+		if cols <= 0 {
+			cols = t.out.uiWidth()
+		}
+		labelText := label + ": "
+		available := cols - visibleLen(pad+labelText) - 3
+		fmt.Fprintf(t.out.writer, "\r\x1b[K%s%s%s%s%s", pad, th.Primary+th.Bold, labelText, th.Reset, e.view(available, th))
 	}
 	render()
-
 	for {
-		ev, err := t.term.ReadKey()
+		ev, err := t.readKey()
 		if err != nil {
 			return "", false
 		}
 		switch ev.kind {
 		case keyEnter:
 			fmt.Fprintln(t.out.writer)
-			return string(buf), true
-		case keyEsc:
+			return e.text, true
+		case keyEsc, keyInterrupt:
 			fmt.Fprintln(t.out.writer)
 			t.flash = "edit cancelled"
 			return "", false
-		case keyBackspace:
-			if len(buf) > 0 {
-				buf = buf[:len(buf)-1]
-			}
-		case keyChar:
-			if intOnly {
-				if !(ev.r >= '0' && ev.r <= '9') && ev.r != '-' {
-					continue
-				}
-			}
-			buf = append(buf, ev.r)
+		default:
+			e.handleKey(ev, intOnly)
 		}
 		render()
 	}

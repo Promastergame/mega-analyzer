@@ -931,9 +931,9 @@ func (p *DEXParser) releaseClassCode(class *ClassDef) {
 		return
 	}
 	for _, method := range class.DirectMethods {
-		method.Code = nil
+		method.releaseCode()
 	}
 	for _, method := range class.VirtualMethods {
-		method.Code = nil
+		method.releaseCode()
 	}
 }

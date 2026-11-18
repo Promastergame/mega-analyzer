@@ -89,8 +89,8 @@ var codeExecutionFragments = []fragmentRule{
 }
 
 var webviewRules = []heuristicRule{
-	{[]byte("setJavaScriptEnabled"), types.CategoryVulnerability, types.SeverityMedium, ConfidenceMedium, "JS enabled in WebView"},
-	{[]byte("addJavascriptInterface"), types.CategoryVulnerability, types.SeverityHigh, ConfidenceHigh, "WebView JS bridge (RCE risk API<17)"},
+	{[]byte("setJavaScriptEnabled"), types.CategoryWebViewJSBridge, types.SeverityInfo, ConfidenceLow, "WebView JavaScript setting reference (argument unresolved)"},
+	{[]byte("addJavascriptInterface"), types.CategoryWebViewJSBridge, types.SeverityInfo, ConfidenceHigh, "WebView JavaScript bridge reference; review exposed methods and origins"},
 	{[]byte("android:usesCleartextTraffic=\"true\""), types.CategoryVulnerability, types.SeverityHigh, ConfidenceDefinitive, "cleartext HTTP permitted"},
 }
 
@@ -152,14 +152,30 @@ var elfSpecificRules = []heuristicRule{
 	{[]byte("ptrace"), types.CategoryMalware, types.SeverityHigh, ConfidenceMedium, "ptrace (anti-debug or injection)"},
 }
 
-var allRuleGroups = [][]heuristicRule{
-	credentialRules,
-	permissionRules,
-	networkRules,
-	rootBypassRules,
-	codeExecutionRules,
-	webviewRules,
-	cryptoRules,
+// ruleGroup names a heuristic rule set so pass 1 can skip one selectively.
+type ruleGroup struct {
+	name  string
+	rules []heuristicRule
+}
+
+var allRuleGroups = []ruleGroup{
+	{name: "credential", rules: credentialRules},
+	{name: "permission", rules: permissionRules},
+	{name: "network", rules: networkRules},
+	{name: "root_bypass", rules: rootBypassRules},
+	{name: "code_execution", rules: codeExecutionRules},
+	{name: "webview", rules: webviewRules},
+	{name: "crypto", rules: cryptoRules},
+}
+
+// isManifestFilePath reports whether the scanned file is the app manifest,
+// whose declared permissions are owned by the manifest permission inventory.
+func isManifestFilePath(path string) bool {
+	p := strings.ReplaceAll(strings.ToLower(path), "\\", "/")
+	if slash := strings.LastIndexByte(p, '/'); slash >= 0 {
+		p = p[slash+1:]
+	}
+	return p == "androidmanifest.xml"
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -686,8 +702,16 @@ func ScanContent(
 	}
 
 	// ── Pass 1: direct pattern scan — all occurrences ────────────────────────
+	// Declared permissions are reported once by the manifest permission
+	// inventory (ManifestInfoDetector and the rules engine read XMLData).
+	// Byte-scanning the manifest text for the same permission strings
+	// double-counted QUERY_ALL_PACKAGES and REQUEST_INSTALL_PACKAGES.
+	skipPermissionRules := isManifestFilePath(file)
 	for _, group := range allRuleGroups {
-		for _, rule := range group {
+		if group.name == "permission" && skipPermissionRules {
+			continue
+		}
+		for _, rule := range group.rules {
 			offset := 0
 			hitCount := 0
 			for hitCount < maxFindingsPerRule {
@@ -751,9 +775,7 @@ func ScanContent(
 		label := "cleartext HTTP endpoint: " + uf.raw
 
 		if uf.isPublicIP {
-			sev = types.SeverityHigh
-			conf = ConfidenceHigh
-			label = "hard-coded public IP endpoint: " + uf.raw
+			label = "cleartext HTTP reference using a numeric IP: " + uf.raw
 		}
 		if isBinary {
 			conf = adjustConfidence(conf, true)

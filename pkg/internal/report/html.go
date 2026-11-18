@@ -95,6 +95,10 @@ func (r *HTMLReporter) GenerateStream(w io.Writer) error {
 	bw.WriteString("<meta name=\"viewport\" content=\"width=device-width,initial-scale=1\">")
 	fmt.Fprintf(bw, "<meta name=\"generator\" content=\"APK Analyzer v%s\">", html.EscapeString(view.Report.Meta.EngineVersion))
 	fmt.Fprintf(bw, "<title>APK Analysis Report - %s</title>", html.EscapeString(view.Report.Meta.TargetName))
+	// Inline data-URI favicon: report tabs open from blob origins behind a
+	// sandboxing CSP that blocks every external fetch, so the browser tab
+	// would otherwise show a generic page icon.
+	bw.WriteString(`<link rel="icon" type="image/png" href="` + reportFaviconDataURI + `">`)
 	bw.WriteString("<style>")
 	bw.WriteString(r.buildStyles())
 	bw.WriteString("</style></head><body>")
@@ -118,11 +122,12 @@ func (r *HTMLReporter) GenerateStream(w io.Writer) error {
 
 		// ── NEW SECTIONS ──
 		r.buildComparativeRating(bw, view) // #8
+		r.buildNetworkIndicators(bw, view.Report.NetworkIndicators)
+		r.buildFindingExplanations(bw, view.Report.TypedFindings)
 		r.buildRiskOverview(bw, view)
 		r.buildFPFilterSection(bw, view) // NEW: FP Filter
-		r.buildDecisionAISection(bw)
-		r.buildHeatmap(bw, view)     // #5
-		r.buildSignalChain(bw, view) // #4 + #9
+		r.buildHeatmap(bw, view)         // #5
+		r.buildSignalChain(bw, view)     // #4 + #9
 		r.buildRuleFindingsSection(bw, view)
 		r.buildBankingThreatsSection(bw, view)
 		r.buildArtifactFindingsSection(bw, view)

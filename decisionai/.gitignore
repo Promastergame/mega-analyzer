@@ -1,0 +1,36 @@
+bin/
+*.exe
+*.test
+*.out
+*.zip
+/gocache/
+s1/testdata/fuzz/
+__pycache__/
+nim/*.a
+models/qwen*/
+/data/local/
+/data/prepared/
+/data/hf/
+
+# Local runtime state, scratch work and generated verification logs.
+/.runtime/
+/.tmp/
+/checks/
+
+# Downloaded/exported neural weights and training checkpoints are release assets.
+# Keep the small, canonical JSON models, calibration and model notices in Git.
+/models/*.dte
+/models/*.pt
+/models/*.pth
+/models/*.onnx
+/models/*.safetensors
+/models/*.gguf
+/models/*.bin
+
+# Rebuildable training data and teacher responses; retain authored references.
+/data/*
+!/data/distill/
+/data/distill/*
+!/data/distill/README.md
+!/data/distill/paraphrases.json
+/scripts/train/domain_nli.json

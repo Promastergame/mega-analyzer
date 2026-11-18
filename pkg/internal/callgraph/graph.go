@@ -103,6 +103,10 @@ func (b *Builder) Build() *Graph {
 	hierarchy := NewClassHierarchy(classes)
 	instantiated := collectInstantiated(classes)
 	var edges []edge
+	// One immutable hierarchy per build. Resolve virtual targets once per
+	// signature instead of walking every subclass for every call site.
+	targetCache := make(map[string][]string)
+	subCache := make(map[string][]string)
 
 	for _, class := range classes {
 		for _, method := range class.Methods {
@@ -110,7 +114,7 @@ func (b *Builder) Build() *Graph {
 				continue
 			}
 			caller := methodRef(class.Descriptor, method)
-			edges = append(edges, buildMethodEdges(hierarchy, caller, method, fanoutCap)...)
+			edges = append(edges, buildMethodEdges(hierarchy, caller, method, fanoutCap, targetCache, subCache)...)
 		}
 	}
 	if useRTA {
@@ -133,7 +137,7 @@ func collectInstantiated(classes []*dexir.Class) map[string]struct{} {
 	return out
 }
 
-func buildMethodEdges(h *ClassHierarchy, caller string, method *dexir.Method, fanoutCap int) []edge {
+func buildMethodEdges(h *ClassHierarchy, caller string, method *dexir.Method, fanoutCap int, targetCache, subCache map[string][]string) []edge {
 	var edges []edge
 	for _, ins := range method.Instructions {
 		if ins == nil || !ins.IsInvoke() || ins.Method == nil {
@@ -146,22 +150,38 @@ func buildMethodEdges(h *ClassHierarchy, caller string, method *dexir.Method, fa
 			continue
 		}
 
-		candidates := []edge{base}
-		for _, sub := range h.Subs(ins.Method.Class) {
-			defining, ok := h.LookupMethod(sub, ins.Method.Name, ins.Method.Proto)
-			if !ok || defining != sub {
-				continue
+		key := ins.Method.String()
+		targets, cached := targetCache[key]
+		if !cached {
+			subs, ok := subCache[ins.Method.Class]
+			if !ok {
+				subs = h.Subs(ins.Method.Class)
+				subCache[ins.Method.Class] = subs
 			}
-			candidates = append(candidates, edge{
-				CallSite: CallSite{Caller: caller, Callee: sub + "->" + ins.Method.Name + ins.Method.Proto, Line: ins.Line, Kind: kind, Resolved: true},
-				cha:      true,
-			})
+			methodKey := methodKey(ins.Method.Name, ins.Method.Proto)
+			for _, sub := range subs {
+				info := h.classes[sub]
+				if info == nil {
+					continue
+				}
+				if _, defined := info.methods[methodKey]; !defined {
+					continue
+				}
+				targets = append(targets, sub+"->"+ins.Method.Name+ins.Method.Proto)
+				if len(targets) > fanoutCap {
+					break
+				}
+			}
+			targetCache[key] = targets
 		}
-		if len(candidates)-1 > fanoutCap {
+		if len(targets) > fanoutCap {
 			base.Resolved = false
 			edges = append(edges, base)
 		} else {
-			edges = append(edges, candidates...)
+			edges = append(edges, base)
+			for _, target := range targets {
+				edges = append(edges, edge{CallSite: CallSite{Caller: caller, Callee: target, Line: ins.Line, Kind: kind, Resolved: true}, cha: true})
+			}
 		}
 	}
 	return append(edges, reflectionEdges(h, caller, method)...)

@@ -40,11 +40,11 @@ func (r *HTMLReporter) buildSidebar(sb htmlWriter, view HTMLReportView) {
 		{"recommendations", "bulb", "Recommendations", len(view.Report.Recommendations)},
 	}
 
-	if r.result.DecisionAI != nil {
+	if len(view.Report.TypedFindings) > 0 || r.result.DecisionAI != nil || r.result.SourceEvidence != nil || r.result.GNNDiagnostics != nil {
 		navItems = append(navItems, struct {
 			id, iconID, label string
 			count             int
-		}{"decision-ai", "cpu", "DecisionAI", r.result.DecisionAI.Processed})
+		}{"finding-explanations", "code", "Finding explanations", len(view.Report.TypedFindings)})
 	}
 	// Artifacts is opt-in. Append only when the section is populated.
 	if view.Report.Artifacts != nil {
@@ -92,6 +92,7 @@ func (r *HTMLReporter) buildSidebar(sb htmlWriter, view HTMLReportView) {
 		{"hotspots", "Hotspots"}, {"matches", "All Matches"},
 		{"piracy", "Piracy"}, {"confidence-chart", "Confidence"},
 		{"recommendations", "Recommendations"},
+		{"finding-explanations", "Finding explanations"},
 	}
 	if view.Report.BundleAnalysis != nil && view.Report.BundleAnalysis.Standalone {
 		scoped := allSections[:0]
@@ -142,6 +143,16 @@ func (r *HTMLReporter) buildHeroSection(sb htmlWriter, view HTMLReportView) {
 		icon("adjustments"), html.EscapeString(view.Report.Meta.Profile)))
 	sb.WriteString(fmt.Sprintf(`<span class="meta-item"><span class="meta-icon">%s</span><span>%s</span></span>`,
 		icon("clock"), html.EscapeString(view.Report.Meta.Timestamp)))
+	if view.Report.Meta.ArtifactSHA256 != "" {
+		// SHA-256 of the analyzed artifact: without it, proving that several
+		// reports describe the same file is impossible.
+		sha := view.Report.Meta.ArtifactSHA256
+		if len(sha) > 16 {
+			sha = sha[:16] + "…"
+		}
+		sb.WriteString(fmt.Sprintf(`<span class="meta-item" title="%s"><span class="meta-icon">%s</span><span>SHA-256 %s</span></span>`,
+			html.EscapeString(view.Report.Meta.ArtifactSHA256), icon("fingerprint"), html.EscapeString(sha)))
+	}
 	sb.WriteString(`</div>`)
 
 	// Verdict
@@ -164,7 +175,7 @@ func (r *HTMLReporter) buildStatsCards(sb htmlWriter, view HTMLReportView) {
 		// units, not generated .smali files (only --decode writes those).
 		{"puzzle", "Application Units", fmt.Sprintf("%d", view.Report.Stats.AppCodeFiles), "application classes", ""},
 		{"target", "Total Matches", fmt.Sprintf("%d", view.Report.Stats.TotalMatches), "pattern detections", "accent"},
-		{"alert-triangle", "Critical", fmt.Sprintf("%d", view.Report.Stats.CriticalMatches), "high priority findings", "danger"},
+		{"alert-triangle", "Priority flags", fmt.Sprintf("%d", view.Report.Stats.CriticalMatches), "pattern flags; see finding severity", "danger"},
 		{"flame", "Hotspots", fmt.Sprintf("%d", view.Report.Stats.HotspotsCount), "suspicious files", "warning"},
 		{"link", "Correlations", fmt.Sprintf("%d", view.Report.Stats.CorrelationsCount), "linked findings", ""},
 	}
@@ -248,8 +259,6 @@ func (r *HTMLReporter) buildComparativeRating(sb htmlWriter, view HTMLReportView
 	sb.WriteString(fmt.Sprintf(`<div class="verdict-recommendation">%s</div>`, recommendation))
 
 	sb.WriteString(`<div class="score-breakdown">`)
-	sb.WriteString(`<div class="breakdown-title">Score Composition</div>`)
-
 	breakdownItems := []struct {
 		label string
 		value int
@@ -259,6 +268,23 @@ func (r *HTMLReporter) buildComparativeRating(sb htmlWriter, view HTMLReportView
 		{"Critical Findings", bd.CriticalFindings, 30},
 		{"Piracy Indicators", bd.PiracyIndicators, 25},
 		{"Confidence Boost", bd.ConfidenceBoost, 15},
+	}
+	if bd.Profile != nil {
+		sb.WriteString(`<div class="breakdown-title">Actionable Findings by Category</div>`)
+		breakdownItems = nil
+		for _, key := range []string{"MALWARE", "SECURITY", "PRIVACY", "PIRACY", "CRACK_POINT", "BILLING"} {
+			category := bd.Profile.Categories[key]
+			if category.Count > 0 {
+				breakdownItems = append(breakdownItems, struct {
+					label string
+					value int
+					max   int
+				}{category.Name, category.Score, 10})
+			}
+		}
+		sb.WriteString(`<p>Inventory and hardening references do not increase risk. This static score is not a probability of infection.</p>`)
+	} else {
+		sb.WriteString(`<div class="breakdown-title">Score Composition</div>`)
 	}
 	for _, bi := range breakdownItems {
 		pct := 0
@@ -432,7 +458,7 @@ func (r *HTMLReporter) buildSignalChain(sb htmlWriter, view HTMLReportView) {
 	sb.WriteString(`<div class="step-dot">2</div>`)
 	sb.WriteString(`<div class="step-content">`)
 	sb.WriteString(fmt.Sprintf(`<div class="step-title"><span class="step-icon">%s</span><span>Pattern Matching</span></div>`, icon("search")))
-	sb.WriteString(fmt.Sprintf(`<div class="step-detail">%d total matches found, %d critical</div>`,
+	sb.WriteString(fmt.Sprintf(`<div class="step-detail">%d total matches found, %d priority flags</div>`,
 		view.Report.Stats.TotalMatches, view.Report.Stats.CriticalMatches))
 	sb.WriteString(`</div></div>`)
 
@@ -595,7 +621,7 @@ func (r *HTMLReporter) buildArtifactFindingsSection(sb htmlWriter, view HTMLRepo
 		}
 
 		// Payload
-		if f.Payload != "" {
+		if showsArtifactPayload(f) {
 			sb.WriteString(`<div class="artifact-payload">`)
 			sb.WriteString(fmt.Sprintf(`<div class="payload-title">%s Derived Exploit Payload</div>`, icon("key")))
 			sb.WriteString(fmt.Sprintf(`<pre class="payload-code"><code>%s</code></pre>`, html.EscapeString(f.Payload)))
@@ -606,6 +632,23 @@ func (r *HTMLReporter) buildArtifactFindingsSection(sb htmlWriter, view HTMLRepo
 	}
 
 	sb.WriteString(`</div></section>`)
+}
+
+// showsArtifactPayload reports whether an artifact finding should display its
+// masked payload block. Inventory-grade observations — a standalone numeric
+// literal with no credential context, for example — carry a masked "payload"
+// that dresses a build constant up as an exploit primitive; they keep the
+// reason line and drop the "Derived Exploit Payload" block.
+func showsArtifactPayload(f ArtifactFindingView) bool {
+	if f.Payload == "" {
+		return false
+	}
+	for _, s := range f.Stages {
+		if s == "inventory" {
+			return false
+		}
+	}
+	return true
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1357,6 +1400,18 @@ func (r *HTMLReporter) buildConfidenceChart(sb htmlWriter, view HTMLReportView) 
 	}
 
 	totalMatches := len(view.Matches)
+	// The match table is a display subset (MaxSnippetsPerMatch), so its
+	// proportions can contradict the verdict — "Critical Rate 0%" next to a
+	// CRITICAL risk. The stats pair counts every pattern match and critical
+	// rule match; prefer it whenever it describes a larger population.
+	if r != nil && r.result != nil && r.result.Stats.TotalMatches > totalMatches {
+		totalMatches = r.result.Stats.TotalMatches
+		criticalCount = r.result.Stats.CriticalMatches
+		if criticalCount > totalMatches {
+			criticalCount = totalMatches
+		}
+		normalCount = totalMatches - criticalCount
+	}
 	critPct := 0
 	if totalMatches > 0 {
 		critPct = criticalCount * 100 / totalMatches

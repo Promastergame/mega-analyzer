@@ -1,6 +1,7 @@
 package pipeline
 
 import (
+	"strings"
 	"testing"
 
 	"mega-analyzer/pkg/internal/types"
@@ -148,13 +149,18 @@ const-string v2, "https://legitimate.com/api"
 
 	tldMatches := 0
 	for _, m := range analysis.Matches {
-		if m.Category == types.CategorySuspiciousURL {
+		// TLD reputation was retired: domain references are Info-level inventory.
+		if m.Category == types.CategoryNetworkEndpoint && m.Severity == types.SeverityInfo &&
+			strings.Contains(m.Context, "TLD does not establish reputation") {
 			tldMatches++
+		}
+		if m.Category == types.CategorySuspiciousURL {
+			t.Errorf("suspicious-TLD verdict must not return: %+v", m)
 		}
 	}
 
 	if tldMatches != 2 {
-		t.Errorf("expected 2 suspicious TLD matches, got %d", tldMatches)
+		t.Errorf("expected 2 domain reference matches, got %d", tldMatches)
 	}
 }
 
@@ -341,20 +347,21 @@ func TestThreatAggregator_AccessibilityAbuseCorrelation(t *testing.T) {
 
 	signals := d.GetAggregator().GetSignals()
 
-	// Should have full accessibility abuse correlation
+	// Should have the accessibility UI-capabilities observation (formerly the
+	// ACCESSIBILITY_ABUSE_FULL high-severity attribution).
 	found := false
 	for _, corr := range signals.Correlations {
-		if corr.Name == "ACCESSIBILITY_ABUSE_FULL" {
+		if corr.Name == "ACCESSIBILITY_UI_CAPABILITIES" {
 			found = true
-			if corr.Severity != SeverityHigh {
-				t.Errorf("expected HIGH severity, got %v", corr.Severity)
+			if corr.Severity != SeverityInfo || corr.Score != 0 {
+				t.Errorf("expected Info severity with score 0, got %v/%d", corr.Severity, corr.Score)
 			}
 			break
 		}
 	}
 
 	if !found {
-		t.Error("expected ACCESSIBILITY_ABUSE_FULL correlation")
+		t.Error("expected ACCESSIBILITY_UI_CAPABILITIES correlation")
 	}
 }
 
@@ -380,17 +387,18 @@ func TestThreatAggregator_StealerCombo(t *testing.T) {
 
 	found := false
 	for _, corr := range signals.Correlations {
-		if corr.Name == "STEALER_PERMISSION_COMBO" {
+		if corr.Name == "SENSITIVE_PERMISSION_PROFILE" {
 			found = true
-			if corr.Severity != SeverityCritical {
-				t.Errorf("expected CRITICAL severity for 5 perms")
+			// Permission declarations are an inventory profile, not a stealer verdict.
+			if corr.Severity != SeverityInfo || corr.Score != 0 {
+				t.Errorf("expected Info severity with score 0, got %v/%d", corr.Severity, corr.Score)
 			}
 			break
 		}
 	}
 
 	if !found {
-		t.Error("expected STEALER_PERMISSION_COMBO correlation")
+		t.Error("expected SENSITIVE_PERMISSION_PROFILE correlation")
 	}
 }
 

@@ -5,22 +5,21 @@ DEX. Она использует публичный пакет `pkg/decompiler`.
 обращается к этому же API.
 
 По умолчанию используется нативный Go backend. Наличие Java/Android SDK не меняет
-его выбор; поиск и запуск внешних инструментов выполняются только при явном
-`--backend baksmali`. Декомпиляция не запускает сканирование безопасности.
+его выбор. Внешний backend и JAR smali/baksmali удалены; декодирование
+использует только встроенный движок. Декомпиляция не запускает сканирование безопасности.
 
 ## Сборка и запуск
 
 Из корня репозитория, Go 1.27.3+:
 
 ```powershell
-go build -trimpath -tags noembed -o bin/decompiler.exe ./cmd/decompiler
+go build -trimpath -o bin/decompiler.exe ./cmd/decompiler
 ./bin/decompiler.exe app.apk -o decoded_app
 ./bin/decompiler.exe classes.dex -o decoded_dex --json
 ```
 
 На Linux/macOS имя бинарника можно задать как `bin/decompiler`.
 Для сборки без C toolchain установите `CGO_ENABLED=0`.
-Тег `noembed` исключает вложенные инструменты совместимости из бинарника.
 
 Одиночный DEX сохраняется как `classes.dex`, классы — в `smali/`.
 Для APK с несколькими DEX используются `smali/`, `smali_classes2/` и т. д.
@@ -43,14 +42,7 @@ go build -trimpath -tags noembed -o bin/decompiler.exe ./cmd/decompiler
 Опции можно указывать до или после входного файла. Для имён, начинающихся с `-`,
 используйте разделитель `--`. Справка: `decompiler --help`.
 
-Совместимость с baksmali включается явно:
-
-```powershell
-./bin/decompiler.exe app.apk -o decoded_compat --backend baksmali --baksmali-jar tools/baksmali.jar --java java
-```
-
-Ошибка явно выбранного baksmali возвращается вызывающему коду. Незаметного
-переключения на другой backend нет.
+Неизвестное значение `--backend` возвращает ошибку до создания выходного каталога.
 
 ## Результат и ошибки
 

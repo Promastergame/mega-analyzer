@@ -49,6 +49,9 @@ func TestParseDumpsysBattery(t *testing.T) {
 	if m["temperature"] != "315" {
 		t.Errorf("temperature = %q", m["temperature"])
 	}
+	if m["health"] != "good" {
+		t.Errorf("health = %q, want good", m["health"])
+	}
 }
 
 func TestNormalizeBatteryStatus(t *testing.T) {

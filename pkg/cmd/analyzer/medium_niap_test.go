@@ -19,8 +19,8 @@ func TestNiapFindingMapping(t *testing.T) {
 	}{
 		// Found anti-pattern → real finding.
 		{niap.Match{RuleID: "ANTI", Status: niap.StatusFailed, Matched: true}, true, types.SeverityMedium},
-		// Absent positive pattern → real finding.
-		{niap.Match{RuleID: "POS", Status: niap.StatusFailed, Matched: false}, true, types.SeverityMedium},
+		// Absent positive pattern → compliance gap, not a proved vulnerability.
+		{niap.Match{RuleID: "POS", Status: niap.StatusFailed, Matched: false}, true, types.SeverityInfo},
 		// Clean negative rule (anti-pattern NOT found) → silence.
 		{niap.Match{RuleID: "ANTI", Status: niap.StatusPassed, Matched: false}, false, 0},
 		// Satisfied positive rule → silence.

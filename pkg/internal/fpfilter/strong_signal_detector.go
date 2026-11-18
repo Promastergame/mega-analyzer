@@ -1,6 +1,7 @@
 package fpfilter
 
 import (
+	"regexp"
 	"strings"
 
 	"mega-analyzer/pkg/internal/types"
@@ -8,6 +9,8 @@ import (
 
 // StrongSignalDetector finds security signals that must not be suppressed.
 type StrongSignalDetector struct{}
+
+var cveIdentifier = regexp.MustCompile(`(?i)\bCVE-[0-9]{4}-[0-9]{4,}\b`)
 
 func NewStrongSignalDetector() *StrongSignalDetector {
 	return &StrongSignalDetector{}
@@ -17,6 +20,9 @@ func NewStrongSignalDetector() *StrongSignalDetector {
 func (s *StrongSignalDetector) Detect(match *types.Match) []types.StrongSignal {
 	var signals []types.StrongSignal
 	if match == nil {
+		return signals
+	}
+	if isObservation(match) {
 		return signals
 	}
 
@@ -119,22 +125,13 @@ func (s *StrongSignalDetector) Detect(match *types.Match) []types.StrongSignal {
 		})
 	}
 
-	// 8. Known vulnerability identifiers from dependency/library scanners
-	text := strings.ToLower(match.Pattern + " " + match.Text + " " + match.Context + " " + match.Metadata["cve"] + " " + match.Metadata["cwe"])
-	if strings.Contains(text, "cve-") || strings.Contains(text, "cwe-") || strings.Contains(text, "vulnerab") {
+	// 8. A structured CVE result from a dependency scanner. CWE is taxonomy;
+	// prose containing "vulnerability" or a critical label is not extra proof.
+	if cveIdentifier.MatchString(match.Metadata["cve"]) {
 		signals = append(signals, types.StrongSignal{
 			SignalType: "known_vulnerability",
 			Confidence: 0.95,
-			Evidence:   "Finding carries CVE/CWE/vulnerability evidence",
-		})
-	}
-
-	// 9. Explicit Critical severity from original analysis
-	if match.IsCritical {
-		signals = append(signals, types.StrongSignal{
-			SignalType: "critical_severity_base",
-			Confidence: 0.9,
-			Evidence:   "Flagged as critical by core rule engine",
+			Evidence:   "Dependency scanner reported " + match.Metadata["cve"],
 		})
 	}
 

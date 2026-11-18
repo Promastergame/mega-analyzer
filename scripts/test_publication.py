@@ -64,6 +64,7 @@ class SourcePolicyTests(unittest.TestCase):
     def test_internal_reports_and_generated_metadata_stay_out_of_sources(self):
         for name in ["WEB_STATIC_UPGRADE.ru.md", "SOURCE_MANIFEST.json", ".github/dependabot.yml",
                      "docs/RELEASE_VALIDATION.md", "docs/PETYA_DECRYPTOR_REVIEW.ru.md",
+                     "decisionai/docs/AI-PERFORMANCE-IMPLEMENTATION.ru.md",
                      "docs/review-jar-minecraft/source-checks.json",
                      "docs/review-jar-workspace/checks.json",
                      "docs/ncer/SMALI_DEX_MODULE_AUDIT_TODO.md", "docs/security-audit.ru.md",

@@ -3,6 +3,7 @@ package report
 import (
 	"math"
 
+	"mega-analyzer/pkg/internal/rating"
 	"mega-analyzer/pkg/internal/types"
 )
 
@@ -16,17 +17,24 @@ const piracySiteDiscount = 10
 // gauge, the HTML gauge and the Markdown "Risk Score" line all read from it,
 // so every surface reports the same number.
 type SuspicionBreakdown struct {
-	PatternMatches   int     // up to 30
-	CriticalFindings int     // up to 30
-	PiracyIndicators int     // up to 25
-	ConfidenceBoost  int     // up to 15
-	Confidence       float64 // 0..1, average hotspot confidence
-	Score            int     // clamped sum of the four buckets
+	PatternMatches   int                 // up to 30
+	CriticalFindings int                 // up to 30
+	PiracyIndicators int                 // up to 25
+	ConfidenceBoost  int                 // up to 15
+	Confidence       float64             // 0..1, average hotspot confidence
+	Score            int                 // clamped sum of the four buckets
+	Profile          *rating.RiskProfile // typed risk profile; nil for legacy results
 }
 
 // SuspicionScore derives the canonical breakdown straight from the analysis
 // result, with piracy-site URL matches discounted (see piracySiteDiscount).
 func SuspicionScore(result *types.AnalysisResult) SuspicionBreakdown {
+	if result == nil {
+		return SuspicionBreakdown{}
+	}
+	if profile, ok := rating.ResultProfile(result); ok {
+		return SuspicionBreakdown{Score: profile.OverallScore, Profile: &profile}
+	}
 	piracySites := result.MatchesByCategory[types.CategoryPiracySite]
 	// Keep ceil(piracySites/piracySiteDiscount) of them, drop the rest.
 	removed := piracySites - (piracySites+piracySiteDiscount-1)/piracySiteDiscount

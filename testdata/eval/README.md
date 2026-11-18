@@ -92,10 +92,14 @@ Cases marked `known_gap` are detection gaps found while building this corpus
 they pin the ground truth so a future detector fix flips them to "resolved".
 
 Baseline snapshot (corpus v2, 70 cases, 62 scored): micro precision 1.00,
-recall 1.00, F1 1.00, with the eight documented gaps below. The current v5
+recall 1.00, F1 1.00, with the eight documented gaps below. The current v6
 corpus has grown to 97 cases, all scored with no `known_gap` entries: the
 full corpus passes at micro precision 1.00 / recall 1.00. Historical gap
 list from the v2 baseline (all resolved since):
+
+Version 6 also distinguishes unresolved PendingIntent flags from a mutable
+surface: `pi-unresolved-flags` requires `pending_intent_review` and forbids
+`pending_intent_vuln`. It still contributes to the scored metrics.
 
 | case | gap class | symptom |
 | --- | --- | --- |

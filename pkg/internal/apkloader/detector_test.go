@@ -4,10 +4,12 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestDetectInputType(t *testing.T) {
-	tempDir := t.TempDir()
+	tempDir := testutil.TempDir(t)
 
 	tests := []struct {
 		name     string
@@ -247,7 +249,7 @@ func TestDetectInputType(t *testing.T) {
 }
 
 func TestDetectByMagic(t *testing.T) {
-	tempDir := t.TempDir()
+	tempDir := testutil.TempDir(t)
 
 	tests := []struct {
 		name     string
@@ -363,7 +365,7 @@ func TestNormalizeArchiveType(t *testing.T) {
 }
 
 func TestHasSmaliFiles(t *testing.T) {
-	tempDir := t.TempDir()
+	tempDir := testutil.TempDir(t)
 
 	tests := []struct {
 		name     string
@@ -435,7 +437,7 @@ func TestHasSmaliFiles(t *testing.T) {
 }
 
 func TestHasCacheArtifacts(t *testing.T) {
-	tempDir := t.TempDir()
+	tempDir := testutil.TempDir(t)
 
 	tests := []struct {
 		name     string
@@ -652,7 +654,7 @@ func TestIsCacheExtension(t *testing.T) {
 }
 
 func TestDetectDirectory(t *testing.T) {
-	tempDir := t.TempDir()
+	tempDir := testutil.TempDir(t)
 
 	tests := []struct {
 		name     string
@@ -714,7 +716,7 @@ func TestDetectDirectory(t *testing.T) {
 }
 
 func TestDetectFile(t *testing.T) {
-	tempDir := t.TempDir()
+	tempDir := testutil.TempDir(t)
 
 	tests := []struct {
 		name     string

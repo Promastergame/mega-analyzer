@@ -1,6 +1,9 @@
 package report
 
-import _ "embed"
+import (
+	_ "embed"
+	"encoding/base64"
+)
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // STATIC WEB ASSETS
@@ -16,6 +19,14 @@ import _ "embed"
 
 //go:embed web/icons.svg
 var iconSprite string
+
+//go:embed web/favicon-32.png
+var reportFaviconPNG []byte
+
+// reportFaviconDataURI is inlined into REPORT.html <head>: report tabs are
+// served from opaque blob origins with a strict CSP, so an external favicon
+// URL can never load there — only a data: URI survives (img-src data:).
+var reportFaviconDataURI = "data:image/png;base64," + base64.StdEncoding.EncodeToString(reportFaviconPNG)
 
 //go:embed web/styles.css
 var htmlStyles string

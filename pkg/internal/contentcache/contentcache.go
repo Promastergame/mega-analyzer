@@ -32,12 +32,13 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"syscall"
 	"time"
 )
 
 const (
-	defaultMaxEntryBytes    int64 = 16 * 1024 * 1024  // 16 MiB max per single entry
-	defaultMaxHotBytesPerNS int64 = 12 * 1024 * 1024  // 12 MiB per namespace (was 64 MiB — 8 NS × 64 = 512 MiB OOM)
+	defaultMaxEntryBytes    int64 = 16 * 1024 * 1024 // 16 MiB max per single entry
+	defaultMaxHotBytesPerNS int64 = 12 * 1024 * 1024 // 12 MiB per namespace (was 64 MiB — 8 NS × 64 = 512 MiB OOM)
 
 	// evictTargetRatio is the low-water mark for disk eviction. Cleaning down
 	// to the exact limit made every subsequent Put re-run a full WalkDir.
@@ -244,8 +245,8 @@ func DefaultStoreConfig() StoreConfig {
 	return StoreConfig{
 		BaseDir:             ".omnisec-cache/content",
 		Version:             2,
-		MaxMemoryPerNS:      512,                        // was 4096; 512 entries is ample with 12 MiB byte budget
-		MaxDiskBytes:        512 * 1024 * 1024,          // 512 MiB disk cap (was 0 = unlimited)
+		MaxMemoryPerNS:      512,               // was 4096; 512 entries is ample with 12 MiB byte budget
+		MaxDiskBytes:        512 * 1024 * 1024, // 512 MiB disk cap (was 0 = unlimited)
 		MaxEntryBytes:       defaultMaxEntryBytes,
 		MaxMemoryBytesPerNS: defaultMaxHotBytesPerNS,
 		PurgeLegacyVersions: true,
@@ -1135,7 +1136,7 @@ func (s *Store) Clear() error {
 	s.diskMu.Unlock()
 
 	s.diskBytes.Store(0)
-	if err := os.RemoveAll(s.baseDir); err != nil {
+	if err := removeCacheTree(s.baseDir); err != nil {
 		return err
 	}
 	return s.createLayout()
@@ -1152,7 +1153,7 @@ func (s *Store) InvalidateNamespace(ns Namespace) error {
 	s.evictIndex = nil
 	s.diskMu.Unlock()
 
-	if err := os.RemoveAll(filepath.Join(s.baseDir, string(ns))); err != nil {
+	if err := removeCacheTree(filepath.Join(s.baseDir, string(ns))); err != nil {
 		return err
 	}
 	if err := s.createNamespaceDir(ns); err != nil {
@@ -1164,6 +1165,25 @@ func (s *Store) InvalidateNamespace(ns Namespace) error {
 		}
 	}
 	return nil
+}
+
+// Windows can briefly report a sharing violation or a nonempty directory
+// after its files were removed. Give those transient errors a bounded retry
+// window; permanent errors still reach the caller.
+func removeCacheTree(path string) error {
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		err := os.RemoveAll(path)
+		if err == nil {
+			return nil
+		}
+		retry := runtime.GOOS == "windows" && (errors.Is(err, syscall.Errno(5)) ||
+			errors.Is(err, syscall.Errno(32)) || errors.Is(err, syscall.Errno(145)))
+		if !retry || !time.Now().Before(deadline) {
+			return err
+		}
+		time.Sleep(20 * time.Millisecond)
+	}
 }
 
 func validNamespace(ns Namespace) bool {

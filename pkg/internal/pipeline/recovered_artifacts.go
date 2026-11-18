@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"net"
 	"net/url"
 	"regexp"
 	"sort"
@@ -14,6 +15,7 @@ import (
 
 	"mega-analyzer/pkg/internal/apkloader"
 	"mega-analyzer/pkg/internal/codescan"
+	"mega-analyzer/pkg/internal/networkrefs"
 	"mega-analyzer/pkg/internal/types"
 )
 
@@ -125,7 +127,9 @@ func classifyRecoveredText(value, method string, offset uint32, depth int) []rec
 	if parsed, err := url.Parse(value); err == nil && parsed.Hostname() != "" && (parsed.Scheme == "http" || parsed.Scheme == "https") {
 		artifacts = append(artifacts, newRecoveredArtifact("url", []byte(value), method, offset, depth, boundedPreview(value, 256)))
 		artifacts = append(artifacts, newRecoveredArtifact("domain", []byte(strings.ToLower(parsed.Hostname())), method, offset, depth, strings.ToLower(parsed.Hostname())))
-	} else if domainArtifactPattern.MatchString(value) {
+	} else if ip := net.ParseIP(value); ip != nil {
+		artifacts = append(artifacts, newRecoveredArtifact("ip_address", []byte(ip.String()), method, offset, depth, ip.String()))
+	} else if domainArtifactPattern.MatchString(value) && !javaClassArtifactPattern.MatchString(value) && networkrefs.IsRecoveredHostname(value) {
 		artifacts = append(artifacts, newRecoveredArtifact("domain", []byte(strings.ToLower(value)), method, offset, depth, strings.ToLower(value)))
 	}
 	if dalvikMethodArtifactPattern.MatchString(value) {

@@ -454,7 +454,7 @@ Sidecar-анализаторы в `<output>/insights/`:
 | `-no-headers`, `-no-smali-header` | Не добавлять метаданные/комментарии `# Disassembled from DEX` в Smali файлы (по умолчанию отключены, чистый Smali) |
 | `-copy-original` | Сохранить оригинальный META-INF |
 | `-framework-dir <path>` | Директория фреймворков для ресурсов |
-| `-dex-backend <auto\|native\|baksmali>` | Бэкенд декомпиляции DEX→Smali (default: `auto`). `native` — встроенный Go-дизассемблер без JVM + поклассовый кэш; `baksmali` — внешний JAR (только если указан и найден) |
+| `-dex-backend <auto\|native>` | Встроенный Go-декодер DEX→Smali; оба значения используют нативный движок с поклассовым кэшем (default: `auto`) |
 | `-class-cache` | Кэшировать native DEX→Smali поклассово в `.mega-analyzer-cache.db` (default: `true`; отключение: `-class-cache=false`) |
 
 **Build/Rebuild** — собрать APK обратно (как `apktool b`):
@@ -482,17 +482,11 @@ Sidecar-анализаторы в `<output>/insights/`:
 
 | Флаг | Описание |
 |---|---|
-| `-smali-jar <path>` | Путь к `smali.jar` |
-| `-baksmali-jar <path>` | Путь к `baksmali.jar` |
 | `-aapt2 <path>` | Путь к `aapt2` |
 | `-use-smali` | Включить smali→dex (default: `true`) |
 | `-use-aapt2` | Включить aapt2 compile+link (default: `true`) |
-| `-smali-api <N>` | API level для smali/baksmali (`-a`); 0 = default инструмента |
-| `-smali-jobs <N>` | Воркеры smali/baksmali (`-j`); 0 = авто (до 8 на процесс) |
-| `-smali-verbose` | Передать `--verbose` в smali (богаче диагностика) |
-| `-baksmali-use-locals` | Передать `--use-locals` в baksmali |
-| `-baksmali-seq-labels` | Передать `--sequential-labels` в baksmali |
-| `-baksmali-no-param-regs` | Передать `--parameter-registers=false` в baksmali |
+| `-smali-api <N>` | Android API level нативного сборщика; 0 = автоматически по DEX проекта |
+| `-smali-jobs <N>` | Воркеры нативной сборки DEX; 0 = авто (до 4 на процесс) |
 
 **Примеры:**
 
@@ -505,9 +499,6 @@ Sidecar-анализаторы в `<output>/insights/`:
 
 # Декодирование без JVM через native-бэкенд с кэшем
 .\bin\analyzer.exe -decode -t .\app.apk -o .\decoded_app -dex-backend native -class-cache
-
-# Официальный baksmali с детерминированными метками
-.\bin\analyzer.exe -decode -t .\app.apk -o .\decoded_app -dex-backend baksmali -baksmali-jar .\tools\baksmali.jar -baksmali-seq-labels -baksmali-use-locals
 ```
 
 ### Smali class-cache viewer (`cmd/cache-viewer`)

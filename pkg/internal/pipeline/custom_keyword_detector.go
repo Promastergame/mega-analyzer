@@ -359,10 +359,19 @@ func (d *CustomKeywordDetector) detectWithAC(
 			types.CategoryCustomKeyword,
 			analysis.Path, line,
 			desc, kw.Original,
-			kw.Suspicious,
+			false,
 		)
 		m.Text = snippet
+		if kw.Suspicious {
+			m.Metadata["suspicious"] = "true"
+		}
 		applyKeywordSeverity(&m, *kw)
+		// Custom keywords obey the same false-positive table as built-in
+		// patterns; without this the user keyword list re-introduced known
+		// noise (46 setAccessible findings on a clean app).
+		if matcher.ShouldSuppressCustomKeyword(m.Category, m.Text, ctx.Path, snippet) {
+			continue
+		}
 		analysis.Matches = append(analysis.Matches, m)
 
 		totalHits++
@@ -422,10 +431,19 @@ func (d *CustomKeywordDetector) detectRegex(
 					types.CategoryCustomKeyword,
 					analysis.Path, line,
 					desc, kw.Original,
-					kw.Suspicious,
+					false,
 				)
 				m.Text = snippet
+				if kw.Suspicious {
+					m.Metadata["suspicious"] = "true"
+				}
 				applyKeywordSeverity(&m, *kw)
+				// Same false-positive table as the AC phase (Fix: custom
+				// keywords must not bypass suppression).
+				if matcher.ShouldSuppressCustomKeyword(m.Category, m.Text, ctx.Path, snippet) {
+					searchFrom = absIdx + matchLen
+					continue
+				}
 				analysis.Matches = append(analysis.Matches, m)
 
 				totalHits++
@@ -713,6 +731,7 @@ func applyKeywordSeverity(m *types.Match, kw keywordEntry) {
 		return
 	}
 	m.Score = scoreForSeverity(kw.Severity)
+	m.Severity = kw.Severity
 	if m.Metadata == nil {
 		m.Metadata = map[string]string{}
 	}

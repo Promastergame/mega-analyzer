@@ -21,6 +21,7 @@ import (
 	"mega-analyzer/pkg/internal/cache"
 	"mega-analyzer/pkg/internal/config"
 	"mega-analyzer/pkg/internal/correlation"
+	"mega-analyzer/pkg/internal/decisionai"
 	"mega-analyzer/pkg/internal/deobfuscation"
 	"mega-analyzer/pkg/internal/evidencegraph"
 	"mega-analyzer/pkg/internal/ipaloader"
@@ -358,7 +359,7 @@ func (a *App) Run(args []string) error {
 		return a.handleVersionDiff()
 	}
 
-	if opts.IsFirmwareCommand() {
+	if opts.IsFirmwareCommand() && opts.NoTUI {
 		if err := opts.Validate(); err != nil {
 			return err
 		}
@@ -371,7 +372,7 @@ func (a *App) Run(args []string) error {
 	// ══════════════════════════════════════════════════════════════════════════
 	// MAKE-SERVER — authorized-lab Elixir/OTP private server generator
 	// ══════════════════════════════════════════════════════════════════════════
-	if opts.IsMakeServerCommand() {
+	if opts.IsMakeServerCommand() && opts.NoTUI {
 		if err := opts.Validate(); err != nil {
 			return err
 		}
@@ -537,6 +538,11 @@ func (a *App) Run(args []string) error {
 	if len(a.ipaFindings) > 0 {
 		result.ArtifactFindings = append(result.ArtifactFindings, a.ipaFindings...)
 	}
+	// A multi-ABI native library repeated the same finding once per
+	// lib/<abi>/ copy (JNI surface ×5, raw syscall ×3, numeric PIN ×2 on a
+	// single clean APK). Merge identical per-ABI copies before reports and
+	// the evidence graph are built so the dedup stays consistent everywhere.
+	result.ArtifactFindings = dedupeArtifactFindings(result.ArtifactFindings)
 
 	// 9.55 Merge cross-format crack points (JAR / native / iOS) into the unified
 	// aggregation so they reach the CLI summary, reports, dashboard and the ML
@@ -595,8 +601,6 @@ func (a *App) Run(args []string) error {
 		}
 	}
 
-	a.runDecisionAITriage(ctx, result, outputDir)
-
 	// Artifacts live under the managed result folder, never the upload temp.
 	staticOutputErr := a.runStaticOutputs(ctx, absTarget, outputDir)
 	if staticOutputErr != nil {
@@ -609,7 +613,7 @@ func (a *App) Run(args []string) error {
 	}
 
 	// 10. Generate reports
-	if err := a.generateReports(result, outputDir); err != nil {
+	if err := a.generateReports(ctx, result, outputDir); err != nil {
 		return fmt.Errorf("report generation failed: %w", err)
 	}
 
@@ -640,7 +644,7 @@ func (a *App) Run(args []string) error {
 			a.output.Warning("Experimental subsystem failed: %v", err)
 		} else {
 			// Re-generate reports so experimental findings show up too.
-			if err := a.generateReports(result, outputDir); err != nil {
+			if err := a.generateReports(ctx, result, outputDir); err != nil {
 				return fmt.Errorf("report refresh failed: %w", err)
 			}
 		}
@@ -1182,6 +1186,41 @@ func (a *App) mergeCrossFormatCrackPoints(result *types.AnalysisResult) {
 	result.CrackPoint.TotalHighConf = high
 }
 
+// dedupeArtifactFindings merges artifact findings that repeat identically once
+// per ABI copy of the same native library (lib/arm64-v8a/x.so,
+// lib/x86_64/x.so, …). A clean 4-ABI APK reported the same JNI-surface,
+// raw-syscall and numeric-PIN finding five and three times, tripling the
+// artifact section without adding information. The first occurrence is kept
+// and annotated; genuinely different findings (distinct payload or wording)
+// are never merged.
+func dedupeArtifactFindings(findings []types.ArtifactFinding) []types.ArtifactFinding {
+	if len(findings) <= 1 {
+		return findings
+	}
+
+	type findingKey struct {
+		lib, reason, payload string
+	}
+	seen := make(map[findingKey]int, len(findings))
+	out := make([]types.ArtifactFinding, 0, len(findings))
+	for _, f := range findings {
+		k := findingKey{
+			lib:     strings.ToLower(filepath.Base(f.Path)),
+			reason:  f.Reason,
+			payload: f.Payload,
+		}
+		if idx, dup := seen[k]; dup {
+			if !strings.Contains(out[idx].Reason, "ABI copy of this library") {
+				out[idx].Reason += " (same finding in other ABI copies of this library)"
+			}
+			continue
+		}
+		seen[k] = len(out)
+		out = append(out, f)
+	}
+	return out
+}
+
 // cleanup удаляет временные файлы (если не --keep-temp)
 func (a *App) cleanup() {
 	if a.tempDir == "" || a.opts.KeepTemp {
@@ -1266,9 +1305,15 @@ func (a *App) buildConfig() *config.Config {
 	cfg.DeobfuscationOptions.EnableMR = a.opts.EnableDeobfMR
 	cfg.DeobfuscationOptions.EnableNameQuality = a.opts.EnableNameQuality
 
-	// Crack point & Anomaly overrides
-	cfg.EnableCrackPointAnalysis = a.opts.CrackPointAnalysis
-	cfg.EnableAnomalyDetection = a.opts.AnomalyDetection
+	// Crack point & Anomaly overrides. These flags default to true, so mapping
+	// them unconditionally would silently re-enable what a profile (quick)
+	// turned off — only an explicitly passed flag may override the profile.
+	if a.opts.CrackPointExplicit {
+		cfg.EnableCrackPointAnalysis = a.opts.CrackPointAnalysis
+	}
+	if a.opts.AnomalyExplicit {
+		cfg.EnableAnomalyDetection = a.opts.AnomalyDetection
+	}
 
 	// Content-Cache & Data-Flow
 	cfg.EnableContentCache = a.opts.EnableContentCache
@@ -1278,7 +1323,12 @@ func (a *App) buildConfig() *config.Config {
 	if a.opts.ContentCacheMaxDiskMB > 0 {
 		cfg.ContentCacheMaxDiskMB = a.opts.ContentCacheMaxDiskMB
 	}
-	cfg.EnableDataFlow = a.opts.EnableDataFlow
+	// The flag defaults to true; without the explicit check it would undo the
+	// quick profile's EnableDataFlow=false and put the heavy second-pass
+	// data-flow analysis back into every fast triage scan.
+	if a.opts.DataFlowExplicit {
+		cfg.EnableDataFlow = a.opts.EnableDataFlow
+	}
 	if a.opts.DataFlowMaxMethods > 0 {
 		cfg.DataFlowMaxMethods = a.opts.DataFlowMaxMethods
 	}
@@ -1412,7 +1462,7 @@ func (a *App) runAnalysis(ctx context.Context, cfg *config.Config, target string
 	// budget that would otherwise ignore Ctrl+C and grind on partial data.
 	if !a.opts.SkipGNN && !a.interrupted.Load() {
 		if gnnWeights := resolveGNNModelPath(a.opts.GNNModelPath); gnnWeights != "" {
-			a.output.Info("Running GNN vulnerability classification...")
+			a.output.Info("Running GNN classification of visible method control-flow graphs...")
 			gnnStarted := time.Now()
 			// The shared analysis deadline is usually almost exhausted by now:
 			// the pattern scan can consume most of -timeout, which would cancel
@@ -1426,9 +1476,35 @@ func (a *App) runAnalysis(ctx context.Context, cfg *config.Config, target string
 			}
 			gnnCancel()
 			a.output.Info("Timing: GNN classification took %s", time.Since(gnnStarted).Round(time.Millisecond))
+		} else {
+			diagnostics, _ := newGNNDiagnostics(result, "")
+			finishGNNDiagnostics(diagnostics)
+			diagnostics.Status, diagnostics.Reason = "unavailable", "no_supported_json_model"
+			result.GNNDiagnostics = diagnostics
 		}
 	} else {
 		a.output.Info("Skipping GNN vulnerability classification by request")
+		diagnostics, _ := newGNNDiagnostics(result, "")
+		finishGNNDiagnostics(diagnostics)
+		diagnostics.Status, diagnostics.Reason = "skipped", "disabled_or_interrupted"
+		result.GNNDiagnostics = diagnostics
+	}
+
+	// The neuroclassifier is part of the confirmation layer: an unavailable
+	// model is a degraded run, not a normal one. Record the limitation on the
+	// run metadata so reports show it, and keep a "complete" label from
+	// hiding the gap.
+	if result != nil && result.Run != nil && result.GNNDiagnostics != nil &&
+		result.GNNDiagnostics.Status == "unavailable" {
+		reason := result.GNNDiagnostics.Reason
+		if reason == "" {
+			reason = "model_not_loaded"
+		}
+		result.Run.Limitations = append(result.Run.Limitations,
+			"Neuroclassifier (GNN) unavailable: "+reason+". ML confirmation did not run; risk scoring relies on static signals only.")
+		if result.Run.Status == "complete" {
+			result.Run.Status, result.Run.StopReason = "incomplete", "gnn_unavailable"
+		}
 	}
 
 	// Apply ProGuard/R8 name recovery if mapping file provided
@@ -1466,12 +1542,13 @@ func (a *App) runAnalysis(ctx context.Context, cfg *config.Config, target string
 // GENERATE REPORTS
 // ═══════════════════════════════════════════════════════════════════════════════
 
-func (a *App) generateReports(result *types.AnalysisResult, outputDir string) error {
+func (a *App) generateReports(ctx context.Context, result *types.AnalysisResult, outputDir string) error {
 	if result != nil && result.Run != nil && a.interrupted.Load() {
 		result.Run.Status, result.Run.StopReason = "incomplete", "cancelled"
 	}
 	if result != nil {
 		pipeline.RefreshTypedFindings(result)
+		logScoreBreakdown(result)
 		a.finalizeRunIdentity(result)
 		result.EvidenceGraph = evidencegraph.Build(result)
 	}
@@ -1498,10 +1575,21 @@ func (a *App) generateReports(result *types.AnalysisResult, outputDir string) er
 
 	// Marker makes it safer to clean in the future.
 	_ = writeOutputMarker(outDir)
+	if err := writeGNNDiagnosticsReport(outDir, result); err != nil {
+		a.output.Warning("GNN diagnostics report: %v", err)
+	}
+
+	// Review the same refreshed findings that the exporters will receive,
+	// including late sidecars and experimental results. Cleaning must finish
+	// first so it cannot delete the advisory artifacts written here.
+	a.runDecisionAITriage(ctx, result, outDir)
+	imageReviewer, closeImageReviewer := a.beginDecisionAIImageReview(ctx)
+	defer closeImageReviewer()
 
 	mdOpts := selectReportOptions(a.opts.Profile, a.opts.Report)
 	mdOpts.EngineVersion = Version
 	mdOpts.Profile = string(a.opts.Profile)
+	mdOpts.Artifacts.NoImageBlur = a.opts.NoImageBlur
 
 	registry := NewGeneratorRegistry(result, mdOpts)
 	if a.opts.NoHTML {
@@ -1510,10 +1598,13 @@ func (a *App) generateReports(result *types.AnalysisResult, outputDir string) er
 	if a.opts.NoJSON {
 		registry.DisableJSON()
 	}
+	if a.opts.JSONCompact {
+		registry.WithJSONCompact(true)
+	}
 
 	// Artifacts panel — opt-in. Zero impact when --artifacts is off.
 	if a.opts.EnableArtifacts {
-		if view := a.buildArtifactsView(result, outDir); view != nil {
+		if view := a.buildArtifactsView(result, outDir, imageReviewer); view != nil {
 			registry.WithArtifacts(view)
 			a.output.Info("Artifacts: ON  →  %d items, %d flagged",
 				view.Summary.Total, view.Summary.Flagged)
@@ -1521,6 +1612,7 @@ func (a *App) generateReports(result *types.AnalysisResult, outputDir string) er
 			a.output.Info("Artifacts: ON  →  no extracted artifacts found")
 		}
 	}
+	a.finishDecisionAIImageReview(imageReviewer, result, outDir)
 
 	err := registry.GenerateAll(outDir, a.output)
 	if a.opts.SARIF {
@@ -1546,7 +1638,7 @@ func (a *App) generateReports(result *types.AnalysisResult, outputDir string) er
 
 // buildArtifactsView wires up the opt-in Artifacts pipeline. Returns nil
 // when there's nothing to surface (no extracted dir, no artifact files).
-func (a *App) buildArtifactsView(result *types.AnalysisResult, outDir string) *report.ArtifactsView {
+func (a *App) buildArtifactsView(result *types.AnalysisResult, outDir string, imageReviewer *decisionai.ImageReviewer) *report.ArtifactsView {
 	extractedDir := a.tempDir
 	if extractedDir == "" {
 		// User passed a folder directly — still walk it.
@@ -1572,6 +1664,9 @@ func (a *App) buildArtifactsView(result *types.AnalysisResult, outDir string) *r
 		NoImageBlur:       a.opts.NoImageBlur,
 		SmaliClasses:      classes,
 		CrackPointsByPath: cps,
+	}
+	if imageReviewer != nil {
+		pipelineOpts.ReviewImage = imageReviewer.Review
 	}
 
 	view, err := artifacts.Build(pipelineOpts)

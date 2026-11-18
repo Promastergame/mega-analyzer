@@ -164,10 +164,10 @@ func TestStrongSignalDetectorEdgeCases(t *testing.T) {
 		t.Errorf("Expected 'dangerous_permission' signal, got %v", sigsPerm)
 	}
 
-	// 9. Critical severity
+	// 9. A critical label is not independent evidence.
 	sigsCrit := detector.Detect(&types.Match{IsCritical: true})
-	if len(sigsCrit) != 1 || sigsCrit[0].SignalType != "critical_severity_base" {
-		t.Errorf("Expected 'critical_severity_base' signal, got %v", sigsCrit)
+	if len(sigsCrit) != 0 {
+		t.Errorf("Severity alone must not create a strong signal, got %v", sigsCrit)
 	}
 }
 
@@ -282,17 +282,17 @@ func TestVerdictRefinerComplete(t *testing.T) {
 		t.Errorf("Expected first kept, second duplicate suppressed, got: %s, %s", resDup2[0].Verdict, resDup2[1].Verdict)
 	}
 
-	// 4. Cross-finding correlation (SDK upgrade)
+	// 4. An unrelated app finding cannot promote library boilerplate.
 	findingsCorr := []types.ClassifiedFinding{
 		{Original: &types.Match{Categorized: types.Categorized{Category: "FILE_ACCESS"}}, Verdict: types.VerdictConfirmedAppRisk},
 		{Original: &types.Match{Categorized: types.Categorized{Category: "DYNAMIC_CODE_LOADING"}}, Verdict: types.VerdictSDKNoiseSuppressed, SDKInfo: &types.SDKInfo{}},
 	}
 	resCorr := refiner.Refine(findingsCorr)
-	if resCorr[1].Verdict != types.VerdictSDKInteresting {
-		t.Errorf("Expected SDK finding to be upgraded to SDKInteresting, got %s", resCorr[1].Verdict)
+	if resCorr[1].Verdict != types.VerdictSDKNoiseSuppressed {
+		t.Errorf("Unrelated app risk promoted SDK noise: %s", resCorr[1].Verdict)
 	}
 
-	// 5. Behavior Chain — upgrades only correlated security chains
+	// 5. Co-present capabilities are not an evidence-backed behavior chain.
 	findingsChainWeak := []types.ClassifiedFinding{
 		{Verdict: types.VerdictNeedsContext},
 		{Verdict: types.VerdictNeedsContext},
@@ -312,8 +312,8 @@ func TestVerdictRefinerComplete(t *testing.T) {
 	}
 	resChainStrong := refiner.Refine(findingsChainStrong)
 	for i, cf := range resChainStrong {
-		if cf.Verdict != types.VerdictConfirmedAppRisk {
-			t.Errorf("Expected strong chain item %d upgraded to ConfirmedAppRisk, got %s", i, cf.Verdict)
+		if cf.Verdict != types.VerdictNeedsContext {
+			t.Errorf("Unlinked capability %d was promoted to a risk: %s", i, cf.Verdict)
 		}
 	}
 }

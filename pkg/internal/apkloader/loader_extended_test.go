@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -44,7 +46,7 @@ func TestExtractor_PrepareInput_NonExistent(t *testing.T) {
 }
 
 func TestExtractor_PrepareInput_ContextCanceled(t *testing.T) {
-	tempDir := t.TempDir()
+	tempDir := testutil.TempDir(t)
 
 	e := NewExtractor()
 	ctx, cancel := context.WithCancel(context.Background())
@@ -57,7 +59,7 @@ func TestExtractor_PrepareInput_ContextCanceled(t *testing.T) {
 }
 
 func TestExtractor_PrepareInput_ContextTimeout(t *testing.T) {
-	tempDir := t.TempDir()
+	tempDir := testutil.TempDir(t)
 
 	e := NewExtractor()
 	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Nanosecond)
@@ -168,7 +170,7 @@ func TestArtifactFinding_Severities(t *testing.T) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 func TestDetectDirectory_EmptyDir(t *testing.T) {
-	tempDir := t.TempDir()
+	tempDir := testutil.TempDir(t)
 
 	inputType, err := detectDirectory(tempDir)
 	if err == nil {
@@ -181,7 +183,7 @@ func TestDetectDirectory_EmptyDir(t *testing.T) {
 }
 
 func TestDetectDirectory_WithSmaliFiles(t *testing.T) {
-	tempDir := t.TempDir()
+	tempDir := testutil.TempDir(t)
 
 	// Create smali directory
 	smaliDir := filepath.Join(tempDir, "smali")
@@ -229,7 +231,7 @@ func TestDetectFile_ByExtension(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tempDir := t.TempDir()
+			tempDir := testutil.TempDir(t)
 			filePath := filepath.Join(tempDir, tt.filename)
 
 			f, err := os.Create(filePath)

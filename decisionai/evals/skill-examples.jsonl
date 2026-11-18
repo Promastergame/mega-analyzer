@@ -1,0 +1,67 @@
+{"state": "хочу чтобы сайт выглядел красиво а не как типичный ИИ шаблон", "skill": "frontend-design"}
+{"state": "сделай лендинг стильным, поправь шрифты и отступы", "skill": "frontend-design"}
+{"state": "make my react dashboard look less generic", "skill": "frontend-design"}
+{"state": "improve the UI design of this web page", "skill": "frontend-design"}
+{"state": "красивый интерфейс для веб-приложения", "skill": "frontend-design"}
+{"state": "сделай красивый one-pager отчёт в html", "skill": "artifact-design"}
+{"state": "применить цвета и логотип нашей компании к презентации", "skill": "brand-guidelines"}
+{"state": "оформи документ в фирменном стиле", "skill": "brand-guidelines"}
+{"state": "подбери тему оформления со шрифтами и палитрой для слайдов", "skill": "theme-factory"}
+{"state": "apply a preset color theme to my report", "skill": "theme-factory"}
+{"state": "дизайн плохой, переделай вёрстку", "skill": "frontend-design"}
+{"state": "ui выглядит убого", "skill": "frontend-design"}
+{"state": "сделай презентацию на 10 слайдов про продажи", "skill": "pptx"}
+{"state": "нужно открыть pptx и поменять текст на втором слайде", "skill": "pptx"}
+{"state": "make a slide deck for the board meeting", "skill": "pptx"}
+{"state": "отредактируй ворд документ, включи режим правок", "skill": "docx"}
+{"state": "create a word document with a table of contents", "skill": "docx"}
+{"state": "посчитай формулы в экселе и сделай сводную таблицу", "skill": "xlsx"}
+{"state": "open this csv and add a pivot table", "skill": "xlsx"}
+{"state": "вытащи таблицы из пдф", "skill": "pdf"}
+{"state": "merge these two PDFs and fill the form", "skill": "pdf"}
+{"state": "распознай текст со сканов pdf", "skill": "pdf"}
+{"state": "текст звучит как будто его написал чатгпт, сделай по-человечески", "skill": "humanizer"}
+{"state": "убери следы ИИ из статьи", "skill": "humanizer"}
+{"state": "make this essay sound less robotic", "skill": "humanizer"}
+{"state": "переведи письмо на английский", "skill": "translator"}
+{"state": "translate the docs to German keeping terminology", "skill": "translator"}
+{"state": "напиши ответ клиенту на почту, вежливо", "skill": "email-writer"}
+{"state": "draft a cold outreach email", "skill": "email-writer"}
+{"state": "сделай выжимку встречи: решения и задачи", "skill": "meeting-notes"}
+{"state": "summarize this call transcript into action items", "skill": "meeting-notes"}
+{"state": "напиши апдейт для руководства о статусе проекта", "skill": "internal-comms"}
+{"state": "помоги написать техническую спецификацию", "skill": "doc-coauthoring"}
+{"state": "улучши мой системный промпт для бота", "skill": "prompt-engineering"}
+{"state": "how do I write better prompts for GPT", "skill": "prompt-engineering"}
+{"state": "тест падает, не понимаю почему", "skill": "systematic-debugging"}
+{"state": "there's a weird bug in production, help me find the root cause", "skill": "systematic-debugging"}
+{"state": "сначала напиши тест, потом код", "skill": "test-driven-development"}
+{"state": "посмотри мой пулл реквест", "skill": "code-review"}
+{"state": "напиши нормальное сообщение коммита", "skill": "git-commit"}
+{"state": "резолвни конфликт при мердже", "skill": "git-commit"}
+{"state": "оптимизируй медленный sql запрос", "skill": "sql-expert"}
+{"state": "which index should I add to this postgres table", "skill": "sql-expert"}
+{"state": "проверь код на уязвимости и утечки ключей", "skill": "security-audit"}
+{"state": "засунь приложение в докер и задеплой", "skill": "docker-deploy"}
+{"state": "write a Dockerfile and docker-compose for my api", "skill": "docker-deploy"}
+{"state": "хочу сделать mcp сервер для своего api", "skill": "mcp-builder"}
+{"state": "декомпилируй apk и найди где лимит монет", "skill": "apk-reverse"}
+{"state": "пропатчить smali и пересобрать apk", "skill": "apk-reverse"}
+{"state": "открой сайт и нажми кнопку войти", "skill": "agent-browser"}
+{"state": "заполни форму на сайте за меня", "skill": "agent-browser"}
+{"state": "scrape the prices from this website", "skill": "agent-browser"}
+{"state": "найди в интернете свежие новости про nvidia", "skill": "web-search"}
+{"state": "погугли кто сейчас CEO OpenAI", "skill": "web-search"}
+{"state": "протестируй мое веб-приложение через playwright", "skill": "webapp-testing"}
+{"state": "проанализируй продажи по месяцам и найди тренды", "skill": "data-analysis"}
+{"state": "why did churn go up last quarter? here is the data", "skill": "data-analysis"}
+{"state": "построй график выручки", "skill": "inline-charts"}
+{"state": "plot a bar chart of these numbers", "skill": "inline-charts"}
+{"state": "нарисуй картинку кота в космосе", "skill": "image-generation"}
+{"state": "generate a logo for my startup", "skill": "image-generation"}
+{"state": "сделай гифку для слака", "skill": "slack-gif-creator"}
+{"state": "генеративное искусство на p5js", "skill": "algorithmic-art"}
+{"state": "смонтируй видео с субтитрами на remotion", "skill": "video-remotion"}
+{"state": "сделай анимированный ролик программно", "skill": "video-remotion"}
+{"state": "хочу создать новый скилл", "skill": "skill-creator"}
+{"state": "мой скилл не срабатывает, улучши описание", "skill": "skill-creator"}

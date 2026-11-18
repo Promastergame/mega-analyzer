@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 // Read the Android wire format without the signer's constants or layout parser.
@@ -77,7 +79,7 @@ func TestV2V3AndroidSigningBlockFormat(t *testing.T) {
 		{"newer Android", 35, 35},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			apk := filepath.Join(t.TempDir(), "test.apk")
+			apk := filepath.Join(testutil.TempDir(t), "test.apk")
 			writeTestV2APK(t, apk)
 			if err := SignV2V3(apk, key, cert, tc.minSDK); err != nil {
 				t.Fatal(err)
@@ -129,7 +131,7 @@ func TestV3RejectsUnsignedSDKRangeChanges(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	apk := filepath.Join(t.TempDir(), "test.apk")
+	apk := filepath.Join(testutil.TempDir(t), "test.apk")
 	writeTestV2APK(t, apk)
 	if err := SignV2V3(apk, key, cert, 28); err != nil {
 		t.Fatal(err)

@@ -4,6 +4,7 @@ import (
 	"math"
 	"testing"
 
+	"mega-analyzer/pkg/internal/types"
 	"mega-analyzer/pkg/ml/gnncache"
 )
 
@@ -75,11 +76,11 @@ func TestGNNMinConfidenceForClass(t *testing.T) {
 		"signature-spoof": 0.60,
 		"dynamic-load":    0.65,
 		// Untuned classes fall back to the global floor.
-		"license-bypass":  gnnMinConfidence,
+		"license-bypass":   gnnMinConfidence,
 		"integrity-tamper": gnnMinConfidence,
-		"native-bridge":   gnnMinConfidence,
-		"benign":          gnnMinConfidence,
-		"unknown":         gnnMinConfidence,
+		"native-bridge":    gnnMinConfidence,
+		"benign":           gnnMinConfidence,
+		"unknown":          gnnMinConfidence,
 	}
 	for class, want := range cases {
 		if got := gnnMinConfidenceForClass(class); got != want {
@@ -89,14 +90,16 @@ func TestGNNMinConfidenceForClass(t *testing.T) {
 }
 
 func TestGNNLibrarySuppressed(t *testing.T) {
+	// Billing libraries stay prefix-verified: license-check inside Play
+	// Billing internals is never actionable, other classes stay live there.
 	for _, method := range []string{
 		"com.google.android.gms.internal.play_billing.zzgf-><init>",
 		"com.android.billingclient.api.BillingClientImpl->queryProductDetailsAsync",
 	} {
-		if !gnnLibrarySuppressed(method, "license-check") {
-			t.Errorf("billing library method not suppressed: %s", method)
+		if reason, ok := gnnLibrarySuppressed(method, "license-check", nil); !ok || reason != "billing_library" {
+			t.Errorf("billing library method not suppressed: %s (reason=%q ok=%v)", method, reason, ok)
 		}
-		if gnnLibrarySuppressed(method, "repack-marker") {
+		if _, ok := gnnLibrarySuppressed(method, "repack-marker", nil); ok {
 			t.Errorf("suppression must apply to license-check only: %s", method)
 		}
 	}
@@ -105,8 +108,94 @@ func TestGNNLibrarySuppressed(t *testing.T) {
 		"Lcom/app/BillingManager;->verify()Z",
 		"com.google.android.gms.internal.play_billingextra.Foo->bar",
 	} {
-		if gnnLibrarySuppressed(method, "license-check") {
+		if _, ok := gnnLibrarySuppressed(method, "license-check", nil); ok {
 			t.Errorf("app method wrongly suppressed: %s", method)
 		}
+	}
+}
+
+// TestGNNFrameworkSuppressionNeedsSiblingVerification covers the 2026-11-03
+// corpus FP clusters: UI-library repack-marker and GMS plumbing
+// repack-marker/signature-spoof/dynamite dynamic-load. A namespace match is
+// suppressed only when the scan shows a genuine bundled library (sibling
+// classes >= gnnFrameworkMinClasses); lone injected classes stay findings.
+func TestGNNFrameworkSuppressionNeedsSiblingVerification(t *testing.T) {
+	// Measured shape of the corpus runs: android.support = 617 classes
+	// (Приват.apk), gms = 106 + 3 dynamite (Button VPN(1).apk).
+	verified := newGNNLibraryClassIndex(map[string]*types.FileAnalysis{
+		"a": {SmaliClass: &types.SmaliClass{Name: "android.support.constraint.a.e"}},
+		"b": {SmaliClass: &types.SmaliClass{Name: "android.support.v7.widget.CardViewBaseImpl"}},
+		"c": {SmaliClass: &types.SmaliClass{Name: "android.support.v7.widget.AppCompatTextView"}},
+		"d": {SmaliClass: &types.SmaliClass{Name: "android.support.v4.content.ContextCompat"}},
+		"e": {SmaliClass: &types.SmaliClass{Name: "android.support.annotation.RestrictTo"}},
+		"f": {SmaliClass: &types.SmaliClass{Name: "android.support.annotation.RestrictTo$Scope"}},
+		"j": {SmaliClass: &types.SmaliClass{Name: "android.support.v7.app.AppCompatActivity"}},
+		"k": {SmaliClass: &types.SmaliClass{Name: "android.support.v4.app.Fragment"}},
+		"g": {SmaliClass: &types.SmaliClass{Name: "androidx.core.widget.NestedScrollView"}},
+		"h": {SmaliClass: &types.SmaliClass{Name: "androidx.recyclerview.widget.RecyclerView"}},
+		"i": {SmaliClass: &types.SmaliClass{Name: "androidx.fragment.app.FragmentActivity"}},
+		// Past the androidx floor: three map entries above plus this padding.
+	})
+	for i := 0; i < gnnFrameworkMinClasses; i++ {
+		verified.counts["androidx."] += 1
+	}
+	verified.counts["com.google.android.gms."] = 10
+	verified.counts["com.google.android.gms.dynamite."] = 3
+
+	suppressedCases := []struct {
+		method, class, reason string
+	}{
+		// The two measured UI FPs.
+		{"android.support.constraint.a.e->a(Landroid/support/constraint/a/a/e;FI)V", "repack-marker", "verified_framework_bundle"},
+		{"android.support.v7.widget.CardViewBaseImpl->initialize(Landroid/support/v7/widget/CardViewDelegate;FFF)V", "repack-marker", "verified_framework_bundle"},
+		// The measured GMS FPs.
+		{"com.google.android.gms.common.wrappers.PackageManagerWrapper->getPackageInfo(Ljava/lang/String;I)Landroid/content/pm/PackageInfo;", "repack-marker", "verified_framework_bundle"},
+		{"com.google.android.gms.common.util.AndroidUtilsLight->getPackageCertificateHashBytes(Landroid/content/Context;Ljava/lang/String;)[B", "repack-marker", "verified_framework_bundle"},
+		{"com.google.android.gms.common.internal.safeparcel.SafeParcelWriter->zzd(Landroid/os/Parcel;Landroid/os/Parcelable;I)V", "signature-spoof", "verified_framework_bundle"},
+		// Stock Dynamite module loader: dynamic-load is its designed behavior,
+		// gated on the whole-GMS sibling count, not the 3-class loader package.
+		{"com.google.android.gms.dynamite.zzc->loadClass(Ljava/lang/String;Z)Ljava/lang/Class;", "dynamic-load", "verified_framework_bundle"},
+	}
+	for _, tc := range suppressedCases {
+		reason, ok := gnnLibrarySuppressed(tc.method, tc.class, verified)
+		if !ok || reason != tc.reason {
+			t.Errorf("%s [%s] not suppressed (reason=%q ok=%v), want %q", tc.method, tc.class, reason, ok, tc.reason)
+		}
+	}
+
+	unverified := newGNNLibraryClassIndex(map[string]*types.FileAnalysis{
+		"a": {SmaliClass: &types.SmaliClass{Name: "android.support.constraint.a.e"}},
+		"b": {SmaliClass: &types.SmaliClass{Name: "com.google.android.gms.dynamite.zzc"}},
+		// Two more gms classes: still below gnnFrameworkMinClasses.
+		"c": {SmaliClass: &types.SmaliClass{Name: "com.google.android.gms.common.GoogleApiAvailability"}},
+		"d": {SmaliClass: &types.SmaliClass{Name: "com.google.android.gms.common.internal.safeparcel.SafeParcelWriter"}},
+	})
+	staysLiveCases := []struct {
+		method, class, why string
+	}{
+		// Namespace squat below the sibling floor: not a verified bundle.
+		{"android.support.constraint.a.e->a(II)V", "repack-marker", "sibling floor"},
+		{"com.google.android.gms.dynamite.zzc->loadClass(Ljava/lang/String;Z)Ljava/lang/Class;", "dynamic-load", "sibling floor"},
+		// Other classes stay live inside verified framework bundles: injected
+		// payloads must still surface there.
+		{"android.support.injected.Payload->loadDex(Ljava/lang/String;)V", "dynamic-load", "class scoping"},
+		{"android.support.injected.Payload->bypass(Ljava/lang/String;)I", "license-bypass", "class scoping"},
+		{"androidx.core.ContentProviderHook->a(Landroid/content/Context;)V", "dynamic-load", "class scoping"},
+		{"com.google.android.gms.injected.Loader->a(Ljava/lang/String;)V", "dynamic-load", "class scoping"},
+		{"com.google.android.gms.common.ChecksumHook->verify()I", "integrity-tamper", "class scoping"},
+	}
+	for _, tc := range staysLiveCases {
+		idx := verified
+		if tc.class == "repack-marker" || tc.method == "com.google.android.gms.dynamite.zzc->loadClass(Ljava/lang/String;Z)Ljava/lang/Class;" {
+			idx = unverified
+		}
+		if reason, ok := gnnLibrarySuppressed(tc.method, tc.class, idx); ok {
+			t.Errorf("%s [%s] wrongly suppressed (%s): reason=%q", tc.method, tc.class, tc.why, reason)
+		}
+	}
+
+	// A nil index (no file set) must never suppress: fail open to findings.
+	if _, ok := gnnLibrarySuppressed("android.support.v7.widget.CardViewBaseImpl->initialize(Landroid/support/v7/widget/CardViewDelegate;FFF)V", "repack-marker", nil); ok {
+		t.Error("nil class index must not suppress framework findings")
 	}
 }

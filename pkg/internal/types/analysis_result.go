@@ -4,7 +4,10 @@ import (
 	"mega-analyzer/pkg/internal/decisionai"
 	"mega-analyzer/pkg/internal/finding"
 	"mega-analyzer/pkg/internal/peinspect"
+	"mega-analyzer/pkg/internal/sourceevidence"
 	"mega-analyzer/pkg/ml/fusion"
+	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -42,6 +45,17 @@ type CoverageStats struct {
 	AnalysisUnits   int  `json:"analysis_units"`
 	FindingsBearing int  `json:"findings_bearing"`
 	LimitReached    bool `json:"limit_reached"`
+	// NotAnalyzed lists queued files that never produced a FileAnalysis
+	// (scan limits, cancellation or noise filtering). Capped; see
+	// NotAnalyzedTotal for the full count.
+	NotAnalyzed      []SkippedFile `json:"not_analyzed,omitempty"`
+	NotAnalyzedTotal int           `json:"not_analyzed_total,omitempty"`
+}
+
+// SkippedFile is one queued-but-unanalyzed file in the coverage gap list.
+type SkippedFile struct {
+	Path   string `json:"path"`
+	Reason string `json:"reason,omitempty"`
 }
 
 // AnalysisCacheStats reports cache effectiveness for the current scan.
@@ -406,7 +420,8 @@ type AnalysisResult struct {
 	MachineCodeReports []MachineCodeReport `json:"machine_code_reports,omitempty"`
 
 	// GNN-based vulnerability classification findings (requires omnisec_ml_gnn build tag)
-	GNNFindings []GNNFinding `json:"gnn_findings,omitempty"`
+	GNNFindings    []GNNFinding    `json:"gnn_findings,omitempty"`
+	GNNDiagnostics *GNNDiagnostics `json:"gnn_diagnostics,omitempty"`
 
 	// FP Filter results
 	FPFilterResults *FPFilterOutput `json:"fp_filter_results,omitempty"`
@@ -428,7 +443,9 @@ type AnalysisResult struct {
 	EvidenceGraph *EvidenceGraph `json:"evidence_graph,omitempty"`
 
 	// Advisory only: original findings and CI verdicts retain scanner semantics.
-	DecisionAI *decisionai.Report `json:"decision_ai,omitempty"`
+	DecisionAI       *decisionai.Report            `json:"decision_ai,omitempty"`
+	DecisionAIImages *decisionai.ImageReviewReport `json:"decision_ai_images,omitempty"`
+	SourceEvidence   *sourceevidence.Report        `json:"source_evidence,omitempty"`
 }
 
 // NcerCausalResult holds the causal discrepancy scores produced by the
@@ -495,6 +512,7 @@ const (
 	VerdictSDKNoiseSuppressed     Verdict = "sdk_noise_suppressed"
 	VerdictGenericNoiseSuppressed Verdict = "generic_noise_suppressed"
 	VerdictNeedsContext           Verdict = "needs_context"
+	VerdictObservation            Verdict = "observation"
 )
 
 type ScoreBreakdown struct {
@@ -542,6 +560,7 @@ type FPFilterStats struct {
 	SDKInteresting         int `json:"sdk_interesting"`
 	GenericNoiseSuppressed int `json:"generic_noise_suppressed"`
 	NeedsContext           int `json:"needs_context"`
+	Observations           int `json:"observations"`
 }
 
 type FPFilterOutput struct {
@@ -693,15 +712,20 @@ func (r *AnalysisResult) Finalize(startTime time.Time) {
 	r.Stats.TotalMatches = 0
 	r.Stats.CriticalMatches = 0
 	r.Stats.AppCodeFiles = 0
-	if r.Coverage.AnalyzedFiles > 0 {
-		r.Stats.AnalyzedFiles = r.Coverage.AnalyzedFiles
-	} else {
-		r.Stats.AnalyzedFiles = len(r.Files)
-	}
+	// Analyzed files are distinct physical files actually processed. The
+	// per-job Coverage counter also counts virtual DEX-class units and
+	// re-queued files, which produced contradictions like "315 analyzed of
+	// 313 total"; the Files map cannot exceed the real universe.
+	r.Stats.AnalyzedFiles = len(r.Files)
 	if r.Coverage.Queued > 0 {
 		r.Stats.TotalFiles = r.Coverage.Queued
 	} else {
 		r.Stats.TotalFiles = len(r.Files)
+	}
+	// Late analysis units (recovered artifacts, decoded bundles) expand the
+	// universe beyond the pre-scan walk; keep the pair self-consistent.
+	if r.Stats.TotalFiles < r.Stats.AnalyzedFiles {
+		r.Stats.TotalFiles = r.Stats.AnalyzedFiles
 	}
 	for _, fa := range r.Files {
 		if fa == nil {
@@ -734,6 +758,29 @@ func (r *AnalysisResult) Finalize(startTime time.Time) {
 }
 
 // IsFinalized проверяет, завершён ли анализ.
+// ShareableTargetName returns a report-safe target name: the original input
+// file name when the run recorded one, else the app package, else the base
+// of TargetDir. Absolute local paths (temp extraction dirs, workspace
+// folders such as F:/PROJECTS/...) must not leak into shared reports through
+// the evidence graph, analysis.json target_dir or the HTML meta section.
+func (r *AnalysisResult) ShareableTargetName() string {
+	if r == nil {
+		return ""
+	}
+	if r.Run != nil {
+		if t := strings.TrimSpace(r.Run.Identity["target"]); t != "" {
+			return filepath.Base(filepath.ToSlash(t))
+		}
+	}
+	if r.AppPackage != "" {
+		return r.AppPackage
+	}
+	if base := filepath.Base(filepath.ToSlash(strings.TrimSpace(r.TargetDir))); base != "." && base != "" && base != "/" {
+		return base
+	}
+	return r.TargetDir
+}
+
 func (r *AnalysisResult) IsFinalized() bool {
 	r.mu.RLock()
 	defer r.mu.RUnlock()

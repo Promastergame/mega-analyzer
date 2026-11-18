@@ -40,3 +40,18 @@ func TestCoreRunMetadataMarksPartialAndDoesNotRecordSecrets(t *testing.T) {
 		t.Fatal("parser failures marked complete")
 	}
 }
+
+func TestStandaloneDexReportsMissingManifest(t *testing.T) {
+	opts := &CLIOptions{Target: "example.dex"}
+	cfg := &config.Config{}
+	result := &types.AnalysisResult{}
+	run := coreRunMetadata(opts, cfg, result, nil)
+	if run.Status != "incomplete" || run.StopReason != "manifest_unavailable" || len(run.Limitations) == 0 {
+		t.Fatalf("DEX manifest limitation not reported: %+v", run)
+	}
+	opts.Target = "example.apk"
+	run = coreRunMetadata(opts, cfg, result, nil)
+	if run.Status != "complete" || len(run.Limitations) != 0 {
+		t.Fatalf("APK incorrectly marked as bare DEX: %+v", run)
+	}
+}

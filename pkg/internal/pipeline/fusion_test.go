@@ -104,3 +104,42 @@ func TestBehaviorAndVulnFusionStandalone(t *testing.T) {
 		t.Fatal("expected non-nil report from runVulnDetectorsFusionIntelligence")
 	}
 }
+
+func TestInventoryCorrelationsDoNotBecomeThreatEvidence(t *testing.T) {
+	signals := NewApkSignals()
+	signals.Correlations = []Correlation{
+		{Name: "ACCESSIBILITY_UI_CAPABILITIES", Severity: SeverityInfo},
+		{Name: "SENSITIVE_PERMISSION_PROFILE", Severity: SeverityInfo},
+		{Name: "ANTI_ANALYSIS_WITH_PAYLOAD", Severity: SeverityInfo},
+	}
+	report := runBehaviorFusionIntelligence(signals)
+	if report == nil {
+		t.Fatal("behavior report unavailable")
+	}
+	for _, evidence := range report.Decision.Evidence {
+		if evidence.Factor == "multiple_correlations" || evidence.Factor == "high_threat_correlation" {
+			t.Fatalf("inventory observations created threat evidence: %+v", evidence)
+		}
+	}
+
+	// A separate assessed correlation still contributes its own evidence.
+	signals.Correlations = append(signals.Correlations, Correlation{
+		Name: "DEX_FROM_NETWORK", Description: "Independent loader correlation", Score: 15, Severity: SeverityCritical,
+	})
+	report = runBehaviorFusionIntelligence(signals)
+	if report == nil {
+		t.Fatal("behavior report unavailable")
+	}
+	found := false
+	for _, evidence := range report.Decision.Evidence {
+		if evidence.Factor == "multiple_correlations" {
+			t.Fatal("inventory observations inflated the assessed correlation count")
+		}
+		if evidence.Factor == "high_threat_correlation" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatal("inventory correction suppressed an independent risk correlation")
+	}
+}

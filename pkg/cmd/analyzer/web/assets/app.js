@@ -2,7 +2,7 @@
 var MODES={
   "minecraft":{t:"Minecraft Mods & Packs",s:"Java mods, texture packs and Bedrock add-ons: metadata, dependencies, nested archives and static risk indicators.",panel:"none",report:true,accept:".jar,.zip,.mcpack,.mcaddon",fmts:["JAR","ZIP","MCPACK","MCADDON"],info:"Reads package content without launching Minecraft. Supports Fabric, Forge, NeoForge, Quilt and Bedrock manifests. A complete report does not guarantee safety."},
   "full":{t:"Full Static Analysis",s:"APK/DEX and JS/Hermes bundles — static findings, readable exports and downloadable files.",panel:"full",report:true,accept:".apk,.dex,.jar,.war,.zip,.aab,.ipa,.xapk,.apks,.apkm,.bundle,.hbc,.jsbundle,.js,.mjs,.cjs",fmts:["APK","DEX","AAB","JAR","IPA","ZIP","XAPK","APKS","JS","Hermes"],ico:"M22 12A10 10 0 1 1 12 2|M12 12L18.5 7.5|c3"},
-  "decode":{t:"Decode / Unpack",s:"Decode APK/DEX into Smali and editable resources using the built-in engine.",panel:"decode",report:false,btn:"Decode",accept:".apk,.dex,.jar,.zip,.xapk",fmts:["APK","DEX","JAR","XAPK"],info:"Runs without Java, apktool or baksmali. Download the result ZIP, edit the project, then upload it in Build APK. Keep hidden project files for rebuilding. Java view is pseudocode, not compilable source."},
+  "decode":{t:"Decode APK",s:"Decode APK/DEX into Smali and editable resources using the built-in engine.",panel:"decode",report:false,btn:"Decode APK",accept:".apk,.dex,.jar,.zip,.xapk",fmts:["APK","DEX","JAR","XAPK"],info:"Runs without Java, apktool or baksmali. Download the result ZIP, edit the project, then upload it in Build APK. Keep hidden project files for rebuilding. Java view is pseudocode, not compilable source."},
   "build":{t:"Build APK",s:"Build an APK from a project ZIP with the built-in assembler, resource compiler and signer.",panel:"build",report:false,btn:"Build APK",accept:".zip",fmts:["PROJECT ZIP"],info:"ZIP must contain AndroidManifest.xml at the root or in one project folder, with Smali or existing DEX and supported resources. No aapt2, android.jar, d8 or Java is required. Java/Kotlin/Gradle source projects are not supported; unsupported resource features produce an error. The APK uses a debug signing key, not the original publisher's key."},
   "machine-code":{t:"Machine Code Forensics",s:"Raw PE / ELF / .so binary forensics via OmniSec.",panel:"tune",report:true,accept:".exe,.dll,.so,.elf,.bin",fmts:["EXE","DLL","ELF",".so"]},
   "firmware":{t:"Firmware / IoT",s:"Rootfs, archive and firmware image analysis.",panel:"tune",report:true,accept:".bin,.img,.zip,.tar,.gz",fmts:["BIN","IMG","rootfs","archive"]},
@@ -72,9 +72,13 @@ var TOOL_GROUPS=[
   {name:"Transform",items:["decode","build","version-diff"]},
   {name:"Network",items:["web-scan","intercept"]}
 ];
-var TOOL_LABELS={minecraft:"Minecraft mods & packs",full:"Static analysis","machine-code":"Binary forensics",firmware:"Firmware & IoT",sandbox:"Dynamic analysis",decode:"Decode / unpack",build:"Build APK","version-diff":"Version diff","web-scan":"Server scan",intercept:"MITM proxy"};
+if(window.MegaWasm){
+  ["machine-code","firmware"].forEach(function(k){MODES[k].report=false;});
+  TOOL_GROUPS=TOOL_GROUPS.map(function(group){return {name:group.name,items:group.items.filter(function(k){return window.MegaWasm.allowed.has(k);})};}).filter(function(group){return group.items.length;});
+}
+var TOOL_LABELS={minecraft:"Minecraft mods & packs",full:"Static analysis","machine-code":"Binary forensics",firmware:"Firmware & IoT",sandbox:"Dynamic analysis",decode:"Decode APK",build:"Build APK","version-diff":"Version diff","web-scan":"Server scan",intercept:"MITM proxy"};
 // Interface language: nav + chrome only (page bodies stay English).
-var TOOL_LABELS_RU={minecraft:"Майнкрафт-моды и паки",full:"Статический анализ","machine-code":"Анализ бинарей",firmware:"Прошивки и IoT",sandbox:"Динамический анализ",decode:"Декодировать",build:"Собрать APK","version-diff":"Сравнение версий","web-scan":"Сканирование сервера",intercept:"MITM-прокси"};
+var TOOL_LABELS_RU={minecraft:"Майнкрафт-моды и паки",full:"Статический анализ","machine-code":"Анализ бинарей",firmware:"Прошивки и IoT",sandbox:"Динамический анализ",decode:"Декодировать APK",build:"Собрать APK","version-diff":"Сравнение версий","web-scan":"Сканирование сервера",intercept:"MITM-прокси"};
 var GROUP_NAMES_RU={Analyze:"Анализ",Transform:"Преобразование",Network:"Сеть"};
 var CHROME_RU={"New Analysis":"Новый анализ",Workspace:"Рабочая область"};
 var uiLang="en";
@@ -84,9 +88,9 @@ function toolLabel(k){return uiLang==="ru"?(TOOL_LABELS_RU[k]||TOOL_LABELS[k]):T
 function groupLabel(n){return uiLang==="ru"?(GROUP_NAMES_RU[n]||n):n;}
 var MODE_RU={
   minecraft:{t:"Майнкрафт-моды и паки",s:"Java-моды, текстур-паки и дополнения Bedrock: метаданные, зависимости, вложенные архивы и статические индикаторы риска."},
-  full:{t:"Полный статический анализ",s:"APK/DEX и JS/Hermes-бандлы: статический анализ, экспорт кода и скачивание файлов."},
-  decode:{t:"Декодировать / распаковать",s:"APK/DEX в Smali и редактируемые ресурсы встроенным движком."},
-  build:{t:"Собрать APK",s:"Сборка APK из ZIP проекта встроенным ассемблером, компилятором ресурсов и средством подписи."},
+  full:{t:"Полный статический анализ",s:"APK/DEX и JS/Hermes-бандлы: статический анализ, экспорт кода и файлы."},
+  decode:{t:"Декодировать APK",s:"Декодирование APK/DEX в Smali и редактируемые ресурсы."},
+  build:{t:"Собрать APK",s:"Сборка APK из ZIP проекта встроенным ассемблером и ресурсами."},
   "machine-code":{t:"Форенсика машинного кода",s:"Форенсика PE / ELF / .so бинарей через OmniSec."},
   firmware:{t:"Прошивки / IoT",s:"Анализ rootfs, архивов и образов прошивок."},
   "version-diff":{t:"Сравнение версий",s:"Сравнить старую сборку с новой."},
@@ -96,12 +100,12 @@ var MODE_RU={
 };
 function modeTitle(k){var m=MODES[k];if(!m)return k;return uiLang==="ru"?((MODE_RU[k]||{}).t||m.t):m.t;}
 function modeSub(k){var m=MODES[k];if(!m)return "";return uiLang==="ru"?((MODE_RU[k]||{}).s||m.s):m.s;}
-var MODE_BTN_RU={Decode:"Декодировать","Build APK":"Собрать APK","Start analysis":"Начать анализ","Scan server":"Сканировать сервер","Start proxy":"Запустить прокси",Analyze:"Анализировать",Stop:"Стоп"};
+var MODE_BTN_RU={Decompile:"Декодировать APK",Decode:"Декодировать APK","Decode APK":"Декодировать APK","Build APK":"Собрать APK","Start analysis":"Начать анализ","Scan server":"Сканировать сервер","Start proxy":"Запустить прокси",Analyze:"Анализировать",Stop:"Стоп"};
 function modeBtn(k){var m=MODES[k];var b=(m&&m.btn)||"Analyze";return uiLang==="ru"?(MODE_BTN_RU[b]||b):b;}
 var MODE_INFO_RU={
   minecraft:"Читает содержимое пакета без запуска Minecraft. Поддерживает манифесты Fabric, Forge, NeoForge, Quilt и Bedrock. Полный отчёт не гарантирует безопасность.",
   decode:"Работает без Java, apktool и baksmali. Скачай ZIP результата, отредактируй проект и загрузи его в «Собрать APK». Сохрани скрытые файлы проекта для повторной сборки. Представление Java — псевдокод, а не компилируемые исходники.",
-  build:"В ZIP нужен AndroidManifest.xml в корне или единственной папке проекта, Smali или готовый DEX и поддерживаемые ресурсы. aapt2, android.jar, d8 и Java не требуются. Проекты с исходниками Java/Kotlin/Gradle не поддерживаются; неподдерживаемые ресурсы вызовут ошибку. APK получает отладочную подпись, а не подпись исходного автора.",
+  build:"В ZIP нужен AndroidManifest.xml, Smali или готовый DEX и ресурсы. aapt2, android.jar, d8 и Java не требуются. Исходники Java/Kotlin не поддерживаются. APK получает отладочную подпись.",
   "version-diff":"Перетащи СТАРУЮ сборку в первую зону, а НОВУЮ во вторую, чтобы сравнить их.",
   sandbox:"Не виртуальная машина. Нативные файлы выполняются на хосте анализатора, Android-приложения на выбранном устройстве. Используй одноразовое внешне изолированное лабораторное окружение.",
   "web-scan":"Активное сканирование: запускай только против серверов, которыми владеешь или разрешено тестировать.",
@@ -120,6 +124,10 @@ function applyLang(){
   var na=document.querySelector("#sidebar .new-btn:not(#workspaceOpen) .new-btn-label");if(na)na.textContent=uiLang==="ru"?"Новый анализ":"New Analysis";
   var wsBtn=document.querySelector("#workspaceOpen .new-btn-label");if(wsBtn)wsBtn.textContent=uiLang==="ru"?"Мой компьютер":"My Computer";
   var ws=document.querySelector(".workspace-name");if(ws)ws.textContent=uiLang==="ru"?"Рабочая область":"Workspace";
+  if(window.MegaWasm){
+    if(wsBtn)wsBtn.textContent=uiLang==="ru"?"Файлы вкладки":"Tab files";
+    if(window.MegaBrowserNotice)window.MegaBrowserNotice.setLanguage(uiLang);
+  }
   var m=MODES[curMode];if(m){uiText("toolTitle",modeTitle(curMode));uiText("toolSub",modeSub(curMode));uiText("sbtn-t",modeBtn(curMode));if(m.info)uiText("minfo-t",modeInfo(curMode));}
   applyPageLang();
   var netMirror=document.getElementById("sbxNetToggle");if(netMirror)uiText("sbxNetToggleState",pageT(netMirror.checked?"on":"off"));
@@ -154,6 +162,7 @@ var PAGE_I18N={
   decodeOptions:{en:"Decoded project",ru:"Декодированный проект"},
   nativeJavaViewD:{en:"Add readable Java pseudocode alongside Smali; for inspection only",ru:"Добавить читаемый псевдокод Java рядом со Smali для изучения"},
   buildOptions:{en:"APK packaging",ru:"Упаковка APK"},
+  buildNameHint:{en:"Letters, numbers, _ and -; up to 80 characters. Spaces and other symbols become _. Add .xapk for an XAPK.",ru:"Буквы, цифры, _ и -; до 80 символов. Пробелы и другие знаки заменяются на _. Для XAPK укажи расширение .xapk."},
   buildCompression:{en:"Compression",ru:"Сжатие"},
   compressionFast:{en:"Fast",ru:"Быстрое"},
   compressionBalanced:{en:"Balanced",ru:"Сбалансированное"},
@@ -177,7 +186,7 @@ var PAGE_I18N={
   saveDecoded:{en:"Save decoded APK / DEX",ru:"Сохранить декодированный APK / DEX"},
   saveDecodedD:{en:"Write Smali + decoded resources to decoded/ alongside reports; APK/DEX input only",ru:"Smali и декодированные ресурсы в decoded/ рядом с отчётами; только APK/DEX и архивы"},
   javaView:{en:"Java pseudocode view",ru:"Псевдокод Java"},
-  javaViewD:{en:"Requires Save decoded APK or Decode mode; not original Java source",ru:"Требует сохранения декодированного APK или режима Decode; не исходный Java"},
+  javaViewD:{en:"Requires Save decoded APK or Decode mode; not original Java source",ru:"Требует сохранения декодированного APK или режима Декодировать APK; не исходный Java"},
   noResources:{en:"Skip resource decoding",ru:"Не декодировать ресурсы"},
   noResourcesD:{en:"For decoded output only; analysis is unchanged",ru:"Только для декодированного вывода; не меняет анализ"},
   copyOriginal:{en:"Copy original APK metadata",ru:"Копировать исходные метаданные APK"},
@@ -268,7 +277,8 @@ var PAGE_I18N={
   saveT:{en:"Save results",ru:"Сохранить результаты"},
   saveS:{en:"Each scan gets its own persistent folder",ru:"Каждое сканирование получает свою папку"},
   resName:{en:"Result name",ru:"Имя результата"},
-  resNamePh:{en:"e.g. myapp-v1 (display name; scans never overwrite each other)",ru:"например myapp-v1 (имя для показа; сканы не перезаписывают друг друга)"},
+  resNamePh:{en:"e.g. minecraft (display name; scans never overwrite each other)",ru:"например minecraft (имя для показа; сканы не перезаписывают друг друга)"},
+  apkNamePh:{en:"e.g. minecraft.apk or minecraft.xapk",ru:"например minecraft.apk или minecraft.xapk"},
   wsFolder:{en:"Workspace folder",ru:"Папка воркспейса"},
   wsFolderPh:{en:"Scans (default) — or a relative folder such as Projects/MyMod",ru:"Scans (по умолчанию) или относительная папка вроде Projects/MyMod"},
   noFile:{en:"No file selected",ru:"Файл не выбран"},
@@ -287,11 +297,32 @@ var PAGE_I18N={
   wsScans:{en:"Workspace / Scans",ru:"Воркспейс / Сканы"},
   selected:{en:"selected",ru:"выбрано"},
   reportWord:{en:"report",ru:"отчёт"},
-  decodeBtn:{en:"Decode",ru:"Декодировать"},
+  decodeBtn:{en:"Decode APK",ru:"Декодировать APK"},
   scanServerBtn:{en:"Scan server",ru:"Сканировать сервер"},
   startAnalysisBtn:{en:"Start analysis",ru:"Начать анализ"},
   startProxyBtn:{en:"Start proxy",ru:"Запустить прокси"}
 };
+if(window.MegaWasm){
+  PAGE_I18N.dzMax={en:"Maximum 512 MB",ru:"Максимум 512 МБ"};
+  PAGE_I18N.saveS={en:"In tab memory — download before reloading",ru:"В памяти вкладки — скачайте перед обновлением"};
+  PAGE_I18N.depthNote={en:"Analysis depth",ru:"Глубина анализа"};
+  PAGE_I18N.workersD={en:"1–4 browser workers",ru:"1–4 браузерных воркера"};
+  PAGE_I18N.timeoutD={en:"Seconds · 0 = no timeout",ru:"Секунды · 0 = без таймаута"};
+  document.querySelectorAll(".p-time").forEach(function(el){el.hidden=true;});
+  ["w","t"].forEach(function(id){
+    var r=document.getElementById(id+"-r"),key="ma-browser-"+(id==="w"?"workers":"timeout"),fallback=id==="w"?2:300;
+    r.disabled=false;r.min=id==="w"?"1":"0";r.max=id==="w"?"4":"3600";r.step="1";
+    var saved=fallback;try{var stored=localStorage.getItem(key);if(stored!==null)saved=Number(stored);}catch(err){}
+    if(!Number.isInteger(saved)||saved<+r.min||saved>+r.max)saved=fallback;r.value=String(saved);
+    var number=document.createElement("input");number.type="number";number.id=id+"-d";number.className="rval browser-number";
+    number.min=r.min;number.max=r.max;number.step="1";number.value=r.value;number.dataset.i18nAria=id==="w"?"workers":"timeout";number.setAttribute("aria-label",id==="w"?"Browser worker count":"Timeout in seconds");
+    document.getElementById(id+"-d").replaceWith(number);
+    function save(){try{localStorage.setItem(key,r.value);}catch(err){}}
+    number.addEventListener("input",function(){var n=Number(number.value);if(number.value!==""&&Number.isInteger(n)&&n>=+r.min&&n<=+r.max){r.value=number.value;save();syncR(id);}});
+    number.addEventListener("change",function(){var n=Number(number.value);r.value=String(Number.isFinite(n)?Math.max(+r.min,Math.min(+r.max,Math.round(n))):fallback);number.value=r.value;save();syncR(id);});
+    r.addEventListener("input",save);
+  });
+}
 function pageT(k){var e=PAGE_I18N[k];if(!e)return k;return uiLang==="ru"?e.ru:e.en;}
 function applyPageLang(){
   syncSandboxDuration();
@@ -348,6 +379,7 @@ function toggleMenu(){setMenuOpen(!document.getElementById("sidebar").classList.
 function closeMenu(){setMenuOpen(false);}
 
 function selTool(k){
+  if(window.MegaWasm&&!window.MegaWasm.allowed.has(k))k="full";
   if(running){stopJob();running=false;}
   invalidateScanView();
   if(curMode==="sandbox"){if(sbxTimerInterval){clearInterval(sbxTimerInterval);sbxTimerInterval=null;}document.body.classList.remove("sbx-running");sbxRunSerial++;jid=null;}
@@ -373,6 +405,16 @@ function selTool(k){
   show("fpWrap",p==="full");
   show("decodeSettings",p==="decode");
   show("buildSettings",p==="build");
+  var nameRow=document.getElementById("resultNameRow");
+  if(nameRow){
+    var nameSlot=document.getElementById(p==="build"?"buildNameSlot":"savedOutputBody");
+    nameSlot.insertBefore(nameRow,nameSlot.firstChild);
+    var nameInput=document.getElementById("outname");
+    nameInput.setAttribute("data-i18n-ph",p==="build"?"apkNamePh":"resNamePh");
+    nameInput.placeholder=pageT(p==="build"?"apkNamePh":"resNamePh");
+    if(p==="build")nameInput.setAttribute("aria-describedby","buildNameHint");
+    else nameInput.removeAttribute("aria-describedby");
+  }
   show("outRow",k!=="intercept");
   // info
   var mi=document.getElementById("minfo");
@@ -401,7 +443,7 @@ function selTool(k){
 function resetAll(){if(curMode==="sandbox"){sbxNewAnalysis();return;}selTool("full");document.getElementById("outdir").value="";window.scrollTo({top:0,behavior:preferredScrollBehavior()});}
 
 // ── drag & drop ──
-var MAX_UPLOAD_BYTES=512*1024*1024; // must match the server's r.Body = http.MaxBytesReader(w, r.Body, 512<<20)
+var MAX_UPLOAD_BYTES=512*1024*1024; // synced from /api/meta
 
 // Validates a candidate file against the current mode's accepted extensions and
 // the server's upload size cap *before* it is ever sent, so drag-and-drop gets
@@ -416,7 +458,7 @@ function fileValidationError(f,which){
     var ok=exts.some(function(ext){return name.slice(-ext.length)===ext;});
     if(!ok)return "Unsupported file type \""+(f.name||"")+"\". Accepted: "+exts.join(", ")+".";
   }
-  if(f.size>MAX_UPLOAD_BYTES)return "File is "+fb(f.size)+", which exceeds the 512 MB upload limit.";
+  if(f.size>MAX_UPLOAD_BYTES)return "File is "+fb(f.size)+", which exceeds the "+Math.round(MAX_UPLOAD_BYTES/1048576)+" MB upload limit.";
   return null;
 }
 function dzErrEl(which){return document.getElementById(which===2?"dzErr2":"dzErr");}
@@ -447,12 +489,37 @@ function fb(n){if(n<1024)return n+" B";if(n<1048576)return(n/1024).toFixed(1)+" 
 function setf(f,which){
   if(!running)invalidateScanView();
   if(which===2){sf2=f;document.getElementById("pname2").textContent=f.name;document.getElementById("psize2").textContent=fb(f.size);document.getElementById("fpill2").classList.add("show");}
-  else{sf=f;document.getElementById("pname").textContent=f.name;document.getElementById("psize").textContent=fb(f.size);document.getElementById("fpill").classList.add("show");}
+  else{
+    sf=f;document.getElementById("pname").textContent=f.name;document.getElementById("psize").textContent=fb(f.size);document.getElementById("fpill").classList.add("show");
+    if(f&&f.name){
+      var base=f.name.replace(/\.[^/.]+$/,"");
+      ["outname"].forEach(function(id){
+        var el=document.getElementById(id);
+        if(el&&!el.value)el.placeholder=base;
+      });
+    }
+  }
   document.getElementById("res").classList.remove("show");
   if(curMode==="sandbox"&&which===1){document.getElementById("sbxConsent").checked=false;buildOsMenu();}
   syncStaticOutputFlags();
   refreshBtn();
 }
+function safeResultBase(value,fallback){
+  var chars=Array.from(String(value||"").normalize("NFC").replace(/\.(zip|apk|xapk)$/i,"").replace(/[^\p{L}\p{N}_-]/gu,"_").replace(/_+/g,"_").replace(/^[_-]+|[_-]+$/g,""));
+  var base="",bytes=0;
+  chars.slice(0,80).some(function(c){var size=encodeURIComponent(c).replace(/%[0-9A-F]{2}|./g,"x").length;if(bytes+size>160)return true;base+=c;bytes+=size;return false;});
+  if(!base)base=fallback||"app";
+  if(/^(con|prn|aux|nul|com[0-9]|lpt[0-9])$/i.test(base))base="_"+base;
+  return base;
+}
+function buildResultName(){
+  var input=document.getElementById("outname"),value=input.value;
+  var ext=/\.xapk$/i.test(value)?".xapk":".apk";
+  var name=safeResultBase(value||(sf&&sf.name),"app")+ext;
+  input.value=name;
+  return name;
+}
+document.getElementById("outname").addEventListener("blur",function(){if(curMode==="build"&&this.value)buildResultName();});
 function clearFile(which){
   if(!running)invalidateScanView();
   if(which===2){sf2=null;document.getElementById("fi2").value="";document.getElementById("fpill2").classList.remove("show");}
@@ -521,14 +588,15 @@ function fillRange(r){var mn=+r.min,mx=+r.max,v=+r.value,p=mx>mn?((v-mn)/(mx-mn)
 function syncR(id){
   if(id==="sbx"){syncSandboxDuration();return;}
   var r=document.getElementById(id+"-r"),d=document.getElementById(id+"-d"),v=r.value;
-  if(id==="w")d.textContent=(v==="0")?"auto":v;
+  if(d.tagName==="INPUT")d.value=v;
+  else if(id==="w")d.textContent=(v==="0")?"auto":v;
   else if(id==="t")d.textContent=(v==="0")?"∞":v+" s";
   else if(id==="fp")d.textContent=(v==="-1")?"auto":v;
   else if(id==="sbx"){var sec=parseInt(v);if(sec<60)d.textContent=sec+" s";else if(sec%60===0)d.textContent=(sec/60)+" min";else d.textContent=Math.floor(sec/60)+"m "+(sec%60)+"s";}
   else if(id==="sbxcpu")d.textContent=(v==="1")?"1 core":v+" cores";
   else if(id==="sbxram")d.textContent=v+" MB";
   fillRange(r);
-  r.setAttribute("aria-valuetext",d.textContent);
+  r.setAttribute("aria-valuetext",d.tagName==="INPUT"?(id==="t"&&v==="0"?"No timeout":v):d.textContent);
   syncWorkspaceUI();
 }
 
@@ -557,6 +625,7 @@ function bldFlags(){
   if(curMode==="build"){
     f.push("-compression-mode",document.getElementById("buildCompression").value);
     if(document.getElementById("buildNoSign").checked)f.push("-no-sign");
+    f.push("-apk-name",buildResultName());
   }
   if(curMode==="full"){
     var budget=document.getElementById("bundleBudget");if(budget)f.push("-bundle-budget",budget.value);
@@ -648,12 +717,35 @@ function vmwareReadinessMessage(){
 }
 function stopJob(){if(uploadAbort){try{uploadAbort.abort();}catch(e){}return;}if(jid)fetch("/api/stop/"+jid,{method:"POST"}).catch(function(){});}
 
+// Security software (Kaspersky etc.) sometimes answers for the local server:
+// either an HTML block page or a dropped connection mid-upload. Name the
+// culprit instead of dumping its whole page into the scan log.
+function scanErrorText(status,body){
+  var text=body||"";
+  var title=/<title[^>]*>([^<]{1,120})<\/title>/i.exec(text);
+  var who=title?title[1].trim():"";
+  if(who||/^\s*<(!doctype|html|\?xml)/i.test(text)){
+    return uiLang==="ru"
+      ?"Запрос перехватила не веб-панель анализатора, а "+(who?"«"+who+"»":"сторонняя страница")+" — похоже, веб-защита антивируса или прокси. Добавьте 127.0.0.1 и папку анализатора в исключения антивируса и повторите."
+      :"The reply came from "+(who?"\""+who+"\"":"a third-party page")+" instead of the analyzer web UI — likely antivirus web protection or a proxy. Add 127.0.0.1 and the analyzer folder to its exclusions and retry.";
+  }
+  return text.trim()||("HTTP "+status);
+}
 function run(){
+  if(window.MegaWasm&&(!document.getElementById("w-d").reportValidity()||!document.getElementById("t-d").reportValidity()))return;
   var m=MODES[curMode],sandboxRequest=curMode==="sandbox",requestSerial=sbxRunSerial;
   if(curMode==="sandbox"&&(!sf||!curTarget||!curTarget.runnable||!sandboxConsentReady()||sbxBusy()))return;
   if(curMode==="sandbox"&&isVMwareTarget()&&!vmwareExecutionReady())return;
   if(!m.fileless&&!sf)return;
   if(sandboxRequest&&!Number.isFinite(sandboxDurationSeconds())){document.getElementById("sbx-r").reportValidity();return;}
+  // Belt-and-suspenders size check before any byte is sent: a rejected
+  // over-limit upload used to abort mid-flight and surface as an opaque
+  // "Failed to fetch" instead of the server's 413 message.
+  var totalBytes=(sf?sf.size:0)+((curMode==="version-diff"&&sf2)?sf2.size:0);
+  if(totalBytes>MAX_UPLOAD_BYTES){
+    showDzErr(1,"File is "+fb(totalBytes)+", which exceeds the "+Math.round(MAX_UPLOAD_BYTES/1048576)+" MB upload limit.");
+    return;
+  }
   invalidateScanView();
   var generation=scanGeneration,requestMode=curMode;
   var prog=document.getElementById("prog"),res=document.getElementById("res"),pb=document.getElementById("pb"),pt=document.getElementById("pt"),ps=document.getElementById("ps"),sbxDash=document.getElementById("liveSbxDash");
@@ -686,6 +778,7 @@ function run(){
 
   var fd=new FormData();
   fd.append("mode",curMode);
+  if(window.MegaWasm){fd.append("workers",document.getElementById("w-r").value);fd.append("timeout",document.getElementById("t-r").value);}
   if(sandboxRequest){
     fd.append("sandbox-target",isVMwareTarget()?curTarget.key:curTarget.kind+":"+(curTarget.serial||curTarget.avd||"host"));
     fd.append("sandbox-consent",sandboxConsentReady()?"yes":"no");
@@ -700,7 +793,7 @@ function run(){
 
   var controller=new AbortController();uploadAbort=controller;
   fetch("/api/scan",{method:"POST",body:fd,signal:controller.signal})
-    .then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error((t||("HTTP "+r.status)).trim());});return r.json();})
+    .then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error(scanErrorText(r.status,t));});return r.json();})
     .then(function(d){
       if(!scanIsCurrent(generation,null,requestMode)||(sandboxRequest&&requestSerial!==sbxRunSerial)){
         if(d.id)fetch("/api/stop/"+d.id,{method:"POST"}).catch(function(){});
@@ -736,7 +829,9 @@ function run(){
         if(curMode==="sandbox"){cleanupSbxDashboard();sbxSetPhase("setup");syncEnvRow();prepareSandboxWorkspace();}
         refreshBtn();return;
       }
-      ll("[error] "+err.message,"le");
+      var _msg=(err&&err.message)||"upload failed";
+      if(err&&err.name==="TypeError")_msg+=" — connection lost mid-upload; check that the web server is still running and that antivirus web protection does not intercept 127.0.0.1";
+      ll("[error] "+_msg,"le");
       if(curMode==="sandbox"){cleanupSbxDashboard();sbxSetPhase("setup");syncEnvRow();prepareSandboxWorkspace();showDzErr(1,"Could not start the analysis: "+err.message);refreshBtn();}
     });
 }
@@ -919,10 +1014,16 @@ function syncSbxView(){
   if(sbxViewPhase!=="setup"){
     if(con)con.style.display=showScreen?"none":"flex";
     if(andD)andD.style.display=showScreen&&!vmware?"flex":"none";
+  }else{
+    if(con)con.style.display="none";
+    if(andD)andD.style.display=showScreen&&!vmware?"flex":"none";
+    var idle=document.getElementById("sbxVmIdle");if(idle)idle.style.display=showScreen&&!vmware?"none":"flex";
   }
   if(vmD)vmD.style.display=showScreen&&vmware&&sbxViewPhase!=="setup"?"flex":"none";
   if(showScreen&&vmware&&sbxViewPhase==="running"&&curMode==="sandbox")startVMwareScreen();
   else stopVMwareScreen(true);
+  if(curMode==="sandbox"&&curEnv==="android"&&showScreen&&(sbxViewPhase==="running"||sbxViewPhase==="setup"&&curTarget&&curTarget.serial))liveStart();
+  else if(sbxViewPhase==="setup")liveStop(false);
   if(showScreen&&vmware&&sbxViewPhase==="complete")uiText("vmwareScreenStatus",uiLang==="ru"?(vmwareScreenState.url?"Последний полученный кадр · сессия завершена":"Сессия завершена · кадр не получен"):(vmwareScreenState.url?"Last captured frame · session ended":"Session ended · no frame captured"));
   if(outB)outB.classList.toggle("on",!showScreen);
   if(scrB){
@@ -1844,6 +1945,8 @@ function findingLocation(f){
 // Typed findings and artifact_findings are projections of the same evidence.
 function collectResultFindings(data){
   var base=(Array.isArray(data)?data:(data.findings||data.results||[])).slice();
+  // The typed projection includes artifact evidence with its final severity.
+  if(Array.isArray(data)||Array.isArray(data.findings))return base;
   var key=function(f){
     var loc=(f.locations||[])[0]||{};
     var ev=(f.evidence||[])[0]||{};
@@ -1863,6 +1966,25 @@ function bundleResultSummary(s){
   if(!s||!s.standalone)return "";
   var ru=uiLang==="ru";
   return "<div class='done-card'><div class='dt'>"+e(s.status)+" · "+e(s.observations)+(ru?" наблюдений, ":" observations, ")+e(s.risk_signals)+(ru?" сигналов риска":" risk signals")+"</div><div class='dp'>"+(ru?"Строки: ":"Strings: ")+e(s.strings_scanned)+" / "+e(s.strings_total)+" · "+e(Number(s.elapsed_seconds).toFixed(3))+" s</div><p>"+(ru?"Бандл, не весь APK. Итоговая безопасность НЕ ОЦЕНЕНА. URL и названия API — справочные наблюдения, не подтверждённые уязвимости.":"Bundle scope, not the full APK. Security NOT ASSESSED. URL/API names are inventory, not confirmed vulnerabilities.")+"</p></div>";
+}
+
+function staticResultSummary(data){
+  if(!data||Array.isArray(data)||(!data.run&&!data.risk_profile))return "";
+  var ru=uiLang==="ru",run=data.run||{},risk=data.risk_profile||{};
+  var counts={malware:0,vulnerability:0,hardening:0,inventory:0};
+  (Array.isArray(data.findings)?data.findings:[]).forEach(function(f){if(f&&Object.prototype.hasOwnProperty.call(counts,f.kind))counts[f.kind]++;});
+  var incomplete=run.status==="incomplete";
+  var title=incomplete?(ru?"Анализ неполный":"Incomplete analysis"):(ru?"Сводка статического анализа":"Static analysis summary");
+  var h="<div class='done-card'><div class='dt'>"+title+"</div>";
+  if(Number.isFinite(risk.overall_score))h+="<div class='dp'>"+(ru?"Общий риск: ":"Overall risk: ")+e(risk.overall_level||"")+" · "+e(risk.overall_score)+"/100</div>";
+  h+="<div class='dp'>"+(ru?"Признаки вредоносного поведения: ":"Malware indicators: ")+counts.malware+" · "+(ru?"Уязвимости: ":"Vulnerabilities: ")+counts.vulnerability+" · "+(ru?"Усиление защиты: ":"Hardening: ")+counts.hardening+" · "+(ru?"Справочные наблюдения: ":"Inventory: ")+counts.inventory+"</div>";
+  if(incomplete){
+    h+="<p>"+(run.stop_reason==="timeout"?(ru?"Достигнут лимит времени. Проверьте охват анализа в отчёте.":"Time limit reached. Review analysis coverage in the report."):(ru?"Охват анализа неполный. Причина: ":"Analysis coverage is incomplete. Reason: ")+e(run.stop_reason||"unknown"))+"</p>";
+    var df=data.data_flow_stats||{};
+    if(df.slices_truncated>0)h+="<p>"+(ru?"Пути data flow ограничены бюджетом: ":"Data-flow slices limited by analysis budget: ")+e(df.slices_truncated)+". "+(ru?"Это ограничение охвата, а не обнаруженная угроза.":"This is a coverage limit, not a detected threat.")+"</p>";
+    (Array.isArray(run.limitations)?run.limitations:[]).slice(0,6).forEach(function(value){h+="<p>"+e(value)+"</p>";});
+  }
+  return h+"</div>";
 }
 
 function loadRes(id){
@@ -1894,7 +2016,7 @@ function loadRes(id){
         return;
       }
       var minecraftResult=Array.isArray(data.packs)&&typeof data.complete==="boolean";
-      var minecraftSummary=bundleResultSummary(data.bundle_analysis);
+      var minecraftSummary=staticResultSummary(data)+bundleResultSummary(data.bundle_analysis);
       if(minecraftResult){
         minecraftSummary="<div class='done-card'><div class='dt'>"+e(data.format)+" · "+(data.complete?"Inspection completed":"Incomplete inspection")+"</div><div class='dp'>"+e(String((data.packs||[]).length))+" packs · "+e(String((data.files||[]).length))+" files · indicator score "+e(String(data.risk_score||0))+"/100. Static indicators are not a malware verdict. Open the report for dependencies and contents.</div></div>";
       }
@@ -1902,7 +2024,7 @@ function loadRes(id){
       var cnt={};fnd.forEach(function(f){var s=(f.Severity||f.severity||"INFO").toUpperCase();cnt[s]=(cnt[s]||0)+1;});
       chips.innerHTML="";SO.forEach(function(sv){if(cnt[sv]){var s=document.createElement("span");s.className="chip "+(SC[sv]||"c-info");s.textContent=cnt[sv]+" "+sv;chips.appendChild(s);}});
       if(!fnd.length&&(minecraftResult||data.bundle_analysis)){fw.innerHTML=minecraftSummary;return;}
-      if(!fnd.length){fw.innerHTML="<div class='done-card'><div class='dt'>No findings in this result</div><div class='dp'>Output written to "+e(curOut)+"</div></div>";return;}
+      if(!fnd.length){fw.innerHTML=minecraftSummary+"<div class='done-card'><div class='dt'>No findings in this result</div><div class='dp'>Output written to "+e(curOut)+"</div></div>";return;}
       var top=fnd.slice().sort(function(a,b){return SO.indexOf((a.Severity||a.severity||"INFO").toUpperCase())-SO.indexOf((b.Severity||b.severity||"INFO").toUpperCase());}).slice(0,5).map(function(f){
         var sv=(f.Severity||f.severity||"INFO").toUpperCase();
         var rule=f.Pattern||f.pattern||f.Rule||f.rule||f.Title||f.title||"";
@@ -1915,6 +2037,8 @@ function loadRes(id){
 
 // ── live android view (ANY.RUN-style) ──
 var liveTimer=null,liveStreaming=false,liveWS=null,liveDecoder=null,liveCtx=null,liveMode="";
+var liveGeneration=0,liveFrameTimer=null,liveRetryTimer=null,liveStatusAbort=null,liveRequestScope="";
+var liveRetainTimer=null,liveCanvasHasFrame=false;
 var hasWebCodecs=(typeof window.VideoDecoder!=="undefined");
 
 function liveURL(path){
@@ -1930,29 +2054,61 @@ function fridaURL(path){
 }
 
 function liveStart(){
-  var st = document.getElementById("sbxAndroidStream");
-  if(st) st.style.display="flex";
-  var con = document.getElementById("sbxConsole");
-  if(con) con.style.display="none";
-  var vid = document.getElementById("sbxVmIdle");
-  if(vid) vid.style.display="none";
-
-  if(liveTimer)return;
+  var scope=liveURL("/api/live/status");
+  if(liveTimer&&liveRequestScope===scope)return;
+  if(liveTimer)liveStop(false);
+  liveCanvasHasFrame=false;sbxHasFrame=false;document.getElementById("sbxStreamPlaceholder").hidden=false;
+  liveRequestScope=scope;
+  liveGeneration++;
   liveTick();
   liveTimer=setInterval(liveTick,1500);
 }
+function stopLiveVideo(){
+  clearTimeout(liveFrameTimer);liveFrameTimer=null;
+  var ws=liveWS;liveWS=null;
+  if(ws){ws.onmessage=ws.onerror=ws.onclose=null;try{ws.close();}catch(e){}}
+  var decoder=liveDecoder;liveDecoder=null;
+  if(decoder){try{decoder.close();}catch(e){}}
+}
+function stopLiveImageRetention(){
+  if(liveRetainTimer){clearInterval(liveRetainTimer);liveRetainTimer=null;}
+}
+function retainLiveImageFrame(){
+  var img=document.getElementById("liveScreen"),cv=document.getElementById("liveCanvas");
+  if(!img||!cv||!img.naturalWidth||!img.naturalHeight)return false;
+  try{
+    // Preserve pixels while the image is decodable. Closing a multipart stream
+    // or starting the next PNG request can invalidate it before the done event.
+    var context=cv.getContext("2d");if(!context)return false;
+    if(cv.width!==img.naturalWidth||cv.height!==img.naturalHeight){cv.width=img.naturalWidth;cv.height=img.naturalHeight;}
+    context.drawImage(img,0,0);liveCanvasHasFrame=true;return true;
+  }catch(e){return false;}
+}
 function liveStop(preserveFrame){
+  liveGeneration++;
   if(liveTimer){clearInterval(liveTimer);liveTimer=null;}
+  if(liveStatusAbort){liveStatusAbort.abort();liveStatusAbort=null;}
+  clearTimeout(liveRetryTimer);liveRetryTimer=null;
+  var img=document.getElementById("liveScreen"),cv=document.getElementById("liveCanvas");
+  if(preserveFrame&&sbxHasFrame&&liveMode!=="video")retainLiveImageFrame();
+  stopLiveImageRetention();
+  stopLiveVideo();
   liveStreaming=false;liveMode="";
-  if(liveWS){try{liveWS.close();}catch(e){}liveWS=null;}
-  if(liveDecoder){try{liveDecoder.close();}catch(e){}liveDecoder=null;}
-  var img=document.getElementById("liveScreen");if(img&&!preserveFrame){img.src="";img.style.display="none";}
-  var cv=document.getElementById("liveCanvas");if(cv&&!preserveFrame){cv.style.display="none";}
+  liveRequestScope="";
+  if(img){img.onload=img.onerror=img.onabort=null;img.removeAttribute("src");img.style.display="none";}
+  var retained=!!(preserveFrame&&cv&&liveCanvasHasFrame);
+  if(cv)cv.style.display=retained?"":"none";
+  sbxHasFrame=retained;document.getElementById("sbxStreamPlaceholder").hidden=retained;
+  if(!preserveFrame)liveCanvasHasFrame=false;
 }
 
 // poll status to drive the badge; once booted, attach the best stream available
 function liveTick(){
-  fetch(liveURL("/api/live/status")).then(function(r){return r.json();}).then(function(s){
+  if(liveStatusAbort)return;
+  var generation=liveGeneration,controller=new AbortController();liveStatusAbort=controller;
+  var timeout=setTimeout(function(){controller.abort();},5000);
+  fetch(liveURL("/api/live/status"),{signal:controller.signal}).then(function(r){if(!r.ok)throw new Error("Device status unavailable");return r.json();}).then(function(s){
+    if(generation!==liveGeneration)return;
     var badge=document.getElementById("liveBadge"),bt=document.getElementById("liveBadgeT");
     // Locked / sleeping screen → show an English overlay instead of a black frame.
     setLockOverlay(s.serial&&s.booted&&s.screen===false);
@@ -1968,10 +2124,17 @@ function liveTick(){
       if(badge) badge.classList.add("off");
       if(bt) bt.textContent=s.serial+" · booting…";
     }else{
+      if(liveStreaming){
+        liveStreaming=false;liveMode="";stopLiveVideo();stopLiveImageRetention();clearTimeout(liveRetryTimer);liveRetryTimer=null;
+        var img=document.getElementById("liveScreen");img.onload=img.onerror=img.onabort=null;img.removeAttribute("src");
+      }
       if(badge) badge.classList.add("off");
       if(bt) bt.textContent="Waiting for device…";
     }
-  }).catch(function(){});
+  }).catch(function(){
+    if(generation!==liveGeneration)return;
+    var bt=document.getElementById("liveBadgeT");if(bt)bt.textContent=uiLang==="ru"?"Не удалось проверить устройство · повторяю…":"Device status unavailable · reconnecting…";
+  }).finally(function(){clearTimeout(timeout);if(liveStatusAbort===controller)liveStatusAbort=null;});
 }
 // setLockOverlay shows/hides the "device is locked" message over the stream.
 function setLockOverlay(locked){
@@ -1990,29 +2153,15 @@ function parseAvcCodecString(au){
   }
   return"avc1.42e01e"; // baseline fallback
 }
-// extractSPSPPS collects the SPS (type 7) and PPS (type 8) NAL units from an access unit.
-function extractSPSPPS(au){
-  var nals=[];
-  for(var i=0;i+3<au.length;){
-    if(au[i]===0&&au[i+1]===0&&au[i+2]===1){
-      var next=au.length;
-      for(var j=i+3;j+2<au.length;j++){if(au[j]===0&&au[j+1]===0&&au[j+2]===1){next=j;break;}}
-      var t=au[i+3]&0x1f;
-      if(t===7||t===8)nals.push(au.slice(i,next));
-      i=next;
-    }else{i++;}
-  }
-  if(!nals.length)return null;
-  var total=nals.reduce(function(s,n){return s+n.length;},0);
-  var out=new Uint8Array(total);var off=0;
-  nals.forEach(function(n){out.set(n,off);off+=n.length;});
-  return out;
-}
 function _setStreamMode(txt,color){
   var m=document.getElementById("sbxStreamMode");
   if(m){m.textContent=txt;m.style.color=color||"#7ba05b";}
 }
 function startVideo(){
+  if(!liveStreaming)return;
+  var generation=liveGeneration,decoder=null,ws=null;
+  function current(){return liveStreaming&&generation===liveGeneration&&liveMode==="video"&&liveDecoder===decoder;}
+  liveMode="video";
   var canvas=document.getElementById("liveCanvas"),img=document.getElementById("liveScreen");
   canvas.style.display="";img.style.display="none";
   _setStreamMode("⚡ HD video","#7ba05b");
@@ -2020,11 +2169,15 @@ function startVideo(){
   var configured=false;
   var ts=0;
   var frameCount=0,blackCount=0,blackChecked=false;
+  liveFrameTimer=setTimeout(function(){if(current())fallbackMjpeg();},12000);
   try{
-    liveDecoder=new VideoDecoder({
+    decoder=new VideoDecoder({
       output:function(frame){
-        if(canvas.width!==frame.displayWidth){canvas.width=frame.displayWidth;canvas.height=frame.displayHeight;}
+        if(!current()){frame.close();return;}
+        clearTimeout(liveFrameTimer);liveFrameTimer=null;
+        if(canvas.width!==frame.displayWidth||canvas.height!==frame.displayHeight){canvas.width=frame.displayWidth;canvas.height=frame.displayHeight;}
         liveCtx.drawImage(frame,0,0,canvas.width,canvas.height);
+        liveCanvasHasFrame=true;
         frame.close();
         sbxHasFrame=true;document.getElementById("sbxStreamPlaceholder").hidden=true;
         // Auto-detect black screen (MediaTek/DRM: real H264 frames but all black pixels).
@@ -2040,51 +2193,90 @@ function startVideo(){
           }catch(e){blackChecked=true;}
         }
       },
-      error:function(e){if(!configured)fallbackMjpeg();}
+      error:function(){if(current())fallbackMjpeg();}
     });
+    liveDecoder=decoder;
   }catch(e){fallbackMjpeg();return;}
 
   var proto=location.protocol==="https:"?"wss:":"ws:";
-  liveWS=new WebSocket(proto+"//"+location.host+liveURL("/api/live/video"));
-  liveWS.binaryType="arraybuffer";
-  liveWS.onmessage=function(ev){
+  try{ws=new WebSocket(proto+"//"+location.host+liveURL("/api/live/video"));}catch(e){fallbackMjpeg();return;}
+  liveWS=ws;ws.binaryType="arraybuffer";
+  ws.onmessage=function(ev){
+    if(!current()||liveWS!==ws)return;
     var au=new Uint8Array(ev.data);
     if(!configured){
       // Wait for an access unit containing SPS (type 7) — that's our codec config.
       if(!nalContains(au,7))return;
       var codecStr=parseAvcCodecString(au);
-      var desc=extractSPSPPS(au);
+      // The server sends Annex-B access units. Supplying description switches
+      // WebCodecs to AVC format, which expects an avcC record and length prefixes.
       var cfg={codec:codecStr,optimizeForLatency:true};
-      if(desc)cfg.description=desc;
-      try{liveDecoder.configure(cfg);configured=true;}
+      try{decoder.configure(cfg);configured=true;}
       catch(e){fallbackMjpeg();return;}
     }
     var key=nalContains(au,5)||nalContains(au,7);
-    try{liveDecoder.decode(new EncodedVideoChunk({type:key?"key":"delta",timestamp:ts,duration:33333,data:au}));ts+=33333;}
-    catch(e){}
+    try{decoder.decode(new EncodedVideoChunk({type:key?"key":"delta",timestamp:ts,duration:33333,data:au}));ts+=33333;}
+    catch(e){fallbackMjpeg();}
   };
-  liveWS.onerror=function(){fallbackMjpeg();};
-  liveMode="video";
+  ws.onerror=ws.onclose=function(){if(current()&&liveWS===ws)fallbackMjpeg();};
 }
 function fallbackMjpeg(){
-  if(liveMode==="mjpeg")return;
-  if(liveWS){try{liveWS.close();}catch(e){}liveWS=null;}
-  if(liveDecoder){try{liveDecoder.close();}catch(e){}liveDecoder=null;}
+  if(!liveStreaming||liveMode==="mjpeg"||liveMode==="png")return;
+  stopLiveVideo();
   startMjpeg();
 }
 function startMjpeg(){
+  if(!liveStreaming)return;
+  var generation=liveGeneration;
+  function current(){return liveStreaming&&generation===liveGeneration&&liveMode==="mjpeg";}
+  liveMode="mjpeg";
   var canvas=document.getElementById("liveCanvas"),img=document.getElementById("liveScreen");
   canvas.style.display="none";img.style.display="";
   _setStreamMode("📷 Screenshot","#fc9");
   _attachLiveEvents(img);
-  // Auto-reconnect: if the stream drops (e.g. ADB hiccup on tap), restart it.
-  img.onerror=function(){
-    if(liveStreaming&&liveMode==="mjpeg"){setTimeout(startMjpeg,800);}
-  };
+  // Some Android targets cannot keep a persistent capture pipe open.
+  // Individual PNG requests still provide a live screen on those targets.
+  img.onerror=function(){if(current())startScreenshotPolling();};
   img.onabort=img.onerror;
-  img.onload=function(){sbxHasFrame=true;document.getElementById("sbxStreamPlaceholder").hidden=true;};
+  img.onload=function(){if(!current())return;clearTimeout(liveFrameTimer);liveFrameTimer=null;retainLiveImageFrame();sbxHasFrame=true;document.getElementById("sbxStreamPlaceholder").hidden=true;};
+  stopLiveImageRetention();
+  liveRetainTimer=setInterval(function(){if(current())retainLiveImageFrame();},500);
+  clearTimeout(liveFrameTimer);
+  liveFrameTimer=setTimeout(function(){if(current())startScreenshotPolling();},12000);
   img.src=liveURL("/api/live/stream?t="+Date.now());
-  liveMode="mjpeg";
+}
+function startScreenshotPolling(){
+  if(!liveStreaming)return;
+  stopLiveImageRetention();
+  clearTimeout(liveFrameTimer);clearTimeout(liveRetryTimer);
+  liveFrameTimer=liveRetryTimer=null;
+  var generation=liveGeneration,img=document.getElementById("liveScreen"),url=liveURL("/api/live/screen");
+  function current(){return liveStreaming&&generation===liveGeneration&&liveMode==="png";}
+  liveMode="png";
+  document.getElementById("liveCanvas").style.display="none";img.style.display="";
+  img.onload=img.onerror=img.onabort=null;img.removeAttribute("src");
+  _setStreamMode("📷 Screenshot","#fc9");_attachLiveEvents(img);
+  function next(delay){
+    clearTimeout(liveFrameTimer);liveFrameTimer=null;clearTimeout(liveRetryTimer);
+    if(current())liveRetryTimer=setTimeout(request,delay);
+  }
+  function failed(){
+    if(!current())return;
+    if(!sbxHasFrame){
+      uiText("sbxStreamPlaceholderTitle",uiLang==="ru"?"Ожидаю кадры устройства":"Waiting for device frames");
+      uiText("sbxStreamPlaceholderNote",uiLang==="ru"?"Не удалось получить кадр. Подключаюсь повторно…":"Could not receive a frame. Reconnecting…");
+    }
+    next(1000);
+  }
+  img.onload=function(){if(!current())return;retainLiveImageFrame();sbxHasFrame=true;document.getElementById("sbxStreamPlaceholder").hidden=true;next(500);};
+  img.onerror=img.onabort=failed;
+  function request(){
+    if(!current())return;
+    liveRetryTimer=null;
+    liveFrameTimer=setTimeout(function(){if(current()){img.removeAttribute("src");failed();}},12000);
+    img.src=url+(url.indexOf("?")>=0?"&":"?")+"t="+Date.now();
+  }
+  request();
 }
 // Attach pointer events once on first page load (H264 path uses canvas which is always in DOM).
 (function(){
@@ -2597,6 +2789,7 @@ function refreshEnv(){
   }).catch(function(err){if(sbxBusy())return;envState="error";envFresh=false;envError=err.name==="AbortError"?"Timed out; the host is shown independently.":err.message;buildOsMenu();}).finally(function(){_envPending=false;});
 }
 function refreshEnvironments(reinspect){
+  if(window.MegaWasm)return;
   if(reinspect&&vmwarePanelID&&!sbxBusy()){invalidateVMwareReport();vmwareInspectQueued=true;flushVMwareInspection();syncVMwareButtons();refreshBtn();}
   refreshHost();refreshEnv();
 }
@@ -2606,8 +2799,17 @@ refreshEnvironments();startEnvPoll();
 
 // pull real bundle counts (SAST rules, trackers) from the backend
 fetch("/api/meta").then(function(r){return r.json();}).then(function(m){
+	var version=document.getElementById("appVersion");
+	if(version&&m.version){version.textContent="v"+String(m.version).replace(/^v/,"");version.title=[m.commit,m.buildDate].filter(Boolean).join(" · ");}
   var a=document.getElementById("sastCount");if(a&&m.sastRules)a.textContent=m.sastRules;
   var b=document.getElementById("trackerCount");if(b&&m.trackers)b.textContent=m.trackers;
+  // Keep the pre-flight limit and the dropzone label in sync with the server.
+  if(m.uploadMaxBytes&&m.uploadMaxBytes!==MAX_UPLOAD_BYTES){
+    MAX_UPLOAD_BYTES=m.uploadMaxBytes;
+    var mb=Math.round(MAX_UPLOAD_BYTES/1048576);
+    PAGE_I18N.dzMax={en:"Maximum "+mb+" MB",ru:"Максимум "+mb+" МБ"};
+    applyPageLang();
+  }
 }).catch(function(){});
 
 // ── URL routing — each tool gets its own path ──
@@ -3068,8 +3270,20 @@ function loadArtifacts(id){
     var files=data.files||[],ru=uiLang==="ru";
     var h="";
     if(data.done&&data.exit_code!==0)h+="<p>"+(ru?"Задание завершилось с ошибкой. Файлы могут быть частичными; проверь логи. Код: ":"Job failed; files may be partial. Check logs. Exit code: ")+e(data.exit_code)+"</p>";
-    if(artifactMode==="build"&&data.done&&data.exit_code===0&&files.some(function(f){return f.path==="app.apk";}))h+="<p><a class='ws-button ws-primary' href='/api/artifacts/"+encodeURIComponent(id)+"/files/app.apk' download='app.apk'>"+(ru?"Скачать APK":"Download APK")+"</a></p>";
-    if(data.done)h+="<p><a href='/api/artifacts/"+encodeURIComponent(id)+"/archive.zip' download>"+(ru?"Скачать все файлы ZIP":"Download all files as ZIP")+"</a></p><p>"+(ru?"ZIP доступен до ":"ZIP supports up to ")+e(data.archive_limit||200000)+(ru?" файлов. Для больших результатов используй рабочую область.":" files. Use the workspace for larger results.")+"</p>";
+    var apkFile=files.find(function(f){return f.path.endsWith(".apk")||f.path.endsWith(".xapk");});
+    if(artifactMode==="build"&&data.done&&data.exit_code===0&&apkFile){
+      h+="<p><a class='ws-button ws-primary' href='/api/artifacts/"+encodeURIComponent(id)+"/files/"+encodeURIComponent(apkFile.path)+"' download='"+e(apkFile.path)+"'>"+(ru?"Скачать ":"Download ")+e(apkFile.path)+"</a></p>";
+    }
+    var customName=(document.getElementById("outname")&&document.getElementById("outname").value.trim())||
+                   (sf?sf.name.replace(/\.[^/.]+$/,""):"archive");
+    var safeBase=safeResultBase(customName,"archive");
+    var archiveDlName=safeBase+".zip";
+    if(data.done)h+="<p><a href='/api/artifacts/"+encodeURIComponent(id)+"/archive.zip' download='"+e(archiveDlName)+"'>"+(ru?"Скачать все файлы ("+e(archiveDlName)+")":"Download all files as ZIP")+"</a></p><p>"+(ru?"ZIP доступен до ":"ZIP supports up to ")+e(data.archive_limit||200000)+(ru?" файлов. Для больших результатов используй рабочую область.":" files. Use the workspace for larger results.")+"</p>";
+    if(artifactMode==="decode"&&data.done&&data.exit_code===0){
+      var targetExt=(sf&&sf.name&&sf.name.toLowerCase().endsWith(".xapk"))?".xapk":".apk";
+      var rebuildName=safeBase+targetExt;
+      h+="<p><button type='button' class='ws-button ws-primary' id='rebuildDecodedBtn' onclick='rebuildFromDecoded(\""+encodeURIComponent(id)+"\",\""+e(safeBase)+"\")'>"+(ru?"Собрать в "+e(rebuildName):"Build as "+e(rebuildName))+"</button></p>";
+    }
     (data.stages||[]).forEach(function(stage){
       h+="<p><b>"+e(stage.stage)+"</b>: "+e(stage.status)+(stage.diagnostics&&stage.diagnostics.length?" — "+e(stage.diagnostics.join("; ")):"")+"</p>";
       var c=stage.export;
@@ -3102,3 +3316,21 @@ function syncStaticOutputFlags(){
 }
 document.addEventListener("change",syncStaticOutputFlags);
 syncStaticOutputFlags();
+
+window.rebuildFromDecoded = function(id, baseName) {
+  fetch("/api/artifacts/" + encodeURIComponent(id) + "/archive.zip")
+    .then(function(r){ return r.blob(); })
+    .then(function(blob){
+      var ext = (sf && sf.name && sf.name.toLowerCase().endsWith(".xapk")) ? ".xapk" : ".apk";
+      selTool("build");
+      var file = new File([blob], baseName + ".zip", { type: "application/zip" });
+      setf(file, 1);
+      var on = document.getElementById("outname");
+      if (on) on.value = safeResultBase(baseName,"app") + ext;
+      var sbtn = document.getElementById("sbtn");
+      if (sbtn) {
+        sbtn.scrollIntoView({ behavior: "smooth", block: "center" });
+        sbtn.focus();
+      }
+    });
+};

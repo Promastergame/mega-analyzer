@@ -209,7 +209,12 @@ func (s *Scorer) ScoreFileDetailed(analysis *types.FileAnalysis) ScoreBreakdown 
 	}
 
 	// ── 5. Entropy — бонус зависит от контекста ──────────────────────────────
-	if analysis.Entropy > s.config.MinEntropyThreshold {
+	// Entropy only corroborates suspicious content. Smali text sits at ~5.1
+	// bits/byte across the board (uniform character distribution), so the
+	// bonus fired on essentially every obfuscated file and manufactured the
+	// "Unknown, 0 matches" hotspots. A file with zero matches has no signal
+	// for entropy to amplify.
+	if analysis.Entropy > s.config.MinEntropyThreshold && len(analysis.Matches) > 0 {
 		if bd.CriticalCount > 0 {
 			bd.EntropyBonus = w.EntropyCriticalBoost
 		} else {
@@ -325,6 +330,32 @@ func (s *Scorer) fileToHotspot(path string, analysis *types.FileAnalysis) (types
 
 	// Score
 	bd := s.ScoreFileDetailed(analysis)
+
+	// A file with zero matches carries no evidence: importance and entropy
+	// alone manufactured "Unknown, 0 matches" hotspots in the 18-22 band.
+	// Decision points and criticals both imply at least one match.
+	if len(analysis.Matches) == 0 && bd.DecisionPointCount == 0 {
+		return types.Hotspot{}, false
+	}
+
+	// Bare keyword hits are not evidence either: a file whose only matches
+	// are generic Custom Keyword strings (setAccessible, loadUrl,
+	// shouldOverrideUrlLoading — the vocabulary of every obfuscated androidx
+	// class) produced 16 of 19 hotspots on an obfuscated-library-heavy APK.
+	// A hotspot needs a corroborating signal: a critical match, a decision
+	// point, or a non-keyword category.
+	if bd.CriticalCount == 0 && bd.DecisionPointCount == 0 {
+		onlyKeyword := true
+		for i := range analysis.Matches {
+			if analysis.Matches[i].Category != types.CategoryCustomKeyword {
+				onlyKeyword = false
+				break
+			}
+		}
+		if onlyKeyword && len(analysis.Matches) > 0 {
+			return types.Hotspot{}, false
+		}
+	}
 
 	// Minimum threshold
 	if bd.NormalizedTotal < 10 && bd.CriticalCount == 0 && bd.DecisionPointCount == 0 {

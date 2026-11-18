@@ -891,59 +891,109 @@ func TestEngine_EvaluateRule(t *testing.T) {
 }
 
 func TestEngine_EvaluateAll(t *testing.T) {
-	engine := NewEngine()
+	t.Run("permission-only match becomes inventory", func(t *testing.T) {
+		engine := NewEngine()
 
-	// Load rules
-	ruleSet := RuleSet{
-		Category: "test",
-		Rules: []Rule{
-			{
-				ID: "R001", Name: "SMS Rule", Score: 80, Severity: "high", Enabled: true,
-				Description: "Detects SMS access",
-				Conditions:  []Condition{{Type: "permission", Value: "READ_SMS"}},
+		// Load rules
+		ruleSet := RuleSet{
+			Category: "test",
+			Rules: []Rule{
+				{
+					ID: "R001", Name: "SMS Rule", Score: 80, Severity: "high", Enabled: true,
+					Description: "Detects SMS access",
+					Conditions:  []Condition{{Type: "permission", Value: "READ_SMS"}},
+				},
+				{
+					ID: "R002", Name: "Network Rule", Score: 60, Severity: "medium", Enabled: true,
+					Description: "Detects network access",
+					Conditions:  []Condition{{Type: "permission", Value: "INTERNET"}},
+				},
+				{
+					ID: "R003", Name: "Disabled Rule", Score: 100, Enabled: false,
+					Conditions: []Condition{{Type: "permission", Value: "READ_SMS"}},
+				},
 			},
-			{
-				ID: "R002", Name: "Network Rule", Score: 60, Severity: "medium", Enabled: true,
-				Description: "Detects network access",
-				Conditions:  []Condition{{Type: "permission", Value: "INTERNET"}},
+		}
+
+		data, _ := json.Marshal(ruleSet)
+		filePath := createTempRuleFile(t, string(data))
+		engine.LoadRulesFromFile(filePath)
+
+		ctx := &ConditionContext{
+			Permissions: []string{"android.permission.READ_SMS"},
+		}
+
+		results := engine.EvaluateAll(ctx)
+
+		if len(results) != 1 {
+			t.Fatalf("expected 1 result, got %d", len(results))
+		}
+
+		r := results[0]
+		if r.RuleID != "R001" {
+			t.Errorf("expected R001, got %s", r.RuleID)
+		}
+		// A permission declaration alone is a manifest profile, not a malware verdict.
+		if r.Score != 0 || r.Severity != "info" {
+			t.Errorf("permission-only rule should downgrade to info/0, got score %d severity %q", r.Score, r.Severity)
+		}
+		if r.FindingKind != "inventory" {
+			t.Errorf("expected FindingKind inventory, got %q", r.FindingKind)
+		}
+		if !r.Matched {
+			t.Error("Matched should be true")
+		}
+		if r.IsHighOrAbove() {
+			t.Error("IsHighOrAbove() should be false for downgraded 'info' severity")
+		}
+	})
+
+	t.Run("rule with non-permission evidence keeps score", func(t *testing.T) {
+		engine := NewEngine()
+
+		ruleSet := RuleSet{
+			Category: "test",
+			Rules: []Rule{
+				{
+					ID: "R010", Name: "SMS Send Rule", Score: 80, Severity: "high", Enabled: true,
+					Description: "Detects SMS handling",
+					Conditions: []Condition{
+						{Type: "permission", Value: "READ_SMS"},
+						{Type: "api_call", Value: "SmsManager"},
+					},
+				},
 			},
-			{
-				ID: "R003", Name: "Disabled Rule", Score: 100, Enabled: false,
-				Conditions: []Condition{{Type: "permission", Value: "READ_SMS"}},
-			},
-		},
-	}
+		}
 
-	data, _ := json.Marshal(ruleSet)
-	filePath := createTempRuleFile(t, string(data))
-	engine.LoadRulesFromFile(filePath)
+		data, _ := json.Marshal(ruleSet)
+		filePath := createTempRuleFile(t, string(data))
+		engine.LoadRulesFromFile(filePath)
 
-	ctx := &ConditionContext{
-		Permissions: []string{"android.permission.READ_SMS"},
-	}
+		ctx := &ConditionContext{
+			Permissions: []string{"android.permission.READ_SMS"},
+			APICalls:    []string{"SmsManager"},
+		}
 
-	results := engine.EvaluateAll(ctx)
+		results := engine.EvaluateAll(ctx)
 
-	if len(results) != 1 {
-		t.Fatalf("expected 1 result, got %d", len(results))
-	}
+		if len(results) != 1 {
+			t.Fatalf("expected 1 result, got %d", len(results))
+		}
 
-	r := results[0]
-	if r.RuleID != "R001" {
-		t.Errorf("expected R001, got %s", r.RuleID)
-	}
-	if r.Score != 80 {
-		t.Errorf("expected score 80, got %d", r.Score)
-	}
-	if !r.Matched {
-		t.Error("Matched should be true")
-	}
-	if !r.IsCritical() && r.Severity == "critical" {
-		t.Error("IsCritical() incorrect")
-	}
-	if !r.IsHighOrAbove() {
-		t.Error("IsHighOrAbove() should be true for 'high' severity")
-	}
+		r := results[0]
+		if r.RuleID != "R010" {
+			t.Errorf("expected R010, got %s", r.RuleID)
+		}
+		if r.Score != 80 {
+			t.Errorf("expected score 80, got %d", r.Score)
+		}
+		if !r.Matched {
+			t.Error("Matched should be true")
+		}
+		if !r.IsHighOrAbove() {
+			t.Error("IsHighOrAbove() should be true for 'high' severity")
+		}
+	})
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

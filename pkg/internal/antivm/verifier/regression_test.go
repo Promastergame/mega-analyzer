@@ -41,22 +41,7 @@ func TestRegression_AllAPILevels(t *testing.T) {
 // matchingState builds a DeviceState that fully satisfies the profile, as if
 // captured from a correctly-patched device (a stand-in for a replay capture).
 func matchingState(p profile.DeviceProfile) adapter.DeviceState {
-	st := adapter.NewDeviceState()
-	st.Props["ro.product.model"] = p.Model
-	st.Props["ro.product.brand"] = p.Brand
-	st.Props["ro.product.manufacturer"] = p.Manufacturer
-	st.Props["ro.product.device"] = p.Device
-	st.Props["ro.build.fingerprint"] = p.Fingerprint
-	st.Props["ro.build.display.id"] = p.BuildID
-	st.Props["ro.build.version.security_patch"] = p.SecurityPatch
-	st.Props["ro.kernel.qemu"] = "0"
-	st.Display["resolution"] = p.Resolution
-	st.Display["density"] = itoa(p.Density)
-	st.Battery["level"] = itoa(p.Battery.Level)
-	st.Battery["status"] = p.Battery.Status
-	st.Network["mac"] = p.Network.MACAddress
-	st.Network["imei"] = p.Network.IMEI
-	return st
+	return stateMatching(p)
 }
 
 // TestRegression_ViaReplayAdapter proves the same through the ReplayAdapter,

@@ -72,10 +72,10 @@ type APKRebuilder struct {
 	Diagnostics               []Diagnostic
 	meta                      *APKMeta
 
-	// Tool overrides (when empty, auto-detect is used)
-	SmaliCfg SmaliToolConfig
+	// Native assembly settings and optional resource-tool overrides
+	SmaliCfg SmaliBuildConfig
 	Aapt2Cfg Aapt2Config
-	UseSmali bool // when false, skip smali assembly even if tools found
+	UseSmali bool // when false, skip native smali assembly
 	UseAapt2 bool // when false, skip aapt2 even if found
 }
 
@@ -146,8 +146,8 @@ func (r *APKRebuilder) loadMeta() {
 func (r *APKRebuilder) GetMeta() *APKMeta { return r.meta }
 
 // Rebuild rebuilds an APK or XAPK from the source directory.
-// When aapt2 and smali tools are available it follows the Apktool
-// round-trip pipeline: smali→dex, aapt2 compile→link, zip→align→sign.
+// Smali→DEX assembly is native. Resource compilation, alignment and signing
+// use the in-process implementations unless external compatibility is enabled.
 // When target is XAPK, it packages the signed inner APK, manifest.json and OBB assets into a standard XAPK archive.
 func (r *APKRebuilder) Rebuild(ctx context.Context, outputPath string) error {
 	r.OutputPath = outputPath
@@ -213,21 +213,7 @@ func (r *APKRebuilder) rebuildArtifact(ctx context.Context, outputPath string) e
 	}
 
 	// ── Phase 1: assemble smali → dex (optional) ──
-	// Fill only the missing fields: replacing the whole config silently
-	// discards an explicit -smali-jar/-smali-api/-smali-jobs override.
 	smaliCfg := r.SmaliCfg
-	if smaliCfg.SmaliJar == "" || smaliCfg.JavaBinary == "" {
-		def := DefaultSmaliConfig()
-		if smaliCfg.SmaliJar == "" {
-			smaliCfg.SmaliJar = def.SmaliJar
-		}
-		if smaliCfg.JavaBinary == "" {
-			smaliCfg.JavaBinary = def.JavaBinary
-		}
-		if smaliCfg.BaksmaliJar == "" {
-			smaliCfg.BaksmaliJar = def.BaksmaliJar
-		}
-	}
 	// When the API level was not pinned explicitly, match the newest dex
 	// version present in the tree: rebuilding a 037/038/039 tree with the
 	// tool default (035) produces a mixed-version APK that ART rejects with
@@ -243,25 +229,11 @@ func (r *APKRebuilder) rebuildArtifact(ctx context.Context, outputPath string) e
 	}
 	if r.UseSmali && smaliDirsPresent(r.SourceDir) && smaliFilesPresent(r.SourceDir) {
 		changed, unknown, _ := SmaliTreeChanged(r.SourceDir)
-		// The native Go assembler is always available; smali.jar/Java only
-		// matters for constructs it cannot represent yet.
-		haveAssembler := true
-		javaAssembler := smaliCfg.SmaliJar != "" && smaliCfg.JavaBinary != ""
-		_ = javaAssembler
 		switch {
 		case len(changed) == 0 && len(unknown) == 0:
 			// Smali is byte-identical to what was decoded: the original dex
 			// files are already correct. No preflight, no assembler, no Java.
 			r.warn("smali unchanged since decode: reusing original dex files (no assembler needed)")
-		case !haveAssembler && len(changed) == 0:
-			// No decode snapshot to compare with (tree not produced by this
-			// tool): keep the historical behaviour and package the existing dex.
-			r.warn("smali tool not found and no decode snapshot: the existing classes.dex is packaged as-is; " +
-				"edited .smali files (if any) are NOT included. Pass -smali-jar <path> to assemble them.")
-		case !haveAssembler:
-			return &LoaderError{Op: "smali_assemble", err: fmt.Errorf(
-				"smali was edited in %s but no assembler is available; the edits would be silently dropped. "+
-					"Pass -smali-jar <path> (needs Java), or revert the smali edits", strings.Join(changed, ", "))}
 		default:
 			preDiags := ValidateSmaliTree(r.SourceDir)
 			r.addDiagnostics(preDiags...)

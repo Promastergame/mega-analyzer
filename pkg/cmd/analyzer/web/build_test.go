@@ -25,6 +25,11 @@ func TestBuildAndDecodeUseNativeManagedPaths(t *testing.T) {
 	if !reflect.DeepEqual(args, want) {
 		t.Fatalf("build arguments = %q; want %q", args, want)
 	}
+	namedArgs := buildModeArgs("build", []string{target}, out, "", "", "", []string{"-apk-name", "minecraft.apk"})
+	namedWant := []string{"-build", "-t", target, "-o", filepath.Join(out, "minecraft.apk"), "-no-tui", "-no-color", "-standalone", "-use-aapt2=false"}
+	if !reflect.DeepEqual(namedArgs, namedWant) {
+		t.Fatalf("named build arguments = %q; want %q", namedArgs, namedWant)
+	}
 	decode := buildModeArgs("decode", []string{"app.apk"}, out, "", "", "", []string{"-java-view", "-copy-original"})
 	if !slices.Contains(decode, "-standalone") || !slices.Contains(decode, "-java-view") || decode[4] != out {
 		t.Fatalf("decode lost native mode, output path, or pseudocode option: %q", decode)
@@ -58,6 +63,19 @@ func TestTransformFlagsRejectExternalToolsAndPathOverrides(t *testing.T) {
 	}
 	if _, err := validateWebModeFlags("build", []string{"-java-view"}); err == nil {
 		t.Fatal("build accepted decode-only option")
+	}
+}
+
+func TestAPKResultNames(t *testing.T) {
+	for _, name := range []string{"minecraft.apk", "my-project_2.xapk", "Тетрис.apk", "_CON.apk", strings.Repeat("a", 80) + ".apk"} {
+		if _, err := validateWebModeFlags("build", []string{"-apk-name", name}); err != nil {
+			t.Errorf("rejected valid result name %q: %v", name, err)
+		}
+	}
+	for _, name := range []string{".apk", "../escape.apk", "a/b.apk", "my app.apk", "a\n.apk", "a\x00.apk", "CON.apk", "LPT1.xapk", "name.exe", strings.Repeat("a", 81) + ".apk"} {
+		if _, err := validateWebModeFlags("build", []string{"-apk-name", name}); err == nil {
+			t.Errorf("accepted invalid result name %q", name)
+		}
 	}
 }
 

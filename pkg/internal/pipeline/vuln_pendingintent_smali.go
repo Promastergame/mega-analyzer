@@ -28,6 +28,7 @@ import (
 	"strconv"
 	"strings"
 
+	"mega-analyzer/pkg/internal/finding"
 	"mega-analyzer/pkg/internal/types"
 )
 
@@ -46,6 +47,12 @@ var piFactoryMethods = map[string]bool{
 }
 
 func detectPendingIntentFromAST(ctx *FileDetectContext, analysis *types.FileAnalysis) {
+	if analysis != nil && analysis.IsLibrary {
+		// Compat-library call sites (androidx SearchView's mutable voice
+		// search PendingIntent is the canonical example) follow the platform
+		// recommendation; mutability findings are only meaningful in app code.
+		return
+	}
 	class := ctx.Class
 	if class == nil {
 		return
@@ -132,18 +139,20 @@ func evalPendingIntentCallSite(
 		return
 	}
 
-	emit := func(desc, evidence string, critical bool, confidence string) {
+	emit := func(category types.Category, desc, evidence string, confidence string, severity types.Severity) {
 		match := newMatch(
-			types.CategoryPendingIntentVuln, analysis.Path, lineNumber,
-			desc, evidence, critical,
+			category, analysis.Path, lineNumber,
+			desc, evidence, false,
 		)
 		match.MethodName = m.Name
 		match.ClassName = class.Name
 		match.Confidence = confidence
 		match.EvidenceType = "smali_ast_dataflow"
-		if !critical {
-			match.Severity = types.SeverityMedium
-		}
+		match.Severity = severity
+		match.Explanation = &finding.Explanation{Status: "needs_review", Summary: desc,
+			Conditions:  []string{evidence},
+			Limitations: []string{"Mutability alone does not establish an exploit. A token recipient, unspecified Intent fields and the executed operation must be checked."},
+			NextChecks:  []string{"Resolve flags at the caller, Intent component/action and the recipients of this PendingIntent."}}
 		analysis.Matches = append(analysis.Matches, match)
 	}
 
@@ -153,19 +162,23 @@ func evalPendingIntentCallSite(
 		// Correct usage — explicitly immutable.
 		return
 	case resolved && flags&piFlagMutable != 0:
-		emit("PendingIntent created with FLAG_MUTABLE — any app receiving this intent "+
-			"can modify its extras/action before delivery (intent redirection, CWE-927). "+
-			"Use FLAG_IMMUTABLE unless mutability is required (e.g. inline reply)",
-			"PendingIntent;->"+call.method+" FLAG_MUTABLE", true, "high")
+		emit(types.CategoryPendingIntentVuln, "PendingIntent uses FLAG_MUTABLE. If the token is shared with an untrusted recipient, unspecified Intent fields may be filled in. Review whether mutability is required (for example, inline reply)",
+			"PendingIntent;->"+call.method+" FLAG_MUTABLE", "high", types.SeverityMedium)
 	case resolved:
-		emit("PendingIntent created without FLAG_IMMUTABLE (flags=0x"+
-			strconv.FormatInt(flags, 16)+") — the mutable intent can be intercepted and "+
-			"rewritten by malicious apps (CWE-927). Required on API 31+",
-			"PendingIntent;->"+call.method+" missing FLAG_IMMUTABLE", true, "high")
+		// A resolved constant with neither mutability bit (typically
+		// FLAG_UPDATE_CURRENT = 0x8000000 built by or-int from compat
+		// wrappers) cannot establish a vulnerability on its own: the or-int
+		// tracker sees only the local constant, so the real flag value may
+		// include more bits assembled elsewhere; and on targetSdk 31+ a
+		// PendingIntent without an explicit mutability flag throws at
+		// runtime, making this either dead code or under-constant analysis.
+		// Either way it is a review note, not a MEDIUM finding.
+		emit(types.CategoryPendingIntentReview, "PendingIntent flags constant (0x"+
+			strconv.FormatInt(flags, 16)+") carries no explicit mutability flag. The constant may be partial (flags assembled via or-int at runtime) or the call site may be unreachable, because targetSdk 31+ throws without FLAG_IMMUTABLE/FLAG_MUTABLE. Verify the full flag value and reachability before treating this as a mutable surface",
+			"PendingIntent;->"+call.method+" flags=0x"+strconv.FormatInt(flags, 16), "low", types.SeverityInfo)
 	default:
-		emit("PendingIntent created with a flags value that cannot be resolved to a "+
-			"constant — verify FLAG_IMMUTABLE is set (mutable intents are exploitable, CWE-927)",
-			"PendingIntent;->"+call.method+" unresolved flags", false, "medium")
+		emit(types.CategoryPendingIntentReview, "PendingIntent flags could not be resolved. Mutability and a vulnerability are not established; inspect the callers supplying flags",
+			"PendingIntent;->"+call.method+" unresolved flags", "low", types.SeverityInfo)
 	}
 }
 

@@ -34,6 +34,11 @@ type RiskProfile struct {
 	OverallLevel string                    `json:"overall_level"` // "SAFE", "LOW", "MEDIUM", "HIGH", "CRITICAL"
 	Categories   map[string]CategoryRating `json:"categories"`
 	PrimaryRisk  string                    `json:"primary_risk"` // Самая критичная категория
+	// Inconclusive marks a verdict whose evidence is incomplete (coverage or
+	// data-flow budget hit) or weakly corroborated. The score is capped at
+	// the HIGH band while flagged.
+	Inconclusive       bool   `json:"inconclusive,omitempty"`
+	InconclusiveReason string `json:"inconclusive_reason,omitempty"`
 }
 
 // MapCategory приводит категорию из Finding к одной из 6 базовых категорий
@@ -70,7 +75,7 @@ func ComputeProfile(findings []types.ClassifiedFinding) RiskProfile {
 
 	for _, f := range findings {
 		// Игнорируем подавленный SDK шум при подсчёте рисков приложения
-		if f.Verdict == types.VerdictSDKNoiseSuppressed || f.Verdict == types.VerdictGenericNoiseSuppressed {
+		if f.Verdict == types.VerdictSDKNoiseSuppressed || f.Verdict == types.VerdictGenericNoiseSuppressed || f.Verdict == types.VerdictObservation {
 			continue
 		}
 
@@ -141,6 +146,16 @@ func ComputeProfile(findings []types.ClassifiedFinding) RiskProfile {
 			// спидометр.
 			if score < 0 {
 				score = 0
+			}
+			// Corroboration gate: a category reaches CRITICAL only when its
+			// strongest finding is itself critical. Volume of HIGH findings
+			// must not synthesize a critical verdict — the 2026-11-04 markor
+			// baseline (clean FOSS editor) scored SECURITY 10/10 from 93 HIGH
+			// data-flow hygiene findings with zero critical evidence. Real
+			// malware keeps its verdict: its critical findings (RAT reverse
+			// shell, NFC card read, rootkit SU) still set mScore >= 90.
+			if score >= 9 && mScore < 90 {
+				score = 8
 			}
 		}
 

@@ -1,0 +1,10 @@
+{
+  "code": ".method public static maxItems()I\n    .registers 2\n    const/16 v0, 0xa\n    const/16 v1, 0x32\n    if-le v0, v1, :cond_0\n    move v0, v1\n    :cond_0\n    return v0\n.end method",
+  "line": 3,
+  "expected": 10,
+  "replacement": 100,
+  "target": "поднять локальный лимит элементов с 10 до 100",
+  "app_owned": true,
+  "library": false,
+  "server_dependency": false
+}

@@ -22,7 +22,7 @@ func runPendingIntentAST(t *testing.T, content string) []types.Match {
 func piMatches(matches []types.Match) []types.Match {
 	out := make([]types.Match, 0, len(matches))
 	for _, m := range matches {
-		if m.Category == types.CategoryPendingIntentVuln {
+		if m.Category == types.CategoryPendingIntentVuln || m.Category == types.CategoryPendingIntentReview {
 			out = append(out, m)
 		}
 	}
@@ -55,8 +55,14 @@ func TestPendingIntentAST_MixedSafeAndUnsafe(t *testing.T) {
 	if matches[0].MethodName != "unsafe" {
 		t.Errorf("finding attributed to %q, want unsafe", matches[0].MethodName)
 	}
-	if !matches[0].IsCritical {
-		t.Error("expected critical for known-zero flags")
+	// flags=0 resolved: neither mutability bit is present, which at targetSdk
+	// 31+ means dead code or under-constant or-int analysis — a review note,
+	// not a MEDIUM vulnerability finding.
+	if matches[0].Category != types.CategoryPendingIntentReview {
+		t.Errorf("flags=0 must be a review note, got %v", matches[0].Category)
+	}
+	if matches[0].IsCritical || matches[0].Severity != types.SeverityInfo {
+		t.Error("resolved flags without a mutability bit are a review note, not a critical exploit")
 	}
 }
 
@@ -131,8 +137,11 @@ func TestPendingIntentAST_UnresolvedFlags(t *testing.T) {
 	if matches[0].IsCritical {
 		t.Error("unresolved flags should not be critical")
 	}
-	if matches[0].Confidence != "medium" {
-		t.Errorf("Confidence = %q, want medium", matches[0].Confidence)
+	if matches[0].Confidence != "low" || matches[0].Category != types.CategoryPendingIntentReview || matches[0].Severity != types.SeverityInfo {
+		t.Errorf("unresolved flags must be informational review, got %#v", matches[0])
+	}
+	if item := typedFindingFromMatch(matches[0], ""); item.Kind != "inventory" || len(item.CWE) != 0 || item.Explanation == nil || item.Explanation.Status != "needs_review" {
+		t.Errorf("unresolved flags were presented as a vulnerability: %#v", item)
 	}
 }
 

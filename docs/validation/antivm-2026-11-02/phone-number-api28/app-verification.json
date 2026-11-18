@@ -1,0 +1,86 @@
+[
+  {
+    "Field": "model",
+    "Expected": "PromasterPhone 1",
+    "Actual": "PromasterPhone 1",
+    "Passed": true
+  },
+  {
+    "Field": "brand",
+    "Expected": "promaster",
+    "Actual": "promaster",
+    "Passed": true
+  },
+  {
+    "Field": "manufacturer",
+    "Expected": "Promaster",
+    "Actual": "Promaster",
+    "Passed": true
+  },
+  {
+    "Field": "device",
+    "Expected": "promasterphone1",
+    "Actual": "promasterphone1",
+    "Passed": true
+  },
+  {
+    "Field": "product",
+    "Expected": "promasterphone1",
+    "Actual": "promasterphone1",
+    "Passed": true
+  },
+  {
+    "Field": "hardware",
+    "Expected": "qcom",
+    "Actual": "qcom",
+    "Passed": true
+  },
+  {
+    "Field": "board",
+    "Expected": "sdm845",
+    "Actual": "sdm845",
+    "Passed": true
+  },
+  {
+    "Field": "fingerprint",
+    "Expected": "promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys",
+    "Actual": "promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys",
+    "Passed": true
+  },
+  {
+    "Field": "build_id",
+    "Expected": "PQ3A.190801.101",
+    "Actual": "PQ3A.190801.101",
+    "Passed": true
+  },
+  {
+    "Field": "security_patch",
+    "Expected": "2019-08-01",
+    "Actual": "2019-08-01",
+    "Passed": true
+  },
+  {
+    "Field": "device_name",
+    "Expected": "PromasterPhone 1",
+    "Actual": "PromasterPhone 1",
+    "Passed": true
+  },
+  {
+    "Field": "phone_number",
+    "Expected": "12025550123",
+    "Actual": "+12025550123",
+    "Passed": true
+  },
+  {
+    "Field": "build_type",
+    "Expected": "user",
+    "Actual": "user",
+    "Passed": true
+  },
+  {
+    "Field": "build_tags",
+    "Expected": "release-keys",
+    "Actual": "release-keys",
+    "Passed": true
+  }
+]

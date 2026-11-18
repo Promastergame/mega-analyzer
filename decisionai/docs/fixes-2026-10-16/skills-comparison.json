@@ -1,0 +1,187 @@
+[
+  {
+    "dataset": "skill-routing-holdout",
+    "before": {
+      "skills": 35,
+      "cases": 44,
+      "top1": 1,
+      "top3": 1,
+      "other_recall": 1,
+      "false_abstain": 0,
+      "top1_by_group": {
+        "code": 1,
+        "data": 1,
+        "design": 1,
+        "media": 1,
+        "meta": 1,
+        "office": 1,
+        "other": 1,
+        "web": 1,
+        "writing": 1
+      },
+      "plan_exact": 0,
+      "plan_false_rate": 0,
+      "ece": 0.0705,
+      "auto_rate": 0.2955,
+      "auto_accuracy": 1,
+      "latency_ms_p50": 17.84,
+      "latency_ms_p95": 32.74
+    },
+    "after": {
+      "skills": 35,
+      "cases": 44,
+      "top1": 1,
+      "top3": 1,
+      "other_recall": 1,
+      "false_abstain": 0,
+      "top1_by_group": {
+        "code": 1,
+        "data": 1,
+        "design": 1,
+        "media": 1,
+        "meta": 1,
+        "office": 1,
+        "other": 1,
+        "web": 1,
+        "writing": 1
+      },
+      "plan_exact": 0,
+      "plan_false_rate": 0,
+      "ece": 0.0705,
+      "auto_rate": 0,
+      "auto_accuracy": 0,
+      "latency_ms_p50": 16.85,
+      "latency_ms_p95": 22.28
+    }
+  },
+  {
+    "dataset": "skill-routing-stress",
+    "before": {
+      "skills": 35,
+      "cases": 24,
+      "top1": 0.9583,
+      "top3": 1,
+      "other_recall": 1,
+      "false_abstain": 0,
+      "top1_by_group": {
+        "design": 1,
+        "inject": 1,
+        "long": 0.6667,
+        "mixed": 1,
+        "negation": 1,
+        "other": 1,
+        "typo": 1
+      },
+      "plan_exact": 0,
+      "plan_false_rate": 0.0417,
+      "ece": 0.1449,
+      "auto_rate": 0.0833,
+      "auto_accuracy": 1,
+      "latency_ms_p50": 17.19,
+      "latency_ms_p95": 146.73,
+      "failures": [
+        "[false-plan] \"Context: our Q3 numbers are in sales.csv, revenue dropped in August. Leadership wants to know why and which regions drove it. Please dig in.\" -> 2 steps",
+        "[long] \"Context: our Q3 numbers are in sales.csv, revenue dropped in August. Leadership wants to know why and which regions drove it. Please dig in.\" -> xlsx, want [data-analysis], top [xlsx:0.99 internal-comms:0.01 data-analysis:0.00]"
+      ]
+    },
+    "after": {
+      "skills": 35,
+      "cases": 24,
+      "top1": 0.9583,
+      "top3": 1,
+      "other_recall": 1,
+      "false_abstain": 0,
+      "top1_by_group": {
+        "design": 1,
+        "inject": 1,
+        "long": 0.6667,
+        "mixed": 1,
+        "negation": 1,
+        "other": 1,
+        "typo": 1
+      },
+      "plan_exact": 0,
+      "plan_false_rate": 0.0417,
+      "ece": 0.1449,
+      "auto_rate": 0,
+      "auto_accuracy": 0,
+      "latency_ms_p50": 17.96,
+      "latency_ms_p95": 147.97,
+      "failures": [
+        "[false-plan] \"Context: our Q3 numbers are in sales.csv, revenue dropped in August. Leadership wants to know why and which regions drove it. Please dig in.\" -> 2 steps",
+        "[long] \"Context: our Q3 numbers are in sales.csv, revenue dropped in August. Leadership wants to know why and which regions drove it. Please dig in.\" -> xlsx, want [data-analysis], top [xlsx:0.99 internal-comms:0.01 data-analysis:0.00]"
+      ]
+    }
+  },
+  {
+    "dataset": "skill-routing-blind2",
+    "before": {
+      "skills": 35,
+      "cases": 42,
+      "top1": 0.9048,
+      "top3": 1,
+      "other_recall": 1,
+      "false_abstain": 0,
+      "top1_by_group": {
+        "code": 0.875,
+        "data": 0.5,
+        "design": 1,
+        "media": 1,
+        "meta": 1,
+        "multi": 1,
+        "office": 0.75,
+        "other": 1,
+        "web": 0.6667,
+        "writing": 1
+      },
+      "plan_exact": 1,
+      "plan_false_rate": 0.0278,
+      "ece": 0.115,
+      "auto_rate": 0.2857,
+      "auto_accuracy": 1,
+      "latency_ms_p50": 18.05,
+      "latency_ms_p95": 58.79,
+      "failures": [
+        "[office] \"достань текст из отсканированного договора\" -> humanizer, want [pdf], top [humanizer:0.43 pdf:0.22 pptx:0.10]",
+        "[false-plan] \"статья слишком канцелярская и пахнет gpt, оживи\" -> 2 steps",
+        "[code] \"оставь замечания к моему коммиту как ревьюер\" -> git-commit, want [code-review], top [git-commit:1.00 code-review:0.00 docx:0.00]",
+        "[web] \"проверь что форма регистрации работает в моем локальном приложении\" -> agent-browser, want [webapp-testing], top [agent-browser:0.82 test-driven-development:0.05 webapp-testing:0.05]",
+        "[data] \"какие клиенты приносят больше всего выручки, разбей по сегментам\" -> inline-charts, want [data-analysis], top [inline-charts:0.80 data-analysis:0.18 xlsx:0.01]"
+      ]
+    },
+    "after": {
+      "skills": 35,
+      "cases": 42,
+      "top1": 0.9048,
+      "top3": 1,
+      "other_recall": 1,
+      "false_abstain": 0,
+      "top1_by_group": {
+        "code": 0.875,
+        "data": 0.5,
+        "design": 1,
+        "media": 1,
+        "meta": 1,
+        "multi": 1,
+        "office": 0.75,
+        "other": 1,
+        "web": 0.6667,
+        "writing": 1
+      },
+      "plan_exact": 1,
+      "plan_false_rate": 0.0278,
+      "ece": 0.115,
+      "auto_rate": 0,
+      "auto_accuracy": 0,
+      "latency_ms_p50": 20.08,
+      "latency_ms_p95": 54.95,
+      "failures": [
+        "[office] \"достань текст из отсканированного договора\" -> humanizer, want [pdf], top [humanizer:0.43 pdf:0.22 pptx:0.10]",
+        "[false-plan] \"статья слишком канцелярская и пахнет gpt, оживи\" -> 2 steps",
+        "[code] \"оставь замечания к моему коммиту как ревьюер\" -> git-commit, want [code-review], top [git-commit:1.00 code-review:0.00 docx:0.00]",
+        "[web] \"проверь что форма регистрации работает в моем локальном приложении\" -> agent-browser, want [webapp-testing], top [agent-browser:0.82 test-driven-development:0.05 webapp-testing:0.05]",
+        "[data] \"какие клиенты приносят больше всего выручки, разбей по сегментам\" -> inline-charts, want [data-analysis], top [inline-charts:0.80 data-analysis:0.18 xlsx:0.01]"
+      ]
+    }
+  }
+]

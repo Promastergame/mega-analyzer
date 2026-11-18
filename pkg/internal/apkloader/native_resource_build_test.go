@@ -12,11 +12,13 @@ import (
 	"time"
 
 	"mega-analyzer/pkg/internal/apkloader/axml"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestNativeProjectRebuildNoExternalTools(t *testing.T) {
 	t.Setenv("MEGA_STANDALONE", "1")
-	source := t.TempDir()
+	source := testutil.TempDir(t)
 	files := map[string]string{
 		"AndroidManifest.xml":      `<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="example.native" android:versionCode="1"><uses-sdk android:minSdkVersion="21"/><application android:label="@string/app_name"/></manifest>`,
 		"res/values/strings.xml":   `<resources><string name="app_name">Standalone build</string></resources>`,
@@ -33,7 +35,7 @@ func TestNativeProjectRebuildNoExternalTools(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	output := filepath.Join(t.TempDir(), "native.apk")
+	output := filepath.Join(testutil.TempDir(t), "native.apk")
 	r := NewAPKRebuilder(source)
 	if err := r.Rebuild(context.Background(), output); err != nil {
 		t.Fatal(err)
@@ -90,7 +92,7 @@ func TestRebuildFailurePreservesExistingAPK(t *testing.T) {
 	t.Setenv("MEGA_STANDALONE", "1")
 	for _, mode := range []string{"fresh", "overlay"} {
 		t.Run(mode, func(t *testing.T) {
-			source := t.TempDir()
+			source := testutil.TempDir(t)
 			manifest := filepath.Join(source, "AndroidManifest.xml")
 			if err := os.WriteFile(manifest, []byte(`<manifest package="example.app"><application>`), 0644); err != nil {
 				t.Fatal(err)
@@ -104,7 +106,7 @@ func TestRebuildFailurePreservesExistingAPK(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			output := filepath.Join(t.TempDir(), "existing.apk")
+			output := filepath.Join(testutil.TempDir(t), "existing.apk")
 			original := []byte("previous successful artifact")
 			if err := os.WriteFile(output, original, 0644); err != nil {
 				t.Fatal(err)
@@ -133,7 +135,7 @@ func TestOverlayOlderTextStillAppliesEdits(t *testing.T) {
 		{"res/layout/main.xml", `<TextView xmlns:android="http://schemas.android.com/apk/res/android" android:text="Original"/>`, `<TextView xmlns:android="http://schemas.android.com/apk/res/android" android:text="Edited"/>`, "text", "Edited"},
 	} {
 		t.Run(tc.path, func(t *testing.T) {
-			source := t.TempDir()
+			source := testutil.TempDir(t)
 			path := filepath.Join(source, filepath.FromSlash(tc.path))
 			if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 				t.Fatal(err)
@@ -186,7 +188,7 @@ func TestOverlayOlderTextStillAppliesEdits(t *testing.T) {
 
 func TestRebuildBinaryResourcesWithoutExportMarker(t *testing.T) {
 	t.Setenv("MEGA_STANDALONE", "1")
-	project := t.TempDir()
+	project := testutil.TempDir(t)
 	if err := os.MkdirAll(filepath.Join(project, "res", "values"), 0755); err != nil {
 		t.Fatal(err)
 	}
@@ -201,7 +203,7 @@ func TestRebuildBinaryResourcesWithoutExportMarker(t *testing.T) {
 		t.Fatal(err)
 	}
 	// A --no-resources decode has only binary resources, with no export marker.
-	source := t.TempDir()
+	source := testutil.TempDir(t)
 	for path, data := range compiled.Binary {
 		if err := os.WriteFile(filepath.Join(source, path), data, 0644); err != nil {
 			t.Fatal(err)
@@ -210,7 +212,7 @@ func TestRebuildBinaryResourcesWithoutExportMarker(t *testing.T) {
 	r := NewAPKRebuilder(source)
 	r.IncludeSignature = false
 	r.IncludeAlignment = false
-	output := filepath.Join(t.TempDir(), "binary.apk")
+	output := filepath.Join(testutil.TempDir(t), "binary.apk")
 	if err := r.Rebuild(context.Background(), output); err != nil {
 		t.Fatalf("no-resources rebuild required XML exports: %v", err)
 	}

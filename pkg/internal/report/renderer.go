@@ -2,6 +2,7 @@ package report
 
 import (
 	"fmt"
+	"html"
 	"io"
 	"sort"
 	"strings"
@@ -49,7 +50,9 @@ func (r *MarkdownRenderer) RenderStream(w io.Writer, view ReportView) error {
 	r.renderTableOfContents(view)
 	r.renderProtectionMap(view.Summary, view.Stats)
 	r.renderStats(view.Stats)
+	r.renderNetworkIndicators(view.NetworkIndicators)
 	r.renderTypedFindings(view.TypedFindings)
+	r.renderFindingExplanations(view.TypedFindings)
 	r.renderRiskMatrix(view.RiskSummary)
 	r.renderDetections(view.Detections)
 	r.renderDeobfuscation(view.Deobfuscation)
@@ -99,7 +102,7 @@ func (r *MarkdownRenderer) renderEvidenceGraph(graph *types.EvidenceGraph) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 func (r *MarkdownRenderer) renderHeader(meta MetaView) {
-	r.sb.WriteString("# 🔥 APK LICENSE ANALYSIS REPORT\n\n")
+	r.sb.WriteString("# 🔥 APK ANALYSIS REPORT\n\n")
 	r.sb.WriteString("```\n")
 	r.sb.WriteString(fmt.Sprintf("  Target:   %s\n", meta.TargetName))
 	if meta.AppPackage != "" {
@@ -109,6 +112,9 @@ func (r *MarkdownRenderer) renderHeader(meta MetaView) {
 	r.sb.WriteString(fmt.Sprintf("  Engine:   v%s (schema %s)\n", meta.EngineVersion, meta.ReportSchema))
 	r.sb.WriteString(fmt.Sprintf("  Date:     %s\n", meta.Timestamp))
 	r.sb.WriteString(fmt.Sprintf("  Duration: %s\n", meta.Duration))
+	if meta.ArtifactSHA256 != "" {
+		r.sb.WriteString(fmt.Sprintf("  SHA-256:  %s\n", meta.ArtifactSHA256))
+	}
 	r.sb.WriteString("```\n\n")
 }
 
@@ -134,11 +140,11 @@ func (r *MarkdownRenderer) renderDashboard(view ReportView) {
 		s.CriticalHotspots, s.HighHotspots,
 		st.DecisionPoints))
 
-	r.sb.WriteString("| 📊 Matches | 🛡️ Security | 💰 Monetization |\n")
+	r.sb.WriteString("| 📊 Pattern matches | 🛡️ Security references | 💰 Monetization references |\n")
 	r.sb.WriteString("|------------|-------------|------------------|\n")
-	r.sb.WriteString(fmt.Sprintf("| %d total (%d critical) | %s | %s |\n\n",
+	r.sb.WriteString(fmt.Sprintf("| %d total (%d priority flags) | %s | %s |\n\n",
 		st.TotalMatches, st.CriticalMatches,
-		dashboardBadge(s.DetectedGroups[types.GroupSecurity], "Protected", "None"),
+		dashboardBadge(s.DetectedGroups[types.GroupSecurity], "Found", "None"),
 		monetizationSummary(s.DetectedGroups),
 	))
 
@@ -147,6 +153,19 @@ func (r *MarkdownRenderer) renderDashboard(view ReportView) {
 
 	confBar := buildProgressBar(risk.Confidence, 20)
 	r.sb.WriteString(fmt.Sprintf("**Analysis Confidence:** `%s` %.0f%%\n\n", confBar, risk.Confidence*100))
+	if risk.Inconclusive {
+		r.sb.WriteString(fmt.Sprintf("> **Verdict: INCONCLUSIVE** — %s. Treat the risk level as an upper bound; extend the limits and re-run before a final decision.\n\n", risk.InconclusiveReason))
+	}
+	if len(risk.Breakdown) > 0 {
+		r.sb.WriteString("**Score breakdown** (overall = max category score × 10):\n\n")
+		r.sb.WriteString("| Category | Score | Level | Findings | Strongest |\n")
+		r.sb.WriteString("|---|---|---|---|---|\n")
+		for _, bc := range risk.Breakdown {
+			r.sb.WriteString(fmt.Sprintf("| %s | %d/10 | %s | %d | %.0f |\n",
+				bc.Name, bc.Score, bc.Level, bc.Findings, bc.MaxScore))
+		}
+		r.sb.WriteString("\n")
+	}
 
 	r.sb.WriteString(fmt.Sprintf("> %s **%s**\n\n", s.RiskEmoji, s.Verdict))
 	r.sb.WriteString("---\n\n")
@@ -157,7 +176,8 @@ func (r *MarkdownRenderer) renderDashboard(view ReportView) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 func (r *MarkdownRenderer) renderProtectionMap(s SummaryView, st StatsView) {
-	r.sb.WriteString("## 🗺️ Protection Map\n\n")
+	r.sb.WriteString("## 🗺️ Pattern Map\n\n")
+	r.sb.WriteString("Static references grouped by pattern category. These matches do not verify a protection mechanism, subscription, or runtime behavior.\n\n")
 
 	r.sb.WriteString("```mermaid\ngraph LR\n")
 	r.sb.WriteString("    APK[\"📦 APK\"] --> LC{\"License\"}\n")
@@ -194,7 +214,7 @@ func (r *MarkdownRenderer) renderProtectionMap(s SummaryView, st StatsView) {
 	r.sb.WriteString("```\n\n")
 
 	r.sb.WriteString("<details>\n<summary>📋 Text version (if diagram doesn't render)</summary>\n\n")
-	r.sb.WriteString("| Protection Layer | Status | Details |\n")
+	r.sb.WriteString("| Pattern group | Status | Details |\n")
 	r.sb.WriteString("|-----------------|--------|--------|\n")
 
 	layers := []struct {
@@ -253,7 +273,7 @@ func (r *MarkdownRenderer) renderTableOfContents(view ReportView) {
 
 	sections := []tocEntry{
 		{"⚡", "Dashboard", ""},
-		{"🗺️", "Protection Map", ""},
+		{"🗺️", "Pattern Map", ""},
 		{"📊", "Statistics", fmt.Sprintf("%d files", view.Stats.TotalFiles)},
 		{"🛡️", "Security Findings", fmt.Sprintf("%d typed", len(view.TypedFindings))},
 		{"⚠️", "Risk Matrix", ""},
@@ -329,7 +349,7 @@ func (r *MarkdownRenderer) renderStats(st StatsView) {
 	r.sb.WriteString("## 📊 Statistics\n\n")
 
 	r.sb.WriteString("```yaml\n")
-	r.sb.WriteString(fmt.Sprintf("Files:     %d total | %d analyzed | %d application units | %d library units\n",
+	r.sb.WriteString(fmt.Sprintf("Files:     %d total | %d analyzed | %d application units | %d recognized library units\n",
 		st.TotalFiles, st.AnalyzedFiles, st.AppCodeFiles, st.LibraryCodeFiles))
 	r.sb.WriteString(fmt.Sprintf("Coverage:  %d discovered | %d eligible | %d queued | %d parsed | %d parse failures | %d worker failures\n",
 		st.Discovered, st.Eligible, st.Queued, st.Parsed, st.ParseFailed, st.FilesFailed))
@@ -351,7 +371,7 @@ func (r *MarkdownRenderer) renderStats(st StatsView) {
 		r.sb.WriteString(fmt.Sprintf("Cache:     %d hits | %d misses | %.1f%% hit rate\n", st.CacheHits, st.CacheMisses, st.CacheHitRate*100))
 	}
 	if st.DataFlowFindings > 0 {
-		r.sb.WriteString(fmt.Sprintf("Data-flow: %d confirmed source-to-sink flows\n", st.DataFlowFindings))
+		r.sb.WriteString(fmt.Sprintf("Data-flow: %d retained static source-to-sink paths\n", st.DataFlowFindings))
 	}
 	r.sb.WriteString("```\n\n")
 
@@ -409,6 +429,25 @@ func (r *MarkdownRenderer) renderTypedFindings(findings []TypedFindingView) {
 	}
 	r.sb.WriteString(fmt.Sprintf("**Vulnerabilities:** %d · **Malware:** %d · **Hardening:** %d · **Inventory:** %d\n\n",
 		counts["vulnerability"], counts["malware"], counts["hardening"], counts["inventory"]))
+	if counts["malware"] > 0 {
+		r.sb.WriteString("Malware rule combinations are static indicators. Family names in heuristic rules do not establish attribution or observed execution.\n\n")
+	}
+	risks, observations := splitTypedFindings(findings)
+	if len(risks) > 0 {
+		r.renderTypedFindingRows(risks)
+	} else {
+		r.sb.WriteString("No vulnerability or malware finding was produced. Check coverage before treating this as a clean result.\n\n")
+	}
+	if len(observations) > 0 {
+		r.sb.WriteString(fmt.Sprintf("<details>\n<summary>Capabilities and protections (%d observations)</summary>\n\n", len(observations)))
+		r.sb.WriteString("API references, permissions and protection checks are retained here as observations. Their labels do not establish malicious use and do not increase the application risk score.\n\n")
+		r.renderTypedFindingRows(observations)
+		r.sb.WriteString("\n</details>\n")
+	}
+	r.sb.WriteString("\n---\n\n")
+}
+
+func (r *MarkdownRenderer) renderTypedFindingRows(findings []TypedFindingView) {
 	r.sb.WriteString("| Severity | Kind | Rule | Finding | Confidence | Location | Taxonomy |\n")
 	r.sb.WriteString("|----------|------|------|---------|------------|----------|----------|\n")
 	const maxShown = 200
@@ -425,21 +464,22 @@ func (r *MarkdownRenderer) renderTypedFindings(findings []TypedFindingView) {
 			mdCell(item.Severity), mdCell(item.Kind), mdCell(item.RuleID), mdCell(item.Title),
 			item.Confidence*100, mdCell(location), mdCell(taxonomy)))
 		if item.Evidence != "" {
-			r.sb.WriteString(fmt.Sprintf("|  | evidence |  | `%s` |  | detector: `%s` | fingerprint: `%s` |\n",
-				mdCell(item.Evidence), mdCell(item.Detector), mdCell(shortFingerprint(item.Fingerprint))))
+			r.sb.WriteString(fmt.Sprintf("|  | evidence |  | <code>%s</code> |  | detector: `%s` | fingerprint: `%s` |\n",
+				html.EscapeString(mdCell(item.Evidence)), mdCell(item.Detector), mdCell(shortFingerprint(item.Fingerprint))))
 		}
 	}
 	if len(findings) > maxShown {
 		r.sb.WriteString(fmt.Sprintf("\n_%d additional findings omitted from Markdown; use analysis.json for the complete set._\n", len(findings)-maxShown))
 	}
-	r.sb.WriteString("\n---\n\n")
+	r.sb.WriteString("\n")
 }
 
 func mdCell(value string) string {
+	value = strings.ToValidUTF8(value, "\uFFFD")
 	value = strings.ReplaceAll(value, "|", "\\|")
 	value = strings.Join(strings.Fields(value), " ")
 	if len(value) > 160 {
-		value = value[:157] + "..."
+		value = truncateToRuneBoundary(value, 157) + "..."
 	}
 	return value
 }
@@ -924,11 +964,11 @@ func (r *MarkdownRenderer) renderRuleFindings(findings []RuleFindingView) {
 		emoji := severityEmoji(f.Severity)
 		name := f.Name
 		if len(name) > 50 {
-			name = name[:47] + "..."
+			name = truncateToRuneBoundary(name, 47) + "..."
 		}
 		desc := f.Description
 		if len(desc) > 80 {
-			desc = desc[:77] + "..."
+			desc = truncateToRuneBoundary(desc, 77) + "..."
 		}
 
 		r.sb.WriteString(fmt.Sprintf("| %d | %s %s | %d | %s | %s |\n",
@@ -973,7 +1013,7 @@ func (r *MarkdownRenderer) renderBankingThreats(findings []RuleFindingView) {
 
 	r.sb.WriteString("## 💳 Banking Trojan Combos\n\n")
 	r.sb.WriteString("High-confidence banking malware patterns (overlay, ATS, screen capture, OTP steal). ")
-	r.sb.WriteString("Based on real families: Anubis, Hook, Vultur, TeaBot, Xenomorph, Octo.\n\n")
+	r.sb.WriteString("Static combinations relevant to credential and UI risks. Actual behavior requires linked code evidence.\n\n")
 
 	r.sb.WriteString("| Severity | Rule | Tags | Description |\n")
 	r.sb.WriteString("|----------|------|------|-------------|\n")
@@ -984,7 +1024,7 @@ func (r *MarkdownRenderer) renderBankingThreats(findings []RuleFindingView) {
 		}
 		desc := f.Description
 		if len(desc) > 90 {
-			desc = desc[:87] + "..."
+			desc = truncateToRuneBoundary(desc, 87) + "..."
 		}
 		tags := f.Tags
 		if tags == "" {
@@ -1148,7 +1188,7 @@ func (r *MarkdownRenderer) renderArtifactFindings(findings []ArtifactFindingView
 			for _, stage := range f.Stages {
 				r.sb.WriteString(fmt.Sprintf("- %s\n", stage))
 			}
-			if f.Payload != "" {
+			if showsArtifactPayload(f) {
 				r.sb.WriteString("\n#### 💎 Exploit Primitive / Payload\n")
 				r.sb.WriteString("```\n")
 				r.sb.WriteString(f.Payload)

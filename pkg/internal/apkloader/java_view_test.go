@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestGenerateJavaClass(t *testing.T) {
@@ -61,7 +63,7 @@ func TestGenerateJavaClass(t *testing.T) {
 }
 
 func TestJavaViewSidecars(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	apk := filepath.Join(dir, "in.apk")
 	writeJavaTestAPK(t, apk)
 	out := filepath.Join(dir, "decoded")

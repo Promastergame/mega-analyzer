@@ -231,6 +231,60 @@ func TestApp_BuildConfig(t *testing.T) {
 			},
 		},
 		{
+			// Flag defaults are true: without explicit tracking they used to
+			// re-enable the heavy second-pass modules the quick profile turns
+			// off, making every fast triage scan pay for data-flow, crack
+			// point and anomaly analysis.
+			name: "quick profile survives flag defaults",
+			opts: &CLIOptions{
+				Profile:             ProfileQuick,
+				EnableDataFlow:      true,
+				CrackPointAnalysis:  true,
+				AnomalyDetection:    true,
+				EnableCallGraph:     true,
+				EnableCorrelations:  true,
+				Workers:             4,
+			},
+			checkFn: func(t *testing.T, cfg *config.Config) {
+				if cfg.EnableDataFlow {
+					t.Error("quick profile should keep data-flow off even when the flag default is true")
+				}
+				if cfg.EnableCrackPointAnalysis {
+					t.Error("quick profile should keep crack point analysis off even when the flag default is true")
+				}
+				if cfg.EnableAnomalyDetection {
+					t.Error("quick profile should keep anomaly detection off even when the flag default is true")
+				}
+				if cfg.EnableCallGraph {
+					t.Error("quick profile should keep call graph off")
+				}
+			},
+		},
+		{
+			name: "explicit heavy-module flags override quick profile",
+			opts: &CLIOptions{
+				Profile:             ProfileQuick,
+				EnableDataFlow:      true,
+				DataFlowExplicit:    true,
+				CrackPointAnalysis:  true,
+				CrackPointExplicit:  true,
+				AnomalyDetection:    true,
+				AnomalyExplicit:     true,
+				Workers:             4,
+			},
+			checkFn: func(t *testing.T, cfg *config.Config) {
+				if !cfg.EnableDataFlow {
+					t.Error("explicit -enable-data-flow should override the quick profile")
+				}
+				if !cfg.EnableCrackPointAnalysis {
+					t.Error("explicit -crackpoint-analysis should override the quick profile")
+				}
+				if !cfg.EnableAnomalyDetection {
+					t.Error("explicit -anomaly-detection should override the quick profile")
+				}
+			},
+		},
+		{
 			name: "max files limit",
 			opts: &CLIOptions{
 				Profile:  ProfileBalanced,

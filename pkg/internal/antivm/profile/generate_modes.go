@@ -21,6 +21,9 @@ var androidReleases = []androidRelease{
 
 // releaseByAPI returns the release row for an API level.
 func releaseByAPI(api int) (androidRelease, bool) {
+	if api == 28 {
+		return androidRelease{28, "9", "PQ3A"}, true
+	}
 	for _, r := range androidReleases {
 		if r.API == api {
 			return r, true

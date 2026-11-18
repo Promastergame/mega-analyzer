@@ -62,11 +62,11 @@ func assertMatchCount(t *testing.T, matches []types.Match, want int, label strin
 	}
 }
 
-// countSuspicious counts critical (suspicious) matches.
+// countSuspicious counts suspicious keyword metadata, distinct from critical severity.
 func countSuspicious(matches []types.Match) int {
 	count := 0
 	for _, m := range matches {
-		if m.IsCritical {
+		if m.Metadata["suspicious"] == "true" {
 			count++
 		}
 	}
@@ -578,10 +578,10 @@ func TestCustomKeywordDetector_JSONSuspiciousFlag(t *testing.T) {
 	assertMatchCount(t, a.Matches, 2, "json suspicious flag")
 
 	for _, m := range a.Matches {
-		if strings.Contains(m.Pattern, "frida") && !m.IsCritical {
+		if strings.Contains(m.Pattern, "frida") && m.Metadata["suspicious"] != "true" {
 			t.Error("frida should be suspicious")
 		}
-		if strings.Contains(m.Pattern, "loadurl") && m.IsCritical {
+		if strings.Contains(m.Pattern, "loadurl") && m.Metadata["suspicious"] == "true" {
 			t.Error("loadurl should NOT be suspicious")
 		}
 	}
@@ -800,8 +800,8 @@ func TestCustomKeywordDetector_AddKeyword(t *testing.T) {
 
 	for _, m := range a.Matches {
 		if strings.Contains(m.Pattern, "frida") {
-			if !m.IsCritical {
-				t.Error("frida should be suspicious")
+			if m.Metadata["suspicious"] != "true" || m.IsCritical {
+				t.Error("frida should be suspicious, not automatically critical")
 			}
 			if !strings.Contains(m.Context, "[hooking]") {
 				t.Errorf("frida desc = %q", m.Context)
@@ -848,8 +848,8 @@ func TestCustomKeywordDetector_LoadKeywordsFromBytesJSON(t *testing.T) {
 	ctx := newTextCtx("frida check")
 	a := makeAnalysis(ctx.Path)
 	d.Detect(ctx, a)
-	if !a.Matches[0].IsCritical {
-		t.Error("should be suspicious from JSON")
+	if a.Matches[0].Metadata["suspicious"] != "true" || a.Matches[0].IsCritical {
+		t.Error("should be suspicious but not automatically critical from JSON")
 	}
 }
 

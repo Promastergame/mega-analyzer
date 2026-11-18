@@ -121,10 +121,10 @@ func TestSuppressionEngine_Stats(t *testing.T) {
 	}
 }
 
-func TestVerdictRefiner_Refine_BehaviorChain(t *testing.T) {
+func TestVerdictRefinerDoesNotInventBehaviorChain(t *testing.T) {
 	r := NewVerdictRefiner()
 
-	// 3+ NeedsContext findings with a strong signal should be upgraded
+	// Even a signal elsewhere in the file does not link three capabilities.
 	makeNeedsContext := func(cat types.Category, hasStrong bool) types.ClassifiedFinding {
 		cf := types.ClassifiedFinding{
 			Verdict: types.VerdictNeedsContext,
@@ -146,14 +146,10 @@ func TestVerdictRefiner_Refine_BehaviorChain(t *testing.T) {
 	}
 
 	refined := r.Refine(findings)
-	upgraded := 0
 	for _, cf := range refined {
-		if cf.Verdict == types.VerdictConfirmedAppRisk {
-			upgraded++
+		if cf.Verdict != types.VerdictNeedsContext {
+			t.Errorf("unlinked finding promoted: %+v", cf)
 		}
-	}
-	if upgraded == 0 {
-		t.Error("behavior chain with 3 NeedsContext findings and strong signal should be upgraded")
 	}
 }
 

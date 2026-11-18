@@ -12,6 +12,7 @@ import (
 	"sync/atomic"
 
 	"mega-analyzer/pkg/internal/configs"
+	"mega-analyzer/pkg/internal/finding"
 	"mega-analyzer/pkg/internal/rules"
 	"mega-analyzer/pkg/internal/types"
 	"mega-analyzer/pkg/internal/verdict"
@@ -204,6 +205,8 @@ func (p *Pipeline) applyRuleEngine() {
 // rule ID, tagged with the first file it fired in). globalPerms carries the
 // APK-wide manifest permissions into every per-file context.
 func (p *Pipeline) evaluateFileScopedCombos(globalPerms []string) []rules.RuleEvaluationResult {
+	manifestCtx := newSourceRuleContext()
+	appendManifestRuleSources(manifestCtx, p.result)
 	filesMap := p.result.Files
 	if len(filesMap) == 0 {
 		return nil
@@ -216,7 +219,15 @@ func (p *Pipeline) evaluateFileScopedCombos(globalPerms []string) []rules.RuleEv
 	for k := range filesMap {
 		keys = append(keys, k)
 	}
-	sort.Strings(keys)
+	// Prefer app-code evidence over a library hit, then stable path order.
+	sort.Slice(keys, func(i, j int) bool {
+		a, b := filesMap[keys[i]], filesMap[keys[j]]
+		ai, bi := a != nil && a.IsAppCode, b != nil && b.IsAppCode
+		if ai != bi {
+			return ai
+		}
+		return keys[i] < keys[j]
+	})
 	files := make([]*types.FileAnalysis, len(keys))
 	for i, k := range keys {
 		files[i] = filesMap[k]
@@ -249,14 +260,14 @@ func (p *Pipeline) evaluateFileScopedCombos(globalPerms []string) []rules.RuleEv
 					if i >= len(files) {
 						return
 					}
-					perFile[i] = evaluateOneFileScoped(p.rulesEngine, files[i], globalPerms)
+					perFile[i] = evaluateOneFileScoped(p.rulesEngine, files[i], globalPerms, manifestCtx)
 				}
 			}()
 		}
 		wg.Wait()
 	} else {
 		for i := range files {
-			perFile[i] = evaluateOneFileScoped(p.rulesEngine, files[i], globalPerms)
+			perFile[i] = evaluateOneFileScoped(p.rulesEngine, files[i], globalPerms, manifestCtx)
 		}
 	}
 
@@ -271,6 +282,22 @@ func (p *Pipeline) evaluateFileScopedCombos(globalPerms []string) []rules.RuleEv
 			// files[i] is guaranteed non-nil when results is non-empty, because
 			// evaluateOneFileScoped returns nil for nil/evidenceless files.
 			if files[i] != nil {
+				if files[i].IsLibrary {
+					// Namespace attribution is not a trust guarantee. Keep the
+					// finding, but distinguish library-only static evidence.
+					if res.Severity == "critical" {
+						res.Severity = "high"
+					} else if res.Severity == "high" {
+						res.Severity = "medium"
+					}
+					if res.Score > 60 {
+						res.Score = 60
+					}
+					if res.Confidence == 0 || res.Confidence > 0.5 {
+						res.Confidence = 0.5
+					}
+					res.Limitations = append(res.Limitations, "This rule matched known library code only; bundled libraries may still be modified or malicious, and reachability is unknown.")
+				}
 				res.MatchedFile = files[i].Path
 			} else {
 				res.MatchedFile = keys[i]
@@ -283,13 +310,19 @@ func (p *Pipeline) evaluateFileScopedCombos(globalPerms []string) []rules.RuleEv
 
 // evaluateOneFileScoped evaluates the file-scoped combo rules against a single
 // file's evidence. Returns nil when the file carries nothing worth evaluating.
-func evaluateOneFileScoped(engine *rules.Engine, fa *types.FileAnalysis, globalPerms []string) []rules.RuleEvaluationResult {
+func evaluateOneFileScoped(engine *rules.Engine, fa *types.FileAnalysis, globalPerms []string, manifest ...*rules.ConditionContext) []rules.RuleEvaluationResult {
 	if !fileMayMatchCombo(fa) {
 		return nil
 	}
 	fileCtx := buildFileContext(fa, globalPerms)
 	if fileCtx == nil {
 		return nil
+	}
+	if len(manifest) > 0 && manifest[0] != nil {
+		fileCtx.Sources["permission"] = manifest[0].Sources["permission"]
+		if manifest[0].Facts["android.legacy_js_bridge"] {
+			addRuleSource(fileCtx, "fact", "android.legacy_js_bridge", manifest[0].Sources["fact"]["android.legacy_js_bridge"])
+		}
 	}
 	return engine.EvaluateFileScopedRules(fileCtx)
 }
@@ -312,75 +345,10 @@ func fileMayMatchCombo(fa *types.FileAnalysis) bool {
 // permissions injected so permission conditions still resolve. Returns nil
 // when the file carries no code-level signal worth evaluating.
 func buildFileContext(fa *types.FileAnalysis, globalPerms []string) *rules.ConditionContext {
-	apiCol := newCollector()
-	patternCol := newCollector()
-	stringCol := newCollector()
-	classCol := newCollector()
-	methodCol := newCollector()
-
-	for _, m := range fa.Matches {
-		patternCol.addWithLower(m.Pattern)
-		patternCol.addWithLower(m.Text)
-		patternCol.addWithLower(m.Context)
-		stringCol.addWithLower(m.Pattern)
-		stringCol.addWithLower(m.Text)
-		stringCol.addWithLower(m.Context)
-
-		if m.ClassName != "" {
-			classCol.addWithLower(m.ClassName)
-			apiCol.addWithLower(m.ClassName)
-		}
-		if m.MethodName != "" {
-			methodCol.addWithLower(m.MethodName)
-			apiCol.addWithLower(m.MethodName)
-		}
-	}
-
-	// Plaintext recovered from encrypted literals is evidence like any other,
-	// and it is the evidence most worth matching: an obfuscator went to the
-	// trouble of hiding it.
-	for _, s := range fa.RecoveredStrings {
-		stringCol.addWithLower(s)
-		patternCol.addWithLower(s)
-	}
-
-	if fa.SmaliClass != nil {
-		cls := fa.SmaliClass
-		classCol.addWithLower(cls.Name)
-		classCol.addWithLower(cls.PackageName)
-		classCol.addWithLower(cls.SuperClass)
-		for _, iface := range cls.Interfaces {
-			classCol.addWithLower(iface)
-		}
-
-		for i := range cls.Methods {
-			m := &cls.Methods[i]
-			methodCol.addWithLower(m.Name)
-			apiCol.addWithLower(m.Name)
-			apiCol.addWithLower(m.FullSignature(cls.Name))
-			for j := range m.Invokes {
-				addInvoke(apiCol, classCol, methodCol, &m.Invokes[j])
-			}
-		}
-	}
-
-	// Nothing code-like to match a behavioral combo against.
-	if len(apiCol.items) == 0 && len(classCol.items) == 0 && len(stringCol.items) == 0 {
-		return nil
-	}
-
-	// Deliberately not calling ctx.Build() here. Build materialises all six
-	// exact-match indexes plus the concatenated allValues slice, and this
-	// function runs once per file. The engine builds exactly the indexes its
-	// loaded rules can read, on first evaluation, via BuildFor.
-	return &rules.ConditionContext{
-		Permissions: globalPerms,
-		APICalls:    apiCol.items,
-		Patterns:    patternCol.items,
-		Strings:     stringCol.items,
-		Classes:     classCol.items,
-		Methods:     methodCol.items,
-	}
+	ctx := newSourceRuleContext()
+	ctx.Permissions = append([]string(nil), globalPerms...)
+	appendFileRuleSources(ctx, fa)
+	return ctx
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -417,75 +385,20 @@ func (c *stringCollector) addWithLower(val string) {
 }
 
 func buildRuleContext(result *types.AnalysisResult) *rules.ConditionContext {
-	permCol := newCollector()
-	apiCol := newCollector()
-	patternCol := newCollector()
-	stringCol := newCollector()
-	classCol := newCollector()
-	methodCol := newCollector()
-
-	for _, perm := range extractPermissionsFromManifest(result.TargetDir) {
-		permCol.addWithLower(perm)
+	ctx := newSourceRuleContext()
+	if result == nil {
+		return ctx
 	}
-
-	for _, fa := range result.Files {
-		if fa == nil {
-			continue
-		}
-		for _, m := range fa.Matches {
-			patternCol.addWithLower(m.Pattern)
-			patternCol.addWithLower(m.Text)
-			patternCol.addWithLower(m.Context)
-			stringCol.addWithLower(m.Pattern)
-			stringCol.addWithLower(m.Text)
-			stringCol.addWithLower(m.Context)
-
-			if m.ClassName != "" {
-				classCol.addWithLower(m.ClassName)
-				apiCol.addWithLower(m.ClassName)
-			}
-			if m.MethodName != "" {
-				methodCol.addWithLower(m.MethodName)
-				apiCol.addWithLower(m.MethodName)
-			}
-		}
-
-		if fa.XMLData != nil {
-			for _, perm := range fa.XMLData.Permissions {
-				permCol.addWithLower(perm)
-			}
-		}
-
-		if fa.SmaliClass != nil {
-			cls := fa.SmaliClass
-			classCol.addWithLower(cls.Name)
-			classCol.addWithLower(cls.PackageName)
-			classCol.addWithLower(cls.SuperClass)
-			for _, iface := range cls.Interfaces {
-				classCol.addWithLower(iface)
-			}
-
-			for i := range cls.Methods {
-				m := &cls.Methods[i]
-				methodCol.addWithLower(m.Name)
-				apiCol.addWithLower(m.Name)
-				apiCol.addWithLower(m.FullSignature(cls.Name))
-				for j := range m.Invokes {
-					addInvoke(apiCol, classCol, methodCol, &m.Invokes[j])
-				}
-			}
-		}
+	appendManifestRuleSources(ctx, result)
+	paths := make([]string, 0, len(result.Files))
+	for path := range result.Files {
+		paths = append(paths, path)
 	}
-
-	// See buildFileContext: the engine sizes the indexes itself via BuildFor.
-	return &rules.ConditionContext{
-		Permissions: permCol.items,
-		APICalls:    apiCol.items,
-		Patterns:    patternCol.items,
-		Strings:     stringCol.items,
-		Classes:     classCol.items,
-		Methods:     methodCol.items,
+	sort.Strings(paths)
+	for _, path := range paths {
+		appendFileRuleSources(ctx, result.Files[path])
 	}
+	return ctx
 }
 
 func addInvoke(apiCol, classCol, methodCol *stringCollector, inv *types.Invoke) {
@@ -554,7 +467,16 @@ func extractPermissionsFromManifest(targetDir string) []string {
 // ─────────────────────────────────────────────────────────────────────────────
 
 func buildRuleMatch(res rules.RuleEvaluationResult) types.Match {
-	category := ruleCategoryToCategory(res.Category)
+	category := ruleCategoryToCategory(res.Category, res.RuleCategory)
+	kind := res.FindingKind
+	if kind == "" {
+		switch strings.ToLower(res.RuleCategory) {
+		case "security":
+			kind = "vulnerability"
+		case "privacy", "evasion", "persistence":
+			kind = "inventory"
+		}
+	}
 
 	// File-scoped combos carry the file they actually fired in; global rules
 	// keep the synthetic "rule:<id>" location.
@@ -569,27 +491,82 @@ func buildRuleMatch(res rules.RuleEvaluationResult) types.Match {
 		"rule_id":       res.RuleID,
 		"rule_name":     res.RuleName,
 		"rule_set":      res.Category,
+		"rule_category": res.RuleCategory,
 		"severity":      res.Severity,
 		"score":         strconv.Itoa(res.Score),
 		"references":    strings.Join(res.References, "; "),
 		"tags":          strings.Join(res.Tags, ", "),
 		"description":   res.Message,
 		"engine_source": "json_rules",
+		"detector":      "json_rules",
 		"rule_scope":    scope,
+		"finding_kind":  kind,
 	}
 	if res.MatchedFile != "" {
 		meta["matched_file"] = res.MatchedFile
 	}
 
-	return types.Match{
+	var evidence []finding.Evidence
+	var conditions []string
+	for _, w := range res.Evidence {
+		location := finding.Location{File: w.Source.File, Line: w.Source.Line, Class: w.Source.Class, Method: w.Source.Method}
+		if location.File == "" {
+			location.File = file
+		}
+		desc := "Matched " + w.Type + ": " + w.Expected
+		if w.Negated {
+			desc = "Not found in analyzed context: " + w.Expected
+		}
+		snippet := firstNonEmpty(w.Source.Snippet, w.Observed)
+		evidence = append(evidence, finding.NewEvidence("rule_"+w.Type, desc, snippet, location))
+		conditions = append(conditions, desc)
+	}
+	status := "heuristic"
+	if kind == "inventory" {
+		status = "observation"
+	}
+	limitations := append([]string(nil), res.Limitations...)
+	limitations = append(limitations, "Static matches do not establish execution, permission grants or a common data flow between separate indicators.")
+	match := types.Match{
 		SourceLocation: types.SourceLocation{File: file, Line: 0},
 		Categorized:    types.Categorized{Category: category},
-		Scored:         types.Scored{Score: float64(res.Score)},
+		Scored:         types.Scored{Score: float64(res.Score), Confidence: res.Confidence},
 		Text:           res.RuleName,
 		Pattern:        res.RuleID,
 		Context:        res.Message,
 		Metadata:       meta,
-		IsCritical:     res.IsHighOrAbove(),
+		Severity:       ruleMatchSeverity(res.Severity),
+		IsCritical:     strings.EqualFold(res.Severity, "critical"),
+		EvidenceType:   "rule_combination",
+		Evidence:       evidence,
+		Explanation:    &finding.Explanation{Status: status, Summary: res.Message, Conditions: conditions, Limitations: limitations, NextChecks: append([]string(nil), res.NextChecks...)},
+	}
+	// Prefer a real code witness to a synthetic global-rule location.
+	for _, w := range res.Evidence {
+		if w.Source.File != "" && w.Type != "permission" {
+			match.SourceLocation = types.SourceLocation{File: w.Source.File, Line: w.Source.Line}
+			match.ClassName, match.MethodName = w.Source.Class, w.Source.Method
+			break
+		}
+	}
+	if match.Line == 0 && len(evidence) > 0 && evidence[0].Location.File != "" {
+		match.SourceLocation = types.SourceLocation{File: evidence[0].Location.File, Line: evidence[0].Location.Line}
+	}
+	return match
+}
+
+func ruleMatchSeverity(value string) types.Severity {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "critical":
+		return types.SeverityCritical
+	case "high":
+		return types.SeverityHigh
+	case "medium":
+		return types.SeverityMedium
+	case "low":
+		return types.SeverityLow
+	default:
+		return types.SeverityInfo
 	}
 }
 
@@ -679,7 +656,19 @@ func filterBankingRules(results []rules.RuleEvaluationResult) []rules.RuleEvalua
 	return filtered
 }
 
-func ruleCategoryToCategory(ruleSet string) types.Category {
+func ruleCategoryToCategory(ruleSet string, semantic ...string) types.Category {
+	if len(semantic) > 0 {
+		switch strings.ToLower(semantic[0]) {
+		case "security":
+			return types.CategoryVulnerability
+		case "privacy":
+			return types.CategoryPrivacy
+		case "evasion":
+			return types.CategoryAntiAnalysis
+		case "persistence":
+			return types.CategoryManifestInfo
+		}
+	}
 	switch strings.ToLower(ruleSet) {
 	case "permission_rules":
 		return types.CategoryPermissionRule

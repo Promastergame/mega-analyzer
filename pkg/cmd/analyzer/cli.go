@@ -21,6 +21,9 @@ type CLIOptions struct {
 	DecisionAIInput       string
 	DecisionAIMaxFindings int
 	DecisionAIBudget      int // total seconds, including all finding requests
+	DecisionAIImages      bool
+	DecisionAIMaxImages   int
+	DecisionAIImageBudget int // separate total seconds for report preview checks
 
 	// Sandbox / detonation
 	Sandbox                   bool
@@ -82,6 +85,9 @@ type CLIOptions struct {
 	// Explicit flags — true если пользователь ЯВНО указал флаг в CLI.
 	CallGraphExplicit       bool
 	CorrelationsExplicit    bool
+	DataFlowExplicit        bool
+	CrackPointExplicit      bool
+	AnomalyExplicit         bool
 	DeepScanExplicit        bool
 	MaxFileSizeExplicit     bool
 	MaxResourceSizeExplicit bool
@@ -93,9 +99,12 @@ type CLIOptions struct {
 	Quiet        bool
 	NoColor      bool
 	NoTUI        bool
+	TUISection   string // initial configuration section
+	TUISearch    string // initial flag search query
 	JSON         bool
 	NoHTML       bool
 	NoJSON       bool
+	JSONCompact  bool
 	SARIF        bool
 
 	// CI exit codes: 0 clean, 1 findings >= FailOn, 2 findings one level
@@ -204,32 +213,25 @@ type CLIOptions struct {
 	NoSmali            bool // skip smali generation
 	NoSmaliHeaders     bool // skip # Disassembled from DEX comment headers in smali
 	SmaliHeaders       bool // include source/hash comments for this decode invocation
-	Standalone         bool // forbid Java/smali/aapt2/apksigner/zipalign processes; native Go only
+	Standalone         bool // forbid Java/aapt2/apksigner/zipalign processes; native Go only
 	AllowExternalTools bool // explicitly opt build into compatibility tool discovery/execution
 	JavaView           bool // emit per-class .java pseudocode next to smali
 	FrameworkDir       string
 	CopyOriginal       bool   // preserve original META-INF
-	SmaliJar           string // path to smali.jar
-	BaksmaliJar        string // path to baksmali.jar
 	Aapt2Path          string // path to aapt2 binary
 	UseSmali           bool   // enable smali→dex assembly (default: auto-detect)
 	UseAapt2           bool   // enable aapt2 resource compile+link (default: auto-detect)
 	// v1-v7 apkloader upgrades
-	DexBackend          string // decode backend: auto|native|baksmali (default: auto)
-	ClassCache          bool   // cache native DEX→Smali per class in .mega-analyzer-cache.db (default: true)
-	SmaliAPI            int    // smali/baksmali -a/--api level (0 = auto-match tree dex)
-	SmaliJobs           int    // smali/baksmali -j/--jobs workers (0 = auto)
-	SmaliHeapMB         int    // JVM heap MB for smali/baksmali (0 = default)
-	SmaliVerbose        bool   // smali --verbose for richer diagnostics
-	SmaliIncremental    bool   // incremental smali→dex via .mega-analyzer-build-cache.json (default: true)
-	BaksmaliUseLocals   bool   // baksmali --use-locals
-	BaksmaliSeqLabels   bool   // baksmali --sequential-labels
-	BaksmaliNoParamRegs bool   // baksmali --parameter-registers=false
-	CompressionMode     string // rebuild zip mode: fast|balanced|best (default: fast)
-	SpoolThresholdMB    int    // spool entries larger than N MB to temp files (0 = default 128MB)
-	PreserveSignature   bool   // experimental: keep original META-INF/signing blocks, skip re-sign
-	KsPath              string // keystore for rebuild signing (apksigner); empty = generated debug key
-	KsAlias             string // key alias inside --ks (empty = keystore default)
+	DexBackend        string // decode backend: auto|native (default: auto)
+	ClassCache        bool   // cache native DEX→Smali per class in .mega-analyzer-cache.db (default: true)
+	SmaliAPI          int    // native assembler Android API level (0 = auto-match tree dex)
+	SmaliJobs         int    // native assembler DEX workers (0 = auto)
+	SmaliIncremental  bool   // incremental smali→dex via .mega-analyzer-build-cache.json (default: true)
+	CompressionMode   string // rebuild zip mode: fast|balanced|best (default: fast)
+	SpoolThresholdMB  int    // spool entries larger than N MB to temp files (0 = default 128MB)
+	PreserveSignature bool   // experimental: keep original META-INF/signing blocks, skip re-sign
+	KsPath            string // keystore for rebuild signing (apksigner); empty = generated debug key
+	KsAlias           string // key alias inside --ks (empty = keystore default)
 
 	// OBB / DATA / CACHE SCANNER
 	OBBScan       bool   // enable OBB expansion file deep scan

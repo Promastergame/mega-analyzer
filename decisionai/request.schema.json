@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:mega-analyzer:decisionai:request:0.1.0",
+  "title": "DecisionAI Request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "code"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "maxLength": 256
+    },
+    "code": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 1048576
+    },
+    "scope": {
+      "enum": [
+        "audit",
+        "defensive",
+        "test_fixture",
+        ""
+      ]
+    },
+    "state": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "questions": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "$ref": "#/$defs/question"
+      }
+    },
+    "threshold": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "finding",
+        "patch"
+      ],
+      "properties": {
+        "finding": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "patch": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      }
+    },
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "app_owned": {
+          "type": "boolean"
+        },
+        "library": {
+          "type": "boolean"
+        },
+        "server_dependency": {
+          "type": "boolean"
+        },
+        "evidence": {
+          "type": "array",
+          "maxItems": 128,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "patch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "line",
+        "expected",
+        "replacement"
+      ],
+      "properties": {
+        "line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "expected": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "replacement": {
+          "type": "integer",
+          "minimum": -2147483648,
+          "maximum": 2147483647
+        },
+        "target": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "condition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "field",
+        "op"
+      ],
+      "properties": {
+        "field": {
+          "type": "string",
+          "minLength": 1
+        },
+        "op": {
+          "enum": [
+            "eq",
+            "ne",
+            "gt",
+            "gte",
+            "lt",
+            "lte",
+            "in",
+            "exists"
+          ]
+        },
+        "value": {}
+      }
+    },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "question",
+        "true_when",
+        "false_when"
+      ],
+      "properties": {
+        "question": {
+          "type": "string",
+          "minLength": 1
+        },
+        "true_when": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/condition"
+          }
+        },
+        "false_when": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/condition"
+          }
+        }
+      }
+    }
+  }
+}

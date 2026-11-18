@@ -63,6 +63,9 @@ func TestVerdictsAndEdgeCases(t *testing.T) {
 	}
 
 	// Case 2: Verdict LOW (one unused normal permission => 5)
+	if err := os.WriteFile(filepath.Join(dir, "Main.smali"), []byte(".class public Lexample/Main;\n.super Ljava/lang/Object;\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
 	rep, err = Analyze(dir, []string{"android.permission.NFC"})
 	if err != nil {
 		t.Fatal(err)

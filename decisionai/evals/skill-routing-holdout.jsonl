@@ -1,0 +1,44 @@
+{"group": "design", "state": "дай скилл, с которым нейросеть рисует нормальные интерфейсы", "accept": ["frontend-design", "artifact-design"]}
+{"group": "design", "state": "нужна прокачка дизайна от ИИ", "accept": ["frontend-design", "artifact-design"]}
+{"group": "design", "state": "the app's frontend looks bland, make it pop", "accept": ["frontend-design"]}
+{"group": "design", "state": "сверстай красивую страницу с карточками товаров", "accept": ["frontend-design"]}
+{"group": "design", "state": "редизайн главной страницы сайта", "accept": ["frontend-design"]}
+{"group": "design", "state": "нарисуй афишу концерта в pdf", "accept": ["canvas-design", "artifact-design"]}
+{"group": "design", "state": "подгони презентацию под наш брендбук", "accept": ["brand-guidelines"]}
+{"group": "design", "state": "use our corporate colors and logo", "accept": ["brand-guidelines"]}
+{"group": "design", "state": "хочу готовую цветовую тему для документа", "accept": ["theme-factory"]}
+{"group": "office", "state": "собери слайды для питча инвесторам", "accept": ["pptx"]}
+{"group": "office", "state": "поправь таблицу excel, добавь формулы", "accept": ["xlsx"]}
+{"group": "office", "state": "split this pdf into pages", "accept": ["pdf"]}
+{"group": "office", "state": "сделай docx с оглавлением", "accept": ["docx"]}
+{"group": "writing", "state": "перепиши текст чтобы не палилось что это нейросеть", "accept": ["humanizer"]}
+{"group": "writing", "state": "translate this into Spanish", "accept": ["translator"]}
+{"group": "writing", "state": "составь письмо партнёру с напоминанием об оплате", "accept": ["email-writer"]}
+{"group": "writing", "state": "итоги созвона: кто что делает", "accept": ["meeting-notes"]}
+{"group": "writing", "state": "рассылка для сотрудников компании", "accept": ["internal-comms"]}
+{"group": "writing", "state": "prompt for my chatbot gives bad answers, fix it", "accept": ["prompt-engineering"]}
+{"group": "code", "state": "приложение крашится, найди причину", "accept": ["systematic-debugging"]}
+{"group": "code", "state": "сделай ревью кода", "accept": ["code-review"]}
+{"group": "code", "state": "write tests first for this feature (TDD)", "accept": ["test-driven-development"]}
+{"group": "code", "state": "rebase my branch onto main", "accept": ["git-commit"]}
+{"group": "code", "state": "запрос к базе тормозит, ускорь", "accept": ["sql-expert"]}
+{"group": "code", "state": "найди захардкоженные пароли в репозитории", "accept": ["security-audit"]}
+{"group": "code", "state": "контейнеризуй сервис", "accept": ["docker-deploy"]}
+{"group": "code", "state": "build an MCP server for the GitHub API", "accept": ["mcp-builder"]}
+{"group": "code", "state": "разбери андроид приложение, поменяй константу в smali", "accept": ["apk-reverse"]}
+{"group": "web", "state": "зайди на сайт и сделай скриншот", "accept": ["agent-browser"]}
+{"group": "web", "state": "what's the latest news on the EU AI act", "accept": ["web-search"]}
+{"group": "web", "state": "прогони e2e тесты фронта в браузере", "accept": ["webapp-testing"]}
+{"group": "data", "state": "сравни метрики двух кварталов", "accept": ["data-analysis"]}
+{"group": "data", "state": "визуализируй эти цифры диаграммой", "accept": ["inline-charts"]}
+{"group": "media", "state": "сгенерируй иконку приложения", "accept": ["image-generation"]}
+{"group": "media", "state": "animated emoji gif for our slack", "accept": ["slack-gif-creator"]}
+{"group": "media", "state": "сделай видеоролик с анимацией текста", "accept": ["video-remotion"]}
+{"group": "media", "state": "fractal flow field art with code", "accept": ["algorithmic-art"]}
+{"group": "meta", "state": "напиши SKILL.md для нового навыка", "accept": ["skill-creator"]}
+{"group": "other", "state": "сколько градусов на улице", "accept": ["other"]}
+{"group": "other", "state": "кто выиграл чемпионат мира 2018", "accept": ["other"]}
+{"group": "other", "state": "забронируй столик в ресторане", "accept": ["other"]}
+{"group": "other", "state": "спасибо, всё понятно", "accept": ["other"]}
+{"group": "other", "state": "tell me a fun fact about cats", "accept": ["other"]}
+{"group": "other", "state": "как приготовить борщ", "accept": ["other"]}

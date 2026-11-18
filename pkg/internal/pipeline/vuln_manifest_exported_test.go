@@ -43,8 +43,8 @@ func TestManifest_ImplicitExportTargetSdk30(t *testing.T) {
 	if len(matches) != 1 {
 		t.Fatalf("expected 1 implicit-export finding, got %d: %v", len(matches), getMatchSummary(matches))
 	}
-	if !matches[0].IsCritical {
-		t.Error("implicit export on targetSdk 30 must be critical")
+	if matches[0].IsCritical {
+		t.Error("export alone does not establish a critical vulnerability")
 	}
 }
 
@@ -78,8 +78,8 @@ func TestManifest_ExplicitExportedNoPermission(t *testing.T) {
         <service android:name=".SyncService" android:exported="true"/>
     </application>
 </manifest>`))
-	if len(matches) != 1 || !matches[0].IsCritical {
-		t.Fatalf("expected critical explicit-export finding, got %v", getMatchSummary(matches))
+	if len(matches) != 1 || matches[0].IsCritical {
+		t.Fatalf("expected noncritical explicit-export finding, got %v", getMatchSummary(matches))
 	}
 }
 

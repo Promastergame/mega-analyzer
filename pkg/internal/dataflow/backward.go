@@ -39,12 +39,17 @@ type sliceState struct {
 	sinkTruncated                                                                 bool
 	cfgs                                                                          map[string]*methodCFG
 	cfgNodes, cfgEdges, cfgIncomplete, cfgQueries, cfgCacheHits, unreachableSinks int
+	// exportedComponents holds the dotted names of manifest components with
+	// effective export. nil/empty = unknown (legacy behavior); a known
+	// non-exported component is labeled as app-internal, not an IPC surface.
+	exportedComponents map[string]struct{}
 }
 
 type callReference struct {
-	caller string
-	index  int
-	call   invokeCall
+	caller             string
+	index              int
+	call               invokeCall
+	unresolvedDispatch bool
 }
 
 type fieldWrite struct {
@@ -58,7 +63,7 @@ func analyzeBackward(ctx context.Context, active map[string]methodData, classes 
 	result.Stats.MethodsDiscovered = len(active)
 	result.Stats.MethodsAnalyzed = len(active)
 	result.Stats.Iterations = 1
-	state := &sliceState{methods: active, classes: classes, ctx: ctx, maxSteps: config.MaxSliceSteps, maxDepth: config.MaxSliceDepth, maxSinkSteps: config.MaxSliceStepsPerSink}
+	state := &sliceState{methods: active, classes: classes, ctx: ctx, maxSteps: config.MaxSliceSteps, maxDepth: config.MaxSliceDepth, maxSinkSteps: config.MaxSliceStepsPerSink, exportedComponents: config.ExportedComponents}
 	if state.maxDepth <= 0 {
 		state.maxDepth = maxSliceDepth
 	}
@@ -80,87 +85,93 @@ func analyzeBackward(ctx context.Context, active map[string]methodData, classes 
 	state.buildAuditIndexes(signatures)
 	seen := make(map[string]struct{})
 
-	for _, signature := range signatures {
+	// Two-pass scheduling. Pass 1 collects every sink call site in file order;
+	// pass 2 traces them by sensitivity rank. The old single pass walked files
+	// top-to-bottom, so one large low-value method could drain the whole-run
+	// step budget before later critical sinks were ever traced (the 2026-11-03
+	// corpus run hit the slicing ceiling and truncated 108 slices on
+	// Приват.apk). Priority order means the untraced remainder is the least
+	// sensitive work, not whatever happened to sort last by file name.
+	work := collectSinkWork(ctx, signatures, active)
+	sort.SliceStable(work, func(i, j int) bool {
+		if work[i].rank != work[j].rank {
+			return work[i].rank < work[j].rank
+		}
+		if work[i].signature != work[j].signature {
+			return work[i].signature < work[j].signature
+		}
+		if work[i].index != work[j].index {
+			return work[i].index < work[j].index
+		}
+		return work[i].sink.param < work[j].sink.param
+	})
+	for _, item := range work {
 		if state.stopped() {
 			result.Stats.LimitReached = true
 			break
 		}
+		signature, index, call, sink := item.signature, item.index, item.call, item.sink
 		method := active[signature]
-		for index, raw := range method.Body {
-			if index&255 == 0 && state.stopped() {
+		if !state.reachableInstruction(signature, index) {
+			state.unreachableSinks++
+			continue
+		}
+		register := sinkArgumentRegister(call, sink.param)
+		if register == "" {
+			continue
+		}
+		state.visited = make(map[string]struct{})
+		state.sinkSteps, state.sinkTruncated = 0, false
+		result.Stats.SinksVisited++
+		hits := state.traceCallArgument(signature, index-1, call, sink.param, 0)
+		if state.sinkTruncated {
+			result.Stats.SlicesTruncated++
+		}
+		result.Stats.Flows += len(hits)
+		for _, hit := range hits {
+			labels := hit.labels & sink.labels
+			if labels == 0 || (sink.sanitizer != SanitizerNone && hit.sanitized&sink.sanitizer != 0) {
+				continue
+			}
+			line := method.LineStart + index
+			key := sink.category + "\x00" + hit.source + "\x00" + call.signature + "\x00" + signature + "\x00" + method.Path + "\x00" + strconv.Itoa(line)
+			if _, duplicate := seen[key]; duplicate {
+				continue
+			}
+			seen[key] = struct{}{}
+			path := append([]Step(nil), hit.steps...)
+			path = append(path, Step{Method: signature, Type: "sink", Line: line})
+			for i := range path {
+				if owner, ok := active[path[i].Method]; ok {
+					path[i].File = owner.Path
+				}
+			}
+			confidence := sliceConfidence(path, hit.field)
+			informational := sink.category == "log_data_exposure" && labels&(LabelPII|LabelCredential|LabelLocation) == 0
+			category, severity := sink.category, sink.severity
+			if informational {
+				category = "untrusted_log_input"
+				severity = "low"
+			}
+			finding := Finding{
+				Source: hit.source, Sink: call.signature, Category: category,
+				ExploitChain: exploitChainName(category, labels),
+				Label:        labels, Severity: severity, Confidence: confidence,
+				Location: Location{File: method.Path, Line: line, Method: signature}, Path: path,
+			}
+			if informational {
+				if len(result.Observations) < config.MaxFindings {
+					result.Observations = append(result.Observations, finding)
+				} else {
+					result.Stats.ObservationsOmitted++
+				}
+				continue
+			}
+			result.Findings = append(result.Findings, finding)
+			if len(result.Findings) >= config.MaxFindings {
+				result.Stats.LimitReached = true
+				result.Stats.Findings = len(result.Findings)
 				return result
-			}
-			call, ok := parseInvoke(raw)
-			if !ok {
-				continue
-			}
-			models := sinksFor(call.signature)
-			if len(models) == 0 {
-				continue
-			}
-			if !state.reachableInstruction(signature, index) {
-				state.unreachableSinks++
-				continue
-			}
-			for _, sink := range models {
-				register := sinkArgumentRegister(call, sink.param)
-				if register == "" {
-					continue
-				}
-				state.visited = make(map[string]struct{})
-				state.sinkSteps, state.sinkTruncated = 0, false
-				result.Stats.SinksVisited++
-				hits := state.traceCallArgument(signature, index-1, call, sink.param, 0)
-				if state.sinkTruncated {
-					result.Stats.SlicesTruncated++
-				}
-				result.Stats.Flows += len(hits)
-				for _, hit := range hits {
-					labels := hit.labels & sink.labels
-					if labels == 0 || (sink.sanitizer != SanitizerNone && hit.sanitized&sink.sanitizer != 0) {
-						continue
-					}
-					line := method.LineStart + index
-					key := sink.category + "\x00" + hit.source + "\x00" + call.signature + "\x00" + signature + "\x00" + method.Path + "\x00" + strconv.Itoa(line)
-					if _, duplicate := seen[key]; duplicate {
-						continue
-					}
-					seen[key] = struct{}{}
-					path := append([]Step(nil), hit.steps...)
-					path = append(path, Step{Method: signature, Type: "sink", Line: line})
-					for i := range path {
-						if owner, ok := active[path[i].Method]; ok {
-							path[i].File = owner.Path
-						}
-					}
-					confidence := sliceConfidence(path, hit.field)
-					informational := sink.category == "log_data_exposure" && labels&(LabelPII|LabelCredential|LabelLocation) == 0
-					category, severity := sink.category, sink.severity
-					if informational {
-						category = "untrusted_log_input"
-						severity = "low"
-					}
-					finding := Finding{
-						Source: hit.source, Sink: call.signature, Category: category,
-						ExploitChain: exploitChainName(category, labels),
-						Label:        labels, Severity: severity, Confidence: confidence,
-						Location: Location{File: method.Path, Line: line, Method: signature}, Path: path,
-					}
-					if informational {
-						if len(result.Observations) < config.MaxFindings {
-							result.Observations = append(result.Observations, finding)
-						} else {
-							result.Stats.ObservationsOmitted++
-						}
-						continue
-					}
-					result.Findings = append(result.Findings, finding)
-					if len(result.Findings) >= config.MaxFindings {
-						result.Stats.LimitReached = true
-						result.Stats.Findings = len(result.Findings)
-						return result
-					}
-				}
 			}
 		}
 	}
@@ -176,6 +187,65 @@ func analyzeBackward(ctx context.Context, active map[string]methodData, classes 
 	})
 	result.Stats.Findings = len(result.Findings)
 	return result
+}
+
+// sinkWork is one sink call site scheduled for backward tracing.
+type sinkWork struct {
+	signature string
+	index     int
+	call      invokeCall
+	sink      sinkModel
+	rank      int
+}
+
+// sinkRank orders the trace queue: severity first (critical → low), and
+// logging sinks last — when the run budget runs out mid-corpus, the leftover
+// untraced work must be the least sensitive slices. log_data_exposure already
+// downgrades to an informational observation when its labels are weak, so its
+// full-finding form also waits behind the actionable categories.
+func sinkRank(sink sinkModel) int {
+	if sink.category == "log_data_exposure" {
+		return 4
+	}
+	switch sink.severity {
+	case "critical":
+		return 0
+	case "high":
+		return 1
+	case "medium":
+		return 2
+	default:
+		return 3
+	}
+}
+
+// collectSinkWork walks methods in file order and records every modeled sink
+// argument that a slice could be built for. Pure collection: no slice budget
+// is spent here, so cancellation is the only early exit.
+func collectSinkWork(ctx context.Context, signatures []string, active map[string]methodData) []sinkWork {
+	work := make([]sinkWork, 0, 256)
+	for _, signature := range signatures {
+		if ctx.Err() != nil {
+			return work
+		}
+		method := active[signature]
+		for index, raw := range method.Body {
+			call, ok := parseInvoke(raw)
+			if !ok {
+				continue
+			}
+			for _, sink := range sinksFor(call.signature) {
+				if sinkArgumentRegister(call, sink.param) == "" {
+					continue
+				}
+				work = append(work, sinkWork{
+					signature: signature, index: index, call: call,
+					sink: sink, rank: sinkRank(sink),
+				})
+			}
+		}
+	}
+	return work
 }
 
 func (s *sliceState) traceRegister(signature string, before int, register string, depth int) []sliceHit {
@@ -270,6 +340,15 @@ func (s *sliceState) traceDefinition(signature string, method methodData, index 
 			}
 		}()
 		if source, ok := sourceFor(call.signature); ok {
+			if containerReadSource(call.signature) && !call.isStatic && len(call.registers) > 0 {
+				hits := s.traceRegister(signature, callIndex-1, call.registers[0], depth+1)
+				if len(hits) > 0 {
+					return addPropagationStep(hits, signature, method.LineStart+callIndex)
+				}
+				return []sliceHit{{source: "[unverified container origin] " + call.signature,
+					labels: source.label, param: -1,
+					steps: []Step{{Method: signature, Type: "source", Line: method.LineStart + callIndex}}}}
+			}
 			return []sliceHit{{source: call.signature, labels: source.label, param: -1,
 				steps: []Step{{Method: signature, Type: "source", Line: method.LineStart + callIndex}}}}
 		}
@@ -296,6 +375,9 @@ func (s *sliceState) traceDefinition(signature string, method methodData, index 
 					break
 				}
 				hits = append(hits, s.traceReturns(s.methods[calleeSignature], depth+1)...)
+			}
+			if isDynamicDispatch(call.opcode) && len(callees) > 1 {
+				hits = addSliceStep(hits, Step{Method: signature, Type: "unresolved_dispatch", Line: method.LineStart + callIndex})
 			}
 			return s.bindCalleeParams(signature, callIndex-1, call, hits, depth+1)
 		}
@@ -360,7 +442,7 @@ func (s *sliceState) traceParameter(signature string, method methodData, registe
 	if param, ok := parameterForRegister(method, register); ok {
 		for _, seed := range entryPointTaints(method) {
 			if seed.param == param {
-				return []sliceHit{{source: signature + " [IPC entry point]", labels: seed.labels, param: -1,
+				return []sliceHit{{source: signature + " " + entryPointLabel(signature, s.exportedComponents), labels: seed.labels, param: -1,
 					steps: []Step{{Method: signature, Type: "source", Line: method.LineStart}}, field: true}}
 			}
 		}
@@ -376,10 +458,12 @@ func (s *sliceState) traceParameter(signature string, method methodData, registe
 			if callerRegister == "" {
 				continue
 			}
-			hits = append(hits, addPropagationStep(
-				s.traceCallArgument(ref.caller, ref.index-1, ref.call, param, depth+1),
-				ref.caller, s.methods[ref.caller].LineStart+ref.index,
-			)...)
+			bound := s.traceCallArgument(ref.caller, ref.index-1, ref.call, param, depth+1)
+			stepType := "propagate"
+			if ref.unresolvedDispatch {
+				stepType = "unresolved_dispatch"
+			}
+			hits = append(hits, addSliceStep(bound, Step{Method: ref.caller, Type: stepType, Line: s.methods[ref.caller].LineStart + ref.index})...)
 		}
 		if len(hits) > 0 {
 			return hits
@@ -449,8 +533,9 @@ func indexCallers(methods map[string]methodData, resolve func(invokeCall) []stri
 	for signature, method := range methods {
 		for index, raw := range method.Body {
 			if call, ok := parseInvoke(raw); ok {
-				for _, callee := range resolve(call) {
-					out[callee] = append(out[callee], callReference{caller: signature, index: index, call: call})
+				callees := resolve(call)
+				for _, callee := range callees {
+					out[callee] = append(out[callee], callReference{caller: signature, index: index, call: call, unresolvedDispatch: isDynamicDispatch(call.opcode) && len(callees) > 1})
 				}
 			}
 		}
@@ -597,6 +682,9 @@ func sinkArgumentRegister(call invokeCall, param int) string {
 }
 
 func callArgumentRegister(call invokeCall, param int) string {
+	if param == -1 && !call.isStatic && len(call.registers) > 0 {
+		return call.registers[0]
+	}
 	start := 0
 	if !call.isStatic {
 		start = 1

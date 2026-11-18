@@ -2,6 +2,7 @@ package gnn
 
 import (
 	"encoding/json"
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
@@ -21,7 +22,7 @@ func validWeightJSON(t *testing.T) []byte {
 		weights[i] = 0.001
 	}
 	bias := make([]float64, outDim)
-	classifierW := make([]float64, NumVulnClasses)
+	classifierW := make([]float64, 2*outDim*NumVulnClasses)
 	classifierB := make([]float64, NumVulnClasses)
 	classNames := make([]string, NumVulnClasses)
 	for i := range classNames {
@@ -35,8 +36,8 @@ func validWeightJSON(t *testing.T) []byte {
 				"activation": "ReLU", "dropout": 0.0,
 			}},
 			"num_classes":   NumVulnClasses,
-			"readout":       "MeanMax",
-			"normalization": "Symmetric",
+			"readout":       "meanmax",
+			"normalization": "symmetric",
 			"residual":      false,
 		},
 		"layer_data": []map[string]any{{
@@ -60,6 +61,36 @@ func validWeightJSON(t *testing.T) []byte {
 		t.Fatalf("marshal weight file: %v", err)
 	}
 	return data
+}
+
+func TestValidateRejectsNativeOverflowAndInvalidNormalization(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		edit func(map[string]any)
+	}{
+		{"classifier_overflow", func(w map[string]any) { w["classifier_bias"].([]any)[0] = math.MaxFloat64 }},
+		{"layer_bias_overflow", func(w map[string]any) { w["layer_data"].([]any)[0].(map[string]any)["bias"].([]any)[0] = 1e100 }},
+		{"unpaired_norm", func(w map[string]any) { delete(w["layer_data"].([]any)[0].(map[string]any), "norm_beta") }},
+		{"negative_dimension", func(w map[string]any) {
+			w["config"].(map[string]any)["layers"].([]any)[0].(map[string]any)["features_out"] = -1
+		}},
+		{"invalid_calibration", func(w map[string]any) { w["metadata"].(map[string]any)["conformal_q90"] = 1.5 }},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var wf map[string]any
+			if err := json.Unmarshal(validWeightJSON(t), &wf); err != nil {
+				t.Fatal(err)
+			}
+			test.edit(wf)
+			data, err := json.Marshal(wf)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := ValidateModelFile(writeTemp(t, data)); err == nil {
+				t.Fatal("invalid native model parameters accepted")
+			}
+		})
+	}
 }
 
 func writeTemp(t *testing.T, data []byte) string {
@@ -87,6 +118,38 @@ func TestValidateModelFileAcceptsCompatibleFile(t *testing.T) {
 	}
 	if meta.OODThreshold != 0.85 {
 		t.Errorf("OOD threshold lost: %+v", meta)
+	}
+}
+
+func TestValidateModelFileReadoutMatrixShape(t *testing.T) {
+	for _, readout := range []string{"mean", "max", "meanmax"} {
+		t.Run(readout, func(t *testing.T) {
+			var wf map[string]any
+			if err := json.Unmarshal(validWeightJSON(t), &wf); err != nil {
+				t.Fatal(err)
+			}
+			wf["config"].(map[string]any)["readout"] = readout
+			multiplier := 1
+			if readout == "meanmax" {
+				multiplier = 2
+			}
+			wf["classifier_weights"] = make([]float64, multiplier*NumVulnClasses*NumVulnClasses)
+			data, err := json.Marshal(wf)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := ValidateModelFile(writeTemp(t, data)); err != nil {
+				t.Fatalf("native-compatible %s matrix rejected: %v", readout, err)
+			}
+			wf["classifier_weights"] = make([]float64, NumVulnClasses)
+			data, err = json.Marshal(wf)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if _, err := ValidateModelFile(writeTemp(t, data)); err == nil {
+				t.Fatal("scalar-per-class weights accepted for a wider graph embedding")
+			}
+		})
 	}
 }
 

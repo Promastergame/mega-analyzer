@@ -40,7 +40,7 @@ func TestDataFlowRetainsFilesAcrossArrayHelperCalls(t *testing.T) {
 		t.Fatalf("expected one array command flow, got %+v", p.result.DataFlows)
 	}
 	flow := p.result.DataFlows[0]
-	item := typedFindingFromDataFlow(flow)
+	item := typedFindingFromDataFlow(flow, nil)
 	if len(item.Steps) != len(flow.Path) || len(item.Steps) < 5 {
 		t.Fatalf("report lost the evidence chain: %+v", item.Steps)
 	}

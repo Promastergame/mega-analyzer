@@ -196,6 +196,9 @@ func matchLicenseCheckBypass(m *types.SmaliMethod, c *types.SmaliClass, ctx *pat
 
 	found := false
 	for _, kw := range licenseKeywordsLower {
+		if kw == "pro" && !isProPredicate(ctx.nameLower) && !proWord.MatchString(ctx.classLower) {
+			continue
+		}
 		if strings.Contains(ctx.nameLower, kw) || strings.Contains(ctx.classLower, kw) {
 			found = true
 			break

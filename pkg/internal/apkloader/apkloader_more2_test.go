@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 // ─── constant_propagation.go — foldArithmetic branches ───────────────────────
@@ -325,7 +327,7 @@ func TestRobustnessHandler_RecoveryRate(t *testing.T) {
 // ─── detector.go — additional branches ───────────────────────────────────────
 
 func TestDetectFile_APKMAndAAB(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 
 	for _, ext := range []string{".apkm", ".aab"} {
 		path := filepath.Join(dir, "app"+ext)
@@ -343,7 +345,7 @@ func TestDetectFile_APKMAndAAB(t *testing.T) {
 }
 
 func TestDetectFile_OBBandIPA(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	for _, ext := range []string{".obb", ".ipa"} {
 		path := filepath.Join(dir, "file"+ext)
 		if err := os.WriteFile(path, []byte("data"), 0644); err != nil {
@@ -360,7 +362,7 @@ func TestDetectFile_OBBandIPA(t *testing.T) {
 }
 
 func TestDetectFile_OatVdexOdexArtByExtension(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	for _, ext := range []string{".vdex", ".odex", ".art", ".oat"} {
 		path := filepath.Join(dir, "file"+ext)
 		if err := os.WriteFile(path, []byte("data"), 0644); err != nil {
@@ -377,7 +379,7 @@ func TestDetectFile_OatVdexOdexArtByExtension(t *testing.T) {
 }
 
 func TestHasCacheArtifacts_DepthLimit(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	// Create deeply nested dalvik-cache beyond maxDepth
 	deep := filepath.Join(dir, "a", "b", "c", "d", "dalvik-cache")
 	if err := os.MkdirAll(deep, 0755); err != nil {
@@ -390,7 +392,7 @@ func TestHasCacheArtifacts_DepthLimit(t *testing.T) {
 }
 
 func TestHasCacheArtifacts_RecurseIntoSubdirs(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	// oat is 2 levels deep — within maxDepth=3
 	sub := filepath.Join(dir, "system", "framework", "oat")
 	if err := os.MkdirAll(sub, 0755); err != nil {
@@ -528,8 +530,8 @@ func TestStringPatternDatabase_AllCategories(t *testing.T) {
 // ─── cache_analyzer.go — WriteReport to nonexistent dir ──────────────────────
 
 func TestCacheAnalyzer_WriteReport_Success(t *testing.T) {
-	ca := NewCacheAnalyzer("com.test", t.TempDir())
-	outDir := t.TempDir()
+	ca := NewCacheAnalyzer("com.test", testutil.TempDir(t))
+	outDir := testutil.TempDir(t)
 	err := ca.WriteReport(outDir)
 	if err != nil {
 		t.Errorf("WriteReport: %v", err)

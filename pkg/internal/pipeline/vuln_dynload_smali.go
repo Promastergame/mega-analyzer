@@ -148,6 +148,14 @@ func detectDynamicLoadInMethod(m *types.SmaliMethod, class *types.SmaliClass, an
 					path+") — any app can replace the .so for code execution (CWE-829)",
 					"System.load external path", types.SeverityCritical, true, "high", lineNumber)
 			} else if !literal {
+				// ReLinker-style re-link: the operand comes from a File that the
+				// same method extracted out of the app's own APK into private
+				// storage. The .so origin is the signed APK, so CWE-427 (loading
+				// from an unverifiable path) does not apply — this produced a
+				// HIGH finding on a stock Unity/ReLinker game.
+				if methodExtractsFromAppPrivateArchive(m) {
+					continue
+				}
 				emit("System.load invoked with a runtime-computed absolute library path — "+
 					"the .so origin cannot be verified (CWE-427)",
 					"System.load computed path", types.SeverityHigh, false, "medium", lineNumber)
@@ -177,6 +185,34 @@ func libNameRegister(call cryptoInvoke, strs map[string]string) (string, bool) {
 	}
 	value, ok := strs[call.registers[argIndex]]
 	return value, ok
+}
+
+// methodExtractsFromAppPrivateArchive reports whether the method both reads an
+// archive (the APK itself) and resolves an app-private directory. Together
+// these identify the ReLinker/APK-self-extraction idiom: the loaded .so is
+// copied out of the signed APK into getDir()/getFilesDir(), so its origin is
+// verifiable and a "computed path" System.load is not a CWE-427 signal.
+func methodExtractsFromAppPrivateArchive(m *types.SmaliMethod) bool {
+	var archive, privateDir bool
+	for _, raw := range m.Body {
+		line := strings.ToLower(raw)
+		switch {
+		case strings.Contains(line, "ljava/util/zip/zipfile;") ||
+			strings.Contains(line, "ljava/util/zip/zipinputstream;"):
+			archive = true
+		case strings.Contains(line, "->getdir(") ||
+			strings.Contains(line, "->getfilesdir(") ||
+			strings.Contains(line, "->getcachedir(") ||
+			strings.Contains(line, "->getcodecachedir(") ||
+			strings.Contains(line, "->getnobackupfilesdir(") ||
+			strings.Contains(line, "->getnocachefilesdir("):
+			privateDir = true
+		}
+		if archive && privateDir {
+			return true
+		}
+	}
+	return false
 }
 
 func externalStoragePath(path string) bool {

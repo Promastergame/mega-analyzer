@@ -7,7 +7,7 @@ import (
 )
 
 // StandaloneMode forces the pipeline to use only embedded Go
-// implementations: no Java, smali/baksmali, aapt2, apksigner or zipalign
+// implementations: no Java, aapt2, apksigner or zipalign
 // processes are discovered, unpacked or executed in any stage.
 //
 // It is enabled by --standalone (CLI), MEGA_STANDALONE=1, or

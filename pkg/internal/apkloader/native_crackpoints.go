@@ -139,9 +139,15 @@ const maxNumericPinFindings = 16
 func numericPinFindings(data []byte, binName string, seen map[string]bool, reveal bool) []types.ArtifactFinding {
 	var out []types.ArtifactFinding
 	var skipped int
-	for _, occ := range extractStringOccurrences(data, 3) {
+	for _, occ := range extractStringOccurrences(data, 4) {
 		v := occ.val
-		if len(v) > 8 || seen[v] || !isAllDigits(v) {
+		if len(v) < 4 || len(v) > 8 || seen[v] || !isAllDigits(v) {
+			continue
+		}
+		// Three-digit runs are version/build constants, and a run with fewer
+		// than three distinct digits (0300, 1111) is not PIN material either.
+		// Both were noise on stripped game engines (222/333/999/0300).
+		if distinctDigits(v) < 3 {
 			continue
 		}
 		seen[v] = true
@@ -150,18 +156,23 @@ func numericPinFindings(data []byte, binName string, seen map[string]bool, revea
 			continue
 		}
 		window := secretContextWindow(data, occ.offset, len(v), 48)
-		sev := types.SeverityLow
-		reason := "Standalone numeric string, candidate PIN/password"
+		// Without a credential keyword this is just a numeric literal: keep it
+		// as inventory instead of a candidate credential. Only corroborated
+		// runs are reported at Medium.
+		sev := types.SeverityInfo
+		reason := "Standalone numeric literal, weak PIN/password candidate (no credential context)"
+		stages := []string{"native", "secret", "numeric-pin", "inventory"}
 		if hasContextKeyword(window) {
 			sev = types.SeverityMedium
 			reason = "Standalone numeric string near a credential-suggestive keyword — likely PIN/password"
+			stages = []string{"native", "secret", "numeric-pin"}
 		}
 		finding := types.ArtifactFinding{
 			Path:     binName,
 			Severity: sev,
 			Reason:   reason,
 			Payload:  maskNativeSecret(v),
-			Stages:   []string{"native", "secret", "numeric-pin"},
+			Stages:   stages,
 		}
 		if reveal {
 			finding.PayloadFull = v
@@ -189,6 +200,24 @@ func isAllDigits(s string) bool {
 		}
 	}
 	return true
+}
+
+// distinctDigits counts how many different digit characters s contains. A
+// short numeric literal with low diversity (0300, 1111) is a constant, not a
+// PIN; real PINs almost always mix at least three distinct digits.
+func distinctDigits(s string) int {
+	var seen [10]bool
+	n := 0
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			continue
+		}
+		if !seen[c-'0'] {
+			seen[c-'0'] = true
+			n++
+		}
+	}
+	return n
 }
 
 // strOcc is a printable string extracted from raw bytes together with the

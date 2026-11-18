@@ -153,6 +153,9 @@ func TestStaticOutputFlagsSafeAndForwarded(t *testing.T) {
 		}
 	}
 	args := buildModeArgs("full", []string{"app.apk"}, "result", "", "", "", allowed)
+	if !strings.Contains(strings.Join(args, " "), "-json-compact") {
+		t.Fatal("web analysis must avoid embedding all Smali bodies in the result response")
+	}
 	for _, flag := range allowed {
 		if !strings.Contains(strings.Join(args, " "), flag) {
 			t.Fatalf("lost flag %s", flag)

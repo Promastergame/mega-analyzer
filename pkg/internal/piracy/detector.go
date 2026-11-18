@@ -647,6 +647,13 @@ func (d *Detector) analyzeSitePatterns(
 	hits []bool,
 	result *Result,
 ) error {
+	contentASCII := true
+	for _, value := range actx.content {
+		if value >= 128 {
+			contentASCII = false
+			break
+		}
+	}
 	for i := range config.Sites {
 		select {
 		case <-ctx.Done():
@@ -739,11 +746,17 @@ func (d *Detector) analyzeSitePatterns(
 		// Compiled regex patterns
 		regexAnchorIDs := prefilter.regexAnchorIDs(i)
 		for j, re := range site.CompiledRegex {
+			if prefilter.regexClauseMiss(hits, i, j) {
+				continue
+			}
+			if contentASCII && prefilter.regexNeedsNonASCII(i, j) {
+				continue
+			}
 			if anchorsMiss(hits, anchorListAt(regexAnchorIDs, j)) {
 				continue
 			}
 
-			loc := re.FindIndex(actx.content)
+			loc := prefilter.findRegexIndex(i, j, re, actx.content)
 			if loc == nil {
 				continue
 			}

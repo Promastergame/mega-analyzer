@@ -128,6 +128,9 @@ func (e *FusionEngine) Fuse(signals []ModelSignal, extraEvidence []Evidence) Dec
 	// conflict both reduce confidence.
 	coverage := clamp01(float64(len(signals)) / float64(e.cfg.MinSignals))
 	confidence := d.Agreement * (0.55 + 0.45*coverage)
+	if len(signals) < e.cfg.MinSignals {
+		confidence *= coverage
+	}
 	if d.Disagreement {
 		confidence *= 0.7
 	}
@@ -142,7 +145,7 @@ func (e *FusionEngine) Fuse(signals []ModelSignal, extraEvidence []Evidence) Dec
 		d.ConfidenceBand = "Low"
 	}
 
-	if d.Disagreement || d.Confidence < 0.5 {
+	if len(signals) < e.cfg.MinSignals || d.Disagreement || d.Confidence < 0.5 {
 		d.Recommendation = "deep_analysis"
 	} else {
 		d.Recommendation = "report"
@@ -175,7 +178,7 @@ func (e *FusionEngine) Fuse(signals []ModelSignal, extraEvidence []Evidence) Dec
 
 func (e *FusionEngine) explain(d Decision) string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "Threat probability: %.0f%%\n", d.ThreatScore*100)
+	fmt.Fprintf(&b, "Threat score: %.0f%%\n", d.ThreatScore*100)
 	b.WriteString("Main factors:\n")
 	n := 0
 	for _, ev := range d.Evidence {
@@ -186,10 +189,15 @@ func (e *FusionEngine) explain(d Decision) string {
 		}
 	}
 	fmt.Fprintf(&b, "Confidence: %s\n", d.ConfidenceBand)
-	if d.Disagreement {
+	if len(d.Signals) == 1 {
+		b.WriteString("Reason: Only one signal is available; agreement between models cannot be assessed.\n")
+	} else if d.Disagreement {
 		fmt.Fprintf(&b, "Reason: Models disagree (agreement %.0f%%); deeper analysis recommended.\n", d.Agreement*100)
 	} else {
-		fmt.Fprintf(&b, "Reason: %d independent systems agree (agreement %.0f%%).\n", len(d.Signals), d.Agreement*100)
+		fmt.Fprintf(&b, "Reason: %d available signals agree (agreement %.0f%%); signal independence has not been established.\n", len(d.Signals), d.Agreement*100)
+	}
+	if len(d.Signals) < e.cfg.MinSignals {
+		fmt.Fprintf(&b, "Signal coverage: %d/%d; deeper analysis required.\n", len(d.Signals), e.cfg.MinSignals)
 	}
 	return b.String()
 }

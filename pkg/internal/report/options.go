@@ -28,6 +28,11 @@ type MarkdownOptions struct {
 	ReportSchema  string
 	Profile       string
 
+	// Artifacts — настройки раздела Artifacts (блюр чувствительных превью
+	// и т.п.). Заполняется runner'ом из CLI-флагов; нулевое значение
+	// отключает раздел.
+	Artifacts ArtifactsOptions
+
 	// Фильтры
 	MinHotspotScore float64
 	MinConfidence   float64

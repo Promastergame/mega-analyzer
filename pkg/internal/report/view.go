@@ -1,6 +1,8 @@
 package report
 
 import (
+	"mega-analyzer/pkg/internal/decisionai"
+	"mega-analyzer/pkg/internal/finding"
 	"mega-analyzer/pkg/internal/types"
 	"mega-analyzer/pkg/media"
 )
@@ -13,20 +15,21 @@ import (
 
 // ReportView — корневая структура отчёта.
 type ReportView struct {
-	BundleAnalysis  *types.BundleAnalysisSummary
-	StaticOutputs   []types.StaticOutputStage
-	Meta            MetaView
-	Summary         SummaryView
-	Stats           StatsView
-	Detections      DetectionsView
-	Hotspots        []HotspotView
-	HotspotDetails  []HotspotDetailView
-	RiskSummary     RiskSummaryView
-	Suspicion       SuspicionBreakdown // canonical 0-100 risk score (CLI, HTML, Markdown)
-	Recommendations []RecommendationView
-	RuleFindings    []RuleFindingView
-	BankingThreats  []RuleFindingView // critical/high banking trojan combos
-	TypedFindings   []TypedFindingView
+	BundleAnalysis    *types.BundleAnalysisSummary
+	StaticOutputs     []types.StaticOutputStage
+	Meta              MetaView
+	Summary           SummaryView
+	Stats             StatsView
+	Detections        DetectionsView
+	Hotspots          []HotspotView
+	HotspotDetails    []HotspotDetailView
+	RiskSummary       RiskSummaryView
+	Suspicion         SuspicionBreakdown // canonical 0-100 risk score (CLI, HTML, Markdown)
+	Recommendations   []RecommendationView
+	RuleFindings      []RuleFindingView
+	BankingThreats    []RuleFindingView // critical/high banking trojan combos
+	TypedFindings     []TypedFindingView
+	NetworkIndicators []NetworkIndicatorView
 
 	// 🆕 v9.0.0 Elite Research Views
 	Deobfuscation      DeobfuscationView
@@ -112,15 +115,17 @@ type MachineCodeILCallView struct {
 }
 
 type MediaReportView struct {
-	Path          string
-	RiskScore     int
-	SeverityClass string
-	IsPolyglot    bool
-	PrimaryFormat string
-	HiddenFormats []string
-	Regions       []MediaRegionView
-	RecoveredData map[string]string
-	Extra         *media.MediaMetadata // full forensic dump: EXIF tags, XMP, PNG chunks, ICC, thumbnail, trailing data
+	Path             string
+	RiskScore        int
+	SeverityClass    string
+	IsPolyglot       bool
+	PrimaryFormat    string
+	HiddenFormats    []string
+	Regions          []MediaRegionView
+	RecoveredData    map[string]string
+	Extra            *media.MediaMetadata // full forensic dump: EXIF tags, XMP, PNG chunks, ICC, thumbnail, trailing data
+	ThumbnailPreview *decisionai.ImagePreview
+	NoImageBlur      bool
 }
 
 type MediaRegionView struct {
@@ -172,14 +177,15 @@ type HTMLReportView struct {
 // ── META ─────────────────────────────────────────────────────────────────────
 
 type MetaView struct {
-	EngineVersion string
-	ReportSchema  string
-	Profile       string
-	Timestamp     string
-	Duration      string
-	TargetDir     string
-	TargetName    string
-	AppPackage    string
+	EngineVersion  string
+	ReportSchema   string
+	Profile        string
+	Timestamp      string
+	Duration       string
+	TargetDir      string
+	TargetName     string
+	AppPackage     string
+	ArtifactSHA256 string
 }
 
 // ── SUMMARY (5 секунд — понять стоит ли читать) ─────────────────────────────
@@ -250,19 +256,24 @@ type StatsView struct {
 }
 
 type TypedFindingView struct {
-	Kind        string
-	RuleID      string
-	Category    string
-	Title       string
-	Severity    string
-	Confidence  float64
-	CWE         string
-	MASVS       string
-	File        string
-	Line        int
-	Evidence    string
-	Fingerprint string
-	Detector    string
+	ID            string
+	Locations     []finding.Location
+	Kind          string
+	RuleID        string
+	Category      string
+	Title         string
+	Severity      string
+	Confidence    float64
+	CWE           string
+	MASVS         string
+	File          string
+	Line          int
+	Evidence      string
+	Fingerprint   string
+	Detector      string
+	Description   string
+	EvidenceItems []finding.Evidence
+	Explanation   *finding.Explanation
 }
 
 // DecisionPointView is one explicit decision point shown in the report so the
@@ -402,6 +413,20 @@ type RiskSummaryView struct {
 	ByCategory    []RiskCategoryView
 	KeyFindings   []string
 	AttackSurface []string
+	// Inconclusive marks a verdict whose evidence is incomplete (coverage or
+	// data-flow budget) or weakly corroborated; the score is capped at HIGH.
+	Inconclusive       bool
+	InconclusiveReason string
+	// Breakdown explains the score: per-category ratings that feed it.
+	Breakdown []ScoreBreakdownView
+}
+
+type ScoreBreakdownView struct {
+	Name     string
+	Score    int
+	Level    string
+	Findings int
+	MaxScore float64
 }
 
 type RiskCategoryView struct {

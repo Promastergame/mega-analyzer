@@ -28,7 +28,10 @@ func Build(result *types.AnalysisResult) *types.EvidenceGraph {
 		return nil
 	}
 	b := &builder{nodes: make(map[string]types.EvidenceNode), edges: make(map[string]types.EvidenceEdge), files: make(map[string]string)}
-	targetID := b.addNode(types.EvidenceNode{Kind: "target", Label: targetLabel(result), Path: cleanPath(result.TargetDir)})
+	targetID := b.addNode(types.EvidenceNode{Kind: "target", Label: targetLabel(result),
+		// Report-safe: no absolute local paths (temp extraction dirs,
+		// workspace folders) in a shareable evidence graph.
+		Path: result.ShareableTargetName()})
 	b.addFindings(result, targetID)
 
 	for _, hotspot := range result.Hotspots {
@@ -151,11 +154,15 @@ func Query(graph *types.EvidenceGraph, nodeID, path string) (*types.EvidenceChai
 	if !ok {
 		for _, node := range graph.Nodes {
 			if node.Kind == "finding" && (node.Attributes["finding_id"] == rootID || node.Attributes["fingerprint"] == rootID) {
-				if ok { return nil, fmt.Errorf("ambiguous finding identity") }
+				if ok {
+					return nil, fmt.Errorf("ambiguous finding identity")
+				}
 				root, ok = node, true
 			}
 		}
-		if ok { rootID = root.ID }
+		if ok {
+			rootID = root.ID
+		}
 	}
 	if !ok {
 		return nil, fmt.Errorf("evidence node %q not found", rootID)
@@ -198,7 +205,9 @@ func Query(graph *types.EvidenceGraph, nodeID, path string) (*types.EvidenceChai
 		// belong to this investigation. Finding-owned nodes carry their own paths.
 		if root.Kind == "finding" && current != rootID {
 			kind := nodes[current].Kind
-			if kind == "file" || kind == "method" || kind == "finding" { continue }
+			if kind == "file" || kind == "method" || kind == "finding" {
+				continue
+			}
 		}
 		for _, edge := range adjacent[current] {
 			if seenEdges[edge.ID] {
@@ -208,7 +217,9 @@ func Query(graph *types.EvidenceGraph, nodeID, path string) (*types.EvidenceChai
 			if next == current {
 				next = edge.From
 			}
-			if root.Kind == "finding" && nodes[next].Kind == "finding" && next != rootID { continue }
+			if root.Kind == "finding" && nodes[next].Kind == "finding" && next != rootID {
+				continue
+			}
 			if !seen[next] {
 				if len(seen) >= maxChainNodes {
 					truncated = true
@@ -234,8 +245,12 @@ func Query(graph *types.EvidenceGraph, nodeID, path string) (*types.EvidenceChai
 	sort.Slice(chainNodes, func(i, j int) bool { return chainNodes[i].ID < chainNodes[j].ID })
 	sort.Slice(chainEdges, func(i, j int) bool { return chainEdges[i].ID < chainEdges[j].ID })
 	chain := &types.EvidenceChain{RootID: rootID, Summary: fmt.Sprintf("%s is connected to %d evidence node(s) by %d typed relation(s).", root.Label, len(chainNodes)-1, len(chainEdges)), Nodes: chainNodes, Edges: chainEdges, Truncated: truncated}
-	if truncated { chain.Warnings = append(chain.Warnings, "Evidence query reached its node or edge limit; this view is incomplete.") }
-	if root.Attributes["analysis_incomplete"] == "true" { chain.Warnings = append(chain.Warnings, "The source analysis is incomplete; absence of an edge is not evidence of safety.") }
+	if truncated {
+		chain.Warnings = append(chain.Warnings, "Evidence query reached its node or edge limit; this view is incomplete.")
+	}
+	if root.Attributes["analysis_incomplete"] == "true" {
+		chain.Warnings = append(chain.Warnings, "The source analysis is incomplete; absence of an edge is not evidence of safety.")
+	}
 	return chain, nil
 }
 
@@ -256,7 +271,9 @@ func (b *builder) fileNode(targetID, path string) string {
 
 func (b *builder) addNode(node types.EvidenceNode) string {
 	node.Path = cleanPath(node.Path)
-	if node.ID == "" { node.ID = stableID("node", node.Kind, node.Path, node.Method, node.Label, node.Description, canonicalMap(node.Attributes)) }
+	if node.ID == "" {
+		node.ID = stableID("node", node.Kind, node.Path, node.Method, node.Label, node.Description, canonicalMap(node.Attributes))
+	}
 	if existing, ok := b.nodes[node.ID]; ok {
 		if node.Score > existing.Score {
 			existing.Score = node.Score
@@ -273,8 +290,12 @@ func (b *builder) addEdge(from, to, relation, label string) {
 		return
 	}
 	basis := "static_analysis"
-	if relation == "correlates_with" || relation == "supports" { basis = "assessment" }
-	if relation == "reported_observation" || label == "dynamic analysis" { basis = "observation" }
+	if relation == "correlates_with" || relation == "supports" {
+		basis = "assessment"
+	}
+	if relation == "reported_observation" || label == "dynamic analysis" {
+		basis = "observation"
+	}
 	edge := types.EvidenceEdge{From: from, To: to, Relation: relation, Label: label, Attributes: map[string]string{"basis": basis}}
 	edge.ID = stableID("edge", from, to, relation, label)
 	b.edges[edge.ID] = edge
@@ -304,7 +325,9 @@ func targetLabel(result *types.AnalysisResult) string {
 }
 
 func cleanPath(path string) string {
-	if strings.TrimSpace(path) == "" { return "" }
+	if strings.TrimSpace(path) == "" {
+		return ""
+	}
 	// Normalize Windows-style separators before cleaning so paths recorded on
 	// one OS (e.g. "smali\com\Main.smali") match forward-slash node paths and
 	// query lookups on every platform.

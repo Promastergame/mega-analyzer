@@ -2,6 +2,7 @@ package filter
 
 import (
 	"strings"
+	"sync"
 	"sync/atomic"
 )
 
@@ -30,11 +31,70 @@ type Filter struct {
 	classifier *Classifier
 	profile    ProfileType
 
+	// structuralLibs holds package prefixes identified as vendored libraries
+	// by structure (obfuscated names, no manifest components) rather than by
+	// path. Marked once per run by the pipeline's structural pass, read by the
+	// fast path for the rest of the run.
+	structuralMu sync.RWMutex
+	structural   []structuralLib
+
 	// ── Счётчики для мониторинга ─────────────────────────────────────────
 	classifyCalls      atomic.Int64
 	fastPathHits       atomic.Int64
 	cacheInvalidations atomic.Int64
 	savedFromFastPath  atomic.Int64 // 🆕 файлы спасённые critical keyword check'ом
+}
+
+// structuralLib is one runtime-marked library prefix. The result is
+// precomputed so the fast path stays allocation-free.
+type structuralLib struct {
+	prefix string
+	result *ClassificationResult
+}
+
+// structuralLibraryResult mirrors defaultCategoryResult: low importance,
+// library damping, never app code.
+var structuralLibraryResult = &ClassificationResult{
+	IsAppCode:         false,
+	IsLibrary:         true,
+	Importance:        1,
+	RawImportance:     1,
+	Confidence:        0.6,
+	RawStrength:       SignalWeak,
+	EffectiveStrength: SignalWeak,
+	TotalDampening:    1.0,
+	Categories:        []string{"library", "obfuscated_library"},
+}
+
+// MarkStructuralLibrary registers a canonical smali package prefix (e.g.
+// "smali/z/") as a vendored obfuscated library. Paths under it classify as
+// library code with IsAppCode=false from that point on. The prefix must
+// already be lowercase with a trailing slash.
+func (f *Filter) MarkStructuralLibrary(prefix string) {
+	if prefix == "" {
+		return
+	}
+	f.structuralMu.Lock()
+	defer f.structuralMu.Unlock()
+	for _, lib := range f.structural {
+		if lib.prefix == prefix {
+			return
+		}
+	}
+	f.structural = append(f.structural, structuralLib{prefix: prefix, result: structuralLibraryResult})
+}
+
+// lookupStructural returns the precomputed result for a structural library
+// prefix covering path (already canonical and lowercased).
+func (f *Filter) lookupStructural(normalizedLower string) *ClassificationResult {
+	f.structuralMu.RLock()
+	defer f.structuralMu.RUnlock()
+	for _, lib := range f.structural {
+		if strings.HasPrefix(normalizedLower, lib.prefix) {
+			return lib.result
+		}
+	}
+	return nil
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -203,6 +263,10 @@ var knownLibEntries = []knownLibEntry{
 	{prefix: "smali/android/", category: "sdk"},
 	{prefix: "smali/androidx/", category: "sdk"},
 	{prefix: "smali/com/android/internal/", category: "sdk"},
+	// APK signing library (v1/v2/v3 signature verification helpers). Vendored
+	// by build tools into otherwise unrelated apps; its verifyIntegrity* chunk
+	// helpers are signing plumbing, not app anti-tamper protection.
+	{prefix: "smali/com/android/apksig/", category: "sdk"},
 
 	// ═══════════════════════════════════════════════════════════════
 	// GOOGLE — специфичные ПЕРЕД общими!
@@ -627,6 +691,19 @@ func (f *Filter) tryFastPath(path string) (*ClassificationResult, bool) {
 	// ToLower только при необходимости (оптимизация)
 	normalizedLower := toLowerFast(normalized)
 
+	// Runtime-marked structural libraries first: the static prefix index is
+	// built once at init and cannot know about per-run fingerprints.
+	if lib := f.lookupStructural(normalizedLower); lib != nil {
+		// Same critical-keyword guard as the static table: a structural
+		// library must not swallow files whose name carries a strong signal.
+		if matched, _ := containsCriticalKeywordBoundary(normalizedLower); matched {
+			f.savedFromFastPath.Add(1)
+			return nil, false
+		}
+		f.fastPathHits.Add(1)
+		return lib, true
+	}
+
 	// Индексированный lookup: сначала сужаем список до кандидатов
 	candidates := prefixIdx.lookup(normalizedLower)
 	if len(candidates) == 0 {
@@ -701,6 +778,7 @@ func (f *Filter) IsStandardLibrary(path string) bool {
 // FileClassification — результат для горячего пути pipeline.
 type FileClassification struct {
 	IsAppCode        bool
+	IsLibrary        bool
 	Importance       int
 	SkipFullAnalysis bool // known safe library; critical paths never set this
 }
@@ -721,6 +799,7 @@ func (f *Filter) ClassifyForPipeline(path string) FileClassification {
 	if result, ok := f.tryFastPath(path); ok {
 		return FileClassification{
 			IsAppCode:        result.IsAppCode,
+			IsLibrary:        result.IsLibrary,
 			Importance:       result.Importance,
 			SkipFullAnalysis: true,
 		}
@@ -730,6 +809,7 @@ func (f *Filter) ClassifyForPipeline(path string) FileClassification {
 	result := f.classifier.Classify(path)
 	return FileClassification{
 		IsAppCode:  result.IsAppCode,
+		IsLibrary:  result.IsLibrary,
 		Importance: result.Importance,
 	}
 }

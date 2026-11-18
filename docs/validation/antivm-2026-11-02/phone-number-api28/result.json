@@ -1,0 +1,401 @@
+{
+  "status": "passed",
+  "verify_only": false,
+  "modules": [
+    {
+      "module": "identity",
+      "applied": {
+        "succeeded": [
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.hardware.gralloc 'ranchu'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.hardware.hwcomposer 'ranchu'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.hardware.sensors 'ranchu'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.hardware.camera 'ranchu'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.hardware.gps 'ranchu'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.hardware.gatekeeper 'ranchu'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.hardware.fingerprint 'ranchu'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.hardware.power 'ranchu'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.model 'PromasterPhone 1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.brand 'promaster'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.manufacturer 'Promaster'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.device 'promasterphone1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.name 'promasterphone1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.build.fingerprint 'promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.build.id 'PQ3A.190801.101'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.build.display.id 'PQ3A.190801.101'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.build.version.security_patch '2019-08-01'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.build.product 'promasterphone1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.build.description 'promasterphone1-user 9 PQ3A.190801.101 release-keys'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.hardware 'qcom'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.board 'sdm845'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.system.model 'PromasterPhone 1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.system.brand 'promaster'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.system.manufacturer 'Promaster'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.system.device 'promasterphone1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.system.name 'promasterphone1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.system.build.fingerprint 'promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.vendor.model 'PromasterPhone 1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.vendor.brand 'promaster'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.vendor.manufacturer 'Promaster'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.vendor.device 'promasterphone1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.vendor.name 'promasterphone1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.vendor.build.fingerprint 'promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.product.model 'PromasterPhone 1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.product.brand 'promaster'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.product.manufacturer 'Promaster'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.product.device 'promasterphone1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.product.name 'promasterphone1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.build.fingerprint 'promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.odm.model 'PromasterPhone 1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.odm.brand 'promaster'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.odm.manufacturer 'Promaster'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.odm.device 'promasterphone1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.odm.name 'promasterphone1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.odm.build.fingerprint 'promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.system_ext.model 'PromasterPhone 1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.system_ext.brand 'promaster'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.system_ext.manufacturer 'Promaster'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.system_ext.device 'promasterphone1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.product.system_ext.name 'promasterphone1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.system_ext.build.fingerprint 'promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.bootimage.build.fingerprint 'promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys'",
+          "restart zygote and wait for framework/user 0 unlock"
+        ],
+        "failed": null
+      },
+      "verify": {
+        "status": "passed",
+        "checks": {
+          "passed": 13,
+          "failed": 0,
+          "skipped": 0,
+          "partial": 0
+        },
+        "detail": [
+          {
+            "group": "identity",
+            "field": "model",
+            "expected": "PromasterPhone 1",
+            "actual": "PromasterPhone 1",
+            "status": "passed",
+            "severity": "high"
+          },
+          {
+            "group": "identity",
+            "field": "brand",
+            "expected": "promaster",
+            "actual": "promaster",
+            "status": "passed",
+            "severity": "medium"
+          },
+          {
+            "group": "identity",
+            "field": "manufacturer",
+            "expected": "Promaster",
+            "actual": "Promaster",
+            "status": "passed",
+            "severity": "medium"
+          },
+          {
+            "group": "identity",
+            "field": "device",
+            "expected": "promasterphone1",
+            "actual": "promasterphone1",
+            "status": "passed",
+            "severity": "medium"
+          },
+          {
+            "group": "identity",
+            "field": "product",
+            "expected": "promasterphone1",
+            "actual": "promasterphone1",
+            "status": "passed",
+            "severity": "medium"
+          },
+          {
+            "group": "identity",
+            "field": "hardware",
+            "expected": "qcom",
+            "actual": "qcom",
+            "status": "passed",
+            "severity": "high"
+          },
+          {
+            "group": "identity",
+            "field": "board",
+            "expected": "sdm845",
+            "actual": "sdm845",
+            "status": "passed",
+            "severity": "high"
+          },
+          {
+            "group": "build",
+            "field": "fingerprint",
+            "expected": "promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys",
+            "actual": "promaster/promasterphone1/promasterphone1:9/PQ3A.190801.101/190801:user/release-keys",
+            "status": "passed",
+            "severity": "high"
+          },
+          {
+            "group": "build",
+            "field": "build_id",
+            "expected": "PQ3A.190801.101",
+            "actual": "PQ3A.190801.101",
+            "status": "passed",
+            "severity": "medium"
+          },
+          {
+            "group": "build",
+            "field": "security_patch",
+            "expected": "2019-08-01",
+            "actual": "2019-08-01",
+            "status": "passed",
+            "severity": "low"
+          },
+          {
+            "group": "build",
+            "field": "android_version",
+            "expected": "9",
+            "actual": "9",
+            "status": "passed",
+            "severity": "high"
+          },
+          {
+            "group": "build",
+            "field": "api_level",
+            "expected": "28",
+            "actual": "28",
+            "status": "passed",
+            "severity": "high"
+          },
+          {
+            "group": "build",
+            "field": "abi",
+            "expected": "x86_64",
+            "actual": "x86_64",
+            "status": "passed",
+            "severity": "high"
+          }
+        ],
+        "by_group": {
+          "build": "passed",
+          "identity": "passed"
+        }
+      },
+      "critical": true
+    },
+    {
+      "module": "environment",
+      "applied": {
+        "succeeded": [
+          "preserve coherent EGL driver family at /vendor/lib64/egl (temporary bind mount)",
+          "preserve coherent EGL driver family at /vendor/lib/egl (temporary bind mount)",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.kernel.qemu '0'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.boot.qemu '0'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.debuggable '0'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.secure '1'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.build.type 'user'",
+          "'/data/local/tmp/mega-antivm/resetprop' -n ro.build.tags 'release-keys'",
+          "restart zygote and wait for framework/user 0 unlock"
+        ],
+        "failed": null
+      },
+      "verify": {
+        "status": "passed",
+        "checks": {
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0,
+          "partial": 0
+        },
+        "detail": [
+          {
+            "group": "environment",
+            "field": "qemu",
+            "expected": "0",
+            "actual": "0",
+            "status": "passed",
+            "severity": "high"
+          },
+          {
+            "group": "environment",
+            "field": "boot_qemu",
+            "expected": "0",
+            "actual": "0",
+            "status": "passed",
+            "severity": "high"
+          },
+          {
+            "group": "environment",
+            "field": "debuggable",
+            "expected": "0",
+            "actual": "0",
+            "status": "passed",
+            "severity": "medium"
+          },
+          {
+            "group": "environment",
+            "field": "secure",
+            "expected": "1",
+            "actual": "1",
+            "status": "passed",
+            "severity": "medium"
+          },
+          {
+            "group": "environment",
+            "field": "build_type",
+            "expected": "user",
+            "actual": "user",
+            "status": "passed",
+            "severity": "medium"
+          },
+          {
+            "group": "environment",
+            "field": "build_tags",
+            "expected": "release-keys",
+            "actual": "release-keys",
+            "status": "passed",
+            "severity": "medium"
+          }
+        ],
+        "by_group": {
+          "environment": "passed"
+        }
+      },
+      "critical": true
+    },
+    {
+      "module": "battery",
+      "applied": {
+        "succeeded": [
+          "dumpsys battery unplug",
+          "dumpsys battery set level 71",
+          "dumpsys battery set status 3",
+          "dumpsys battery set temp 315",
+          "dumpsys battery set health 2"
+        ],
+        "failed": null
+      },
+      "verify": {
+        "status": "passed",
+        "checks": {
+          "passed": 5,
+          "failed": 0,
+          "skipped": 0,
+          "partial": 0
+        },
+        "detail": [
+          {
+            "group": "battery",
+            "field": "level",
+            "expected": "71",
+            "actual": "71",
+            "status": "passed",
+            "severity": "low"
+          },
+          {
+            "group": "battery",
+            "field": "status",
+            "expected": "discharging",
+            "actual": "discharging",
+            "status": "passed",
+            "severity": "low"
+          },
+          {
+            "group": "battery",
+            "field": "temperature",
+            "expected": "315",
+            "actual": "315",
+            "status": "passed",
+            "severity": "low"
+          },
+          {
+            "group": "battery",
+            "field": "health",
+            "expected": "good",
+            "actual": "good",
+            "status": "passed",
+            "severity": "low"
+          },
+          {
+            "group": "battery",
+            "field": "plugged",
+            "expected": "none",
+            "actual": "none",
+            "status": "passed",
+            "severity": "low"
+          }
+        ],
+        "by_group": {
+          "battery": "passed"
+        }
+      },
+      "critical": false
+    },
+    {
+      "module": "display",
+      "applied": {
+        "succeeded": [
+          "wm size 1080x2160",
+          "wm density 440"
+        ],
+        "failed": null
+      },
+      "verify": {
+        "status": "passed",
+        "checks": {
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0,
+          "partial": 0
+        },
+        "detail": [
+          {
+            "group": "display",
+            "field": "resolution",
+            "expected": "1080x2160",
+            "actual": "1080x2160",
+            "status": "passed",
+            "severity": "low"
+          },
+          {
+            "group": "display",
+            "field": "density",
+            "expected": "440",
+            "actual": "440",
+            "status": "passed",
+            "severity": "low"
+          }
+        ],
+        "by_group": {
+          "display": "passed"
+        }
+      },
+      "critical": false
+    }
+  ],
+  "operations": [
+    {
+      "name": "identity.properties",
+      "module": "identity",
+      "critical": true
+    },
+    {
+      "name": "environment.deqemu",
+      "module": "environment",
+      "critical": true
+    },
+    {
+      "name": "battery.dumpsys",
+      "module": "battery",
+      "critical": false
+    },
+    {
+      "name": "display.resolution",
+      "module": "display",
+      "critical": false
+    }
+  ],
+  "aborted": false,
+  "started_at": "2026-11-02T17:57:42.5756717+06:00",
+  "finished_at": "2026-11-02T17:58:40.9426468+06:00"
+}

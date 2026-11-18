@@ -45,14 +45,20 @@ func (r *MarkdownReporter) GenerateStream(w io.Writer) error {
 	builder := NewViewBuilder(r.result, r.opts)
 	view := builder.Build()
 	renderer := NewMarkdownRenderer(r.opts)
-	return renderer.RenderStream(w, view)
+	if err := renderer.RenderStream(w, view); err != nil {
+		return err
+	}
+	return r.writeEvidenceDiagnostics(w)
 }
 
 func (r *MarkdownReporter) BuildMarkdown() string {
 	builder := NewViewBuilder(r.result, r.opts)
 	view := builder.Build()
 	renderer := NewMarkdownRenderer(r.opts)
-	return renderer.Render(view)
+	var b strings.Builder
+	b.WriteString(renderer.Render(view))
+	_ = r.writeEvidenceDiagnostics(&b)
+	return b.String()
 }
 
 func (r *MarkdownReporter) BuildView() ReportView {

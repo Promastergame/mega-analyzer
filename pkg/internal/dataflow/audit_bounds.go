@@ -56,8 +56,9 @@ func (s *sliceState) buildAuditIndexes(signatures []string) {
 				s.fieldWrites[field] = append(s.fieldWrites[field], fieldWrite{method: signature, line: index, register: fields[1]})
 			}
 			if call, ok := parseInvoke(raw); ok {
-				for _, target := range s.resolveCallees(call) {
-					s.callers[target] = append(s.callers[target], callReference{caller: signature, index: index, call: call})
+				targets := s.resolveCallees(call)
+				for _, target := range targets {
+					s.callers[target] = append(s.callers[target], callReference{caller: signature, index: index, call: call, unresolvedDispatch: isDynamicDispatch(call.opcode) && len(targets) > 1})
 				}
 			}
 		}

@@ -45,6 +45,9 @@ func gateFileMatches(analysis *types.FileAnalysis) int {
 //     they can never trigger a bogus token-boundary drop.
 func precisionGateKeeps(path string, m *types.Match) bool {
 	kw := m.Text
+	if m.Category == types.CategoryCustomKeyword && m.Pattern != "" && strings.Contains(strings.ToLower(m.Text), strings.ToLower(m.Pattern)) {
+		kw = m.Pattern
+	}
 	if kw == "" {
 		kw = m.Pattern
 	}
@@ -53,7 +56,7 @@ func precisionGateKeeps(path string, m *types.Match) bool {
 	}
 	window := kw
 	lkw := strings.ToLower(kw)
-	for _, w := range []string{m.ResolvedContext, m.Context} {
+	for _, w := range []string{m.Text, m.ResolvedContext, m.Context} {
 		if len(w) > len(kw) && strings.Contains(strings.ToLower(w), lkw) {
 			window = w
 			break

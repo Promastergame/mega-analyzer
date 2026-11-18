@@ -1,0 +1,80 @@
+{"group": "design", "state": "найди скилл для ИИ который делает дизайн лучше", "accept": ["frontend-design", "artifact-design"]}
+{"group": "design", "state": "найди скил чтобы ИИ лучше делал дизайн", "accept": ["frontend-design", "artifact-design"]}
+{"group": "design", "state": "хочу чтобы сайт выглядел красиво а не как типичный ИИ шаблон", "accept": ["frontend-design"]}
+{"group": "design", "state": "сделай лендинг стильным, поправь шрифты и отступы", "accept": ["frontend-design"]}
+{"group": "design", "state": "make my react dashboard look less generic", "accept": ["frontend-design"]}
+{"group": "design", "state": "improve the UI design of this web page", "accept": ["frontend-design"]}
+{"group": "design", "state": "красивый интерфейс для веб-приложения", "accept": ["frontend-design"]}
+{"group": "design", "state": "нужен постер для мероприятия", "accept": ["canvas-design", "artifact-design"]}
+{"group": "design", "state": "сделай красивый one-pager отчёт в html", "accept": ["artifact-design"]}
+{"group": "design", "state": "применить цвета и логотип нашей компании к презентации", "accept": ["brand-guidelines"]}
+{"group": "design", "state": "оформи документ в фирменном стиле", "accept": ["brand-guidelines"]}
+{"group": "design", "state": "подбери тему оформления со шрифтами и палитрой для слайдов", "accept": ["theme-factory"]}
+{"group": "design", "state": "apply a preset color theme to my report", "accept": ["theme-factory"]}
+{"group": "design", "state": "дизайн плохой, переделай вёрстку", "accept": ["frontend-design"]}
+{"group": "design", "state": "ui выглядит убого", "accept": ["frontend-design"]}
+{"group": "design", "state": "какой скилл отвечает за дизайн?", "accept": ["frontend-design", "artifact-design"]}
+{"group": "office", "state": "сделай презентацию на 10 слайдов про продажи", "accept": ["pptx"]}
+{"group": "office", "state": "нужно открыть pptx и поменять текст на втором слайде", "accept": ["pptx"]}
+{"group": "office", "state": "make a slide deck for the board meeting", "accept": ["pptx"]}
+{"group": "office", "state": "отредактируй ворд документ, включи режим правок", "accept": ["docx"]}
+{"group": "office", "state": "create a word document with a table of contents", "accept": ["docx"]}
+{"group": "office", "state": "посчитай формулы в экселе и сделай сводную таблицу", "accept": ["xlsx"]}
+{"group": "office", "state": "open this csv and add a pivot table", "accept": ["xlsx"]}
+{"group": "office", "state": "вытащи таблицы из пдф", "accept": ["pdf"]}
+{"group": "office", "state": "merge these two PDFs and fill the form", "accept": ["pdf"]}
+{"group": "office", "state": "распознай текст со сканов pdf", "accept": ["pdf"]}
+{"group": "writing", "state": "текст звучит как будто его написал чатгпт, сделай по-человечески", "accept": ["humanizer"]}
+{"group": "writing", "state": "убери следы ИИ из статьи", "accept": ["humanizer"]}
+{"group": "writing", "state": "make this essay sound less robotic", "accept": ["humanizer"]}
+{"group": "writing", "state": "переведи письмо на английский", "accept": ["translator"]}
+{"group": "writing", "state": "translate the docs to German keeping terminology", "accept": ["translator"]}
+{"group": "writing", "state": "напиши ответ клиенту на почту, вежливо", "accept": ["email-writer"]}
+{"group": "writing", "state": "draft a cold outreach email", "accept": ["email-writer"]}
+{"group": "writing", "state": "сделай выжимку встречи: решения и задачи", "accept": ["meeting-notes"]}
+{"group": "writing", "state": "summarize this call transcript into action items", "accept": ["meeting-notes"]}
+{"group": "writing", "state": "напиши апдейт для руководства о статусе проекта", "accept": ["internal-comms"]}
+{"group": "writing", "state": "помоги написать техническую спецификацию", "accept": ["doc-coauthoring"]}
+{"group": "writing", "state": "улучши мой системный промпт для бота", "accept": ["prompt-engineering"]}
+{"group": "writing", "state": "how do I write better prompts for GPT", "accept": ["prompt-engineering"]}
+{"group": "code", "state": "тест падает, не понимаю почему", "accept": ["systematic-debugging"]}
+{"group": "code", "state": "there's a weird bug in production, help me find the root cause", "accept": ["systematic-debugging"]}
+{"group": "code", "state": "сначала напиши тест, потом код", "accept": ["test-driven-development"]}
+{"group": "code", "state": "посмотри мой пулл реквест", "accept": ["code-review"]}
+{"group": "code", "state": "review this diff for security issues and style", "accept": ["code-review", "security-audit"]}
+{"group": "code", "state": "напиши нормальное сообщение коммита", "accept": ["git-commit"]}
+{"group": "code", "state": "резолвни конфликт при мердже", "accept": ["git-commit"]}
+{"group": "code", "state": "оптимизируй медленный sql запрос", "accept": ["sql-expert"]}
+{"group": "code", "state": "which index should I add to this postgres table", "accept": ["sql-expert"]}
+{"group": "code", "state": "проверь код на уязвимости и утечки ключей", "accept": ["security-audit"]}
+{"group": "code", "state": "засунь приложение в докер и задеплой", "accept": ["docker-deploy"]}
+{"group": "code", "state": "write a Dockerfile and docker-compose for my api", "accept": ["docker-deploy"]}
+{"group": "code", "state": "хочу сделать mcp сервер для своего api", "accept": ["mcp-builder"]}
+{"group": "code", "state": "декомпилируй apk и найди где лимит монет", "accept": ["apk-reverse"]}
+{"group": "code", "state": "пропатчить smali и пересобрать apk", "accept": ["apk-reverse"]}
+{"group": "web", "state": "открой сайт и нажми кнопку войти", "accept": ["agent-browser"]}
+{"group": "web", "state": "заполни форму на сайте за меня", "accept": ["agent-browser"]}
+{"group": "web", "state": "scrape the prices from this website", "accept": ["agent-browser"]}
+{"group": "web", "state": "найди в интернете свежие новости про nvidia", "accept": ["web-search"]}
+{"group": "web", "state": "погугли кто сейчас CEO OpenAI", "accept": ["web-search"]}
+{"group": "web", "state": "протестируй мое веб-приложение через playwright", "accept": ["webapp-testing"]}
+{"group": "data", "state": "проанализируй продажи по месяцам и найди тренды", "accept": ["data-analysis"]}
+{"group": "data", "state": "why did churn go up last quarter? here is the data", "accept": ["data-analysis"]}
+{"group": "data", "state": "построй график выручки", "accept": ["inline-charts"]}
+{"group": "data", "state": "plot a bar chart of these numbers", "accept": ["inline-charts"]}
+{"group": "media", "state": "нарисуй картинку кота в космосе", "accept": ["image-generation"]}
+{"group": "media", "state": "generate a logo for my startup", "accept": ["image-generation"]}
+{"group": "media", "state": "сделай гифку для слака", "accept": ["slack-gif-creator"]}
+{"group": "media", "state": "генеративное искусство на p5js", "accept": ["algorithmic-art"]}
+{"group": "media", "state": "смонтируй видео с субтитрами на remotion", "accept": ["video-remotion"]}
+{"group": "media", "state": "сделай анимированный ролик программно", "accept": ["video-remotion"]}
+{"group": "meta", "state": "хочу создать новый скилл", "accept": ["skill-creator"]}
+{"group": "meta", "state": "мой скилл не срабатывает, улучши описание", "accept": ["skill-creator"]}
+{"group": "other", "state": "какая погода завтра в Омске", "accept": ["other"]}
+{"group": "other", "state": "расскажи анекдот", "accept": ["other"]}
+{"group": "other", "state": "сколько будет 2+2", "accept": ["other"]}
+{"group": "other", "state": "привет, как дела?", "accept": ["other"]}
+{"group": "other", "state": "закажи пиццу домой", "accept": ["other"]}
+{"group": "other", "state": "what's the capital of France", "accept": ["other"]}
+{"group": "other", "state": "напомни мне позвонить маме в 18:00", "accept": ["other"]}
+{"group": "other", "state": "посоветуй фильм на вечер", "accept": ["other"]}

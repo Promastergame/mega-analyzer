@@ -10,6 +10,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 // shardKey builds a key that always lands in hot shard 0 so LRU ordering can
@@ -103,7 +105,7 @@ func TestHotCacheNamespacesAreIsolated(t *testing.T) {
 // TestStoreHotCacheDoesNotFreeze covers the old bug where promotion stopped
 // entirely once a namespace map reached its entry limit.
 func TestStoreHotCacheDoesNotFreeze(t *testing.T) {
-	store, err := NewStore(StoreConfig{BaseDir: t.TempDir(), MaxMemoryPerNS: hotShardCount})
+	store, err := NewStore(StoreConfig{BaseDir: testutil.TempDir(t), MaxMemoryPerNS: hotShardCount})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,7 +130,7 @@ func TestStoreHotCacheDoesNotFreeze(t *testing.T) {
 
 func TestStoreConcurrentAccessIsRaceFree(t *testing.T) {
 	store, err := NewStore(StoreConfig{
-		BaseDir:             t.TempDir(),
+		BaseDir:             testutil.TempDir(t),
 		MaxMemoryPerNS:      64,
 		MaxMemoryBytesPerNS: 64 * 1024,
 		MaxDiskBytes:        256 * 1024,
@@ -183,7 +185,7 @@ func fillStore(t *testing.T, store *Store, n int, payload []byte) []ContentKey {
 // were deleted from disk while this process kept serving them from RAM.
 func TestDiskEvictionInvalidatesHotCache(t *testing.T) {
 	store, err := NewStore(StoreConfig{
-		BaseDir:      t.TempDir(),
+		BaseDir:      testutil.TempDir(t),
 		MaxDiskBytes: 8 * 1024,
 	})
 	if err != nil {
@@ -209,7 +211,7 @@ func TestDiskEvictionInvalidatesHotCache(t *testing.T) {
 
 func TestDiskEvictionRespectsLowWaterMark(t *testing.T) {
 	const limit = 16 * 1024
-	store, err := NewStore(StoreConfig{BaseDir: t.TempDir(), MaxDiskBytes: limit})
+	store, err := NewStore(StoreConfig{BaseDir: testutil.TempDir(t), MaxDiskBytes: limit})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -231,7 +233,7 @@ func TestDiskEvictionRespectsLowWaterMark(t *testing.T) {
 }
 
 func TestDiskBytesTracksRealUsage(t *testing.T) {
-	store, err := NewStore(StoreConfig{BaseDir: t.TempDir(), MaxDiskBytes: 64 * 1024})
+	store, err := NewStore(StoreConfig{BaseDir: testutil.TempDir(t), MaxDiskBytes: 64 * 1024})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -251,7 +253,7 @@ func TestDiskBytesTracksRealUsage(t *testing.T) {
 }
 
 func TestOrphanTempFilesAreCollected(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	store, err := NewStore(StoreConfig{BaseDir: dir})
 	if err != nil {
 		t.Fatal(err)
@@ -277,7 +279,7 @@ func TestOrphanTempFilesAreCollected(t *testing.T) {
 }
 
 func TestClearRecreatesLayout(t *testing.T) {
-	store, err := NewStore(StoreConfig{BaseDir: t.TempDir()})
+	store, err := NewStore(StoreConfig{BaseDir: testutil.TempDir(t)})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -304,7 +306,7 @@ func TestClearRecreatesLayout(t *testing.T) {
 }
 
 func TestInvalidateNamespaceRecreatesDirectory(t *testing.T) {
-	store, err := NewStore(StoreConfig{BaseDir: t.TempDir()})
+	store, err := NewStore(StoreConfig{BaseDir: testutil.TempDir(t)})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -371,7 +373,7 @@ func TestDecodeRecordRejectsDamage(t *testing.T) {
 }
 
 func TestStoreDropsCorruptEntry(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	store, err := NewStore(StoreConfig{BaseDir: dir})
 	if err != nil {
 		t.Fatal(err)
@@ -407,7 +409,7 @@ func TestStoreDropsCorruptEntry(t *testing.T) {
 }
 
 func TestStoreRejectsEntryCopiedFromAnotherKey(t *testing.T) {
-	store, err := NewStore(StoreConfig{BaseDir: t.TempDir()})
+	store, err := NewStore(StoreConfig{BaseDir: testutil.TempDir(t)})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -436,7 +438,7 @@ func TestStoreRejectsWorldReadableEntry(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("POSIX file permission bits are not supported on Windows")
 	}
-	store, err := NewStore(StoreConfig{BaseDir: t.TempDir()})
+	store, err := NewStore(StoreConfig{BaseDir: testutil.TempDir(t)})
 	if err != nil {
 		t.Fatal(err)
 	}

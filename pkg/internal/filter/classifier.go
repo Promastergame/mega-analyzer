@@ -757,6 +757,28 @@ func (c *Classifier) checkHighValuePaths(pathInfo PathInfo, result *Classificati
 // STEP 2: STANDARD LIBRARIES — мягкое гашение
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// vendorSdkNamespaces carry a high-value keyword in their own name. A
+// high-value match inside them ("billing" in billingclient, "purchase" in
+// Purchase.smali) must not promote the vendored SDK to app code.
+var vendorSdkNamespaces = []string{
+	"com/android/billingclient/",
+	"com/android/vending/billing/",
+	// The Play-Billing AIDL implementation under gms internals: without this
+	// entry "billing" in the path overrode the com/google/android/gms/ library
+	// rule, the classes counted as app code, and the payment detector emitted
+	// "Payment Provider: Google Play Billing" against the SDK's own code.
+	"com/google/android/gms/internal/play_billing/",
+}
+
+func isVendorSdkNamespace(libTarget string) bool {
+	for _, p := range vendorSdkNamespaces {
+		if strings.HasPrefix(libTarget, p) {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *Classifier) checkStandardLibraries(pathInfo PathInfo, result *ClassificationResult, dampening *dampeningTracker, trace *ExplainTrace) {
 	libTarget := strings.TrimPrefix(pathInfo.Lower, "smali/")
 
@@ -787,8 +809,10 @@ func (c *Classifier) checkStandardLibraries(pathInfo PathInfo, result *Classific
 			continue
 		}
 
-		// High-value override
-		if len(result.MatchedHighValue) > 0 {
+		// High-value override. A keyword that is part of the SDK's own name
+		// (billingclient, vending/billing) is not app logic: Google Play
+		// Billing's Purchase/PurchaseToken classes must stay library code.
+		if len(result.MatchedHighValue) > 0 && !isVendorSdkNamespace(libTarget) {
 			trace.log("LIBRARY", "override_by_high_value", cl.original.Pattern,
 				fmt.Sprintf("Library pattern matched, but %d high-value patterns take priority",
 					len(result.MatchedHighValue)))

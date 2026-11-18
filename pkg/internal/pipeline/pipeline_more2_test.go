@@ -103,13 +103,24 @@ func TestFilesForCategories_NoMatchingCategory(t *testing.T) {
 	}
 }
 
+// appCodeResultWith builds a result whose recommendations derive from a
+// single app-code file carrying the given match (recommendations ignore
+// library-file matches by contract).
+func appCodeResultWith(cat types.Category, count int) *types.AnalysisResult {
+	result := types.NewAnalysisResult("/tmp")
+	fa := &types.FileAnalysis{Path: "smali/com/app/Main.smali", IsAppCode: true}
+	for i := 0; i < count; i++ {
+		fa.Matches = append(fa.Matches, types.Match{Categorized: types.Categorized{Category: cat}})
+	}
+	result.Files[fa.Path] = fa
+	result.MatchesByCategory = map[types.Category]int{cat: count}
+	return result
+}
+
 // ─── generateRecommendations — billing trigger ────────────────────────────────
 
 func TestGenerateRecommendations_BillingCategory(t *testing.T) {
-	result := types.NewAnalysisResult("/tmp")
-	result.MatchesByCategory = map[types.Category]int{
-		types.CategoryBillingClient: 3,
-	}
+	result := appCodeResultWith(types.CategoryBillingClient, 3)
 	recs := generateRecommendations(result)
 	found := false
 	for _, r := range recs {
@@ -123,10 +134,7 @@ func TestGenerateRecommendations_BillingCategory(t *testing.T) {
 }
 
 func TestGenerateRecommendations_PremiumCategory(t *testing.T) {
-	result := types.NewAnalysisResult("/tmp")
-	result.MatchesByCategory = map[types.Category]int{
-		types.CategoryPremiumCheck: 1,
-	}
+	result := appCodeResultWith(types.CategoryPremiumCheck, 1)
 	recs := generateRecommendations(result)
 	found := false
 	for _, r := range recs {
@@ -140,10 +148,7 @@ func TestGenerateRecommendations_PremiumCategory(t *testing.T) {
 }
 
 func TestGenerateRecommendations_SecurityCategory(t *testing.T) {
-	result := types.NewAnalysisResult("/tmp")
-	result.MatchesByCategory = map[types.Category]int{
-		types.CategorySignatureCheck: 1,
-	}
+	result := appCodeResultWith(types.CategorySignatureCheck, 1)
 	recs := generateRecommendations(result)
 	found := false
 	for _, r := range recs {
@@ -157,10 +162,7 @@ func TestGenerateRecommendations_SecurityCategory(t *testing.T) {
 }
 
 func TestGenerateRecommendations_SubscriptionCategory(t *testing.T) {
-	result := types.NewAnalysisResult("/tmp")
-	result.MatchesByCategory = map[types.Category]int{
-		types.CategorySubscription: 2,
-	}
+	result := appCodeResultWith(types.CategorySubscription, 2)
 	recs := generateRecommendations(result)
 	found := false
 	for _, r := range recs {

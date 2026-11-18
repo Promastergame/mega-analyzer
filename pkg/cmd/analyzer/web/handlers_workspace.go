@@ -210,7 +210,7 @@ func (s *Server) handleWorkspaceFile(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Disposition", mime.FormatMediaType("attachment", map[string]string{"filename": fi.Name()}))
 	if r.URL.Query().Get("preview") == "1" {
 		switch strings.ToLower(path.Ext(rel)) {
-		case ".json", ".txt", ".log", ".md", ".csv", ".html", ".htm", ".xml", ".yml", ".yaml", ".properties", ".java", ".smali":
+		case ".json", ".txt", ".log", ".md", ".csv", ".html", ".htm", ".xml", ".svg", ".yml", ".yaml", ".properties", ".java", ".smali":
 		default:
 			httpError(w, r, 415, "Preview is available for text reports only")
 			return

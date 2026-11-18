@@ -30,6 +30,8 @@ pub mod synth;
 pub mod taxonomy;
 mod trainer;
 mod weights;
+#[cfg(target_arch = "wasm32")]
+mod wasm;
 
 pub use error::{GnnError, Result};
 pub use features::FeatureExtractor;

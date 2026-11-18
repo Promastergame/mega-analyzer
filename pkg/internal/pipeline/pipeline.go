@@ -91,7 +91,10 @@ type Pipeline struct {
 	piracyDetector   *piracy.Detector
 	rulesEngine      *rules.Engine
 	builtinDetectors []FileDetector
-	customDetectors  []FileDetector
+	// fogKeys accumulates byte-array constants decoded by the StringFog
+	// evaluator; the payload-recovery pass tries them as container keys.
+	fogKeys         *fogKeyRegistry
+	customDetectors []FileDetector
 
 	cachedDetectors     []FileDetector
 	cachedDetectorIndex *detectorIndex
@@ -100,11 +103,12 @@ type Pipeline struct {
 	dexSemOnce sync.Once
 	dexSem     chan struct{}
 
-	slowMu    sync.Mutex
-	slowFiles []slowFileSample
-	activeMu  sync.Mutex
-	active    map[string]activeFileProgress
-	workUnits map[string]int64
+	slowMu       sync.Mutex
+	slowFiles    []slowFileSample
+	activeMu     sync.Mutex
+	active       map[string]activeFileProgress
+	workUnits    map[string]int64
+	fileExecutor fileScanExecutor
 
 	OnProgress       func(stage string, current, total int)
 	OnProgressStatus func(stage string, current, total int, status string)
@@ -173,6 +177,9 @@ func NewPipeline(cfg *config.Config) (*Pipeline, error) {
 	}
 
 	p.builtinDetectors = NewBuiltinDetectors(piracyDetector)
+	p.fogKeys = newFogKeyRegistry()
+	p.builtinDetectors = append(p.builtinDetectors, &stringFogEvaluator{p: p})
+	p.fileExecutor = newFileScanExecutor(cfg)
 
 	return p, nil
 }
@@ -257,6 +264,16 @@ func (p *Pipeline) effectiveWorkerCount() int {
 		return defaultWorkerCount
 	}
 	return p.config.Workers
+}
+
+// Browser helpers execute class tasks on other CPU cores. One physical-file
+// producer keeps unrelated Go goroutines from starving their MessagePort
+// replies; DEX class concurrency still uses the full selected worker count.
+func (p *Pipeline) physicalWorkerCount() int {
+	if p.fileExecutor != nil {
+		return 1
+	}
+	return p.effectiveWorkerCount()
 }
 
 // dexClassSemaphore caps concurrent DEX class analyses across ALL pipeline
@@ -395,7 +412,7 @@ func (p *Pipeline) Run(ctx context.Context, targetDir string) (*types.AnalysisRe
 
 	p.resetRunState(targetDir)
 	defer p.publishCacheStats()
-	workerCount := p.effectiveWorkerCount()
+	workerCount := p.physicalWorkerCount()
 
 	logger.Info("Starting analysis v4.0",
 		"target", targetDir,
@@ -472,6 +489,13 @@ func (p *Pipeline) Run(ctx context.Context, targetDir string) (*types.AnalysisRe
 
 	// Log fine-grained sub-stage breakdown (accumulated CPU-like time).
 	p.stats.InternalTimings.log()
+	for i, stat := range p.DetectorMetrics().Snapshot() {
+		if i >= 8 {
+			break
+		}
+		logger.Info("Detector timing", "name", stat.Name, "calls", stat.Calls,
+			"duration", time.Duration(stat.TimeNs).String(), "matches", stat.Matches)
+	}
 
 	return p.result, scanErr
 }
@@ -525,7 +549,7 @@ func (p *Pipeline) runStreamingPipeline(ctx context.Context, targetDir string) e
 		return p.streamFiles(gctx, targetDir, jobsChan)
 	})
 
-	workerCount := p.effectiveWorkerCount()
+	workerCount := p.physicalWorkerCount()
 	for i := 0; i < workerCount; i++ {
 		g.Go(func() error {
 			return p.worker(gctx, jobsChan, resultsChan)
@@ -779,6 +803,108 @@ func (p *Pipeline) publishCoverage() {
 	p.result.Coverage = coverage
 	p.result.Stats.TotalFiles = coverage.Queued
 	p.result.Stats.AnalyzedFiles = coverage.AnalyzedFiles
+	// FilesParsed is a per-job counter: virtual DEX-class units, recovered
+	// artifacts and re-queued files each increment it, so it can exceed the
+	// physical pre-scan walk and produce contradictions like "315 analyzed
+	// of 313 total". The distinct Files map is the honest analyzed count,
+	// and the total grows with it when late units expand the universe.
+	if distinct := len(p.result.Files); distinct > 0 {
+		p.result.Stats.AnalyzedFiles = distinct
+		p.result.Coverage.AnalyzedFiles = distinct
+		if p.result.Stats.TotalFiles < distinct {
+			p.result.Stats.TotalFiles = distinct
+		}
+	}
+
+	// Coverage gap list: every queued file that never produced a FileAnalysis
+	// (scan limits, cancellation or noise filtering). Reviewers need the
+	// explicit list to verify that no application code silently fell out.
+	// The walk universe holds absolute temp paths while result.Files is keyed
+	// relatively, so both sides are canonicalized to slash-relative form
+	// first — and only relative paths are stored, keeping local directories
+	// out of shareable reports.
+	if len(p.workUnits) > 0 {
+		const maxGapList = 500
+		root := filepath.ToSlash(filepath.Clean(p.result.TargetDir))
+		rel := func(path string) string {
+			norm := filepath.ToSlash(filepath.Clean(strings.ReplaceAll(path, "\\", "/")))
+			if root != "" && strings.HasPrefix(norm, root+"/") {
+				return norm[len(root)+1:]
+			}
+			return norm
+		}
+		analyzed := make(map[string]struct{}, len(p.result.Files))
+		// A physical classes*.dex is covered when virtual per-class analyses
+		// exist under its smali tree; the DEX file itself never gets a
+		// FileAnalysis entry of its own.
+		// All parsed DEX classes merge into one virtual "smali/" tree, so
+		// any classes*.dex physical entry is covered as soon as virtual
+		// class analyses exist.
+		smaliAnalyzed := false
+		for path := range p.result.Files {
+			r := rel(path)
+			analyzed[r] = struct{}{}
+			if _, ok := dexNameForSmaliPath(r); ok {
+				smaliAnalyzed = true
+			}
+		}
+		paths := make([]string, 0, 64)
+		for path := range p.workUnits {
+			r := rel(path)
+			if _, ok := analyzed[r]; ok {
+				continue
+			}
+			if smaliAnalyzed && strings.HasPrefix(r, "classes") && strings.HasSuffix(r, ".dex") {
+				continue
+			}
+			paths = append(paths, r)
+		}
+		sort.Strings(paths)
+		gap := make([]types.SkippedFile, 0, len(paths))
+		for _, path := range paths {
+			if len(gap) >= maxGapList {
+				break
+			}
+			gap = append(gap, types.SkippedFile{
+				Path:   path,
+				Reason: "queued but not processed (scan limit, cancellation or noise filter)",
+			})
+		}
+		p.result.Coverage.NotAnalyzedTotal = len(paths)
+		p.result.Coverage.NotAnalyzed = gap
+		if len(paths) > 0 {
+			sample := paths
+			if len(sample) > 5 {
+				sample = sample[:5]
+			}
+			logger.Warn("coverage gap: queued files without analysis results",
+				"count", len(paths), "listed", len(gap),
+				"sample", strings.Join(sample, ", "))
+		}
+	}
+}
+
+// dexNameForSmaliPath maps a virtual smali analysis path to the physical DEX
+// entry that produced it: "smali/a/B.smali" → "classes.dex",
+// "smali_classes2/…" → "classes2.dex", "smali_classes_dup1/…" →
+// "classes_dup1.dex". Everything else reports not-ok.
+func dexNameForSmaliPath(path string) (string, bool) {
+	rest, ok := strings.CutPrefix(path, "smali")
+	if !ok {
+		return "", false
+	}
+	name := "classes"
+	switch {
+	case strings.HasPrefix(rest, "/"):
+	case strings.HasPrefix(rest, "_"):
+		name = strings.TrimPrefix(rest, "_")
+		if slash := strings.IndexByte(name, '/'); slash >= 0 {
+			name = name[:slash]
+		}
+	default:
+		return "", false
+	}
+	return name + ".dex", true
 }
 
 var errMaxFilesReached = errors.New("max files reached")
@@ -923,7 +1049,7 @@ func (p *Pipeline) postProcess(ctx context.Context) {
 	}
 	// totalSteps counts every reportProgress call on the longest path,
 	// including the two deferred ones registered below.
-	const totalSteps = 14
+	const totalSteps = 17
 	step := 0
 	reportProgress := func(stageName string) {
 		step++
@@ -967,6 +1093,17 @@ func (p *Pipeline) postProcess(ctx context.Context) {
 		p.computeDeobfMetrics()
 	}
 
+	// Offline second-stage container recovery: tries the app's own decoded
+	// byte-array constants as decryption keys over opaque asset blobs. Must
+	// precede the rule engine so recovered evidence reaches it.
+	reportProgress("payload_recovery")
+	p.recoverEncryptedPayloads()
+
+	// ABI install-tripwire: lib/x86_64 stub-only against real ARM code.
+	// Must precede the rule engine so the artifact finding reaches scoring.
+	reportProgress("abi_tripwire")
+	p.evaluateAbiTripwire()
+
 	reportProgress("rule engine")
 	p.applyRuleEngine()
 
@@ -978,6 +1115,13 @@ func (p *Pipeline) postProcess(ctx context.Context) {
 	// scoring so every output surface uses the same risk assessment.
 	reportProgress("piracy analysis")
 	p.buildPiracyAnalysis()
+
+	// Recognize structurally-fingerprinted obfuscated libraries before any
+	// consumer scores them as app code. Runs after the rule engine so a
+	// package carrying critical evidence is never reclassified as library.
+	reportProgress("structural sdk")
+	p.markObfuscatedLibraryPackages()
+	p.sweepUnconfirmedAccessibility()
 
 	reportProgress("hotspot scoring")
 	scorer := analyzer.NewScorer(p.config, p.filter)
@@ -1013,6 +1157,11 @@ func (p *Pipeline) postProcess(ctx context.Context) {
 	reportProgress("data_flow")
 	if p.dataFlow != nil {
 		p.runDataFlow(ctx)
+		// Hotspot scoring runs before dataflow on the timeline; without this
+		// merge, files carrying HIGH data-flow paths (e.g. an intent-
+		// redirection receiver) stay invisible in hotspots and the heatmap
+		// while INFO-only files rank.
+		p.mergeDataflowIntoHotspots(scorer)
 	}
 
 	reportProgress("crack_points")
@@ -1365,6 +1514,10 @@ var alwaysFilterSDK = []string{
 	"androidx/camera",
 	"com/google/firebase/installations", "com/google/firebase/messaging",
 	"com/google/firebase/analytics", "com/google/firebase/perf",
+	// The APK signing library's verifyIntegrity* helpers verify signature
+	// chunks during install-time verification. It is third-party signing
+	// plumbing, not the app's own anti-modification protection.
+	"com/android/apksig",
 }
 
 // sdkNoisePrefixes — lower-value category noise only.  For these paths

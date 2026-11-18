@@ -68,13 +68,17 @@ type MissingPermission struct {
 
 // Report holds the permission-to-code mapping result.
 type Report struct {
-	GeneratedAt     string `json:"generated_at"`
-	Target          string `json:"target"`
-	DeclaredCount   int    `json:"declared_count"`
-	UsedCount       int    `json:"used_count"`
-	UnusedCount     int    `json:"unused_count"`
-	UnknownCount    int    `json:"unknown_count"`
-	DeprecatedCount int    `json:"deprecated_count,omitempty"`
+	GeneratedAt      string   `json:"generated_at"`
+	Target           string   `json:"target"`
+	DeclaredCount    int      `json:"declared_count"`
+	UsedCount        int      `json:"used_count"`
+	UnusedCount      int      `json:"unused_count"`
+	UnknownCount     int      `json:"unknown_count"`
+	DeprecatedCount  int      `json:"deprecated_count,omitempty"`
+	CodeFilesScanned int      `json:"code_files_scanned"`
+	CodeFilesSkipped int      `json:"code_files_skipped"`
+	UnsupportedCode  int      `json:"unsupported_code"`
+	Limitations      []string `json:"limitations,omitempty"`
 
 	Permissions        []PermissionUsage   `json:"permissions"`
 	MissingPermissions []MissingPermission `json:"missing_permissions,omitempty"`
@@ -312,16 +316,30 @@ func Analyze(targetDir string, declared []string) (*Report, error) {
 	reverseHits := map[string][]UsageSite{}
 
 	err := filepath.WalkDir(targetDir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() || !isScannable(path) {
+		if err != nil || d == nil {
+			rep.CodeFilesSkipped++
+			return nil
+		}
+		if d.IsDir() {
+			return nil
+		}
+		if !isScannable(path) {
+			switch strings.ToLower(filepath.Ext(path)) {
+			case ".dex", ".class", ".jar", ".so":
+				rep.UnsupportedCode++
+			}
 			return nil
 		}
 		if info, ierr := d.Info(); ierr != nil || info.Size() > maxScanFileSize {
+			rep.CodeFilesSkipped++
 			return nil
 		}
 		data, rerr := os.ReadFile(path)
 		if rerr != nil {
+			rep.CodeFilesSkipped++
 			return nil
 		}
+		rep.CodeFilesScanned++
 		text := string(data)
 		rel, rerr2 := filepath.Rel(targetDir, path)
 		if rerr2 != nil {
@@ -356,6 +374,15 @@ func Analyze(targetDir string, declared []string) (*Report, error) {
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	if rep.CodeFilesScanned == 0 || rep.CodeFilesSkipped > 0 || rep.UnsupportedCode > 0 {
+		rep.Limitations = append(rep.Limitations, "Code mapping is incomplete; absence of an API match does not establish that a permission is unused.")
+		for i := range rep.Permissions {
+			if rep.Permissions[i].Status == StatusUnused {
+				rep.Permissions[i].Status = StatusUnknown
+			}
+		}
 	}
 
 	// Counts and scoring.
@@ -408,6 +435,9 @@ func Analyze(targetDir string, declared []string) (*Report, error) {
 		rep.Verdict = "medium"
 	default:
 		rep.Verdict = "high"
+	}
+	if score == 0 && rep.DeclaredCount > 0 && rep.CodeFilesScanned == 0 {
+		rep.Verdict = "unknown"
 	}
 	return rep, nil
 }

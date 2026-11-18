@@ -222,20 +222,34 @@ func (e *Engine) evaluateDetailed(ctx *ConditionContext, keep func(*Rule) bool) 
 			}
 
 			res := RuleEvaluationResult{
-				RuleID:     rule.ID,
-				RuleName:   rule.Name,
-				Category:   category,
-				Matched:    true,
-				Score:      rule.Score,
-				Severity:   rule.Severity,
-				Message:    rule.Description,
-				References: rule.References,
-				Tags:       rule.Tags,
-				Confidence: rule.EffectiveConfidence(),
+				RuleID:      rule.ID,
+				RuleName:    rule.Name,
+				Category:    category,
+				RuleCategory: rule.Category,
+				Matched:     true,
+				Score:       rule.Score,
+				Severity:    rule.Severity,
+				Message:     rule.Description,
+				References:  rule.References,
+				Tags:        rule.Tags,
+				Confidence:  rule.EffectiveConfidence(),
+				FindingKind: rule.FindingKind,
+				Evidence:    e.ruleEvidenceLocked(rule, ctx, make(map[string]bool)),
+				Limitations: append([]string(nil), rule.Limitations...),
+				NextChecks:  append([]string(nil), rule.NextChecks...),
+			}
+			// A threshold may have matched only manifest declarations even when
+			// the rule also lists APIs. Declarations establish a permission
+			// profile, not a malware family, a grant or an implemented attack.
+			if onlyPermissionEvidence(res.Evidence) {
+				res.FindingKind = "inventory"
+				res.Severity, res.Score = "info", 0
+				res.Message = "Manifest declarations match this permission profile. Requested or service-binding permissions do not establish grants, data collection, transmission or malware attribution."
+				res.RuleName = "Manifest permission profile"
 			}
 			if by := e.firstMatchedContext(e.downgradeFor(rule), ctx, memo); by != nil {
-				res.Score = rule.Score / 2
-				res.Severity = lowerSeverity(rule.Severity)
+				res.Score /= 2
+				res.Severity = lowerSeverity(res.Severity)
 				res.DowngradedBy = by.ID
 			}
 			out.Results = append(out.Results, res)

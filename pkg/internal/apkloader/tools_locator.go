@@ -20,17 +20,11 @@ import (
 )
 
 // This file finds (or, failing that, unpacks) the external tools the rebuild
-// pipeline can use: Java, smali/baksmali and aapt2.
+// pipeline can use: Java for optional APK signing and aapt2.
 //
 // Search order for every tool: explicit environment override -> files next to
 // the executable / working directory -> system installs -> the copy embedded
 // in this binary (extracted once into the per-user cache).
-
-const (
-	embeddedJarName = "mega-smali-tools.jar"
-	smaliMainClass  = "com.android.tools.smali.smali.Main"
-	baksmaliMain    = "com.android.tools.smali.baksmali.Main"
-)
 
 // ToolSource says where a located tool came from.
 type ToolSource string
@@ -135,50 +129,6 @@ func extractBlob(group, name string, data []byte, mode os.FileMode) (string, err
 		return "", err
 	}
 	return path, nil
-}
-
-// ── smali / baksmali ────────────────────────────────────────────────────────
-
-func locateJar(envNames []string, fileNames []string) (string, ToolSource) {
-	for _, env := range envNames {
-		if p := os.Getenv(env); p != "" && isFile(p) {
-			return p, ToolEnv
-		}
-	}
-	for _, dir := range toolSearchDirs() {
-		for _, sub := range []string{"", "smali"} {
-			for _, n := range fileNames {
-				if p := filepath.Join(dir, sub, n); isFile(p) {
-					return p, ToolLocal
-				}
-			}
-		}
-	}
-	if len(embeddedSmaliTools) > 0 {
-		if p, err := extractBlob("smali", embeddedJarName, embeddedSmaliTools, 0o644); err == nil {
-			return p, ToolEmbedded
-		}
-	}
-	return "", ToolMissing
-}
-
-// LocateSmaliJar returns the smali assembler jar.
-func LocateSmaliJar() (string, ToolSource) {
-	return locateJar([]string{"MEGA_SMALI_JAR", "SMALI_JAR"}, []string{"smali.jar"})
-}
-
-// LocateBaksmaliJar returns the baksmali disassembler jar.
-func LocateBaksmaliJar() (string, ToolSource) {
-	return locateJar([]string{"MEGA_BAKSMALI_JAR", "BAKSMALI_JAR"}, []string{"baksmali.jar"})
-}
-
-// jarInvocation returns the java arguments that run a smali-family jar. The
-// embedded combined jar has no single Main-Class, so it is run with -cp.
-func jarInvocation(jar, mainClass string) []string {
-	if strings.HasPrefix(filepath.Base(jar), "mega-smali-tools") {
-		return []string{"-cp", jar, mainClass}
-	}
-	return []string{"-jar", jar}
 }
 
 // ── Java ────────────────────────────────────────────────────────────────────
@@ -399,10 +349,6 @@ func ToolsReport() []ToolStatus {
 	var out []ToolStatus
 	jp, js := LocateJava()
 	out = append(out, ToolStatus{Name: "java", Path: jp, Source: js, Version: javaVersion(jp)})
-	sp, ss := LocateSmaliJar()
-	out = append(out, ToolStatus{Name: "smali", Path: sp, Source: ss})
-	bp, bs := LocateBaksmaliJar()
-	out = append(out, ToolStatus{Name: "baksmali", Path: bp, Source: bs})
 	a := DefaultAapt2Config()
 	src := ToolSystem
 	if a.Aapt2Path == "" {

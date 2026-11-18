@@ -1,0 +1,50 @@
+{
+ "state": {
+  "candidate": "Wallet.addCoins() const/16 v1, 0x64 → 0x3e8",
+  "code": ".method public addCoins(I)V\n    .registers 4\n    iget v0, p0, Lcom/game/Wallet;->coins:I\n    add-int/2addr v0, p1\n    const/16 v1, 0x64\n    if-le v0, v1, :cond_0\n    move v0, v1\n    :cond_0\n    iput v0, p0, Lcom/game/Wallet;->coins:I\n    return-void\n.end method",
+  "line": 5,
+  "build": {
+   "status": "pass",
+   "sha256_matches": true
+  },
+  "runtime": {
+   "status": "pass",
+   "device": "emulator"
+  },
+  "effect_verified": true,
+  "server_dependency": "local_only",
+  "network_requests": 0,
+  "notes": "После патча монеты копятся до 1000. Сетевых запросов не было."
+ },
+ "questions": {
+  "effect_confirmed": {
+   "type": "noul",
+   "instructions": "Подтверждён ли нужный эффект патча?",
+   "criteria": {
+    "true": "Эффект наблюдался на текущей сборке",
+    "false": "Эффект не наблюдался, тест не запускался или был на другой версии"
+   }
+  },
+  "server_dependency": {
+   "type": "score",
+   "instructions": "Насколько поведение зависит от сервера?",
+   "criteria": {
+    "0": "Полностью локально",
+    "1": "Есть кэш с сервера",
+    "2": "Сервер проверяет значение",
+    "3": "Значение решает сервер"
+   }
+  },
+  "literal_role": {
+   "type": "choice",
+   "instructions": "Какую роль играет изменённый литерал?",
+   "criteria": {
+    "limit": "Лимит или максимум значения",
+    "delay": "Задержка или таймер",
+    "color": "Цвет или элемент интерфейса",
+    "resource_id": "Идентификатор ресурса",
+    "other": null
+   }
+  }
+ }
+}

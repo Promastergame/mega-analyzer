@@ -4,9 +4,12 @@ import (
 	"encoding/base64"
 	"encoding/hex"
 	"fmt"
+	"net"
 	"strings"
 	"sync"
 	"sync/atomic"
+
+	"mega-analyzer/pkg/internal/networkrefs"
 )
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -148,16 +151,21 @@ func tryDecryptStringUncached(encrypted string) (plain, transform string) {
 	}
 
 	// 1. Base64 (all four Android variants) → plaintext, else → XOR.
+	encodedBinary := false
 	for _, v := range base64Variants {
 		decoded, err := v.enc.DecodeString(encrypted)
 		if err != nil {
 			continue
 		}
+		encodedBinary = true
 		// A successful base64 decode is not evidence of anything: most
 		// identifier-shaped literals decode cleanly into printable garbage.
 		// The decoded text has to clear the same bar as a cracked one.
 		if isMeaningfulPlaintext(decoded) {
 			return string(decoded), v.name
+		}
+		if recovered := decodeSaltedNibble(decoded); isMeaningfulPlaintext(recovered) || isSaltedNetworkHostname(recovered) {
+			return string(recovered), v.name + "/salted-nibble"
 		}
 		if cracked, key := crackXOR(decoded); cracked != "" {
 			return cracked, fmt.Sprintf("%s + XOR key 0x%02X", v.name, key)
@@ -169,6 +177,7 @@ func tryDecryptStringUncached(encrypted string) (plain, transform string) {
 
 	// 2. Hex → plaintext, else Hex → XOR.
 	if hexBytes, err := hex.DecodeString(encrypted); err == nil {
+		encodedBinary = true
 		if isMeaningfulPlaintext(hexBytes) {
 			return string(hexBytes), "Hex"
 		}
@@ -178,6 +187,12 @@ func tryDecryptStringUncached(encrypted string) (plain, transform string) {
 		if cracked, key := crackRepeatingXOR(hexBytes); cracked != "" {
 			return cracked, fmt.Sprintf("Hex + XOR key %s", formatKey(key))
 		}
+	}
+	// An opaque encoded payload is not a raw XOR/ROT ciphertext. Rotating
+	// its printable encoding can accidentally manufacture secret-shaped text
+	// and invent recoveries from large binary blobs.
+	if encodedBinary {
+		return "", ""
 	}
 
 	// Paths 3-5 attack the literal in place. They only make sense if the
@@ -205,6 +220,30 @@ func tryDecryptStringUncached(encrypted string) (plain, transform string) {
 	}
 
 	return "", ""
+}
+
+// decodeSaltedNibble recognizes the self-contained six-byte salt format
+// used by small Android string obfuscators. It evaluates only this bounded
+// byte transform; no sample method is executed. The usual plaintext gates
+// still decide whether the result is credible.
+func decodeSaltedNibble(encoded []byte) []byte {
+	const saltLen = 6
+	if len(encoded) < saltLen+8 || len(encoded) > 256<<10 {
+		return nil
+	}
+	salt := encoded[:saltLen]
+	plain := append([]byte(nil), encoded[saltLen:]...)
+	for round := 0; round < int(salt[0]&7)+1; round++ {
+		for i, value := range plain {
+			swapped := value<<4 | value>>4
+			plain[i] = (swapped - salt[(i+1)%saltLen]) ^ salt[i%saltLen]
+		}
+	}
+	return plain
+}
+
+func isSaltedNetworkHostname(plain []byte) bool {
+	return len(plain) >= 8 && networkrefs.IsRecoveredHostname(string(plain))
 }
 
 // isReadableLiteral reports whether a literal already reads as ordinary text
@@ -281,7 +320,7 @@ func isMeaningfulPlaintext(plain []byte) bool {
 	if len(plain) < minRecoveredLen || !isPrintableASCII(plain) {
 		return false
 	}
-	return hasSecretShape(plain) || looksLikeSentence(plain) || looksLikeDottedPath(plain)
+	return hasSecretShape(plain) || looksLikeSentence(plain) || looksLikeDottedPath(plain) || net.ParseIP(string(plain)) != nil
 }
 
 // commonEnglishWords is a small closed vocabulary used to tell real text from

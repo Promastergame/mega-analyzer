@@ -5,10 +5,12 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestDecodeCacheHitMissAndOptionInvalidation(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	apk := filepath.Join(dir, "app.apk")
 	out := filepath.Join(dir, "decoded")
 	if err := os.MkdirAll(out, 0o755); err != nil {
@@ -57,7 +59,7 @@ func TestDecodeCacheHitMissAndOptionInvalidation(t *testing.T) {
 }
 
 func TestPrepareInputKeepsDEXAndNeverWritesSmali(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	apkPath := filepath.Join(dir, "app.apk")
 	f, err := os.Create(apkPath)
 	if err != nil {

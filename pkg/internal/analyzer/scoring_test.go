@@ -123,11 +123,26 @@ func TestScoreFile_WithDecisionPoints(t *testing.T) {
 func TestScoreFile_HighEntropy(t *testing.T) {
 	s := newTestScorer()
 	a := newTestAnalysis("smali/com/app/Config.smali", true, 5)
+	addMatch(a, types.CategoryNetworkEndpoint)
 	a.Entropy = 7.5
 
 	bd := s.ScoreFileDetailed(a)
 	if bd.EntropyBonus <= 0 {
 		t.Errorf("EntropyBonus = %f, want > 0", bd.EntropyBonus)
+	}
+}
+
+// Entropy alone is not evidence: smali text sits at ~5.1 bits/byte across the
+// board, so a zero-match file must not receive the bonus that manufactured
+// the "Unknown, 0 matches" hotspots.
+func TestScoreFile_HighEntropyWithoutMatchesNoBonus(t *testing.T) {
+	s := newTestScorer()
+	a := newTestAnalysis("smali/com/app/Config.smali", true, 5)
+	a.Entropy = 7.5
+
+	bd := s.ScoreFileDetailed(a)
+	if bd.EntropyBonus != 0 {
+		t.Errorf("EntropyBonus = %f, want 0 (no matches to corroborate)", bd.EntropyBonus)
 	}
 }
 
@@ -179,9 +194,13 @@ func TestScoreFileDetailed_AllComponents(t *testing.T) {
 	a := newTestAnalysis("smali/com/app/Premium.smali", true, 9)
 
 	addMatch(a, types.CategoryLicenseCheck)
-	addMatch(a, types.CategoryBillingClient)
+	addMatch(a, types.CategoryBillingClient) // inventory, not critical
 	addMatch(a, types.CategoryAnalytics)
 	addMatch(a, types.CategoryAdNetwork)
+	// Second genuinely critical category: billing no longer qualifies, so the
+	// CriticalCount>=2 assertion needs a real critical signal next to the
+	// license check.
+	addMatch(a, types.CategorySignatureCheck)
 
 	a.DecisionPoints = []types.DecisionPoint{
 		{Method: "isPremium", Type: types.DecisionBooleanReturn},

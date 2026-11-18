@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"os"
+	"path/filepath"
 	"testing"
 	"time"
 )
@@ -24,6 +26,28 @@ func TestGNNCacheDiskLimitBytes(t *testing.T) {
 				t.Fatalf("gnnCacheDiskLimitBytes(%d) = %d, want %d", tt.mb, got, tt.want)
 			}
 		})
+	}
+}
+
+func TestBundledGNNDiscoverySelectsSupportedJSON(t *testing.T) {
+	root := t.TempDir()
+	binDir := filepath.Join(root, "bin")
+	rustDir := filepath.Join(root, "rust")
+	if err := os.MkdirAll(rustDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(rustDir, "gnn_weights.gnnbuf"), []byte("native-only"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if path := discoverBundledGNNWeights(binDir); path != "" {
+		t.Fatalf("unsupported compact weights selected: %s", path)
+	}
+	want := filepath.Join(rustDir, "gnn_weights.json")
+	if err := os.WriteFile(want, []byte("{}"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if got := discoverBundledGNNWeights(binDir); got != want {
+		t.Fatalf("bundled JSON not discovered: %s, want %s", got, want)
 	}
 }
 

@@ -27,6 +27,7 @@ package pipeline
 import (
 	"strings"
 
+	"mega-analyzer/pkg/internal/finding"
 	"mega-analyzer/pkg/internal/types"
 )
 
@@ -94,16 +95,18 @@ func emitWebViewCombo(class *types.SmaliClass, analysis *types.FileAnalysis, sta
 	}
 	m := newMatch(
 		types.CategoryWebViewJSBridge, analysis.Path, state.ifaceLine,
-		"WebView addJavascriptInterface + JavaScript enabled — native bridge exposed; on API < 17 "+
-			"any loaded page gains reflection-based code execution (CVE-2012-6636)",
+		"WebView JavaScript bridge registration and JavaScript-enable setting observed in this method. Review exposed methods and loaded origins; these calls do not establish code execution",
 		"addJavascriptInterface + setJavaScriptEnabled",
 		false,
 	)
-	m.Severity = types.SeverityMedium
+	m.Severity = types.SeverityInfo
 	m.MethodName = state.ifaceMethod
 	m.ClassName = class.Name
 	m.Confidence = jsConfidence
 	m.EvidenceType = "smali_ast_dataflow"
+	m.Explanation = &finding.Explanation{Status: "observation", Summary: m.Context,
+		Limitations: []string{"The legacy reflection vulnerability requires an Android runtime or target below API 17; it is not inferred from bridge registration alone.", "Receiver object association, exposed @JavascriptInterface methods and content origins need review."},
+		NextChecks:  []string{"Inspect the registered bridge class, annotated methods, JavaScript setting and content loaded into the same WebView."}}
 	analysis.Matches = append(analysis.Matches, m)
 
 	// ── Escalate to remote-JS RCE when the bridge is exposed to remote content ──
@@ -114,15 +117,21 @@ func emitWebViewCombo(class *types.SmaliClass, analysis *types.FileAnalysis, sta
 		}
 		remote := newMatch(
 			types.CategoryWebViewRemoteJS, analysis.Path, state.ifaceLine,
-			"WebView RCE risk: addJavascriptInterface + setJavaScriptEnabled + remote URL — "+
-				"JS bridge exposed to remote content",
+			"WebView bridge and content-loading calls are co-present. A resolved remote URL creates a surface for review; an unresolved URL is not evidence of remote loading or RCE",
 			"addJavascriptInterface + JS enabled + remote loadUrl",
-			true,
+			false,
 		)
+		remote.Severity = types.SeverityInfo
+		if state.jsEnabled && state.remoteConst {
+			remote.Severity = types.SeverityMedium
+		}
 		remote.MethodName = state.ifaceMethod
 		remote.ClassName = class.Name
 		remote.Confidence = confidence
 		remote.EvidenceType = "smali_ast_dataflow"
+		remote.Explanation = &finding.Explanation{Status: "needs_review", Summary: remote.Context,
+			Limitations: []string{"Call co-presence does not prove object association, attacker control or a native-code execution path."},
+			NextChecks:  []string{"Resolve the loaded URL, redirects, same WebView receiver and the permissions/actions exposed by bridge methods."}}
 		analysis.Matches = append(analysis.Matches, remote)
 	}
 }

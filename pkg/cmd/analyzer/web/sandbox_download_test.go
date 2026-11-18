@@ -50,3 +50,34 @@ func TestSandboxDownloadFileRejectsSymlinkEscape(t *testing.T) {
 		t.Fatalf("symlink escape: code=%d body=%q", rr.Code, rr.Body.String())
 	}
 }
+
+func TestSandboxDownloadsWithPortableRootPaths(t *testing.T) {
+	dir := t.TempDir()
+	if err := os.Mkdir(filepath.Join(dir, "nested"), 0700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "nested", "result.txt"), []byte("inside"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	for _, root := range []string{dir, filepath.ToSlash(dir), dir + string(os.PathSeparator)} {
+		t.Run(root, func(t *testing.T) {
+			for _, method := range []string{http.MethodGet, http.MethodHead} {
+				rr := httptest.NewRecorder()
+				sandboxDownloadFile(rr, httptest.NewRequest(method, "/x", nil), root, "nested/result.txt")
+				if rr.Code != http.StatusOK || rr.Header().Get("Content-Length") != "6" {
+					t.Fatalf("%s: %d %s", method, rr.Code, rr.Body.String())
+				}
+				if method == http.MethodGet && rr.Body.String() != "inside" || method == http.MethodHead && rr.Body.Len() != 0 {
+					t.Fatalf("%s: unexpected body %q", method, rr.Body.String())
+				}
+			}
+			for _, path := range []string{"../result.txt", "/result.txt", filepath.Join(dir, "nested", "result.txt")} {
+				rr := httptest.NewRecorder()
+				sandboxDownloadFile(rr, httptest.NewRequest(http.MethodGet, "/x", nil), root, path)
+				if rr.Code != http.StatusForbidden {
+					t.Fatalf("nonlocal path %q returned %d", path, rr.Code)
+				}
+			}
+		})
+	}
+}

@@ -91,6 +91,10 @@ func (s *Server) handleReport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// ?dl=1 → download; default → open inline in browser
+	// Generated reports keep their interactive viewer but receive an opaque
+	// origin. Even a missed HTML injection cannot call the analyzer's APIs.
+	w.Header().Set("Content-Security-Policy", "sandbox allow-scripts allow-downloads; default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' data: blob:; font-src 'self' data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if r.URL.Query().Get("dl") == "1" {
 		w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="report-%s.html"`, id))

@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.megaanalyzer.identityprobe">
+    <uses-sdk android:minSdkVersion="23" android:targetSdkVersion="30" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS" />
+    <application android:label="Device identity probe" android:debuggable="true" android:allowBackup="false">
+        <activity android:name=".ProbeActivity" android:exported="true" />
+    </application>
+</manifest>

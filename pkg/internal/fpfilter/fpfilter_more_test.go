@@ -40,38 +40,20 @@ func TestExtractSDKName(t *testing.T) {
 	}
 }
 
-func TestIsAppCodePath(t *testing.T) {
-	if isAppCodePath("") {
-		t.Error("empty path should not be app code")
-	}
-	// SDK paths should not be app code
-	if isAppCodePath("smali/com/google/ads/AdMob.smali") {
-		t.Error("google SDK path should not be app code")
-	}
-	if isAppCodePath("smali/androidx/fragment/Fragment.smali") {
-		t.Error("androidx path should not be app code")
-	}
-	// App code path
-	if !isAppCodePath("smali/com/myapp/MainActivity.smali") {
-		t.Error("app smali path should be app code")
-	}
-}
-
-func TestIsSecurityChainCategory(t *testing.T) {
+func TestProtectionCategoriesAreObservations(t *testing.T) {
 	yes := []types.Category{
 		types.CategoryRootDetection,
 		types.CategorySSLPinning,
 		types.CategoryAntiHook,
-		types.CategoryBankingThreat,
-		types.CategoryMalwareCombo,
+		types.CategorySignatureCheck,
 	}
 	for _, c := range yes {
-		if !isSecurityChainCategory(c) {
-			t.Errorf("isSecurityChainCategory(%q) = false, want true", c)
+		if !isObservation(&types.Match{Categorized: types.Categorized{Category: c}}) {
+			t.Errorf("protection %q was treated as a risk", c)
 		}
 	}
-	if isSecurityChainCategory(types.CategoryDonation) {
-		t.Error("donation should not be a security chain category")
+	if isObservation(nil) || isObservation(&types.Match{Categorized: types.Categorized{Category: types.CategoryMalwareCombo}}) {
+		t.Error("nil or an unclassified malware finding was treated as an observation")
 	}
 }
 

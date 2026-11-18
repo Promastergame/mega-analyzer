@@ -1,0 +1,66 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { lfs: true }
+      - uses: actions/setup-go@v5
+        with: { go-version: '1.22' }
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.11' }
+      - name: dataset integrity tests (stdlib only)
+        run: |
+          python -m unittest discover -s scripts/data -p "test_*.py"
+          python -m unittest discover -s scripts/distill -p "test_data_checks.py"
+      - run: go vet ./...
+      - run: go test ./... -count=1
+      - name: race (linux)
+        if: runner.os == 'Linux'
+        run: go test -race -short ./s1 ./cmd/dai -count=1
+      - name: build dai (x86-64 v1, no CGO)
+        env: { CGO_ENABLED: '0', GOAMD64: v1 }
+        run: go build -trimpath -ldflags="-s -w" -o bin/dai-go${{ runner.os == 'Windows' && '.exe' || '' }} ./cmd/dai
+      - name: golden eval (held-out, fails on quality regression)
+        run: |
+          go run ./cmd/dai eval -input evals/golden-test.jsonl -min-noul 0.8 -min-choice 0.7 -min-score 0.3
+          go run ./cmd/dai eval -input evals/distill/decision-blind.jsonl -min-noul 0.8 -min-choice 0.9 -min-score 0.6
+          go run ./cmd/dai eval -input evals/distill/jev-holdout.jsonl -min-noul 0.88 -min-score 0.8
+          go run ./cmd/dai eval -input evals/base-tasks.jsonl -min-noul 0.65 -min-choice 0.65
+          go run ./cmd/dai eval -input evals/unseen.jsonl -min-noul 0.72 -min-score 0.4
+          go run ./cmd/dai eval -input evals/unseen2.jsonl -min-noul 0.6 -min-choice 0.55 -min-score 0.35
+          go run ./cmd/dai eval -input evals/unseen3.jsonl -min-noul 0.95 -min-choice 0.95 -min-score 0.95  # v1.17: числа и незнакомые слова
+      - name: skill routing eval (dev + held-out + stress, fails on regression)
+        run: |
+          go run ./cmd/dai skills-eval -skills evals/skills -skills-examples evals/skill-examples.jsonl -input evals/skill-routing-holdout.jsonl -min-choice 0.93
+          go run ./cmd/dai skills-eval -skills evals/skills -skills-examples evals/skill-examples.jsonl -input evals/skill-routing-stress.jsonl -min-choice 0.8
+          go run ./cmd/dai skills-eval -skills evals/skills -skills-examples evals/skill-examples.jsonl -input evals/skill-routing-blind2.jsonl -min-choice 0.88
+      - name: legacy CLI scenarios
+        run: go run ./cmd/decision-ai test -input examples/tests.json
+
+  native:
+    # Independent of quality gates: a pre-existing eval failure must not skip parity.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { lfs: true }
+      - uses: actions/setup-go@v5
+        with: { go-version: '1.22' }
+      - name: Nim accelerator (linux, required parity with pure Go)
+        run: |
+          curl --fail --location --retry 3 https://nim-lang.org/download/nim-2.2.4-linux_x64.tar.xz -o /tmp/nim.tar.xz
+          tar -xf /tmp/nim.tar.xz -C /tmp
+          export PATH="/tmp/nim-2.2.4/bin:$PATH"
+          nim --version
+          cd nim && nim c --app:staticlib --noMain --mm:arc -d:danger --opt:speed --passC:-O3 -o:libdainim.a dainim.nim && cd ..
+          CGO_ENABLED=1 go test -tags nim ./semai ./s1 ./cmd/dai -count=1
+          # v1.15 FASM kernel: same parity test with the hand-written AVX GEMM (prebuilt nim/fagemm.o)
+          cd nim && nim c --app:staticlib --noMain --mm:arc -d:danger -d:fasm --opt:speed --passC:-O3 --passC:-mavx -o:libdainim.a dainim.nim && ar rcs libdainim.a fagemm.o && cd ..
+          CGO_ENABLED=1 go test -tags nim ./semai ./s1 ./cmd/dai -count=1
+          # v1.16 OpenMP multi-core forward: must stay within the same parity bounds
+          cd nim && nim c --app:staticlib --noMain --mm:arc -d:danger -d:fasm -d:omp --panics:on --opt:speed --passC:-O3 --passC:-mavx --passC:-fopenmp -o:libdainim.a dainim.nim && ar rcs libdainim.a fagemm.o && cd ..
+          CGO_ENABLED=1 CGO_LDFLAGS=-fopenmp go test -tags nim ./semai ./s1 ./cmd/dai -count=1

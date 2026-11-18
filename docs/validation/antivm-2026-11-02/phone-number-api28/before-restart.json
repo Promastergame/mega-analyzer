@@ -1,0 +1,31 @@
+{
+  "capture_id": "bed86374caa64f0eb652a336e4b4eae2",
+  "model": "PromasterPhone 1",
+  "brand": "promaster",
+  "manufacturer": "Promaster",
+  "device": "promasterphone1",
+  "product": "promasterphone1",
+  "hardware": "qcom",
+  "board": "sdm845",
+  "fingerprint": "promaster\/promasterphone1\/promasterphone1:9\/PQ3A.190801.101\/190801:user\/release-keys",
+  "build_id": "PQ3A.190801.101",
+  "display_id": "PQ3A.190801.101",
+  "security_patch": "2019-08-01",
+  "device_name": "PromasterPhone 1",
+  "build_type": "user",
+  "build_tags": "release-keys",
+  "android_version": "9",
+  "api_level": 28,
+  "abis": [
+    "x86_64",
+    "x86"
+  ],
+  "qemu_pipe_present": true,
+  "goldfish_pipe_present": true,
+  "phone_number": "+15555215572",
+  "adb_enabled": 1,
+  "usb_state_available": false,
+  "usb_connected": null,
+  "usb_configured": null,
+  "usb_adb": null
+}

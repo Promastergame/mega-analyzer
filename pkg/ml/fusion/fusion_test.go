@@ -71,7 +71,7 @@ func TestFusionExplanationFormat(t *testing.T) {
 		{Name: "gbm", Score: 0.9, Weight: 1},
 		{Name: "anomaly", Score: 0.8, Weight: 1},
 	}, []Evidence{{Factor: "CFG flattening detected", Contribution: 0}})
-	if !strings.Contains(d.Explanation, "Threat probability:") {
+	if !strings.Contains(d.Explanation, "Threat score:") {
 		t.Errorf("explanation missing header: %q", d.Explanation)
 	}
 	if !strings.Contains(d.Explanation, "Confidence:") {
@@ -92,6 +92,27 @@ func TestFusionEmptySignals(t *testing.T) {
 	d := e.Fuse(nil, nil)
 	if d.Recommendation != "deep_analysis" {
 		t.Error("no signals should trigger deep analysis")
+	}
+}
+
+func TestFusionInsufficientSignalsRequireAnalysis(t *testing.T) {
+	e := NewFusionEngine(FusionConfig{MinSignals: 2})
+	d := e.Fuse([]ModelSignal{{Name: "scanner_heuristic", Score: 0.95, Weight: 1}}, nil)
+	if d.Recommendation != "deep_analysis" || d.ConfidenceBand != "Low" {
+		t.Fatalf("single heuristic was presented as sufficient evidence: %+v", d)
+	}
+	if !strings.Contains(d.Explanation, "Only one signal") || strings.Contains(d.Explanation, "independent systems agree") {
+		t.Fatalf("single signal described as independent confirmation: %s", d.Explanation)
+	}
+	if strings.Contains(d.Explanation, "Threat probability:") {
+		t.Fatal("uncalibrated score described as a probability")
+	}
+	full := e.Fuse([]ModelSignal{
+		{Name: "a", Score: 0.95, Weight: 1},
+		{Name: "b", Score: 0.95, Weight: 1},
+	}, nil)
+	if full.Confidence <= d.Confidence || full.Recommendation != "report" {
+		t.Fatalf("signal coverage did not affect the decision: single=%+v full=%+v", d, full)
 	}
 }
 

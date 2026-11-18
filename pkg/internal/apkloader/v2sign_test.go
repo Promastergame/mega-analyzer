@@ -8,6 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func writeTestV2APK(t *testing.T, path string) {
@@ -42,7 +44,7 @@ func writeTestV2APK(t *testing.T, path string) {
 }
 
 func TestV2V3SignVerify(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	apk := filepath.Join(dir, "test.apk")
 	writeTestV2APK(t, apk)
 	key, cert, err := generateDebugCertificate()
@@ -69,7 +71,7 @@ func TestV2V3SignVerify(t *testing.T) {
 }
 
 func TestV2TamperDetected(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	apk := filepath.Join(dir, "test.apk")
 	writeTestV2APK(t, apk)
 	key, cert, err := generateDebugCertificate()
@@ -94,7 +96,7 @@ func TestV2TamperDetected(t *testing.T) {
 }
 
 func TestV2ResignIdempotent(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	apk := filepath.Join(dir, "test.apk")
 	writeTestV2APK(t, apk)
 	key, cert, err := generateDebugCertificate()
@@ -124,7 +126,7 @@ func TestV2ResignIdempotent(t *testing.T) {
 }
 
 func TestV2UnsignedRejected(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	apk := filepath.Join(dir, "test.apk")
 	writeTestV2APK(t, apk)
 	if _, err := VerifyV2V3Offline(apk); err == nil {
@@ -133,7 +135,7 @@ func TestV2UnsignedRejected(t *testing.T) {
 }
 
 func TestSo16KAlignment(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	in := filepath.Join(dir, "in.apk")
 	out := filepath.Join(dir, "out.apk")
 	writeTestV2APK(t, in)

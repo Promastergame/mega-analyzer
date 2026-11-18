@@ -53,7 +53,15 @@ func (r *APKRebuilder) collectNativeResourceEdits(table *axml.ResourceTable) ([]
 		}
 		info, err := os.Stat(filepath.Join(resDir, rel))
 		if os.IsNotExist(err) {
-			return fmt.Errorf("res/%s: deleting a resource export is not supported while preserving the original ARSC", filepath.ToSlash(rel))
+			slashRel := filepath.ToSlash(rel)
+			// Deleting default configuration files (e.g. res/values/strings.xml) breaks ID resolution.
+			if strings.HasPrefix(slashRel, "values/") {
+				return fmt.Errorf("res/%s: deleting default resource export is not supported while preserving the original ARSC", slashRel)
+			}
+			// When a localized or qualified configuration (such as values-ru/, values-land/, values-es/)
+			// is deleted by the user, we allow it: the original ARSC retains these or falls back,
+			// and no edits need to be applied from the deleted folder.
+			return nil
 		}
 		if err != nil {
 			return err
@@ -86,7 +94,16 @@ func (r *APKRebuilder) collectNativeResourceEdits(table *axml.ResourceTable) ([]
 		}
 		oldData, err := os.ReadFile(filepath.Join(baseline, filepath.FromSlash(rel)))
 		if os.IsNotExist(err) {
-			return fmt.Errorf("res/%s: adding new resource exports is not supported when preserving an existing ARSC", rel)
+			// In Split APKs / XAPKs, language splits (e.g. config.ja.apk) merge their
+			// res/values-<locale>/strings.xml into the project during decode, but the
+			// base APK's resources.arsc only holds the base table.
+			// When the folder is a qualified/localized configuration (not the default values/),
+			// we skip attempting to patch the base ARSC if baseline didn't have it.
+			slashRel := rel
+			if strings.HasPrefix(slashRel, "values/") {
+				return fmt.Errorf("res/%s: adding new resource exports is not supported when preserving an existing ARSC", rel)
+			}
+			return nil
 		}
 		if err != nil {
 			return err

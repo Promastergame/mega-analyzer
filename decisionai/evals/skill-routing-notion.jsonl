@@ -1,0 +1,16 @@
+{"group":"design","state":"найди скилл для ИИ который делает дизайн лучше","accept":["artifact-design"]}
+{"group":"design","state":"сделай красивый постер","accept":["artifact-design"]}
+{"group":"design","state":"нужен красивый html отчёт","accept":["artifact-design"]}
+{"group":"office","state":"сделай презентацию для инвесторов","accept":["pptx"]}
+{"group":"office","state":"excel с формулами","accept":["sheets"]}
+{"group":"office","state":"поправь csv таблицу","accept":["sheets"]}
+{"group":"data","state":"построй график продаж","accept":["inline-charts"]}
+{"group":"data","state":"почему упала выручка? вот данные","accept":["data-analysis"]}
+{"group":"data","state":"сравни метрики по кварталам и найди тренд","accept":["data-analysis"]}
+{"group":"meta","state":"хочу создать новый скилл","accept":["create-new-skill"]}
+{"group":"meta","state":"улучши описание моего скилла","accept":["create-new-skill"]}
+{"group":"notion","state":"синхронизируй данные из github в notion каждый час","accept":["notion-workers","notion-worker-workflows"]}
+{"group":"notion","state":"сделай кастомный блок в notion","accept":["notion-custom-blocks"]}
+{"group":"notion","state":"огромный датасет на миллион строк, работаем через xldb","accept":["notion-xldb"]}
+{"group":"other","state":"расскажи анекдот","accept":["other"]}
+{"group":"other","state":"какая погода завтра","accept":["other"]}

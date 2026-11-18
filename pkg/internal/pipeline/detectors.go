@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
+	"time"
 
 	"mega-analyzer/pkg/internal/matcher"
 	"mega-analyzer/pkg/internal/piracy"
@@ -35,6 +36,11 @@ type FileDetectContext struct {
 	// detector streams and non-smali files). Lets detectors reason about
 	// methods, invokes and register-level constants instead of raw bytes.
 	Class *types.SmaliClass
+
+	// Results of the independent browser helper; nil selects the local path.
+	PrecomputedPiracy    *[]types.Match
+	PiracyDuration       time.Duration
+	PrecomputedDetectors map[string]FileDetectorResult
 
 	// ── Кешированные вычисления (lazy) ───────────────────────────────────
 	hasDigits     *bool
@@ -232,7 +238,24 @@ func (d *detectorAC) findMatchesCriticalIf(contentLower []byte, ctx *FileDetectC
 		}
 		e := &d.entries[patIdx]
 
-		// Group dedup
+		// Получаем позицию для номера строки
+		idx := bytes.Index(contentLower, e.patternLower)
+		if idx < 0 {
+			continue
+		}
+		if e.category == types.CategoryObfuscator {
+			for idx >= 0 && !isWholeWord(contentLower, idx, len(e.patternLower)) {
+				next := bytes.Index(contentLower[idx+1:], e.patternLower)
+				if next < 0 {
+					idx = -1
+					break
+				}
+				idx += next + 1
+			}
+			if idx < 0 {
+				continue
+			}
+		}
 		if e.group != "" {
 			if seenGroups == nil {
 				seenGroups = make(map[string]bool, 4)
@@ -241,12 +264,6 @@ func (d *detectorAC) findMatchesCriticalIf(contentLower []byte, ctx *FileDetectC
 				continue
 			}
 			seenGroups[e.group] = true
-		}
-
-		// Получаем позицию для номера строки
-		idx := bytes.Index(contentLower, e.patternLower)
-		if idx < 0 {
-			continue
 		}
 
 		line := lineAt(ctx.LineOffsets, idx)
@@ -357,8 +374,10 @@ func NewBuiltinDetectors(piracyDet *piracy.Detector) []FileDetector {
 		NewVulnSecretDetector(),            // hardcoded API keys & PEM blocks
 		NewVulnNetworkDetector(),           // cleartext HTTP, insecure TLS
 		NewVulnManifestDetector(),          // exported components, deep links, cleartext flag, StrandHogg
+		NewConveyorManifestDetector(),      // LEANBACK-only launcher, account authenticators, conveyor Svc-process template
 		NewVulnPendingIntentDetector(),     // mutable PendingIntent
 		NewVulnWebViewDetector(),           // addJavascriptInterface + JS + remote URL
+		NewSVGDetector(),                   // SVG scripts, event handlers and encoded payload indicators
 		NewVulnAndroidSurfaceDetector(),    // JS bridge inventory + provider openFile traversal
 		NewVulnZipSlipDetector(),           // ZipEntry.getName() written without traversal filter
 		NewVulnDlopenObfuscationDetector(), // StringBuilder-assembled loadLibrary() argument
@@ -652,7 +671,12 @@ type PaymentProvider struct {
 	Name          string
 	ClassPatterns []string
 	patternsBytes [][]byte
-	IsCritical    bool
+	// Category is the finding category for this provider. Payment SDK presence
+	// is inventory, not a malware signal: every monetized app ships billing
+	// code, so providers default to non-critical. A confirmed abuse pattern
+	// (overlay, premium bypass) is reported by its own detector instead.
+	Category   types.Category
+	IsCritical bool
 }
 
 func (p *PaymentProvider) Compile() {
@@ -662,17 +686,21 @@ func (p *PaymentProvider) Compile() {
 	}
 }
 
+// Payment SDKs are inventory, never CRITICAL on their own. Flagging a
+// `billingclient` import as critical turned every Play-Billing app into a
+// false positive (44 CRITICAL hits on a clean paid game). The category still
+// records what the app uses; abuse is proven by behaviour, not by an import.
 var DefaultPaymentProviders = []PaymentProvider{
-	{Name: "Google Play Billing", ClassPatterns: []string{"Lcom/android/vending/billing/", "Lcom/android/billingclient/api/"}, IsCritical: true},
-	{Name: "PayPal", ClassPatterns: []string{"Lcom/paypal/android/sdk/", "Lcom/paypal/checkout/"}, IsCritical: true},
-	{Name: "Stripe", ClassPatterns: []string{"Lcom/stripe/android/", "Lcom/stripe/"}, IsCritical: true},
-	{Name: "Braintree", ClassPatterns: []string{"Lcom/braintreepayments/", "Lcom/braintree/"}, IsCritical: true},
-	{Name: "Square", ClassPatterns: []string{"Lcom/squareup/sdk/"}, IsCritical: true},
-	{Name: "RevenueCat", ClassPatterns: []string{"Lcom/revenuecat/purchases/"}, IsCritical: true},
-	{Name: "Qonversion", ClassPatterns: []string{"Lio/qonversion/android/"}, IsCritical: true},
-	{Name: "Adapty", ClassPatterns: []string{"Lcom/adapty/android/"}, IsCritical: true},
-	{Name: "BuyMeACoffee", ClassPatterns: []string{"buymeacoffee"}, IsCritical: false},
-	{Name: "Ko-fi", ClassPatterns: []string{"ko-fi.com"}, IsCritical: false},
+	{Name: "Google Play Billing", ClassPatterns: []string{"Lcom/android/vending/billing/", "Lcom/android/billingclient/api/"}, Category: types.CategoryBillingClient},
+	{Name: "PayPal", ClassPatterns: []string{"Lcom/paypal/android/sdk/", "Lcom/paypal/checkout/"}, Category: types.CategoryBillingClient},
+	{Name: "Stripe", ClassPatterns: []string{"Lcom/stripe/android/", "Lcom/stripe/"}, Category: types.CategoryBillingClient},
+	{Name: "Braintree", ClassPatterns: []string{"Lcom/braintreepayments/", "Lcom/braintree/"}, Category: types.CategoryBillingClient},
+	{Name: "Square", ClassPatterns: []string{"Lcom/squareup/sdk/"}, Category: types.CategoryBillingClient},
+	{Name: "RevenueCat", ClassPatterns: []string{"Lcom/revenuecat/purchases/"}, Category: types.CategoryBillingClient},
+	{Name: "Qonversion", ClassPatterns: []string{"Lio/qonversion/android/"}, Category: types.CategoryBillingClient},
+	{Name: "Adapty", ClassPatterns: []string{"Lcom/adapty/android/"}, Category: types.CategoryBillingClient},
+	{Name: "BuyMeACoffee", ClassPatterns: []string{"buymeacoffee"}, Category: types.CategoryDonation},
+	{Name: "Ko-fi", ClassPatterns: []string{"ko-fi.com"}, Category: types.CategoryDonation},
 }
 
 func NewPaymentDetector() *PaymentDetector {
@@ -683,9 +711,9 @@ func NewPaymentDetector() *PaymentDetector {
 	for i := range DefaultPaymentProviders {
 		prov := &DefaultPaymentProviders[i]
 		prov.Compile()
-		cat := types.CategoryBillingClient
-		if !prov.IsCritical {
-			cat = types.CategoryDonation
+		cat := prov.Category
+		if cat == "" {
+			cat = types.CategoryBillingClient
 		}
 		for _, pat := range prov.patternsBytes {
 			provEntries = append(provEntries, detectorACEntry{
@@ -712,7 +740,8 @@ func NewPaymentDetector() *PaymentDetector {
 			patternLower: api,
 			desc:         "Billing API usage",
 			category:     types.CategoryBillingClient,
-			critical:     true,
+			// Import/API presence is inventory; see DefaultPaymentProviders.
+			critical: false,
 		})
 	}
 	d.acAPIs = newDetectorAC(apiEntries)
@@ -730,7 +759,8 @@ func NewPaymentDetector() *PaymentDetector {
 			patternLower: m,
 			desc:         "Purchase method call",
 			category:     types.CategoryBillingClient,
-			critical:     true,
+			// A real purchase flow is legitimate app behaviour.
+			critical: false,
 		})
 	}
 	d.acMethods = newDetectorAC(mEntries)
@@ -835,6 +865,7 @@ func NewSubscriptionDetector() *SubscriptionDetector {
 func (d *SubscriptionDetector) Name() string { return "subscription" }
 
 func (d *SubscriptionDetector) Detect(ctx *FileDetectContext, analysis *types.FileAnalysis) {
+	defer normalizeSubscriptionVocabulary(ctx, analysis)
 	// Skip library files — we want app-code usage only
 	if !ctx.IsAppCode && ctx.FileType == types.FileTypeSmali {
 		return
@@ -916,8 +947,8 @@ func NewObfuscationDetector() *ObfuscationDetector {
 		{"Qihoo 360", []string{"libjiagu", "jiagu", "com.qihoo", "libprotectclass"}},
 		{"Baidu", []string{"libbaiduprotect", "baiduprotect"}},
 		{"Bangcle/SecNeo", []string{"libsecexe", "libsecmain", "secneo", "bangcle"}},
-		{"Tencent Legu", []string{"libshell", "liblbs", "tencent/bugly"}},
-		{"iJiami", []string{"ijiami", "libexec"}},
+		{"Tencent Legu", []string{"liblbs"}},
+		{"iJiami", []string{"ijiami"}},
 		{"APKProtect", []string{"apkprotect", "libapkprotect"}},
 		{"DexProtector", []string{"dexprotector", "lirusern"}},
 		{"DexGuard", []string{"dexguard"}},
@@ -1137,14 +1168,20 @@ func (d *ResourceDetector) Name() string { return "resource" }
 func (d *ResourceDetector) Detect(ctx *FileDetectContext, analysis *types.FileAnalysis) {
 	pathLower := strings.ToLower(ctx.Path)
 
-	// 1. Path patterns
-	for _, rp := range d.pathPatterns {
-		if strings.Contains(pathLower, rp.keyword) {
-			analysis.Matches = append(analysis.Matches, newMatch(
-				rp.category, analysis.Path, 0,
-				fmt.Sprintf("Resource: %s", rp.desc),
-				ctx.Job.RelPath, rp.critical,
-			))
+	// 1. Path patterns. Library smali is skipped with the same convention as
+	// the payment/subscription detectors: "purchase" in the vendored
+	// com/android/billingclient/api/Purchase.smali filename produced a
+	// "Resource: Purchase resource" finding on the SDK's own class.
+	skipLibrarySmali := !ctx.IsAppCode && ctx.FileType == types.FileTypeSmali
+	if !skipLibrarySmali {
+		for _, rp := range d.pathPatterns {
+			if strings.Contains(pathLower, rp.keyword) {
+				analysis.Matches = append(analysis.Matches, newMatch(
+					rp.category, analysis.Path, 0,
+					fmt.Sprintf("Resource: %s", rp.desc),
+					ctx.Job.RelPath, rp.critical,
+				))
+			}
 		}
 	}
 
@@ -1424,6 +1461,11 @@ func shouldSkipPiracyFinding(path string, f piracy.Finding) bool {
 }
 
 func isCriticalPiracyFinding(f piracy.Finding) bool {
+	// A bare word is ambiguous (including the standard HTML <keygen> element).
+	// Other corroborating findings remain independently visible.
+	if strings.EqualFold(f.Pattern, "keygen") {
+		return false
+	}
 	ft := strings.ToLower(f.Type)
 	desc := strings.ToLower(f.Description)
 

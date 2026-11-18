@@ -1,0 +1,5 @@
+{
+  "code": ".method public static check(I)Z\n    .registers 3\n    const v0, 0xFFFFFFFF\n    and-int v1, p0, v0\n    if-eqz v1, :cond_0\n    const/4 v0, 0x1\n    return v0\n    :cond_0\n    const/4 v0, 0x0\n    return v0\n.end method",
+  "line": 3,
+  "threshold": 0.6
+}

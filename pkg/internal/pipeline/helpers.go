@@ -345,6 +345,10 @@ func newMatch(
 	isCritical bool,
 ) types.Match {
 	info := types.GetCategoryInfo(category)
+	severity := types.SeverityInfo
+	if isCritical && findingKind(category) == "malware" {
+		severity = types.SeverityHigh
+	}
 	return types.Match{
 		SourceLocation: types.SourceLocation{File: file, Line: line},
 		Categorized:    types.Categorized{Category: category},
@@ -353,6 +357,8 @@ func newMatch(
 		Text:           matchedValue,
 		Context:        context,
 		IsCritical:     isCritical,
+		Severity:       severity,
+		Metadata:       map[string]string{"title": context},
 	}
 }
 

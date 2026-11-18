@@ -1,0 +1,95 @@
+{
+  "version": "0.1.0",
+  "id": "local-limit-demo",
+  "features": {
+    "app_owned": 1,
+    "branches": 0,
+    "constants": 0.03125,
+    "evidence_count": 0,
+    "instructions": 0.015625,
+    "invokes": 0,
+    "library": 0,
+    "patch_delta_ratio": 0.1,
+    "patch_preflight_ok": 1,
+    "patch_replacement_scale": 9.313225746154785e-9,
+    "patch_requested": 1,
+    "patch_widened_opcode": 0,
+    "register_budget": 0.00390625,
+    "returns": 0.125,
+    "server_dependency": 0
+  },
+  "answers": [
+    {
+      "question": "Подтверждён ли локальный тест?",
+      "state": "true",
+      "reasons": [
+        "tests.passed eq true",
+        "local_only eq true",
+        "tests.passed: условие не выполнено"
+      ]
+    }
+  ],
+  "validation": {
+    "status": "preflight_pass",
+    "issues": []
+  },
+  "finding": {
+    "value": 0.45,
+    "kind": "heuristic_score",
+    "target": "finding",
+    "above_threshold": false,
+    "contributions": {
+      "app_owned": 0.15,
+      "evidence_count": 0,
+      "intercept": 0.3,
+      "library": -0,
+      "server_dependency": -0
+    },
+    "notes": [
+      "Не является вероятностью успешного поведения."
+    ]
+  },
+  "patch_assessment": {
+    "value": 0.7,
+    "kind": "heuristic_score",
+    "target": "patch",
+    "above_threshold": false,
+    "contributions": {
+      "app_owned": 0.3,
+      "branches": -0,
+      "intercept": 0.4,
+      "invokes": -0,
+      "library": -0,
+      "server_dependency": -0
+    },
+    "notes": [
+      "Не является вероятностью успешного поведения."
+    ]
+  },
+  "decision": "review",
+  "reasons": [
+    "Автоприменение отключено. Сборка и поведение здесь не выполняются.",
+    "Preflight — частичная проверка, не полный Smali/Dalvik verifier.",
+    "Находка ниже Threshold; сохранена, а не скрыта.",
+    "Кандидат ниже patch Threshold; не одобрен автоматически."
+  ],
+  "plan": {
+    "original_code": ".method public static limit()I\n.registers 1\nconst/16 v0, 10\nreturn v0\n.end method",
+    "patched_code": ".method public static limit()I\n.registers 1\nconst/16 v0, 20\nreturn v0\n.end method",
+    "original_sha256": "9776f49dde3adf2cb2e150f4d9410fd5b15d571a38607015a6d98e68830db1b4",
+    "patched_sha256": "f9966cad4c2716d1503a3719b5ea3eec07b78f5f334ad9ececc27cfe09f76bbf",
+    "diff": "@@ line 3 @@\n-const/16 v0, 10\n+const/16 v0, 20",
+    "before": 10,
+    "after": 20,
+    "delta": 10,
+    "percent": 100,
+    "explanation": "Литерал 10 → 20; разница +10. Назначение и эффект поведения не установлены. Заявленная пользователем цель: локальный лимит элементов (не подтверждена анализом потока данных).",
+    "validation": {
+      "status": "preflight_pass",
+      "issues": []
+    },
+    "build": "not_run",
+    "runtime": "not_run",
+    "can_apply": false
+  }
+}

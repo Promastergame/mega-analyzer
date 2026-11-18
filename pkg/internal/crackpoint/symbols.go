@@ -146,6 +146,14 @@ func (f *Finder) FindCrackPointsInSymbols(symbols []SymbolRef, container string,
 			continue
 		}
 		for _, gp := range gates {
+			// WebP checks its bitstream magic here, not the APK signature.
+			// This is a symbol semantic distinction, independent of file name.
+			if (platform == PlatformNative || platform == PlatformIOS) && (name == "vp8checksignature" || name == "vp8lchecksignature") {
+				continue
+			}
+			if gp.namePattern == "ispro" && name != "ispro" && name != "isprouser" && name != "isproversion" && name != "isproactive" {
+				continue
+			}
 			if strings.Contains(hay, gp.namePattern) {
 				f.addSymbolCrackPoint(result, seen, sym, container,
 					CrackPointGateMethod, gp.category, gp.weight,

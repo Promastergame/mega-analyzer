@@ -1,0 +1,21 @@
+{
+  "skills": 35,
+  "cases": 44,
+  "top1": 1,
+  "top3": 1,
+  "other_recall": 1,
+  "false_abstain": 0,
+  "top1_by_group": {
+    "code": 1,
+    "data": 1,
+    "design": 1,
+    "media": 1,
+    "meta": 1,
+    "office": 1,
+    "other": 1,
+    "web": 1,
+    "writing": 1
+  },
+  "latency_ms_p50": 14.62,
+  "latency_ms_p95": 38.99
+}

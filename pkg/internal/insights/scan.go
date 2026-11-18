@@ -15,6 +15,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"mega-analyzer/pkg/internal/networkrefs"
 )
 
 type LoadOptions struct {
@@ -362,11 +364,14 @@ func lineAt(data []byte, n int) string {
 }
 
 func extractURLs(data []byte) []string {
-	matches := urlPattern.FindAll(data, -1)
+	matches := urlPattern.FindAllIndex(data, -1)
 	out := make([]string, 0, len(matches))
 	seen := map[string]struct{}{}
 	for _, m := range matches {
-		s := strings.TrimRight(string(m), `.,;]}`)
+		if networkrefs.IsXMLMetadataURL(data, m[0]) {
+			continue
+		}
+		s := strings.TrimRight(string(data[m[0]:m[1]]), `.,;]}`)
 		if _, ok := seen[s]; ok {
 			continue
 		}

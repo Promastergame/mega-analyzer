@@ -1,0 +1,14 @@
+{
+  "game":"russian_checkers",
+  "player":"white",
+  "board":[
+    ".b.b.b.b",
+    "b.b.b.b.",
+    ".b.b.b.b",
+    "........",
+    "........",
+    "w.w.w.w.",
+    ".w.w.w.w",
+    "w.w.w.w."
+  ]
+}

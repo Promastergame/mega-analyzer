@@ -49,6 +49,25 @@ type Evidence struct {
 type TestConfig struct {
 	Props    []PropSet  `json:"props"`
 	Commands []ShellCmd `json:"commands"`
+	// EmulatorOnly rejects device mutations unless an AVD serial is selected.
+	EmulatorOnly bool          `json:"emulator_only,omitempty"`
+	Motion       *MotionConfig `json:"motion,omitempty"`
+}
+
+// MotionConfig is a bounded replay of emulator sensor vectors.
+type MotionConfig struct {
+	Frames          []MotionFrame `json:"frames"`
+	IntervalMillis  int           `json:"interval_millis"`
+	DurationSeconds int           `json:"duration_seconds"`
+}
+
+type MotionFrame struct {
+	Readings []SensorVector `json:"readings"`
+}
+
+type SensorVector struct {
+	Name   string     `json:"name"`
+	Values [3]float64 `json:"values"`
 }
 
 // PropSet is a single system-property assignment.

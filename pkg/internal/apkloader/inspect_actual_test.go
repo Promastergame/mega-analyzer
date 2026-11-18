@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"mega-analyzer/pkg/internal/apkloader/axml"
+	"mega-analyzer/pkg/internal/testutil"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -12,7 +13,7 @@ import (
 
 func TestInspectMiniSandboxRebuiltFiles(t *testing.T) {
 	sourceDir := writeMiniSandbox(t)
-	apkPath := filepath.Join(t.TempDir(), "mini-sandbox.apk")
+	apkPath := filepath.Join(testutil.TempDir(t), "mini-sandbox.apk")
 	rebuilder := NewAPKRebuilder(sourceDir)
 	rebuilder.UseSmali = false
 	rebuilder.IncludeSignature = false

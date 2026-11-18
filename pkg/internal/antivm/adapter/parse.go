@@ -41,6 +41,7 @@ func parseWMDensity(out string) string {
 // stable keys: level, status, temperature, health, plugged.
 func parseDumpsysBattery(out string) map[string]string {
 	res := map[string]string{}
+	readPower := false
 	for _, line := range strings.Split(out, "\n") {
 		line = strings.TrimSpace(line)
 		key, val, ok := strings.Cut(line, ":")
@@ -57,17 +58,27 @@ func parseDumpsysBattery(out string) map[string]string {
 		case "status":
 			res["status"] = normalizeBatteryStatus(val)
 		case "health":
-			res["health"] = val
+			res["health"] = normalizeBatteryHealth(val)
 		case "ac powered", "usb powered", "wireless powered":
+			if val == "true" || val == "false" {
+				readPower = true
+			}
 			if val == "true" {
 				res["plugged"] = strings.TrimSuffix(key, " powered")
 			}
 		}
 	}
-	if _, ok := res["plugged"]; !ok {
+	if _, ok := res["plugged"]; !ok && readPower {
 		res["plugged"] = "none"
 	}
 	return res
+}
+
+func normalizeBatteryHealth(v string) string {
+	if health, ok := map[string]string{"1": "unknown", "2": "good", "3": "overheat", "4": "dead", "5": "over-voltage", "6": "unspecified-failure", "7": "cold"}[strings.TrimSpace(v)]; ok {
+		return health
+	}
+	return strings.ToLower(strings.TrimSpace(v))
 }
 
 // normalizeBatteryStatus maps Android's numeric/string status to our vocabulary.

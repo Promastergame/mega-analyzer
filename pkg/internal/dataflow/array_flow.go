@@ -412,7 +412,7 @@ func (s *sliceState) traceArrayParameter(signature, register string, query array
 	}
 	for _, seed := range entryPointTaints(method) {
 		if seed.param == param {
-			return []sliceHit{{source: signature + " [IPC entry point]", labels: seed.labels, param: -1,
+			return []sliceHit{{source: signature + " " + entryPointLabel(signature, s.exportedComponents), labels: seed.labels, param: -1,
 				steps: []Step{{Method: signature, Type: "source", Line: method.LineStart}}, field: true}}
 		}
 	}

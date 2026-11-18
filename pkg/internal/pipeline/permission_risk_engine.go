@@ -1,11 +1,11 @@
 package pipeline
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 	"sync"
 
+	"mega-analyzer/pkg/internal/finding"
 	"mega-analyzer/pkg/internal/types"
 )
 
@@ -29,6 +29,7 @@ type PermissionRiskRule struct {
 type PermissionRiskEngine struct {
 	rules            []PermissionRiskRule
 	foundPermissions map[string]bool
+	foundSources     map[string]finding.Evidence
 	mu               sync.RWMutex
 	totalScore       int
 }
@@ -37,6 +38,7 @@ func NewPermissionRiskEngine() *PermissionRiskEngine {
 	return &PermissionRiskEngine{
 		rules:            GetDefaultPermissionRules(),
 		foundPermissions: make(map[string]bool),
+		foundSources:     make(map[string]finding.Evidence),
 	}
 }
 
@@ -60,41 +62,16 @@ func (e *PermissionRiskEngine) Detect(ctx *FileDetectContext, analysis *types.Fi
 		return
 	}
 
-	content := ctx.ContentLower
-
-	// Ищем все android:name="android.permission.*" в манифесте
-	permPrefix := []byte("android.permission.")
-	searchStart := 0
-
-	for {
-		idx := bytes.Index(content[searchStart:], permPrefix)
-		if idx < 0 {
-			break
-		}
-
-		// Абсолютная позиция в content
-		absoluteIdx := searchStart + idx + len(permPrefix)
-
-		// Извлекаем название разрешения (до кавычки, >, пробела или конца)
-		endIdx := absoluteIdx
-		for endIdx < len(content) && content[endIdx] != '"' && content[endIdx] != '>' && content[endIdx] != ' ' && content[endIdx] != '\n' {
-			endIdx++
-		}
-
-		if endIdx > absoluteIdx {
-			// ← ИСПРАВЛЕНИЕ: конвертируем в UPPERCASE для сравнения с правилами
-			perm := strings.ToUpper(string(content[absoluteIdx:endIdx]))
-			e.mu.Lock()
-			e.foundPermissions[perm] = true
-			e.mu.Unlock()
-		}
-
-		// Сдвигаем позицию поиска
-		searchStart = endIdx
-		if searchStart >= len(content) {
-			break
-		}
+	// Labels, comments and arbitrary XML strings are not declarations.
+	sources := manifestPermissionSources(ctx.Content, analysis.Path)
+	e.mu.Lock()
+	for _, source := range sources {
+		perm := strings.ToUpper(strings.TrimPrefix(source.Snippet, "android.permission."))
+		e.foundPermissions[perm] = true
+		e.foundSources[perm] = finding.NewEvidence("permission_declaration", "Manifest declaration", source.Snippet,
+			finding.Location{File: source.File, Line: source.Line})
 	}
+	e.mu.Unlock()
 
 	// Оцениваем риск
 	e.scorePermissions(analysis)
@@ -123,18 +100,19 @@ func (e *PermissionRiskEngine) scorePermissions(analysis *types.FileAnalysis) {
 		}
 
 		if allPermsPresent {
-			e.totalScore += rule.BaseScore
-
-			// Добавляем матч
-			severity := determineSeverity(rule.Severity)
-			analysis.Matches = append(analysis.Matches, newMatch(
-				types.CategorySecurity,
-				analysis.Path,
-				0,
-				fmt.Sprintf("High-Risk Permission Combo: %s", rule.Name),
-				fmt.Sprintf("%s | Score: %d | %v", rule.Description, rule.BaseScore, rule.Combos),
-				severity == types.SeverityCritical || severity == types.SeverityHigh,
-			))
+			profile := strings.Join(rule.Permissions, ", ")
+			match := newMatch(types.CategoryManifestInfo, analysis.Path, 0,
+				fmt.Sprintf("Manifest permission profile: %s", profile), profile, false)
+			match.Severity, match.EvidenceType = types.SeverityInfo, "permission_declaration"
+			match.Metadata = map[string]string{"rule_id": "manifest.permission_profile." + rule.ID, "detector": e.Name(), "finding_kind": "inventory"}
+			for _, perm := range rule.Permissions {
+				if source, ok := e.foundSources[perm]; ok {
+					match.Evidence = append(match.Evidence, source)
+				}
+			}
+			match.Explanation = &finding.Explanation{Status: "observation", Summary: match.Context,
+				Limitations: []string{"Permission declarations alone do not prove grants, boot-time execution, theft or network transmission."}}
+			analysis.Matches = append(analysis.Matches, match)
 		}
 	}
 }
@@ -163,6 +141,7 @@ func (e *PermissionRiskEngine) Reset() {
 	e.mu.Lock()
 	defer e.mu.Unlock()
 	e.foundPermissions = make(map[string]bool)
+	e.foundSources = make(map[string]finding.Evidence)
 	e.totalScore = 0
 }
 

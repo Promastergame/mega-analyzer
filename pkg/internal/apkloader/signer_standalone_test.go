@@ -4,10 +4,12 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestStandaloneSigningIgnoresInstalledDebugKeystore(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	t.Chdir(dir)
 	t.Setenv("MEGA_STANDALONE", "1")
 	t.Setenv("PATH", dir)

@@ -18,10 +18,11 @@ type generatorEntry struct {
 }
 
 type GeneratorRegistry struct {
-	result     *types.AnalysisResult
-	mdOpts     report.MarkdownOptions
-	artifacts  *report.ArtifactsView
-	generators []generatorEntry
+	result      *types.AnalysisResult
+	mdOpts      report.MarkdownOptions
+	artifacts   *report.ArtifactsView
+	jsonCompact bool
+	generators  []generatorEntry
 }
 
 func NewGeneratorRegistry(result *types.AnalysisResult, mdOpts report.MarkdownOptions) *GeneratorRegistry {
@@ -41,6 +42,15 @@ func (r *GeneratorRegistry) WithArtifacts(view *report.ArtifactsView) *Generator
 	return r
 }
 
+// WithJSONCompact switches the JSON report to the compact export: findings,
+// matches, evidence and coverage without verbatim smali bodies (see
+// JSONReporter.WithCompact).
+func (r *GeneratorRegistry) WithJSONCompact(compact bool) *GeneratorRegistry {
+	r.jsonCompact = compact
+	r.rebuildGenerators()
+	return r
+}
+
 func (r *GeneratorRegistry) rebuildGenerators() {
 	result := r.result
 	mdOpts := r.mdOpts
@@ -55,7 +65,7 @@ func (r *GeneratorRegistry) rebuildGenerators() {
 		{
 			name: "JSON report",
 			gen: func(outputDir string) error {
-				return report.NewJSONReporter(result).WithArtifacts(artifacts).Generate(outputDir)
+				return report.NewJSONReporter(result).WithArtifacts(artifacts).WithCompact(r.jsonCompact).Generate(outputDir)
 			},
 		},
 		{

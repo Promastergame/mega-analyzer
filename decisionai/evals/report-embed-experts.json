@@ -1,0 +1,54 @@
+{
+  "version": "1.0.0",
+  "backend": "bi-encoder:cointegrated/rubert-tiny2",
+  "calibration": {
+    "version": "1.0.0",
+    "temperatures": {
+      "choice": 0.387,
+      "noul": 0.427,
+      "score": 7.029
+    },
+    "fitted_on": {
+      "choice": 15,
+      "noul": 15,
+      "score": 4
+    },
+    "note": "temperature scaling fitted by minimum cross-entropy"
+  },
+  "examples": 16,
+  "questions": 39,
+  "by_type": {
+    "choice": {
+      "n": 19,
+      "agreement": 0.5789,
+      "brier": 0.5483,
+      "log_loss": 1.0054,
+      "ece": 0.1652,
+      "js_divergence": 0.4035,
+      "auto_rate": 0,
+      "auto_agreement": 0
+    },
+    "noul": {
+      "n": 15,
+      "agreement": 0.8667,
+      "brier": 0.2704,
+      "log_loss": 0.4416,
+      "ece": 0.1569,
+      "js_divergence": 0.1915,
+      "auto_rate": 0,
+      "auto_agreement": 0
+    },
+    "score": {
+      "n": 5,
+      "agreement": 0.4,
+      "brier": 0.617,
+      "log_loss": 1.1642,
+      "ece": 0.3484,
+      "js_divergence": 0.4627,
+      "auto_rate": 0,
+      "auto_agreement": 0
+    }
+  },
+  "latency_ms_p50": 97.09,
+  "latency_ms_p95": 270.04
+}

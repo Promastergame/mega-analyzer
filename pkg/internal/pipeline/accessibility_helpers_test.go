@@ -27,8 +27,16 @@ func TestCalculateThreatScoreNoService(t *testing.T) {
 func TestCalculateThreatScoreWithService(t *testing.T) {
 	s := newAccessibilityState()
 	s.hasAccessibilityService = true
+	s.hasAccessibilitySubclass = true // capability rule: binding + real subclass
 	if got := s.calculateThreatScore(); got <= 0 || got > 10 {
 		t.Errorf("base threat score out of range: %v", got)
+	}
+
+	// A binding without an AccessibilityService subclass is not a capability.
+	bindingOnly := newAccessibilityState()
+	bindingOnly.hasAccessibilityService = true
+	if got := bindingOnly.calculateThreatScore(); got != 0 {
+		t.Errorf("binding without subclass should score 0, got %v", got)
 	}
 
 	s.hasSystemAlertWindow = true

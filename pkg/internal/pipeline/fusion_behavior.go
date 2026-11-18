@@ -128,15 +128,19 @@ func projectBehaviorFeatures(signals *ApkSignals) []float64 {
 	x[7] = clamp01Behavior(float64(stealer) / 10.0)
 	x[8] = clamp01Behavior(float64(anti) / 5.0)
 
-	x[9] = clamp01Behavior(float64(len(signals.Correlations)) / 5.0)
 	x[10] = clamp01Behavior(float64(signals.TotalScore) / 100.0)
 
+	riskCorrelations := 0
 	for _, c := range signals.Correlations {
+		if c.Severity == SeverityInfo || c.Score <= 0 {
+			continue
+		}
+		riskCorrelations++
 		if c.Severity == SeverityCritical || c.Severity == SeverityHigh {
 			x[11] = 1.0
-			break
 		}
 	}
+	x[9] = clamp01Behavior(float64(riskCorrelations) / 5.0)
 
 	return x
 }
@@ -159,10 +163,14 @@ func runBehaviorFusionIntelligence(signals *ApkSignals) *fusion.Report {
 	features := projectBehaviorFeatures(signals)
 
 	signals.mu.RLock()
-	correlationsCount := len(signals.Correlations)
+	correlationsCount := 0
 	totalScore := signals.TotalScore
 	var critCorrs []Correlation
 	for _, c := range signals.Correlations {
+		if c.Severity == SeverityInfo || c.Score <= 0 {
+			continue
+		}
+		correlationsCount++
 		if c.Severity == SeverityCritical || c.Severity == SeverityHigh {
 			critCorrs = append(critCorrs, c)
 		}
@@ -188,7 +196,7 @@ func runBehaviorFusionIntelligence(signals *ApkSignals) *fusion.Report {
 		extra = append(extra, fusion.Evidence{
 			Factor:       "multiple_correlations",
 			Contribution: 0.25,
-			Detail:       fmt.Sprintf("Detected %d multi-signal attack chains across the APK", correlationsCount),
+			Detail:       fmt.Sprintf("Detected %d heuristic risk correlations across the APK; connected execution requires separate evidence", correlationsCount),
 		})
 	}
 

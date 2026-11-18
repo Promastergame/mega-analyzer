@@ -36,7 +36,7 @@ func TestApp_RunnerSubsystems(t *testing.T) {
 	_ = app.handleMachineCode(filepath.Join(tempDir, "dummy.bin"))
 
 	res := types.NewAnalysisResult(tempDir)
-	_ = app.generateReports(res, tempDir)
+	_ = app.generateReports(context.Background(), res, tempDir)
 
 	_ = app.handleOBBScan(tempDir)
 	_ = app.handleCacheScan(tempDir)

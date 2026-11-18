@@ -228,11 +228,13 @@ func (e *DeobfuscationEngineV2) detectXORSmart(content []byte) []ObfuscatedURL {
 	}
 	decoded := make([]byte, len(sample))
 	lowerScratch := make([]byte, len(sample))
+	counts := xorPrintableCounts(sample)
 	for key := 0; key < 256; key++ {
-		printable := xorDecodeSingleByteInto(decoded, sample, byte(key))
+		printable := counts[key]
 		if float64(printable)/float64(len(decoded)) < MinPrintableRatio {
 			continue
 		}
+		xorDecodeSingleByteInto(decoded, sample, byte(key))
 		if !containsXORPlaintext(decoded) {
 			continue
 		}
@@ -255,18 +257,27 @@ func (e *DeobfuscationEngineV2) detectXORSmart(content []byte) []ObfuscatedURL {
 func (e *DeobfuscationEngineV2) detectXOR2Byte(sample []byte) []ObfuscatedURL {
 	decoded := make([]byte, len(sample))
 	lowerScratch := make([]byte, len(sample))
+	evenCounts, oddCounts := xorPrintableCountsStride(sample, 0, 2), xorPrintableCountsStride(sample, 1, 2)
 	attempts := 0
 	for key1 := 0; key1 < 256; key1++ {
+		if attempts >= MaxXORAttempts {
+			return nil
+		}
+		possibleKeys := e.xor2ByteDomainKeys(sample, byte(key1))
 		for key2 := 0; key2 < 256; key2++ {
 			attempts++
 			if attempts > MaxXORAttempts {
 				return nil
 			}
+			if !possibleKeys[key2] {
+				continue
+			}
 
-			printable := xorDecode2ByteInto(decoded, sample, byte(key1), byte(key2))
+			printable := evenCounts[key1] + oddCounts[key2]
 			if float64(printable)/float64(len(decoded)) <= MinPrintableRatio {
 				continue
 			}
+			xorDecode2ByteInto(decoded, sample, byte(key1), byte(key2))
 			if url := e.extractURLFromBytesLowered(decoded, lowerASCIIInto(lowerScratch, decoded)); url != nil {
 				url.Original = fmt.Sprintf("xor_key_0x%02x%02x", key1, key2)
 				url.Method = string(ObfXOR)
@@ -277,6 +288,93 @@ func (e *DeobfuscationEngineV2) detectXOR2Byte(sample []byte) []ObfuscatedURL {
 	}
 
 	return nil
+}
+
+// Determine which second-byte keys can produce a configured domain before
+// decoding and running the domain automaton for each key. Even positions have
+// a fixed key; odd positions constrain key2 to at most two case variants. This
+// is an exact prefilter, including matches at odd offsets and uppercase ASCII.
+func (e *DeobfuscationEngineV2) xor2ByteDomainKeys(data []byte, key1 byte) (keys [256]bool) {
+	for _, domain := range e.knownDomainsBytes {
+		if len(domain) == 0 {
+			continue
+		}
+		for start := 0; start <= len(data)-len(domain); start++ {
+			fixedOffset := start & 1
+			fixedMatch := true
+			for j := fixedOffset; j < len(domain); j += 2 {
+				if asciiLowerByte(data[start+j]^key1) != domain[j] {
+					fixedMatch = false
+					break
+				}
+			}
+			if !fixedMatch {
+				continue
+			}
+			variableOffset := 1 - fixedOffset
+			if variableOffset >= len(domain) {
+				// A one-byte match at a fixed position is valid for every key2.
+				for i := range keys {
+					keys[i] = true
+				}
+				return keys
+			}
+			first := domain[variableOffset]
+			key := data[start+variableOffset] ^ first
+			variants := 1
+			if first >= 'a' && first <= 'z' {
+				variants = 2
+			}
+			for variant := 0; variant < variants; variant++ {
+				candidate := key ^ byte(variant*0x20)
+				if keys[candidate] {
+					continue
+				}
+				matched := true
+				for j := variableOffset; j < len(domain); j += 2 {
+					if asciiLowerByte(data[start+j]^candidate) != domain[j] {
+						matched = false
+						break
+					}
+				}
+				if matched {
+					keys[candidate] = true
+				}
+			}
+		}
+	}
+	return keys
+}
+
+func asciiLowerByte(value byte) byte {
+	if value >= 'A' && value <= 'Z' {
+		return value + ('a' - 'A')
+	}
+	return value
+}
+
+// Counting printable bytes depends on their frequencies, not their order.
+// Reject impossible keys before decoding the same sample hundreds of times.
+func xorPrintableCounts(data []byte) (counts [256]int) {
+	return xorPrintableCountsStride(data, 0, 1)
+}
+
+func xorPrintableCountsStride(data []byte, start, stride int) (counts [256]int) {
+	var frequencies [256]int
+	for i := start; i < len(data); i += stride {
+		frequencies[data[i]]++
+	}
+	for value, frequency := range frequencies {
+		if frequency == 0 {
+			continue
+		}
+		for key := range counts {
+			if isPrintableByte(byte(value) ^ byte(key)) {
+				counts[key] += frequency
+			}
+		}
+	}
+	return counts
 }
 
 func containsXORPlaintext(data []byte) bool {
@@ -515,11 +613,9 @@ func (e *DeobfuscationEngineV2) detectBase64(content []byte) []ObfuscatedURL {
 func (e *DeobfuscationEngineV2) detectBase64MultiLine(content []byte) []ObfuscatedURL {
 	var results []ObfuscatedURL
 
-	matches := e.reBase64Multi.FindAll(content, -1)
-
-	if len(matches) > 50 {
-		matches = matches[:50]
-	}
+	// Only the first 50 candidates are analyzed. Stop the regexp there rather
+	// than scanning and allocating every remaining match in a large file.
+	matches := e.reBase64Multi.FindAll(content, 50)
 
 	for _, match := range matches {
 		cleaned := bytes.Map(func(r rune) rune {

@@ -41,9 +41,12 @@ const (
 	DefaultResourceFileSizeMB = 64
 
 	// Границы для энтропии
-	MinEntropyThreshold     = 0.0
-	MaxEntropyThreshold     = 8.0 // максимум для байтовой энтропии
-	DefaultEntropyThreshold = 4.5
+	MinEntropyThreshold = 0.0
+	MaxEntropyThreshold = 8.0 // максимум для байтовой энтропии
+	// Smali text sits at ~4.5-5.2 bits/byte across every APK (uniform
+	// character distribution), so anything below ~7 flags ordinary code.
+	// Real embedded blobs — packed DEX, encrypted assets — measure >= 7.0.
+	DefaultEntropyThreshold = 7.0
 
 	// DefaultSuspiciousScoreThreshold - app-code SuspiciousScore cutoff.
 	// Was hardcoded as `> 5` in two places in workers.go.

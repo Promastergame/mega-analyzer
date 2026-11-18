@@ -449,15 +449,21 @@ func getPatternExplanation(category, pattern string) string {
 	return "No additional information available"
 }
 
-// classifySuspicionScore returns label, CSS class, and recommendation (#8)
+// classifySuspicionScore returns label, CSS class, and recommendation (#8).
+// The bands mirror the rating scale (pkg/internal/rating: overall 0-100 = max
+// category score × 10, CRITICAL level at >= 85): a "Do Not Install" headline
+// must mean the analyzer found critical evidence, not a pile of high/hygiene
+// findings. Measured mismatch (2026-11-04): a clean FOSS editor showed
+// "HIGHLY SUSPICIOUS / Do Not Install" at 100 while its malware category was
+// LOW and confidence 29%.
 func classifySuspicionScore(score int) (label, class, recommendation string) {
 	switch {
-	case score >= 80:
+	case score >= 85:
 		return "HIGHLY SUSPICIOUS", "critical",
 			"Do Not Install — This application shows strong indicators of piracy, tampering, or malicious modification."
-	case score >= 60:
+	case score >= 65:
 		return "SUSPICIOUS", "high",
-			"Exercise Extreme Caution — Multiple concerning patterns detected. Verify source before installing."
+			"Exercise Caution — Multiple concerning patterns detected. Verify the source and review the evidence before installing."
 	case score >= 40:
 		return "MODERATE CONCERN", "medium",
 			"Review Carefully — Some suspicious patterns found. May be legitimate but warrants investigation."

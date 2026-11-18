@@ -3,15 +3,34 @@ package pipeline
 
 import "mega-analyzer/pkg/internal/types"
 
+// reviewOnlyCategories are inventory categories that still deserve a manual
+// review note even though they are not critical (see the billing entries in
+// types/categoryRegistry). They feed recommendation generation ONLY — the risk
+// matrix and critical counters stay driven by CategoryInfo.IsCritical, so a
+// normal Play Billing integration never shows up as CRITICAL.
+var reviewOnlyCategories = map[types.Category]bool{
+	types.CategoryBillingClient:   true,
+	types.CategoryPurchaseVerify:  true,
+	types.CategoryPurchaseToken:   true,
+	types.CategoryBillingCallback: true,
+}
+
 // generateRecommendations создаёт рекомендации на основе результатов.
 func generateRecommendations(result *types.AnalysisResult) []types.Recommendation {
 	recs := make([]types.Recommendation, 0, 8)
 
-	// Собираем критические категории
+	// Собираем критические категории. Только код приложения: protection-категории
+	// внутри библиотек (например, verifyIntegrity в apksig) — это запчасти
+	// библиотеки, а не защита приложения, и рекомендаций они не создают.
 	critCats := make(map[types.Category]int)
-	for cat, count := range result.MatchesByCategory {
-		if types.GetCategoryInfo(cat).IsCritical {
-			critCats[cat] = count
+	for _, fa := range result.Files {
+		if fa == nil || !fa.IsAppCode {
+			continue
+		}
+		for _, match := range fa.Matches {
+			if types.GetCategoryInfo(match.Category).IsCritical || reviewOnlyCategories[match.Category] {
+				critCats[match.Category]++
+			}
 		}
 	}
 
@@ -31,9 +50,9 @@ func generateRecommendations(result *types.AnalysisResult) []types.Recommendatio
 		},
 		{
 			cats:  []types.Category{types.CategoryBillingClient, types.CategoryPurchaseVerify},
-			prio:  types.PriorityCritical,
-			title: "🔴 In-App Purchase Review",
-			desc:  "Purchase verification logic detected",
+			prio:  types.PriorityMedium,
+			title: "🔵 In-App Purchase Review",
+			desc:  "Billing integration detected (inventory, not a risk by itself)",
 			steps: []string{
 				"1. Locate isPurchased() decision points",
 				"2. Identify purchase token validation",

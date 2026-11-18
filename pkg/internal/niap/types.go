@@ -54,13 +54,16 @@ type Match struct {
 
 // Report holds the NIAP compliance scan result.
 type Report struct {
-	GeneratedAt  string  `json:"generated_at"`
-	Target       string  `json:"target"`
-	TotalRules   int     `json:"total_rules"`
-	Passed       int     `json:"passed"`
-	Failed       int     `json:"failed"`
-	ManualReview int     `json:"manual_review"`
-	Matches      []Match `json:"matches"`
-	Score        int     `json:"score"`
-	Verdict      string  `json:"verdict"`
+	GeneratedAt      string  `json:"generated_at"`
+	Target           string  `json:"target"`
+	TotalRules       int     `json:"total_rules"`
+	Passed           int     `json:"passed"`
+	Failed           int     `json:"failed"`
+	ManualReview     int     `json:"manual_review"`
+	CodeFilesScanned int     `json:"code_files_scanned"`
+	CodeFilesSkipped int     `json:"code_files_skipped"`
+	UnsupportedCode  int     `json:"unsupported_code"`
+	Matches          []Match `json:"matches"`
+	Score            int     `json:"score"`
+	Verdict          string  `json:"verdict"`
 }

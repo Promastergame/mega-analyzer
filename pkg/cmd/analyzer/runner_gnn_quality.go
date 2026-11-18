@@ -2,7 +2,9 @@ package main
 
 import (
 	"math"
+	"strings"
 
+	"mega-analyzer/pkg/internal/types"
 	"mega-analyzer/pkg/ml/gnn"
 	"mega-analyzer/pkg/ml/gnncache"
 )
@@ -89,19 +91,149 @@ var gnnLicenseLibraryPrefixes = []string{
 	"com.android.billingclient.api.",
 }
 
-// gnnLibrarySuppressed reports whether a finding should be dropped as
-// library noise. Currently only license-check inside billing libraries:
-// other classes show no comparable library-shaped FP cluster.
-func gnnLibrarySuppressed(method, vulnName string) bool {
-	if vulnName != "license-check" {
-		return false
+// gnnFrameworkLibraryPrefixes are framework/library namespaces whose bundled
+// code is recompiled wholesale by the build tooling on every APK rebuild.
+// Measured FP clusters from the 2026-11-03 malware corpus run:
+//
+//   - android.support.* UI plumbing predicted repack-marker (ConstraintLayout
+//     0.65, CardViewBaseImpl.initialize 0.75) — corner-radius switches and
+//     layout math read as re-sign/attributions to the model.
+//   - com.google.android.gms.* plumbing predicted repack-marker/signature-spoof
+//     (PackageManagerWrapper.getPackageInfo 0.92, AndroidUtilsLight
+//     .getPackageCertificateHashBytes 0.82, SafeParcelWriter 0.66) — Google's
+//     own package-integrity plumbing reads as authenticity tampering.
+//
+// A namespace match alone is NOT trusted: malware hides in framework
+// namespaces too. newGNNLibraryClassIndex verifies the bundle claim by
+// counting sibling classes, so a lone injected class stays a finding.
+var gnnFrameworkLibraryPrefixes = []string{
+	"android.support.",
+	"androidx.",
+	"com.google.android.material.",
+	"com.google.android.exoplayer2.",
+	"com.google.android.exoplayer.",
+	"com.google.android.gms.dynamite.",
+	"com.google.android.gms.",
+}
+
+// gnnFrameworkMinClasses is the sibling-class floor for treating a namespace
+// match as a genuine bundled library. Measured bundles: android.support.*
+// = 617 classes (Приват.apk), com.google.android.gms.* = 109 (Button VPN).
+// An attacker-injected namespace squat yields 1-3 classes, an order of
+// magnitude below the floor; the smallest real artifact (androidx.annotation)
+// still ships ~40.
+const gnnFrameworkMinClasses = 8
+
+// gnnFrameworkSuppressedClasses limits suppression to authenticity-claim
+// classes: repack-marker and signature-spoof assert "the code is not what it
+// claims to be", which is exactly what library plumbing spuriously resembles.
+// dynamic-load, license-bypass, integrity-tamper and native-bridge stay live
+// inside framework namespaces so injected payloads still surface there.
+// The single exception is the stock Play-services Dynamite module loader
+// (com.google.android.gms.dynamite.*): loading feature modules on demand is
+// its designed behavior (measured FP 0.96), and it only suppresses when the
+// whole GMS bundle passes the sibling check.
+func gnnFrameworkSuppressedClass(prefix, vulnName string) bool {
+	if gnnFrameworkSuppressedClasses[vulnName] {
+		return true
 	}
-	for _, prefix := range gnnLicenseLibraryPrefixes {
-		if len(method) >= len(prefix) && method[:len(prefix)] == prefix {
-			return true
+	// ExoPlayer DRM methods (setDrmLicenseRequestHeader and friends) are
+	// Widevine license plumbing — the license-check class fires on them at
+	// 0.81+ in every media app (measured on NewPipe, 2026-11-04), but DRM
+	// license requests are never actionable licensing findings.
+	if vulnName == "license-check" &&
+		(prefix == "com.google.android.exoplayer2." || prefix == "com.google.android.exoplayer.") {
+		return true
+	}
+	return vulnName == "dynamic-load" &&
+		prefix == "com.google.android.gms.dynamite."
+}
+
+var gnnFrameworkSuppressedClasses = map[string]bool{
+	"repack-marker":   true,
+	"signature-spoof": true,
+}
+
+// gnnLibraryClassIndex counts distinct smali classes per framework prefix for
+// one scan. It turns a namespace match ("looks like a library") into a
+// verified one ("the whole library was bundled"), per the corpus report's
+// rule that namespace strings alone must not hide results.
+type gnnLibraryClassIndex struct {
+	counts map[string]int
+}
+
+func newGNNLibraryClassIndex(files map[string]*types.FileAnalysis) *gnnLibraryClassIndex {
+	idx := &gnnLibraryClassIndex{counts: make(map[string]int, len(gnnFrameworkLibraryPrefixes))}
+	for _, file := range files {
+		if file == nil || file.SmaliClass == nil {
+			continue
+		}
+		name := file.SmaliClass.Name
+		for _, prefix := range gnnFrameworkLibraryPrefixes {
+			if strings.HasPrefix(name, prefix) {
+				idx.counts[prefix]++
+				break
+			}
 		}
 	}
-	return false
+	return idx
+}
+
+// verify checks whether the matched prefix passed the sibling-class floor.
+// The dynamite loader matches the narrow gms.dynamite prefix but is gated on
+// the whole-GMS count: the loader package itself can hold only a handful of
+// classes in a legitimate basement-only bundle.
+func (idx *gnnLibraryClassIndex) verify(prefix, vulnName string) bool {
+	if idx == nil {
+		return false
+	}
+	if vulnName == "dynamic-load" && prefix == "com.google.android.gms.dynamite." {
+		prefix = "com.google.android.gms."
+	}
+	return idx.counts[prefix] >= gnnFrameworkMinClasses
+}
+
+// gnnLibrarySuppressed reports whether a finding should be dropped as library
+// noise, returning the diagnostic reason. Two mechanisms:
+//
+//   - billing libraries: license-check inside Play Billing internals is
+//     structurally license verification but never actionable (verified by
+//     prefix; namespace squatting there has no observed history).
+//   - framework libraries: repack-marker/signature-spoof inside a VERIFIED
+//     framework bundle (sibling classes >= gnnFrameworkMinClasses), plus the
+//     stock Dynamite loader for dynamic-load. Lone injected classes fail the
+//     sibling check and stay findings.
+func gnnLibrarySuppressed(method, vulnName string, libIndex *gnnLibraryClassIndex) (string, bool) {
+	class := method
+	if idx := strings.Index(method, "->"); idx >= 0 {
+		class = method[:idx]
+	}
+	if vulnName == "license-check" {
+		for _, prefix := range gnnLicenseLibraryPrefixes {
+			if strings.HasPrefix(method, prefix) {
+				return "billing_library", true
+			}
+		}
+		// The APK signing library's crypto plumbing (certificate generation,
+		// lineage config, digest selection) reads as license verification to
+		// the model; it is signing infrastructure, never the app's license
+		// gate. Prefix-only like billing libraries: apksig is already a
+		// path-verified known library in the filter, so namespace squatting
+		// would require planting the whole toolchain package.
+		if strings.HasPrefix(class, "com.android.apksig.") {
+			return "signing_library", true
+		}
+		return "", false
+	}
+	for _, prefix := range gnnFrameworkLibraryPrefixes {
+		if strings.HasPrefix(class, prefix) && gnnFrameworkSuppressedClass(prefix, vulnName) {
+			if libIndex.verify(prefix, vulnName) {
+				return "verified_framework_bundle", true
+			}
+			return "", false
+		}
+	}
+	return "", false
 }
 
 // gnnMaxNormalizedEntropy is the third leg of the quality gate. Confidence

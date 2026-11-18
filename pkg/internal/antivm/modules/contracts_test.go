@@ -44,10 +44,8 @@ func TestAllModuleContractsAndFailurePropagation(t *testing.T) {
 				t.Fatalf("read failure swallowed: %v", err)
 			}
 			dev.ApplyErr = fail
-			if m.Name() != "sensors" {
-				if _, err := m.Apply(ctx, dev); !errors.Is(err, fail) {
-					t.Fatalf("apply failure swallowed: %v", err)
-				}
+			if _, err := m.Apply(ctx, dev); !errors.Is(err, fail) {
+				t.Fatalf("apply failure swallowed: %v", err)
 			}
 		})
 	}
@@ -70,7 +68,7 @@ func TestModuleValidationAndBatteryCommands(t *testing.T) {
 			t.Errorf("battery level %d err=%v", tt.level, err)
 		}
 	}
-	for _, tt := range []struct{ status, code string }{{"charging", "2"}, {"full", "5"}, {"discharging", "3"}} {
+	for _, tt := range []struct{ status, code string }{{"charging", "2"}, {"full", "5"}, {"discharging", "3"}, {"not-charging", "4"}} {
 		p.Battery.Status = tt.status
 		commands := NewBatteryModule(p).commands()
 		if commands[2].Cmd != "dumpsys battery set status "+tt.code {
@@ -86,6 +84,25 @@ func TestModuleValidationAndBatteryCommands(t *testing.T) {
 	res, err := m.Apply(context.Background(), dev)
 	if err != nil || len(res.Succeeded) != 0 || dev.ApplyCount != 0 {
 		t.Fatal("disabled sensors executed")
+	}
+}
+
+func TestBatteryAppliesCompleteProfile(t *testing.T) {
+	p := testProfile(t)
+	p.Battery = profile.BatteryProfile{Level: 71, Status: "charging", Temperature: 315, Health: "good", Plugged: "usb"}
+	m := NewBatteryModule(p)
+	if err := m.Validate(p); err != nil {
+		t.Fatal(err)
+	}
+	want := []adapter.ShellCmd{{Cmd: "dumpsys battery unplug"}, {Cmd: "dumpsys battery set level 71"}, {Cmd: "dumpsys battery set status 2"}, {Cmd: "dumpsys battery set temp 315"}, {Cmd: "dumpsys battery set health 2"}, {Cmd: "dumpsys battery set usb 1"}}
+	if !reflect.DeepEqual(m.commands(), want) {
+		t.Fatalf("commands=%+v", m.commands())
+	}
+	for _, bad := range []profile.BatteryProfile{{Level: 71, Status: "broken"}, {Level: 71, Status: "charging", Health: "broken"}, {Level: 71, Status: "charging", Plugged: "broken"}} {
+		p.Battery = bad
+		if err := NewBatteryModule(p).Validate(p); err == nil {
+			t.Fatalf("invalid battery profile accepted: %+v", bad)
+		}
 	}
 }
 

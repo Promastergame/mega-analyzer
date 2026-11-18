@@ -273,6 +273,13 @@ func TestShouldSkipPiracyFinding_Watermark(t *testing.T) {
 	}
 }
 
+func TestIsCriticalPiracyFinding_BareKeygen(t *testing.T) {
+	f := piracy.Finding{Type: "crack", Pattern: "keygen"}
+	if isCriticalPiracyFinding(f) {
+		t.Error("bare keygen is ambiguous and must not be critical")
+	}
+}
+
 func TestIsCriticalPiracyFinding_LuckyPatcher(t *testing.T) {
 	f := piracy.Finding{Type: "crack", Description: "Lucky Patcher patch detected"}
 	if !isCriticalPiracyFinding(f) {

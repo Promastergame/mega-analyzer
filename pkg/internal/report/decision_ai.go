@@ -13,9 +13,29 @@ func (r *HTMLReporter) buildDecisionAISection(w htmlWriter) {
 	w.WriteString(`<section class="section" id="decision-ai"><h2 class="section-title">` + icon("cpu") + `<span>DecisionAI · Review assistant</span></h2>`)
 	w.WriteString(`<style>#decision-ai .hotspot-card{overflow-wrap:anywhere}#decision-ai summary{cursor:pointer;line-height:1.6}#decision-ai summary span{font-weight:400;opacity:.8;margin-left:.5em}#decision-ai .hotspot-card p{margin-top:.75em}</style>`)
 	w.WriteString(`<p class="section-desc">Additional review of scanner evidence. Original findings, severity and CI verdicts are preserved. Model scores have not been validated on your apps.</p>`)
-	fmt.Fprintf(w, `<div class="card"><div class="hotspot-meta"><span>Status: %s</span><span>Reviewed: %d / %d</span><span>Skipped: %d</span></div></div>`, html.EscapeString(d.Status), d.Processed, d.Total, d.Skipped)
+	fmt.Fprintf(w, `<div class="card"><div class="hotspot-meta"><span>Status: %s</span><span>Risks reviewed: %d / %d</span><span>Total findings: %d</span><span>Observations and protections: %d</span></div></div>`, html.EscapeString(d.Status), d.Processed, d.Reviewable, d.Total, d.Observations)
 	if d.Error != "" {
 		fmt.Fprintf(w, `<p class="section-desc">Service error: %s</p>`, html.EscapeString(d.Error))
+	}
+	if source := d.SourceReview; source != nil {
+		fmt.Fprintf(w, `<div class="card"><p>Source review: %s · %d / %d checked · %d consistent · %d unresolved.</p><p>Source rules validate scanner checks and their citations. Execution and independent confirmation remain unresolved.</p></div>`,
+			html.EscapeString(source.Status), source.Processed, source.Total, source.Consistent, source.Unresolved)
+		if source.Error != "" {
+			fmt.Fprintf(w, `<p>Source review error: %s</p>`, html.EscapeString(source.Error))
+		}
+		for _, entry := range source.Entries {
+			answer := entry.Response.Answers["source_check"]
+			fmt.Fprintf(w, `<details class="hotspot-card"><summary>%s · %s · %s</summary><p>Scanner assessment: %s · Service answer: %s · Source: %s</p>`,
+				html.EscapeString(entry.Kind), html.EscapeString(answer.Choice), html.EscapeString(entry.ReviewRoute),
+				html.EscapeString(entry.SourceChoice), html.EscapeString(answer.Choice), html.EscapeString(answer.Source))
+			for _, evidence := range answer.Evidence {
+				fmt.Fprintf(w, `<p>%s</p>`, html.EscapeString(evidence))
+			}
+			if answer.Abstained {
+				fmt.Fprintf(w, `<p>Remaining condition: %s</p>`, html.EscapeString(answer.Reason))
+			}
+			w.WriteString(`</details>`)
+		}
 	}
 	w.WriteString(`<div class="hotspots-list">`)
 	for _, e := range d.Entries {
@@ -29,7 +49,9 @@ func (r *HTMLReporter) buildDecisionAISection(w htmlWriter) {
 			title = e.RuleID
 		}
 		fmt.Fprintf(w, `<details class="hotspot-card"><summary><strong>%s</strong> <span>%s · %s</span></summary><p>%s</p><p><code>%s</code></p>`, html.EscapeString(title), html.EscapeString(e.Severity), html.EscapeString(e.ReviewRoute), kind, html.EscapeString(e.RuleID))
-		if a.Noul != nil {
+		if a.Abstained {
+			w.WriteString(`<p>False-positive score unavailable: the review abstained.</p>`)
+		} else if a.Noul != nil {
 			fmt.Fprintf(w, `<p>False-positive score: <strong>%.4f</strong></p>`, *a.Noul)
 		}
 		if a.Abstained {

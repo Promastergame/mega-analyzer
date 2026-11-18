@@ -1,0 +1,115 @@
+{
+  "date": "2026-10-16",
+  "scope": "Engineering hardening of the supplied AI.zip; weights unchanged; no new semantic vision model trained.",
+  "environment": {
+    "os": "Amazon Linux 2023",
+    "arch": "amd64",
+    "go": "1.22.12",
+    "nim": "2.2.4",
+    "native": "Nim+FASM, without OpenMP",
+    "cpu": "Intel Xeon @ 2.50GHz, benchmark GOMAXPROCS=2"
+  },
+  "passed_checks": [
+    "go test ./... -count=1",
+    "go vet ./...",
+    "go test -race -short ./s1 ./cmd/dai ./experts -count=1",
+    "sh build-nim.sh (candidate build, native tests, promotion)",
+    "14 Python dataset tests",
+    "tests/check_pack.py: 18 matrices bit-exact",
+    "Windows amd64 pure-Go cross-compilation",
+    "native HTTP health + UI routes + checked quantity decision"
+  ],
+  "quality_summary": {
+    "before": {
+      "questions": 719,
+      "correct": 584,
+      "skill_cases": 110,
+      "skill_correct": 105
+    },
+    "after": {
+      "questions": 719,
+      "correct": 584,
+      "skill_cases": 110,
+      "skill_correct": 105
+    }
+  },
+  "known_quality_gate_failure": {
+    "dataset": "evals/distill/jev-holdout.jsonl",
+    "type": "noul",
+    "agreement_before": 0.8778,
+    "agreement_after": 0.8778,
+    "required": 0.88,
+    "threshold_lowered": false
+  },
+  "routing_change": "Unbound legacy neural calibration cannot route auto; deterministic calibrated experts keep their own policy.",
+  "benchmark": {
+    "scope": "New implementation context-index construction versus cache lookup on one repeated synthetic document, NOT end-to-end inference and NOT old/new model speed.",
+    "runs": {
+      "Cached": [
+        {
+          "ns_per_op": 22081,
+          "bytes_per_op": 6912,
+          "allocs_per_op": 1
+        },
+        {
+          "ns_per_op": 28016,
+          "bytes_per_op": 6912,
+          "allocs_per_op": 1
+        },
+        {
+          "ns_per_op": 25309,
+          "bytes_per_op": 6912,
+          "allocs_per_op": 1
+        },
+        {
+          "ns_per_op": 30374,
+          "bytes_per_op": 6912,
+          "allocs_per_op": 1
+        },
+        {
+          "ns_per_op": 24164,
+          "bytes_per_op": 6912,
+          "allocs_per_op": 1
+        }
+      ],
+      "Uncached": [
+        {
+          "ns_per_op": 402524,
+          "bytes_per_op": 152488,
+          "allocs_per_op": 1386
+        },
+        {
+          "ns_per_op": 345940,
+          "bytes_per_op": 152488,
+          "allocs_per_op": 1386
+        },
+        {
+          "ns_per_op": 392610,
+          "bytes_per_op": 152488,
+          "allocs_per_op": 1386
+        },
+        {
+          "ns_per_op": 426682,
+          "bytes_per_op": 152488,
+          "allocs_per_op": 1386
+        },
+        {
+          "ns_per_op": 398702,
+          "bytes_per_op": 152488,
+          "allocs_per_op": 1386
+        }
+      ]
+    },
+    "median_speed_ratio": 15.753368366984077,
+    "whole_process_RAM_measured": false
+  },
+  "not_verified": [
+    "Windows execution",
+    "Windows native compilation/execution",
+    "OpenMP execution",
+    "GitHub Actions execution",
+    "new model training or broad accuracy improvement"
+  ],
+  "weights_modified": false,
+  "logs_directory": "docs/fixes-2026-10-16"
+}

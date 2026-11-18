@@ -14,9 +14,8 @@ import (
 type DecompileBackend string
 
 const (
-	DecompileBackendAuto     DecompileBackend = "auto"
-	DecompileBackendNative   DecompileBackend = "native"
-	DecompileBackendBaksmali DecompileBackend = "baksmali"
+	DecompileBackendAuto   DecompileBackend = "auto"
+	DecompileBackendNative DecompileBackend = "native"
 )
 
 const nativeSmaliEmitterVersion = "native-smali-v5"

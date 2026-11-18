@@ -20,9 +20,6 @@ func TestStandaloneDisablesDiscovery(t *testing.T) {
 	if !Standalone() {
 		t.Fatal("Standalone() should be true after SetStandalone(true)")
 	}
-	if cfg := DefaultSmaliConfig(); cfg.SmaliJar != "" || cfg.BaksmaliJar != "" || cfg.JavaBinary != "" {
-		t.Fatalf("standalone smali config must be empty, got %+v", cfg)
-	}
 	if cfg := DefaultAapt2Config(); cfg.Aapt2Path != "" {
 		t.Fatalf("standalone aapt2 config must be empty, got %+v", cfg)
 	}

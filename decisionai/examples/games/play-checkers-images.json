@@ -1,0 +1,10 @@
+{
+  "server":{"command":".tmp/arena-mcp.exe"},
+  "game":"russian_checkers",
+  "observation_mode":"image",
+  "observe":{"name":"observe","arguments":{}},
+  "move_tool":"apply",
+  "image_layout":{"profile":"arena_checkers_v1","width":384,"height":384,"rows":8,"columns":8,"orientation":"white_bottom","turn":{"left":176,"top":384,"width":32,"height":32}},
+  "max_steps":20,
+  "min_step_interval_ms":500
+}

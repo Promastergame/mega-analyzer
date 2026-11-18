@@ -11,7 +11,7 @@ import (
 	"encoding/hex"
 )
 
-//go:embed assets/index.html assets/app.css assets/app.js assets/error.html assets/workspace.css assets/workspace.js assets/workspace-preview.js assets/novnc.js assets/novnc-LICENSE.txt
+//go:embed assets/index.html assets/app.css assets/app.js assets/error.html assets/workspace.css assets/workspace.js assets/workspace-preview.js assets/novnc.js assets/novnc-LICENSE.txt assets/favicon.ico assets/favicon-32.png assets/apple-touch-icon.png
 var assetFS embed.FS
 
 type staticAsset struct {
@@ -32,6 +32,9 @@ func init() {
 		"workspace.css":        "text/css; charset=utf-8",
 		"novnc.js":             "text/javascript; charset=utf-8",
 		"novnc-LICENSE.txt":    "text/plain; charset=utf-8",
+		"favicon.ico":          "image/x-icon",
+		"favicon-32.png":       "image/png",
+		"apple-touch-icon.png": "image/png",
 	} {
 		body := []byte(mustAsset("assets/" + name))
 		sum := sha256.Sum256(body)

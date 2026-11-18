@@ -10,6 +10,8 @@ import (
 	"testing"
 
 	"mega-analyzer/pkg/internal/apkloader/axml"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 // TestMiniSandboxRebuildWorkflow rebuilds the in-tree mini sandbox and verifies
@@ -21,7 +23,7 @@ func TestMiniSandboxRebuildWorkflow(t *testing.T) {
 	sourceDir := writeMiniSandbox(t)
 
 	// Step 2: Rebuild the APK
-	outputAPK := filepath.Join(t.TempDir(), "rebuilt.apk")
+	outputAPK := filepath.Join(testutil.TempDir(t), "rebuilt.apk")
 	rebuilder := NewAPKRebuilder(sourceDir)
 	rebuilder.UseSmali = false
 	rebuilder.IncludeSignature = false

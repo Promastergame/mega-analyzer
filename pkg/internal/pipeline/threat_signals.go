@@ -139,8 +139,8 @@ var SignalWeight = map[SignalType]int{
 	SignalDiscordWebhook: 8,
 	SignalPastebin:       5,
 	SignalGitHubRaw:      4,
-	SignalSuspiciousTLD:  6,
-	SignalHardcodedIPv4:  8,
+	SignalSuspiciousTLD:  0, // address vocabulary is not malicious reputation
+	SignalHardcodedIPv4:  0,
 
 	// File Operations (MEDIUM)
 	SignalFileWrite:        2,
@@ -164,24 +164,25 @@ var SignalWeight = map[SignalType]int{
 	SignalWebViewOverrideURL: 3,
 
 	// Accessibility Abuse (CRITICAL)
-	SignalAccessibilityPermission:   1,
+	SignalAccessibilityPermission:   0,
 	SignalAccessibilityService:      1,
 	SignalAccessibilityEvent:        0,
 	SignalAccessibilityRootWindow:   1,
 	SignalAccessibilityGlobalAction: 1,
 	SignalAccessibilityNodeInfo:     1,
 
-	// Stealer Permissions (HIGH)
-	SignalPermissionSMS:             7,
-	SignalPermissionContacts:        5,
-	SignalPermissionCallLog:         6,
-	SignalPermissionCamera:          4,
-	SignalPermissionMicrophone:      5,
-	SignalPermissionLocation:        3,
-	SignalPermissionOverlay:         6,
-	SignalPermissionInstallPackages: 8,
-	SignalPermissionQueryPackages:   4,
-	SignalPermissionUsageStats:      5,
+	// Declarations remain available for capability correlation without scoring
+	// them as granted permissions or implemented data-stealing behavior.
+	SignalPermissionSMS:             0,
+	SignalPermissionContacts:        0,
+	SignalPermissionCallLog:         0,
+	SignalPermissionCamera:          0,
+	SignalPermissionMicrophone:      0,
+	SignalPermissionLocation:        0,
+	SignalPermissionOverlay:         0,
+	SignalPermissionInstallPackages: 0,
+	SignalPermissionQueryPackages:   0,
+	SignalPermissionUsageStats:      0,
 
 	// Anti-Analysis (HIGH)
 	SignalFrida:         8,
@@ -406,6 +407,7 @@ const (
 	SeverityMedium
 	SeverityHigh
 	SeverityCritical
+	SeverityInfo
 )
 
 func (s ThreatSeverity) String() string {
@@ -418,6 +420,8 @@ func (s ThreatSeverity) String() string {
 		return "HIGH"
 	case SeverityCritical:
 		return "CRITICAL"
+	case SeverityInfo:
+		return "INFO"
 	default:
 		return "UNKNOWN"
 	}

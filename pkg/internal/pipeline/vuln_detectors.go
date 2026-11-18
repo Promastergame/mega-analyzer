@@ -22,6 +22,8 @@ package pipeline
 import (
 	"bytes"
 	"fmt"
+	"mega-analyzer/pkg/internal/networkrefs"
+	"net"
 	"regexp"
 	"strings"
 
@@ -336,37 +338,7 @@ func (d *VulnNetworkDetector) Detect(ctx *FileDetectContext, analysis *types.Fil
 		return
 	}
 
-	// HTTP cleartext: only flag app code, only non-localhost URLs.
-	if ctx.IsAppCode && d.acHTTP != nil {
-		hits := d.acHTTP.ac.SearchBytes(ctx.ContentLower)
-		for _, h := range hits {
-			if h < 0 || h >= len(d.acHTTP.entries) {
-				continue
-			}
-			e := &d.acHTTP.entries[h]
-			if idx := bytes.Index(ctx.ContentLower, e.patternLower); idx >= 0 {
-				// The AC entry can include the leading quote of a quoted URL, so
-				// the raw window started with that quote and every HasPrefix
-				// below missed (eval case n-localhost-trap: loopback flagged).
-				window := bytes.TrimLeft(ctx.ContentLower[idx:], "\"'` \t")
-				if bytes.HasPrefix(window, []byte("http://localhost")) ||
-					bytes.HasPrefix(window, []byte("http://127.")) ||
-					bytes.HasPrefix(window, []byte("http://10.0.2.2")) ||
-					isKnownNonEndpointHTTPReference(window) {
-					continue
-				}
-				cm := newMatch(
-					types.CategoryCleartextTraffic, analysis.Path,
-					lineAt(ctx.LineOffsets, idx),
-					"Cleartext HTTP endpoint fetched over unencrypted HTTP — MITM / content-injection risk (CWE-319)",
-					safeSnippet(ctx.Content, idx, 80),
-					false,
-				)
-				cm.Severity = types.SeverityMedium
-				analysis.Matches = append(analysis.Matches, cm)
-			}
-		}
-	}
+	d.detectCleartextURLs(ctx, analysis)
 
 	for _, issue := range detectTLSSemantics(ctx.Content, ctx.ContentLower, ctx.FileType) {
 		match := newMatch(
@@ -385,12 +357,52 @@ func (d *VulnNetworkDetector) Detect(ctx *FileDetectContext, analysis *types.Fil
 	}
 }
 
+func (d *VulnNetworkDetector) detectCleartextURLs(ctx *FileDetectContext, analysis *types.FileAnalysis) {
+	if !ctx.IsAppCode {
+		return
+	}
+	seen := make(map[string]bool)
+	for offset := 0; offset < len(ctx.ContentLower); {
+		rel := bytes.Index(ctx.ContentLower[offset:], []byte("http://"))
+		if rel < 0 {
+			break
+		}
+		idx := offset + rel
+		offset = idx + len("http://")
+		if isXMLNamespaceURL(ctx.Content, idx) || isKnownNonEndpointHTTPReference(ctx.ContentLower[idx:]) {
+			continue
+		}
+		raw, _ := extractURLBytes(ctx.Content, idx)
+		if raw == "" || seen[raw] {
+			continue
+		}
+		host, _, _, _ := parseEndpoint(raw)
+		ip := net.ParseIP(host)
+		if host == "" || host == "localhost" || host == "10.0.2.2" || (ip != nil && ip.IsLoopback()) {
+			continue
+		}
+		seen[raw] = true
+		match := newMatch(types.CategoryCleartextTraffic, analysis.Path,
+			lineAt(ctx.LineOffsets, idx),
+			"Cleartext HTTP URL reference; verify runtime reachability (CWE-319)", raw, false)
+		match.Severity = types.SeverityMedium
+		analysis.Matches = append(analysis.Matches, match)
+	}
+}
+
+// Namespace URIs identify XML vocabulary. Check the attribute, not the
+// hostname, so an image href on the same host is still retained.
+func isXMLNamespaceURL(content []byte, offset int) bool {
+	return networkrefs.IsXMLMetadataURL(content, offset)
+}
+
 func isKnownNonEndpointHTTPReference(window []byte) bool {
 	window = bytes.TrimLeft(window, `"'`)
 	for _, prefix := range [][]byte{
 		[]byte("http://schemas.android.com/"),
 		[]byte("http://www.w3.org/"),
 		[]byte("http://xmlpull.org/"),
+		[]byte("http://xml.org/sax/"),
 		[]byte("http://json-schema.org/"),
 		// XML DTD / namespace identifiers — never fetched at runtime.
 		[]byte("http://www.gwtproject.org/"),
@@ -401,6 +413,12 @@ func isKnownNonEndpointHTTPReference(window []byte) bool {
 		[]byte("http://ns.adobe.com/"),
 		[]byte("http://purl.org/"),
 		[]byte("http://schemas.xmlsoap.org/"),
+		// Store deep links. These strings are handed to an ACTION_VIEW intent
+		// (or sit next to the real `market://details?id=` constant) — the app
+		// never sends data over them, and the browser upgrades to HTTPS. A dead
+		// `http://play.google.com/store/...` literal is not a CWE-319 channel.
+		[]byte("http://play.google.com/"),
+		[]byte("http://market.android.com/"),
 	} {
 		if bytes.HasPrefix(window, prefix) {
 			return true
@@ -453,6 +471,12 @@ func (d *VulnPendingIntentDetector) Detect(ctx *FileDetectContext, analysis *typ
 	if ctx.FileType != types.FileTypeSmali {
 		return
 	}
+	// Compat-library call sites (androidx SearchView's mutable voice-search
+	// PendingIntent is the canonical example) follow the platform
+	// recommendation; mutability findings are only meaningful in app code.
+	if analysis != nil && analysis.IsLibrary {
+		return
+	}
 	// Only check files where PendingIntent is referenced.
 	if !bytes.Contains(ctx.ContentLower, []byte("pendingintent")) {
 		return
@@ -483,11 +507,11 @@ func (d *VulnPendingIntentDetector) Detect(ctx *FileDetectContext, analysis *typ
 	for _, pm := range piMethods {
 		if idx := bytes.Index(ctx.ContentLower, pm); idx >= 0 {
 			analysis.Matches = append(analysis.Matches, newMatch(
-				types.CategoryPendingIntentVuln, analysis.Path,
+				types.CategoryPendingIntentReview, analysis.Path,
 				lineAt(ctx.LineOffsets, idx),
-				"PendingIntent created without FLAG_IMMUTABLE — mutable intent can be intercepted (CVE-style intent-redirection)",
+				"PendingIntent factory reference without AST flag resolution; mutability and a vulnerability are not established",
 				string(pm),
-				true,
+				false,
 			))
 		}
 	}
@@ -559,11 +583,11 @@ func (d *VulnWebViewDetector) Detect(ctx *FileDetectContext, analysis *types.Fil
 		m := newMatch(
 			types.CategoryWebViewJSBridge, analysis.Path,
 			lineAt(ctx.LineOffsets, idx),
-			"WebView addJavascriptInterface + JavaScript enabled — native bridge exposed; on API < 17 any loaded page gains reflection-based code execution (CVE-2012-6636)",
+			"WebView bridge and JavaScript-setting references; arguments, exposed methods and content origins require review",
 			"addJavascriptInterface + setJavaScriptEnabled",
 			false,
 		)
-		m.Severity = types.SeverityMedium
+		m.Severity = types.SeverityInfo
 		analysis.Matches = append(analysis.Matches, m)
 	}
 
@@ -587,9 +611,9 @@ func (d *VulnWebViewDetector) Detect(ctx *FileDetectContext, analysis *types.Fil
 		analysis.Matches = append(analysis.Matches, newMatch(
 			types.CategoryWebViewRemoteJS, analysis.Path,
 			lineAt(ctx.LineOffsets, idx),
-			"WebView RCE risk: addJavascriptInterface + setJavaScriptEnabled + remote URL — JS bridge exposed to remote content",
+			"WebView bridge and content-loader references without AST resolution; remote loading and code execution are not established",
 			"addJavascriptInterface + JS enabled + remote loadUrl",
-			true,
+			false,
 		))
 	}
 }
@@ -662,12 +686,16 @@ func checkZipSlipInMethod(method *types.SmaliMethod, methodLines []string, class
 				zipEntryLine = lineNo
 			}
 		}
+		// Only real write sinks count. `new File(...)` is a path object, not a
+		// write: archive readers (ReLinker, APK self-extractors) construct File
+		// handles for ZipFile/openStream all the time, which produced a false
+		// Zip-Slip on a clean APK.
 		if strings.Contains(lower, "fileoutputstream;-><init>") ||
 			strings.Contains(lower, "filewriter;-><init>") ||
-			strings.Contains(lower, "file;-><init>") ||
 			strings.Contains(lower, "randomaccessfile;-><init>") ||
 			strings.Contains(lower, "files;->copy") ||
-			strings.Contains(lower, "files;->write") {
+			strings.Contains(lower, "files;->write") ||
+			strings.Contains(lower, "files;->newoutputstream") {
 			hasFileSink = true
 			if fileSinkLine == 0 && lineNo > 0 {
 				fileSinkLine = lineNo

@@ -68,6 +68,8 @@ func Merge(base, over DeviceProfile) DeviceProfile {
 	setStr(&out.Manufacturer, over.Manufacturer)
 	setStr(&out.Device, over.Device)
 	setStr(&out.Product, over.Product)
+	setStr(&out.Hardware, over.Hardware)
+	setStr(&out.Board, over.Board)
 	setStr(&out.AndroidVersion, over.AndroidVersion)
 	setInt(&out.APILevel, over.APILevel)
 	setStr(&out.ABI, over.ABI)

@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func parseNativeTestDEX(t *testing.T, src string) *DEXParser {
@@ -293,7 +295,7 @@ func TestNativeStandaloneRejectsIncompleteInputs(t *testing.T) {
 			t.Errorf("expected error for incomplete/invalid source:\n%s", src)
 		}
 	}
-	_, _, err := AssembleSmaliDirNative(filepath.Join(t.TempDir(), "missing"), 0)
+	_, _, err := AssembleSmaliDirNative(filepath.Join(testutil.TempDir(t), "missing"), 0)
 	if !errors.Is(err, fs.ErrNotExist) {
 		t.Fatalf("missing tree must report filesystem failure, got %v", err)
 	}
@@ -360,7 +362,7 @@ func TestNativeStandaloneDemoProject(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer original.Close()
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	if err := NewExtractor().generateSmaliOutput(t.Context(), original, dir, 2, smaliOutputOptions{}); err != nil {
 		t.Fatalf("standalone demo decode: %v", err)
 	}

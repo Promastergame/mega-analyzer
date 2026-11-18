@@ -70,3 +70,32 @@ func TestDetectorFromFile_DoesNotMatchShortAliasInsideWord_GG(t *testing.T) {
 		}
 	}
 }
+
+func TestConfiguredWordIndicatorsRejectSubstrings(t *testing.T) {
+	d, err := NewDetectorFromFile(findPiracyConfigPathForTest(t))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		text, pattern string
+		want          bool
+	}{
+		{"SafeKeyGenerator", "keygen", false}, {"keygen", "keygen", true},
+		{"BackportedFixManager", "xmanager", false}, {"xmanager", "xmanager", true},
+		{"micrograms", "microg", false}, {"microg", "microg", true},
+	} {
+		res, err := d.Analyze(context.Background(), "classes.smali", []byte(tc.text), types.FileTypeSmali)
+		if err != nil {
+			t.Fatal(err)
+		}
+		got := false
+		for _, f := range res.Findings {
+			if f.Pattern == tc.pattern {
+				got = true
+			}
+		}
+		if got != tc.want {
+			t.Errorf("%q / %q: got %v want %v", tc.text, tc.pattern, got, tc.want)
+		}
+	}
+}

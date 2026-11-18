@@ -1,11 +1,14 @@
 package pipeline
 
 import (
+	"fmt"
+	"path/filepath"
 	"sort"
 	"strings"
 
 	"mega-analyzer/pkg/internal/finding"
 	"mega-analyzer/pkg/internal/piracy"
+	"mega-analyzer/pkg/internal/rating"
 	"mega-analyzer/pkg/internal/types"
 )
 
@@ -18,6 +21,7 @@ func (p *Pipeline) buildTypedFindings() {
 		paths = append(paths, path)
 	}
 	sort.Strings(paths)
+	services := newAndroidServiceContext(p.result)
 
 	items := make([]finding.Finding, 0, p.result.Stats.TotalMatches+len(p.result.RuleMatches))
 	for _, path := range paths {
@@ -26,22 +30,42 @@ func (p *Pipeline) buildTypedFindings() {
 			continue
 		}
 		for i := range file.Matches {
-			items = append(items, typedFindingFromMatch(file.Matches[i], file.Hash))
+			if file.Matches[i].Metadata["synthetic_dataflow"] == "true" {
+				// Projected into hotspots/heatmap only; the data-flow
+				// converter already emitted the typed finding for this sink.
+				continue
+			}
+			item := typedFindingFromMatch(file.Matches[i], file.Hash)
+			if file.SmaliClass != nil {
+				services.annotate(&item, file.SmaliClass.Name)
+			}
+			items = append(items, item)
 		}
 	}
 	for i := range p.result.RuleMatches {
-		items = append(items, typedFindingFromMatch(p.result.RuleMatches[i], ""))
+		match := p.result.RuleMatches[i]
+		item := typedFindingFromMatch(match, "")
+		class := match.ClassName
+		if class == "" {
+			class = services.byFile[filepath.Clean(match.File)]
+		}
+		services.annotate(&item, class)
+		items = append(items, item)
+	}
+	if observation := systemNamespaceObservation(p.result); observation != nil {
+		items = append(items, *observation)
 	}
 	// P23: the specialized zip-slip detector reports the exact write site;
 	// the generic path_traversal flow on the same file is the same defect at
 	// lower precision (see p4_path_fp.go).
 	zipSlipFiles := p.filesWithZipSlip()
-	for i := range p.result.DataFlows {
-		flow := p.result.DataFlows[i]
+	gnnBenign := gnnBenignMethodDiagnostics(p.result.GNNDiagnostics)
+	for _, flow := range dedupeDataflows(p.result.DataFlows) {
 		if flow.Category == dataflowPathTraversalCategory && zipSlipFiles[flow.Location.File] {
 			continue
 		}
-		items = append(items, typedFindingFromDataFlow(flow))
+		item := typedFindingFromDataFlow(flow, gnnBenign)
+		items = append(items, item)
 	}
 	for i := range p.result.ArtifactFindings {
 		items = append(items, typedFindingFromArtifact(p.result.ArtifactFindings[i]))
@@ -52,6 +76,7 @@ func (p *Pipeline) buildTypedFindings() {
 	for _, item := range p.result.Findings {
 		p.result.FindingsByKind[item.Kind]++
 	}
+	p.result.RiskProfile = rating.ComputeResultProfile(p.result)
 }
 
 // RefreshTypedFindings includes late sidecars without losing evidence attached
@@ -63,6 +88,23 @@ func RefreshTypedFindings(result *types.AnalysisResult) {
 	existing := result.Findings
 	p := &Pipeline{result: result}
 	p.buildTypedFindings()
+	observations := make(map[string]finding.Finding)
+	for _, f := range result.Findings {
+		if f.Kind == finding.KindInventory {
+			observations[f.RuleID+"\x00"+f.Fingerprint] = f
+		}
+	}
+	// Late evidence may enrich an observation, but a stale export's severity
+	// must not undo the current converter's assessment of the same finding.
+	existing = append([]finding.Finding(nil), existing...)
+	for i := range existing {
+		if observation, ok := observations[existing[i].RuleID+"\x00"+existing[i].Fingerprint]; ok {
+			existing[i].Severity = observation.Severity
+			existing[i].Kind = observation.Kind
+			existing[i].CWE, existing[i].MASVS = nil, nil
+			existing[i].Explanation = observation.Explanation
+		}
+	}
 	counts := make(map[string]int)
 	for _, f := range append(append([]finding.Finding(nil), existing...), result.Findings...) {
 		key := f.RuleID + "\x00" + f.Fingerprint
@@ -77,6 +119,7 @@ func RefreshTypedFindings(result *types.AnalysisResult) {
 		f.Occurrences = counts[f.RuleID+"\x00"+f.Fingerprint]
 		result.FindingsByKind[f.Kind]++
 	}
+	result.RiskProfile = rating.ComputeResultProfile(result)
 }
 
 // buildPiracyAnalysis reconstructs the typed piracy result after parallel file
@@ -197,10 +240,26 @@ func typedFindingFromArtifact(artifact types.ArtifactFinding) finding.Finding {
 	ruleID := "artifact." + strings.ToLower(artifact.Severity.String())
 	if strings.HasPrefix(artifact.Reason, "[") {
 		if end := strings.IndexByte(artifact.Reason, ']'); end > 1 {
-			ruleID = "manifestaudit." + strings.ToLower(artifact.Reason[1:end])
+			code := strings.ToLower(artifact.Reason[1:end])
+			if strings.HasPrefix(code, "archive_") {
+				ruleID = "archive." + strings.TrimPrefix(code, "archive_")
+			} else {
+				ruleID = "manifestaudit." + code
+			}
 		}
 	}
 	kind := finding.KindVulnerability
+	if artifact.Severity == types.SeverityInfo {
+		kind = finding.KindInventory
+	}
+	// Sidecar candidates and imported primitives are not verified defects.
+	// Crack points describe protections, not exploitable vulnerabilities.
+	if strings.HasPrefix(artifact.Reason, "Crack point [") {
+		kind = finding.KindHardening
+	}
+	if strings.HasPrefix(artifact.Reason, "Standalone numeric string, candidate") || strings.HasPrefix(artifact.Reason, "[import]") || strings.HasPrefix(artifact.Reason, "[packing]") || strings.HasPrefix(artifact.Reason, "[anti-analysis]") || strings.HasPrefix(artifact.Reason, "[anti-emulator]") {
+		kind = finding.KindInventory
+	}
 	for _, stage := range artifact.Stages {
 		if stage == "inventory" {
 			kind = finding.KindInventory
@@ -209,28 +268,140 @@ func typedFindingFromArtifact(artifact types.ArtifactFinding) finding.Finding {
 		}
 	}
 	taxonomy := finding.MergeTaxonomy(finding.TaxonomyForRule(ruleID), finding.ParseReference(artifact.Reason))
+	title := firstNonEmpty(artifact.Reason, "Artifact finding")
+	severity := artifact.Severity.String()
+	if kind == finding.KindInventory {
+		severity = "info"
+		taxonomy.CWE, taxonomy.MASVS = nil, nil
+		title = strings.ReplaceAll(title, "Packed or encrypted payload", "High whole-file entropy")
+		title = strings.ReplaceAll(title, "likely packed/encrypted", "compression, embedded data or packing require verification")
+		title = strings.ReplaceAll(title, "Android emulator (goldfish) detection", "Goldfish string reference")
+	}
 	return finding.FromLegacy(finding.LegacyInput{
 		RuleID: ruleID, Detector: "sidecar", Kind: kind,
-		Category: "artifact", Title: firstNonEmpty(artifact.Reason, "Artifact finding"), Description: artifact.Reason,
-		Severity: artifact.Severity.String(), Confidence: 0.8, EvidenceType: "sidecar", Evidence: firstNonEmpty(artifact.Payload, artifact.Reason),
+		Category: "artifact", Title: title, Description: title,
+		Severity: severity, Confidence: 0.8, EvidenceType: "sidecar", Evidence: firstNonEmpty(artifact.Payload, artifact.Reason),
 		Location: finding.Location{File: artifact.Path, Line: 1}, CWE: taxonomy.CWE, MASVS: taxonomy.MASVS,
 	})
 }
 
-func typedFindingFromDataFlow(flow types.DataFlowFinding) finding.Finding {
+// dataflowWeakConfidence marks speculative slices. The backward slicer scores
+// every path (0.99 minus path length, minus a field indirection penalty, floor
+// 0.55); flows at the floor are long, field-mediated chains — measured 34 of
+// 93 data-flow findings on the clean markor scan (2026-11-04) sat at the
+// floor, all carrying HIGH severity. A weak path stays visible but must not
+// out-vote its own evidence: it is downgraded one severity step.
+const dataflowWeakConfidence = 0.70
+
+// downgradeDataflowSeverity lowers high and critical severities one step for
+// weak-confidence flows; medium and below already describe their own weight.
+func downgradeDataflowSeverity(severity string) string {
+	switch types.ParseSeverity(severity) {
+	case types.SeverityCritical:
+		return types.SeverityHigh.String()
+	case types.SeverityHigh:
+		return types.SeverityMedium.String()
+	default:
+		return severity
+	}
+}
+
+// gnnBenignMethodDiagnostics collects per-method GNN diagnostics where the
+// model predicted the benign class yet failed its own quality gate. Retain
+// this disagreement as context; the protection taxonomy is not a safety vote.
+func gnnBenignMethodDiagnostics(diag *types.GNNDiagnostics) map[string]types.GNNMethodDiagnostic {
+	if diag == nil {
+		return nil
+	}
+	out := make(map[string]types.GNNMethodDiagnostic)
+	for _, m := range diag.Methods {
+		if m.Method == "" || m.PredictedClass == "" {
+			continue
+		}
+		if m.PredictedClass == gnnBenignClassName && !m.PassesQualityGate {
+			out[m.Method] = m
+		}
+	}
+	return out
+}
+
+// gnnBenignClassName mirrors gnn.VulnBenign's taxonomy name; the pipeline
+// package does not import the model bridge, so the stable string is used.
+const gnnBenignClassName = "benign"
+
+func typedFindingFromDataFlow(flow types.DataFlowFinding, gnnBenign map[string]types.GNNMethodDiagnostic) finding.Finding {
 	taxonomy := finding.TaxonomyForRule("dataflow." + flow.Category)
-	title := "Untrusted data reaches " + flow.Category
+	title := "Static data-flow candidate: " + flow.Category
 	evidence := flow.Source + " -> " + flow.Sink
 	if flow.ExploitChain != "" {
-		title = "Exploit chain: " + flow.ExploitChain
+		title = "Static path: " + flow.ExploitChain
 		evidence = flow.ExploitChain + ": " + evidence
+	}
+	severity := flow.Severity
+	status := "static_flow"
+	kind := finding.KindVulnerability
+	unknownContainerOrigin := true
+	for _, source := range strings.Split(flow.Source, " | ") {
+		if !strings.HasPrefix(source, "[unverified container origin] ") {
+			unknownContainerOrigin = false
+			break
+		}
+	}
+	if unknownContainerOrigin {
+		kind, severity, status = finding.KindInventory, "info", "unverified_input_origin"
+		title = "Input origin needs verification: " + flow.Category
+		taxonomy.CWE, taxonomy.MASVS = nil, nil
+	}
+	unresolvedDispatch := false
+	if flow.Category == "dynamic_class_loading" || flow.Category == "reflection_invocation" {
+		for _, step := range flow.Path {
+			if step.Type == "unresolved_dispatch" {
+				unresolvedDispatch = true
+				break
+			}
+		}
+	}
+	if unresolvedDispatch {
+		kind, severity, status = finding.KindInventory, "info", "unresolved_dispatch"
+		title = "Call target needs verification: " + flow.Category
+		taxonomy.CWE, taxonomy.MASVS = nil, nil
+	}
+	localPreferencePath := flow.Category == "path_traversal" && strings.HasPrefix(flow.Source, "Landroid/content/SharedPreferences;->get")
+	if flow.Category == "path_traversal" && strings.HasPrefix(flow.Sink, "Ljava/io/File;-><init>(") {
+		kind, severity, status = finding.KindInventory, "info", "observation"
+		title = "External input used to construct a filesystem path"
+		taxonomy.CWE, taxonomy.MASVS = nil, nil
+	}
+	if flow.Category == "ssrf" && (strings.HasPrefix(flow.Sink, "Ljava/net/URL;-><init>(") || strings.HasPrefix(flow.Sink, "Lokhttp3/Request$Builder;->url(")) {
+		kind, severity, status = finding.KindInventory, "info", "observation"
+		title = "External input used to construct a URL"
+		taxonomy.CWE, taxonomy.MASVS = nil, nil
+	}
+	if localPreferencePath {
+		kind, severity, status = finding.KindInventory, "info", "observation"
+		title = "Stored preference reaches " + flow.Category + " API"
+		taxonomy.CWE, taxonomy.MASVS = nil, nil
+	}
+	if flow.Confidence < dataflowWeakConfidence {
+		if kind == finding.KindVulnerability {
+			severity = downgradeDataflowSeverity(flow.Severity)
+			status = "static_flow_weak_slice"
+		}
+	}
+	// A model opinion below its own quality gate cannot invalidate a static
+	// source-to-sink path. Record it without changing the evidence severity.
+	var gnnDiag types.GNNMethodDiagnostic
+	gnnDisagrees := false
+	if diag, ok := gnnBenign[flow.Location.Method]; ok && kind == finding.KindVulnerability {
+		gnnDiag, gnnDisagrees = diag, true
+		status = "static_flow_model_disagreement"
 	}
 	item := finding.FromLegacy(finding.LegacyInput{
 		RuleID: "dataflow." + flow.Category, Detector: "summary_dataflow",
-		Kind: finding.KindVulnerability, Category: flow.Category,
+		Kind: kind, Category: flow.Category,
 		Title:       title,
 		Description: flow.Source + " flows to " + flow.Sink,
-		Severity:    flow.Severity, Confidence: flow.Confidence,
+		Severity:    severity, Confidence: flow.Confidence,
 		EvidenceType: "data_flow", Evidence: evidence,
 		Location: finding.Location{File: flow.Location.File, Line: flow.Location.Line, Method: flow.Location.Method},
 		CWE:      taxonomy.CWE, MASVS: taxonomy.MASVS,
@@ -239,7 +410,84 @@ func typedFindingFromDataFlow(flow types.DataFlowFinding) finding.Finding {
 	for i, step := range flow.Path {
 		item.Steps[i] = finding.Step{File: step.File, Method: step.Method, Type: step.Type, Line: step.Line}
 	}
+	item.Explanation = &finding.Explanation{Status: status, Summary: item.Description,
+		Conditions:  []string{flow.Source + " -> " + flow.Sink},
+		Limitations: []string{"This is a static data-flow result, not observed device execution. Reachability, attacker control, sanitization and runtime platform behavior still need verification."},
+		NextChecks:  []string{"Inspect the retained path and any analysis truncation before concluding exploitability."}}
+	if gnnDisagrees {
+		item.Explanation.Limitations = append(item.Explanation.Limitations,
+			fmt.Sprintf("The GNN protection classifier predicted %q with confidence %.2f below its quality gate. This prediction does not resolve input control or invalidate the retained static path.",
+				gnnDiag.PredictedClass, gnnDiag.Confidence))
+	}
+	if localPreferencePath {
+		item.Explanation.Limitations = append(item.Explanation.Limitations, "Reading app-local preferences does not establish attacker control. Trace an external value into the stored preference before treating this path as a vulnerability.")
+	}
+	if unknownContainerOrigin {
+		item.Explanation.Limitations = append(item.Explanation.Limitations,
+			"A Bundle or Parcel read does not establish attacker control. The container's origin was not traced to an external entry point; this candidate is retained as inventory and does not raise the risk score.")
+	}
+	if unresolvedDispatch {
+		item.Explanation.Limitations = append(item.Explanation.Limitations,
+			"The slice expanded a virtual/interface call to multiple implementations without resolving the receiver. It does not establish that this loader or reflection method can receive the reported input; the path is retained as inventory.")
+		item.Explanation.NextChecks = append(item.Explanation.NextChecks, "Resolve the receiver and any R8 merged-class discriminator at each unresolved_dispatch step before asserting a source-to-sink path.")
+	}
 	return item
+}
+
+// dedupeDataflows collapses flows that share the same sink site: one
+// category + sink + file + line with several source variants is ONE finding,
+// not N. The highest severity/confidence variant is kept and the other
+// sources are preserved in its path/conditions context.
+func dedupeDataflows(flows []types.DataFlowFinding) []types.DataFlowFinding {
+	if len(flows) == 0 {
+		return flows
+	}
+	type key struct {
+		category, sink, file string
+		line                 int
+	}
+	order := make([]key, 0, len(flows))
+	byKey := make(map[key]int, len(flows))
+	out := make([]types.DataFlowFinding, 0, len(flows))
+	for _, flow := range flows {
+		k := key{flow.Category, flow.Sink, flow.Location.File, flow.Location.Line}
+		idx, ok := byKey[k]
+		if !ok {
+			byKey[k] = len(out)
+			order = append(order, k)
+			out = append(out, flow)
+			continue
+		}
+		kept := &out[idx]
+		if dataflowSeverityRank(flow.Severity) > dataflowSeverityRank(kept.Severity) ||
+			(dataflowSeverityRank(flow.Severity) == dataflowSeverityRank(kept.Severity) && flow.Confidence > kept.Confidence) {
+			// Merge the previously absorbed sources into the promoted one.
+			flow.Path = append(append([]types.DataFlowStep(nil), flow.Path...), kept.Path...)
+			flow.Source = flow.Source + " | " + kept.Source
+			out[idx] = flow
+			continue
+		}
+		kept.Source = kept.Source + " | " + flow.Source
+		kept.Path = append(kept.Path, flow.Path...)
+	}
+	return out
+}
+
+func dataflowSeverityRank(severity string) int {
+	switch types.ParseSeverity(severity) {
+	case types.SeverityCritical:
+		return 5
+	case types.SeverityHigh:
+		return 4
+	case types.SeverityMedium:
+		return 3
+	case types.SeverityLow:
+		return 2
+	case types.SeverityInfo:
+		return 1
+	default:
+		return 0
+	}
 }
 
 func typedFindingFromMatch(match types.Match, artifactHash string) finding.Finding {
@@ -256,6 +504,9 @@ func typedFindingFromMatch(match types.Match, artifactHash string) finding.Findi
 	detector := "legacy_match"
 	if match.Metadata != nil {
 		ruleID = match.Metadata["rule_id"]
+		if name := firstNonEmpty(match.Metadata["rule_name"], match.Metadata["title"]); name != "" {
+			title = name
+		}
 		if value := match.Metadata["detector"]; value != "" {
 			detector = value
 		}
@@ -276,10 +527,58 @@ func typedFindingFromMatch(match types.Match, artifactHash string) finding.Findi
 		evidence = match.Text
 	}
 	cwe, masvs := taxonomyForCategory(match.Category)
-	return finding.FromLegacy(finding.LegacyInput{
+	kind := findingKind(match.Category)
+	explicitKind := finding.Kind(strings.ToLower(strings.TrimSpace(match.Metadata["finding_kind"])))
+	switch explicitKind {
+	case finding.KindInventory, finding.KindMalware, finding.KindVulnerability, finding.KindHardening:
+		kind = explicitKind
+	default:
+		if match.Explanation != nil && match.Explanation.Status == "observation" && kind != finding.KindHardening {
+			kind = finding.KindInventory
+		}
+	}
+	// Preserve identity while correcting the interpretation of legacy labels.
+	if ruleID == "" && !(match.Category == types.CategoryDynamicLoad && (match.Pattern == "System.load computed path" || match.Pattern == "loadLibrary computed name")) {
+		ruleID = finding.RuleID(string(match.Category), title)
+	}
+	if kind == finding.KindVulnerability && match.Severity == types.SeverityInfo && explicitKind == "" {
+		kind = finding.KindInventory
+		title = info.Name + " review candidate"
+		description = "Informational static reference retained for review; an exploitable defect has not been established."
+		match.Explanation = &finding.Explanation{Status: "observation", Summary: description,
+			Limitations: []string{firstNonEmpty(match.FalsePositiveHints, match.ReasonForSeverity, "The legacy category alone does not establish a vulnerability.")},
+			NextChecks:  []string{firstNonEmpty(match.RequiredNextEvidence, "Verify runtime reachability, caller control and validation before concluding exploitability.")}}
+	}
+	if match.Category == types.CategoryCleartextTraffic && strings.HasPrefix(strings.ToLower(match.Pattern), "http://") {
+		kind, match.Severity = finding.KindInventory, types.SeverityInfo
+		title = "HTTP URL reference"
+		description = "A static HTTP URI was found. A hyperlink, schema identifier or constant does not establish cleartext application traffic."
+		match.Explanation = &finding.Explanation{Status: "observation", Summary: description,
+			NextChecks: []string{"Trace the URI into an actual network request and verify the effective Android network security policy."}}
+	}
+	if match.Category == types.CategoryDeepLinkVuln && (strings.Contains(match.Pattern, `android:scheme="content"`) || strings.Contains(match.Pattern, `android:scheme="file"`)) {
+		kind, match.Severity = finding.KindInventory, types.SeverityInfo
+		title = "Platform URI intent filter"
+		description = "A file/content URI intent filter is declared. These platform schemes are not evidence of custom deep-link hijacking."
+		match.Explanation = &finding.Explanation{Status: "observation", Summary: description}
+	}
+	if match.Category == types.CategoryDynamicLoad && (match.Pattern == "System.load computed path" || match.Pattern == "loadLibrary computed name") {
+		kind = finding.KindInventory
+		match.Severity = types.SeverityInfo
+		cwe, masvs = nil, nil
+		title = "Native library load with unresolved argument"
+		match.Explanation = &finding.Explanation{Status: "observation", Summary: "A native loader call was found, but its argument could not be resolved by the local constant analysis.",
+			Limitations: []string{"An unresolved value does not establish attacker control, an unsafe search path or a downloaded library."},
+			NextChecks:  []string{"Trace the argument to packaged library extraction or an external input. Source-to-loader paths are reported separately by the data-flow engine."}}
+	}
+	if kind == finding.KindInventory || kind == finding.KindHardening {
+		cwe = nil // taxonomy must not turn an API observation into a defect
+		masvs = nil
+	}
+	item := finding.FromLegacy(finding.LegacyInput{
 		RuleID:         ruleID,
 		Detector:       detector,
-		Kind:           findingKind(match.Category),
+		Kind:           kind,
 		Category:       string(match.Category),
 		Title:          title,
 		Description:    description,
@@ -298,6 +597,40 @@ func typedFindingFromMatch(match types.Match, artifactHash string) finding.Findi
 		CWE:   cwe,
 		MASVS: masvs,
 	})
+	if len(match.Evidence) > 0 {
+		item.Evidence = append([]finding.Evidence(nil), match.Evidence...)
+		for _, evidence := range item.Evidence {
+			found := false
+			for _, location := range item.Locations {
+				if location == evidence.Location {
+					found = true
+					break
+				}
+			}
+			if !found {
+				item.Locations = append(item.Locations, evidence.Location)
+			}
+		}
+	}
+	item.Explanation = match.Explanation
+	if item.Explanation == nil && (match.ReasonForSeverity != "" || match.FalsePositiveHints != "" || match.RequiredNextEvidence != "") {
+		item.Explanation = &finding.Explanation{Status: "heuristic", Summary: firstNonEmpty(match.ReasonForSeverity, description)}
+		if match.FalsePositiveHints != "" {
+			item.Explanation.Limitations = []string{match.FalsePositiveHints}
+		}
+		if match.RequiredNextEvidence != "" {
+			item.Explanation.NextChecks = []string{match.RequiredNextEvidence}
+		}
+	}
+	if item.Explanation == nil {
+		status := "heuristic"
+		if item.Kind == finding.KindInventory {
+			status = "observation"
+		}
+		item.Explanation = &finding.Explanation{Status: status, Summary: firstNonEmpty(description, title),
+			Limitations: []string{"A static pattern or API reference alone does not establish execution, granted permissions or the behavior suggested by its label."}}
+	}
+	return item
 }
 
 func confidenceNumber(value string, severity types.Severity, critical bool) float64 {
@@ -332,9 +665,7 @@ func findingKind(category types.Category) finding.Kind {
 		return finding.KindVulnerability
 	case types.CategoryMalware, types.CategoryMalwareCombo,
 		types.CategoryBankingThreat, types.CategoryStealerIndicator,
-		types.CategorySuspiciousNativePayload, types.CategorySuspiciousURL,
-		types.CategoryPiracy, types.CategoryPiracySite,
-		types.CategoryCrackTool, types.CategoryPiracyTool:
+		types.CategorySuspiciousNativePayload, types.CategorySuspiciousURL:
 		return finding.KindMalware
 	case types.CategorySecurity, types.CategorySignatureCheck,
 		types.CategoryIntegrityCheck, types.CategoryTamperDetection,

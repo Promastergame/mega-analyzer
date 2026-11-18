@@ -481,6 +481,16 @@ func TestVulnNetworkDetector_KnownHTTPReferences(t *testing.T) {
 			wantCategory: types.CategoryCleartextTraffic,
 			wantMatch:    true,
 		},
+		{
+			// Store deep link handed to ACTION_VIEW next to the real
+			// `market://details?id=` constant: not a transport channel.
+			name:         "reject Play Store deep link",
+			path:         "smali/com/app/Main.smali",
+			content:      `const-string v0, "http://play.google.com/store/apps/details?id=com.app"`,
+			fileType:     types.FileTypeSmali,
+			wantCategory: types.CategoryCleartextTraffic,
+			wantMatch:    false,
+		},
 	}
 
 	for _, tc := range tests {

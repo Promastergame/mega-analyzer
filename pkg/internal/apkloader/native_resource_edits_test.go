@@ -7,6 +7,8 @@ import (
 	"testing"
 
 	"mega-analyzer/pkg/internal/apkloader/axml"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestNativeResourceEditsDoNotSilentlyDropChanges(t *testing.T) {
@@ -17,7 +19,7 @@ func TestNativeResourceEditsDoNotSilentlyDropChanges(t *testing.T) {
 	}}}}
 	for _, change := range []string{"unchanged", "empty_string", "bool", "style", "added", "removed", "malformed", "removed_file"} {
 		t.Run(change, func(t *testing.T) {
-			source := t.TempDir()
+			source := testutil.TempDir(t)
 			resDir := filepath.Join(source, "res")
 			if err := axml.ExportTable(table, resDir); err != nil {
 				t.Fatal(err)

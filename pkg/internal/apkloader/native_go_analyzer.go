@@ -33,14 +33,35 @@ func AnalyzeNativeGo(data []byte) (*NativeScanReport, bool) {
 		return analyzeELFGo(data), true
 	case len(data) >= 2 && data[0] == 'M' && data[1] == 'Z':
 		return analyzePEGo(data), true
+	case isJavaClassFile(data):
+		// JVM classes share 0xCAFEBABE with Mach-O fat binaries. Kotlin
+		// coroutines ship DebugProbesKt.bin inside the APK, and routing it to
+		// the Mach-O parser produced a bogus "Mach-O parse failed" finding.
+		return nil, false
 	case isMachOMagic(data):
 		return analyzeMachOGo(data), true
 	}
 	return nil, false
 }
 
+// isJavaClassFile reports whether data is a JVM class file. The magic is shared
+// with Mach-O fat binaries, so the version words disambiguate: a class has a
+// minor version of 0/1 and a major version of 45 (Java 1.1) or newer, while a
+// fat binary stores its small architecture count in those bytes.
+func isJavaClassFile(data []byte) bool {
+	if len(data) < 8 {
+		return false
+	}
+	if data[0] != 0xCA || data[1] != 0xFE || data[2] != 0xBA || data[3] != 0xBE {
+		return false
+	}
+	minor := uint16(data[4])<<8 | uint16(data[5])
+	major := uint16(data[6])<<8 | uint16(data[7])
+	return minor <= 1 && major >= 45 && major <= 80
+}
+
 func isMachOMagic(data []byte) bool {
-	if len(data) < 4 {
+	if len(data) < 4 || isJavaClassFile(data) {
 		return false
 	}
 	m := uint32(data[0])<<24 | uint32(data[1])<<16 | uint32(data[2])<<8 | uint32(data[3])
@@ -458,7 +479,7 @@ var nativeImportRules = []struct {
 	// POSIX / Android
 	{"memfd_create", "high", "Fileless execution", "memfd_create — in-memory (fileless) payload"},
 	{"prctl", "medium", "Process control / anti-debug", "prctl — PR_SET_DUMPABLE / anti-debug"},
-	{"syscall", "medium", "Raw syscall use", "syscall() — may bypass libc API hooks"},
+	{"syscall", "info", "Raw syscall import", "syscall() is imported; call sites and purpose require verification"},
 	{"inotify_init", "low", "Filesystem watch", "inotify — tamper/watch detection"},
 	{"__system_property_get", "low", "Android property read", "__system_property_get — device/emulator fingerprinting"},
 	{"socket", "low", "Network socket", "socket() import"},
@@ -526,7 +547,7 @@ func scanNativeStrings(rep *NativeScanReport, strs []string) {
 			if seen[r.needle] {
 				continue
 			}
-			if strings.Contains(lower, r.needle) {
+			if nativeStringRuleMatches(lower, r.needle) {
 				seen[r.needle] = true
 				rep.Findings = append(rep.Findings, mkFinding(
 					"str-"+r.needle, r.cat, r.sev, r.title,
@@ -534,6 +555,26 @@ func scanNativeStrings(rep *NativeScanReport, strs []string) {
 			}
 		}
 	}
+}
+
+func nativeStringRuleMatches(lower, needle string) bool {
+	if needle != "frida" && needle != "xposed" {
+		return strings.Contains(lower, needle)
+	}
+	for start := 0; start < len(lower); {
+		idx := strings.Index(lower[start:], needle)
+		if idx < 0 {
+			return false
+		}
+		idx += start
+		end := idx + len(needle)
+		alphaNumeric := func(b byte) bool { return b >= 'a' && b <= 'z' || b >= '0' && b <= '9' }
+		if (idx == 0 || !alphaNumeric(lower[idx-1])) && (end == len(lower) || !alphaNumeric(lower[end])) {
+			return true
+		}
+		start = idx + 1
+	}
+	return false
 }
 
 // shannonEntropy returns the Shannon entropy (0..8 bits/byte) of data.

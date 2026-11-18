@@ -12,13 +12,17 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"sync"
 
 	"mega-analyzer/pkg/internal/codescan"
+	"mega-analyzer/pkg/internal/decisionai"
 	"mega-analyzer/pkg/internal/imageforensics"
 	"mega-analyzer/pkg/internal/imagesensitive"
 	"mega-analyzer/pkg/internal/nativeartifacts"
 	"mega-analyzer/pkg/internal/report"
+	"mega-analyzer/pkg/internal/svgscan"
 	"mega-analyzer/pkg/internal/threedee"
 )
 
@@ -39,6 +43,8 @@ type Options struct {
 	BudgetMB     int
 	AllowExport  bool
 	NoImageBlur  bool
+	// ReviewImage is called concurrently by artifact workers.
+	ReviewImage func(path string, data []byte) *decisionai.ImagePreview
 
 	// NativeScanLookup returns native scan input keyed by relative path.
 	NativeScanLookup func(rel string) *nativeartifacts.ScanInput
@@ -96,14 +102,36 @@ func Build(opts Options) (*report.ArtifactsView, error) {
 		externalRoot = filepath.Join(opts.OutputDir, "artifacts")
 	}
 
-	for i, c := range candidates {
-		item := buildItem(i, c, budget, externalRoot, opts)
+	// Items build on parallel workers: image enrichment includes the DecisionAI
+	// vision round-trip, which dominates the phase otherwise. Results are
+	// written by index, so item IDs (art_%04d) and the report order stay
+	// identical to the sequential pass.
+	items := make([]*report.ArtifactItem, len(candidates))
+	workers := min(8, max(1, runtime.NumCPU()), len(candidates))
+	var wg sync.WaitGroup
+	jobs := make(chan int)
+	wg.Add(workers)
+	for range workers {
+		go func() {
+			defer wg.Done()
+			for i := range jobs {
+				items[i] = buildItem(i, candidates[i], budget, externalRoot, opts)
+			}
+		}()
+	}
+	for i := range candidates {
+		jobs <- i
+	}
+	close(jobs)
+	wg.Wait()
+
+	for _, item := range items {
 		if item == nil {
 			continue
 		}
 		view.Items = append(view.Items, *item)
 		view.Summary.Total++
-		view.Summary.ByType[string(c.Type)]++
+		view.Summary.ByType[item.Type]++
 		// Count each artifact at most once even when several signals fire. R6.
 		if itemFlagged(item) {
 			view.Summary.Flagged++
@@ -152,6 +180,19 @@ func buildItem(index int, c Candidate, budget *Budget, externalRoot string, opts
 		switch c.Type {
 		case TypeImage:
 			fillImage(item, data, c)
+			if opts.ReviewImage != nil {
+				item.Image.Preview = opts.ReviewImage(c.Path, data)
+				if item.Image.Preview == nil {
+					item.Image.Preview = &decisionai.ImagePreview{PolicyVersion: 1, Status: "not_checked", Blur: true, Reason: "missing_image_assessment"}
+				}
+				// DecisionAI's selected display classes replace the older skin
+				// heuristic, while all forensic findings stay unchanged.
+				item.Image.SensitiveLabel = ""
+				item.Image.SensitiveScore = float64(item.Image.Preview.Score) / 100
+				if item.Image.Preview.Status == "checked" && item.Image.Preview.Blur {
+					item.Image.SensitiveLabel = imagesensitive.SensitiveLabel
+				}
+			}
 		case TypeModel3D:
 			fillThreeDee(item, data, c)
 		case TypeNative:
@@ -166,16 +207,18 @@ func buildItem(index int, c Candidate, budget *Budget, externalRoot string, opts
 	})
 
 	// Embed vs external. Gate on the actual byte count (the stat size from
-	// the walk can change before the read) and charge the budget with the
+	// the walk can change before the read) and reserve the budget with the
 	// real embedded payload size, base64 expansion included, so the total
-	// budget reflects what actually lands in the report. R13.
-	if budget.CanEmbed(int64(len(data))) {
-		mime := item.Mime
-		if mime == "" {
-			mime = "application/octet-stream"
-		}
-		item.EmbeddedDataURI = "data:" + mime + ";base64," + base64.StdEncoding.EncodeToString(data)
-		budget.Charge(int64(len(item.EmbeddedDataURI)))
+	// budget reflects what actually lands in the report. R13. The check and
+	// the reservation are atomic (ReserveForData) — parallel workers must
+	// not both fit past a nearly-exhausted budget.
+	mime := item.Mime
+	if mime == "" {
+		mime = "application/octet-stream"
+	}
+	prefix := "data:" + mime + ";base64,"
+	if budget.ReserveForData(len(data), len(prefix)) {
+		item.EmbeddedDataURI = prefix + base64.StdEncoding.EncodeToString(data)
 	} else if externalRoot != "" {
 		// Copy to artifacts/ subdir so the HTML can reference it.
 		relTarget := filepath.Join(externalRoot, fmt.Sprintf("%s_%s", item.ID, sanitizeName(filepath.Base(c.Path))))
@@ -292,7 +335,20 @@ func fillImage(item *report.ArtifactItem, data []byte, c Candidate) {
 	// renders SVGs inside <img> (scripts are inert there), but exported
 	// files can be opened in browsers directly; use a broader pattern list
 	// than the renderer badge. R16.
-	if svgActiveContent(c.Path, data) {
+	if strings.HasSuffix(strings.ToLower(c.Path), ".svg") || item.Mime == "image/svg+xml" {
+		scan := svgscan.Scan(data)
+		item.SVG = &report.SVGInspection{Active: scan.Active(), Complete: scan.Complete}
+		for _, f := range scan.Findings {
+			item.Forensic.Reasons = append(item.Forensic.Reasons, f.Description+": "+f.Evidence)
+			if f.Rule == "svg.embedded_payload" && (item.Forensic.Verdict == "" || item.Forensic.Verdict == imageforensics.VerdictOK) {
+				item.Forensic.Verdict = imageforensics.VerdictSuspicious
+			}
+		}
+		if !scan.Complete {
+			item.Warnings = append(item.Warnings, "SVG inspection incomplete: malformed input or scan limit reached")
+		}
+	}
+	if item.SVG != nil && item.SVG.Active {
 		item.Forensic.Reasons = append(item.Forensic.Reasons,
 			"svg contains active content (script / event handler / animation)")
 		if item.Forensic.Verdict == "" || item.Forensic.Verdict == imageforensics.VerdictOK {
@@ -511,8 +567,7 @@ func sanitizeDisplay(s string) string {
 	}, s)
 }
 
-// The canonical active-content pattern list lives in report.SVGActivePatterns
-// so this check and the renderer badge cannot drift apart again (D1).
+// The main analysis and report use the same structural SVG scanner.
 
 // svgActiveContent reports whether an SVG contains scripting / event
 // handler / animation constructs that could execute outside an <img>

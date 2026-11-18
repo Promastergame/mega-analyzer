@@ -218,7 +218,7 @@ func TestDecodeValidationAndCancellationDoNotCreateOutput(t *testing.T) {
 		{"missing", filepath.Join(dir, "missing.apk"), t.Context(), decompiler.Options{}, os.ErrNotExist},
 		{"directory", dir, t.Context(), decompiler.Options{}, nil},
 		{"backend", input, t.Context(), decompiler.Options{Backend: "invalid"}, nil},
-		{"standalone", input, t.Context(), decompiler.Options{Backend: decompiler.BackendBaksmali, Standalone: true}, nil},
+		{"retired-backend", input, t.Context(), decompiler.Options{Backend: "baksmali"}, nil},
 	}
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {

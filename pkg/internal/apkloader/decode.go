@@ -7,13 +7,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
 
 	"mega-analyzer/pkg/internal/apkloader/axml"
+	"mega-analyzer/pkg/internal/boundedfile"
 	"mega-analyzer/pkg/internal/types"
 )
 
@@ -27,8 +27,7 @@ type DecodeOptions struct {
 	Standalone     bool             // disallow external tools for this call without changing process policy
 	FrameworkDir   string           // framework directory path (placeholder for apktool compat)
 	CopyOriginal   bool             // preserve original META-INF into original/ for rebuild fidelity
-	SmaliCfg       SmaliToolConfig  // tool configuration for baksmali
-	DexBackend     DecompileBackend // native, baksmali, or auto; empty means auto
+	DexBackend     DecompileBackend // native or auto; empty means auto
 	ClassCache     bool             // cache native DEX→Smali per class when OutputDir is stable
 	JavaView       bool             // emit per-class .java pseudocode next to smali
 }
@@ -54,10 +53,6 @@ func (e *Extractor) decodeInput(ctx context.Context, apkPath string, opts Decode
 	switch opts.DexBackend {
 	case "", DecompileBackendAuto, DecompileBackendNative:
 		opts.DexBackend = DecompileBackendNative
-	case DecompileBackendBaksmali:
-		if opts.Standalone || Standalone() {
-			return "", fmt.Errorf("%s", StandaloneReason("baksmali"))
-		}
 	default:
 		return "", fmt.Errorf("unknown decode backend %q", opts.DexBackend)
 	}
@@ -192,67 +187,15 @@ func (e *Extractor) decodeDEXFiles(ctx context.Context, outDir string, opts Deco
 	}
 	sort.Strings(dexFiles)
 
-	// Native Go DEX→Smali is the default/auto primary backend because it avoids
-	// JVM startup and enables class-level caching. Baksmali is reserved for an
-	// explicit backend request. An explicit backend failure is an error.
-	backend := opts.DexBackend
-	if backend == "" {
-		backend = DecompileBackendAuto
-	}
-	if backend == DecompileBackendAuto {
-		backend = DecompileBackendNative
-	}
-	if backend == DecompileBackendNative {
+	switch opts.DexBackend {
+	case "", DecompileBackendAuto, DecompileBackendNative:
 		return e.parseMultiDEXWithOptions(ctx, dexFiles, outDir, smaliOutputOptions{
 			cache: opts.ClassCache, headers: opts.SmaliHeaders && !opts.NoSmaliHeaders,
 			java: opts.JavaView,
 		})
+	default:
+		return fmt.Errorf("unknown decode backend %q: use native or auto", opts.DexBackend)
 	}
-	if backend != DecompileBackendBaksmali {
-		return fmt.Errorf("unknown decode backend %q", backend)
-	}
-	if opts.Standalone || Standalone() {
-		return fmt.Errorf("%s", StandaloneReason("baksmali"))
-	}
-
-	workers := runtime.NumCPU() / 2
-	if workers < 1 {
-		workers = 1
-	}
-	if workers > 4 {
-		workers = 4
-	}
-	if workers > len(dexFiles) {
-		workers = len(dexFiles)
-	}
-	jobs := make(chan string, len(dexFiles))
-	failed := make(chan error, len(dexFiles))
-	for _, dexFile := range dexFiles {
-		jobs <- dexFile
-	}
-	close(jobs)
-
-	var wg sync.WaitGroup
-	for i := 0; i < workers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for dexFile := range jobs {
-				smaliDir := filepath.Join(outDir, smaliDirNameForDEX(filepath.Base(dexFile)))
-				if err := DisassembleDEXToSmaliContext(ctx, dexFile, smaliDir, opts.SmaliCfg); err != nil {
-					e.warn("baksmali %s: %v", filepath.Base(dexFile), err)
-					failed <- fmt.Errorf("baksmali %s: %w", filepath.Base(dexFile), err)
-				}
-			}
-		}()
-	}
-	wg.Wait()
-	close(failed)
-	var failures []error
-	for err := range failed {
-		failures = append(failures, err)
-	}
-	return errors.Join(append(failures, ctx.Err())...)
 }
 
 // decodeResourcesInPlace decodes manifest, resource table and res/*.xml in a
@@ -360,7 +303,7 @@ type textManifestMeta struct {
 }
 
 func readTextManifestMeta(path string) (*APKMeta, error) {
-	data, err := os.ReadFile(path)
+	data, err := boundedfile.ReadFile(path, maxXMLBytes)
 	if err != nil {
 		return nil, err
 	}

@@ -125,13 +125,18 @@ func (c *Classifier) Classify(match *types.Match, filePath string) types.Classif
 
 func (c *Classifier) assignVerdict(cf *types.ClassifiedFinding) types.Verdict {
 	orig := cf.Original
+	if isObservation(orig) {
+		cf.SuppressionReason = "Capability or protection observation; no behavior is established by its score"
+		return types.VerdictObservation
+	}
 	if orig != nil {
 		fileLower := strings.ToLower(orig.File)
 		// 🖼️ PNG / Media Entropy False Positive Filter
 		if strings.HasSuffix(fileLower, ".png") || strings.HasSuffix(fileLower, ".jpg") ||
 			strings.HasSuffix(fileLower, ".jpeg") || strings.HasSuffix(fileLower, ".webp") ||
 			strings.HasSuffix(fileLower, ".mp3") || strings.HasSuffix(fileLower, ".ogg") {
-			if orig.Category == "malware" || strings.Contains(orig.Pattern, "HighEntropy") || strings.Contains(orig.Text, "HighEntropy") {
+			entropyLabel := strings.NewReplacer("_", "", " ", "").Replace(strings.ToLower(orig.Pattern + " " + orig.Text))
+			if strings.Contains(entropyLabel, "highentropy") && !strings.Contains(entropyLabel, "polyglot") && !strings.Contains(entropyLabel, "payload") && len(orig.Evidence) == 0 {
 				cf.SuppressionReason = "Compressed image/media file natural entropy noise (non-executable asset)"
 				return types.VerdictGenericNoiseSuppressed
 			}
@@ -152,7 +157,7 @@ func (c *Classifier) assignVerdict(cf *types.ClassifiedFinding) types.Verdict {
 	}
 
 	// App code
-	if hasStrongSignals || cf.FinalScore > 15.0 {
+	if hasStrongSignals {
 		return types.VerdictConfirmedAppRisk
 	}
 

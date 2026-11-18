@@ -1,0 +1,53 @@
+"""Held-out skill-routing cases. Written BEFORE tuning the router; never used to tune it."""
+import json
+F, A, C, T, B = "frontend-design", "artifact-design", "canvas-design", "theme-factory", "brand-guidelines"
+cases = [
+ ("design", "дай скилл, с которым нейросеть рисует нормальные интерфейсы", [F, A]),
+ ("design", "нужна прокачка дизайна от ИИ", [F, A]),
+ ("design", "the app's frontend looks bland, make it pop", [F]),
+ ("design", "сверстай красивую страницу с карточками товаров", [F]),
+ ("design", "редизайн главной страницы сайта", [F]),
+ ("design", "нарисуй афишу концерта в pdf", [C, A]),
+ ("design", "подгони презентацию под наш брендбук", [B]),
+ ("design", "use our corporate colors and logo", [B]),
+ ("design", "хочу готовую цветовую тему для документа", [T]),
+ ("office", "собери слайды для питча инвесторам", ["pptx"]),
+ ("office", "поправь таблицу excel, добавь формулы", ["xlsx"]),
+ ("office", "split this pdf into pages", ["pdf"]),
+ ("office", "сделай docx с оглавлением", ["docx"]),
+ ("writing", "перепиши текст чтобы не палилось что это нейросеть", ["humanizer"]),
+ ("writing", "translate this into Spanish", ["translator"]),
+ ("writing", "составь письмо партнёру с напоминанием об оплате", ["email-writer"]),
+ ("writing", "итоги созвона: кто что делает", ["meeting-notes"]),
+ ("writing", "рассылка для сотрудников компании", ["internal-comms"]),
+ ("writing", "prompt for my chatbot gives bad answers, fix it", ["prompt-engineering"]),
+ ("code", "приложение крашится, найди причину", ["systematic-debugging"]),
+ ("code", "сделай ревью кода", ["code-review"]),
+ ("code", "write tests first for this feature (TDD)", ["test-driven-development"]),
+ ("code", "rebase my branch onto main", ["git-commit"]),
+ ("code", "запрос к базе тормозит, ускорь", ["sql-expert"]),
+ ("code", "найди захардкоженные пароли в репозитории", ["security-audit"]),
+ ("code", "контейнеризуй сервис", ["docker-deploy"]),
+ ("code", "build an MCP server for the GitHub API", ["mcp-builder"]),
+ ("code", "разбери андроид приложение, поменяй константу в smali", ["apk-reverse"]),
+ ("web", "зайди на сайт и сделай скриншот", ["agent-browser"]),
+ ("web", "what's the latest news on the EU AI act", ["web-search"]),
+ ("web", "прогони e2e тесты фронта в браузере", ["webapp-testing"]),
+ ("data", "сравни метрики двух кварталов", ["data-analysis"]),
+ ("data", "визуализируй эти цифры диаграммой", ["inline-charts"]),
+ ("media", "сгенерируй иконку приложения", ["image-generation"]),
+ ("media", "animated emoji gif for our slack", ["slack-gif-creator"]),
+ ("media", "сделай видеоролик с анимацией текста", ["video-remotion"]),
+ ("media", "fractal flow field art with code", ["algorithmic-art"]),
+ ("meta", "напиши SKILL.md для нового навыка", ["skill-creator"]),
+ ("other", "сколько градусов на улице", ["other"]),
+ ("other", "кто выиграл чемпионат мира 2018", ["other"]),
+ ("other", "забронируй столик в ресторане", ["other"]),
+ ("other", "спасибо, всё понятно", ["other"]),
+ ("other", "tell me a fun fact about cats", ["other"]),
+ ("other", "как приготовить борщ", ["other"]),
+]
+with open("skill-routing-holdout.jsonl", "w", encoding="utf-8") as f:
+    for g, q, acc in cases:
+        f.write(json.dumps({"group": g, "state": q, "accept": acc}, ensure_ascii=False) + "\n")
+print(len(cases))

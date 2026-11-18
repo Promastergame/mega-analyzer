@@ -23,6 +23,11 @@ func BuildModeArgs(mode string, targets []string, outDir, url, port, upstream st
 	return buildModeArgs(mode, targets, outDir, url, port, upstream, extra)
 }
 
+// ValidateModeFlags is shared by the HTTP and in-browser command adapters.
+func ValidateModeFlags(mode string, args []string) ([]string, error) {
+	return validateWebModeFlags(mode, args)
+}
+
 // buildModeArgs constructs the analyzer argument list for a given mode. targets
 // holds the saved upload path(s): one for most modes, two (old, new) for diff.
 // url/port/upstream are used by the fileless modes (web-scan, intercept).
@@ -36,8 +41,18 @@ func buildModeArgs(mode string, targets []string, outDir, url, port, upstream st
 		a = append(a, extra...)
 		return append(a, "-standalone")
 	case "build":
-		a := append([]string{"-build", "-t", targets[0], "-o", filepath.Join(outDir, "app.apk")}, base...)
-		a = append(a, extra...)
+		apkName := "app.apk"
+		filtered := make([]string, 0, len(extra))
+		for i := 0; i < len(extra); i++ {
+			if extra[i] == "-apk-name" && i+1 < len(extra) {
+				apkName = filepath.Base(extra[i+1])
+				i++
+				continue
+			}
+			filtered = append(filtered, extra[i])
+		}
+		a := append([]string{"-build", "-t", targets[0], "-o", filepath.Join(outDir, apkName)}, base...)
+		a = append(a, filtered...)
 		return append(a, "-standalone", "-use-aapt2=false")
 	case "machine-code":
 		a := append([]string{"-scan-native", "-t", targets[0], "-output", outDir}, base...)
@@ -71,7 +86,7 @@ func buildModeArgs(mode string, targets []string, outDir, url, port, upstream st
 		a = append(a, "-record", filepath.Join(outDir, "capture.jsonl"))
 		return append(a, "-no-color")
 	default: // full
-		a := append([]string{"-t", targets[0], "-output", outDir}, base...)
+		a := append([]string{"-t", targets[0], "-output", outDir, "-json-compact"}, base...)
 		return append(a, extra...)
 	}
 }

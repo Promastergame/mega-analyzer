@@ -129,6 +129,14 @@ func (f *DecisionPointFinder) checkBooleanMethod(
 	filePath string,
 ) *types.DecisionPoint {
 	for pattern, info := range booleanPatterns {
+		// Short names must match entitlement/app predicates, not UI/storage
+		// names such as isProjected, isProperSDFolder or isFakeDragging.
+		if pattern == "ispro" && nameLower != "ispro" && nameLower != "isprouser" && nameLower != "isproversion" && nameLower != "isproactive" {
+			continue
+		}
+		if pattern == "isfake" && nameLower != "isfake" && nameLower != "isfakeapp" && nameLower != "isfakeapk" {
+			continue
+		}
 		if strings.Contains(nameLower, pattern) {
 			return &types.DecisionPoint{
 				SourceLocation: types.SourceLocation{File: filePath, Line: method.LineStart},

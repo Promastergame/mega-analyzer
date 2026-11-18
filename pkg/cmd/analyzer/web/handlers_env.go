@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"mega-analyzer/pkg/buildinfo"
 	"mega-analyzer/pkg/internal/androidsdk"
 	"mega-analyzer/pkg/internal/sandbox"
 )
@@ -126,9 +127,14 @@ func (s *Server) handleEnv(w http.ResponseWriter, r *http.Request) {
 }
 
 // handleMeta serves /api/meta.
-// Real bundle counts (SAST rules, trackers) for the UI badges.
+// Real bundle counts (SAST rules, trackers) for the UI badges, plus the
+// effective upload cap so the front-end pre-flight check matches the server
+// even when MEGA_ANALYZER_MAX_UPLOAD_BYTES overrides the default.
 func (s *Server) handleMeta(w http.ResponseWriter, r *http.Request) {
 	sast, trk := uiBadgeCounts()
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]int{"sastRules": sast, "trackers": trk})
+	json.NewEncoder(w).Encode(map[string]any{
+		"sastRules": sast, "trackers": trk, "uploadMaxBytes": maxUploadBytes(),
+		"version": buildinfo.Version, "commit": buildinfo.CommitHash, "buildDate": buildinfo.BuildDate,
+	})
 }

@@ -158,6 +158,7 @@ func GetAllPatterns() []PatternDef {
 	patterns = append(patterns, getAnalyticsPatterns()...)
 	patterns = append(patterns, getSecurityPatterns()...)
 	patterns = append(patterns, getAdvancedSecurityPatterns()...)
+	patterns = append(patterns, getDropperPatterns()...)
 	patterns = append(patterns, getRemoteConfigPatterns()...)
 	patterns = append(patterns, getObfuscationPatterns()...)
 	patterns = append(patterns, getNetworkPatterns()...)
@@ -189,8 +190,8 @@ func getLicensePatterns() []PatternDef {
 		{Category: types.CategoryLicenseCheck, Pattern: `validateLicense`, Priority: 10, IsCritical: true, Description: "License validation"},
 		{Category: types.CategoryLicenseCheck, Pattern: `isValidLicense`, Priority: 10, IsCritical: true, Description: "License validity check"},
 		{Category: types.CategoryLicenseCheck, Pattern: `hasLicense`, Priority: 9, IsCritical: true, Description: "Has license check"},
-		{Category: types.CategoryLicenseCheck, Pattern: `isRegistered`, Priority: 9, IsCritical: true, Description: "Registration check"},
-		{Category: types.CategoryLicenseCheck, Pattern: `isActivated`, Priority: 9, IsCritical: true, Description: "Activation check"},
+		// isRegistered alone is ambiguous (e.g. listener registration), not a license check.
+		{Category: types.CategoryLicenseCheck, Pattern: `isLicenseActivated`, Priority: 9, IsCritical: true, Description: "License activation check"},
 		{Category: types.CategoryLicenseCheck, Pattern: `"license_key"`, Priority: 8, IsCritical: true, Description: "License key string"},
 
 		// License storage
@@ -206,13 +207,15 @@ func getLicensePatterns() []PatternDef {
 
 func getBillingPatterns() []PatternDef {
 	return []PatternDef{
-		{Category: types.CategoryBillingClient, Pattern: `Lcom/android/billingclient/api/BillingClient`, Priority: 9, IsCritical: true, Description: "BillingClient class"},
-		{Category: types.CategoryBillingClient, Pattern: `Lcom/android/billingclient/api/Purchase`, Priority: 9, IsCritical: true, Description: "Purchase class"},
-		{Category: types.CategoryBillingClient, Pattern: `Lcom/android/billingclient/api/BillingResult`, Priority: 8, IsCritical: true, Description: "BillingResult class"},
-		{Category: types.CategoryBillingClient, Pattern: `Lcom/android/billingclient/api/PurchasesUpdatedListener`, Priority: 9, IsCritical: true, Description: "Purchase update listener"},
+		// Billing SDK classes are inventory. Marking them critical made every
+		// Play-Billing app report CRITICAL findings for a normal purchase flow.
+		{Category: types.CategoryBillingClient, Pattern: `Lcom/android/billingclient/api/BillingClient`, Priority: 9, Description: "BillingClient class"},
+		{Category: types.CategoryBillingClient, Pattern: `Lcom/android/billingclient/api/Purchase`, Priority: 9, Description: "Purchase class"},
+		{Category: types.CategoryBillingClient, Pattern: `Lcom/android/billingclient/api/BillingResult`, Priority: 8, Description: "BillingResult class"},
+		{Category: types.CategoryBillingClient, Pattern: `Lcom/android/billingclient/api/PurchasesUpdatedListener`, Priority: 9, Description: "Purchase update listener"},
 		{Category: types.CategoryBillingClient, Pattern: `Lcom/android/billingclient/api/SkuDetails`, Priority: 8, IsCritical: false, Description: "SKU details"},
 		{Category: types.CategoryBillingClient, Pattern: `Lcom/android/billingclient/api/ProductDetails`, Priority: 8, IsCritical: false, Description: "Product details"},
-		{Category: types.CategoryBillingClient, Pattern: `->queryPurchases`, Priority: 8, IsCritical: true, Description: "Query purchases call"},
+		{Category: types.CategoryBillingClient, Pattern: `->queryPurchases`, Priority: 8, Description: "Query purchases call"},
 		{Category: types.CategoryBillingClient, Pattern: `->launchBillingFlow`, Priority: 7, IsCritical: false, Description: "Launch billing flow"},
 
 		{Category: types.CategoryPurchaseVerify, Pattern: `isPurchased`, Priority: 9, IsCritical: true, Description: "Purchase status check"},
@@ -224,8 +227,10 @@ func getBillingPatterns() []PatternDef {
 		{Category: types.CategoryPurchaseVerify, Pattern: `isProductPurchased`, Priority: 9, IsCritical: true, Description: "Product purchase check"},
 		{Category: types.CategoryPurchaseVerify, Pattern: `getPurchaseState`, Priority: 8, IsCritical: true, Description: "Get purchase state"},
 
-		{Category: types.CategoryPurchaseToken, Pattern: `purchaseToken`, Priority: 8, IsCritical: true, Description: "Purchase token field"},
-		{Category: types.CategoryPurchaseToken, Pattern: `"purchase_token"`, Priority: 8, IsCritical: true, Description: "Purchase token string"},
+		// Purchase tokens are expected fields in any billing integration; they
+		// only become interesting when they leak (hardcoded-secret detectors).
+		{Category: types.CategoryPurchaseToken, Pattern: `purchaseToken`, Priority: 8, Description: "Purchase token field"},
+		{Category: types.CategoryPurchaseToken, Pattern: `"purchase_token"`, Priority: 8, Description: "Purchase token string"},
 		{Category: types.CategoryPurchaseToken, Pattern: `orderId`, Priority: 7, IsCritical: false, Description: "Order ID field"},
 	}
 }
@@ -237,11 +242,11 @@ func getBillingPatterns() []PatternDef {
 func getPremiumPatterns() []PatternDef {
 	return []PatternDef{
 		{Category: types.CategoryPremiumCheck, Pattern: `isPremium`, Priority: 9, IsCritical: true, Description: "Premium status check"},
-		{Category: types.CategoryPremiumCheck, Pattern: `isPro`, Priority: 9, IsCritical: true, Description: "Pro status check"},
+		{Category: types.CategoryPremiumCheck, Pattern: `\bisPro(?:$|[^a-zA-Z0-9]|User\b|Version\b|Active\b)`, IsRegex: true, Priority: 9, IsCritical: true, Description: "Pro status check"},
 		{Category: types.CategoryPremiumCheck, Pattern: `isProUser`, Priority: 9, IsCritical: true, Description: "Pro user check"},
 		{Category: types.CategoryPremiumCheck, Pattern: `isPremiumUser`, Priority: 9, IsCritical: true, Description: "Premium user check"},
 		{Category: types.CategoryPremiumCheck, Pattern: `hasPremium`, Priority: 9, IsCritical: true, Description: "Has premium check"},
-		{Category: types.CategoryPremiumCheck, Pattern: `hasPro`, Priority: 9, IsCritical: true, Description: "Has pro check"},
+		{Category: types.CategoryPremiumCheck, Pattern: `\bhasPro(?:$|[^a-zA-Z0-9]|Access\b|Version\b)`, IsRegex: true, Priority: 9, IsCritical: true, Description: "Has pro check"},
 		{Category: types.CategoryPremiumCheck, Pattern: `isVip`, Priority: 9, IsCritical: true, Description: "VIP status check"},
 		{Category: types.CategoryPremiumCheck, Pattern: `isVipUser`, Priority: 9, IsCritical: true, Description: "VIP user check"},
 		{Category: types.CategoryPremiumCheck, Pattern: `isGold`, Priority: 8, IsCritical: true, Description: "Gold status check"},
@@ -351,7 +356,7 @@ func getAdPatterns() []PatternDef {
 		{Category: types.CategoryAdLoad, Pattern: `fetchAd`, Priority: 5, IsCritical: false, Description: "Fetch ad request"},
 		{Category: types.CategoryAdLoad, Pattern: `requestAd`, Priority: 5, IsCritical: false, Description: "Request ad"},
 
-		{Category: types.CategoryAdShow, Pattern: `showAd`, Priority: 6, IsCritical: false, Description: "Show ad call"},
+		{Category: types.CategoryAdShow, Pattern: `\bshowAd(?:$|[^a-zA-Z0-9]|s\b|vertisement\b)`, IsRegex: true, Priority: 6, IsCritical: false, Description: "Show ad call"},
 		{Category: types.CategoryAdShow, Pattern: `showBanner`, Priority: 6, IsCritical: false, Description: "Show banner"},
 		{Category: types.CategoryAdShow, Pattern: `showInterstitial`, Priority: 6, IsCritical: false, Description: "Show interstitial"},
 		{Category: types.CategoryAdShow, Pattern: `showRewardedAd`, Priority: 6, IsCritical: false, Description: "Show rewarded ad"},
@@ -497,6 +502,28 @@ func getSecurityPatterns() []PatternDef {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// DROPPER / SECOND-STAGE TOOLING
+// ═══════════════════════════════════════════════════════════════════════════════
+
+func getDropperPatterns() []PatternDef {
+	return []PatternDef{
+		// Payload-container markers. These appear in plaintext in builds that
+		// do not obfuscate string constants; StringFog builds are covered by
+		// the stringfog evaluator feeding the rule engine.
+		{Category: types.CategoryMalware, Pattern: `__wombat_payload__`, Priority: 10, IsCritical: true,
+			Description: "Second-stage payload container marker"},
+		{Category: types.CategoryMalware, Pattern: `Provider missing in decoy mode`, Priority: 9, IsCritical: true,
+			Description: "Decoy-mode hidden application loader"},
+		// Injection tooling — non-critical standalone (QA tooling exists);
+		// the toolkit combo raises it with corroboration.
+		{Category: types.CategoryDexNetworkLoad, Pattern: `linjector`, Priority: 7, Description: "Native injection helper"},
+		{Category: types.CategoryDexNetworkLoad, Pattern: `libreality_transport`, Priority: 7, Description: "REALITY TLS-camouflaged transport"},
+		{Category: types.CategoryDexNetworkLoad, Pattern: `libldssfve`, Priority: 8, IsCritical: true,
+			Description: "Known packed-loader native library"},
+	}
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // ADVANCED SECURITY
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -513,10 +540,10 @@ func getAdvancedSecurityPatterns() []PatternDef {
 		{Category: types.CategoryPlayIntegrity, Pattern: `IntegrityTokenRequest`, Priority: 9, IsCritical: true, Description: "Integrity token request"},
 
 		{Category: types.CategorySSLPinning, Pattern: `CertificatePinner`, Priority: 8, IsCritical: true, Description: "OkHttp certificate pinner"},
-		{Category: types.CategorySSLPinning, Pattern: `TrustManager`, Priority: 7, Description: "TrustManager"},
-		{Category: types.CategorySSLPinning, Pattern: `X509TrustManager`, Priority: 7, Description: "X509TrustManager"},
-		{Category: types.CategorySSLPinning, Pattern: `HostnameVerifier`, Priority: 7, Description: "Hostname verifier"},
-		{Category: types.CategorySSLPinning, Pattern: `->checkServerTrusted(`, Priority: 8, IsCritical: true, Description: "Server trust check"},
+		{Category: types.CategoryNetwork, Pattern: `TrustManager`, Priority: 2, Description: "TLS trust manager reference; pinning not established"},
+		{Category: types.CategoryNetwork, Pattern: `X509TrustManager`, Priority: 2, Description: "X.509 trust manager reference; pinning not established"},
+		{Category: types.CategoryNetwork, Pattern: `HostnameVerifier`, Priority: 2, Description: "TLS hostname verifier reference; pinning not established"},
+		{Category: types.CategoryNetwork, Pattern: `->checkServerTrusted(`, Priority: 2, Description: "Server certificate validation API reference; pinning not established"},
 
 		{Category: types.CategoryAntiXposed, Pattern: `"de.robv.android.xposed"`, Priority: 9, IsCritical: true, Description: "Xposed package check"},
 		{Category: types.CategoryAntiXposed, Pattern: `XposedBridge`, Priority: 9, IsCritical: true, Description: "XposedBridge reference"},

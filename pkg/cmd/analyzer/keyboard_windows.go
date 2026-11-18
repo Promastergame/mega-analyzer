@@ -3,41 +3,19 @@
 package main
 
 import (
+	"bufio"
 	"os"
 	"syscall"
+	"unsafe"
 )
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // KEYBOARD — raw-mode single-key reader for Windows
 // ═══════════════════════════════════════════════════════════════════════════════
 
-type keyKind int
-
-const (
-	keyNone keyKind = iota
-	keyChar
-	keyEnter
-	keyEsc
-	keyBackspace
-	keyTab
-	keyUp
-	keyDown
-	keyLeft
-	keyRight
-	keyHome
-	keyEnd
-	keyPgUp
-	keyPgDn
-	keyF1
-)
-
-type keyEvent struct {
-	kind keyKind
-	r    rune // valid when kind == keyChar
-}
-
 // rawTerm captures the terminal mode and restores it on Close.
 type rawTerm struct {
+	reader       *bufio.Reader
 	stdin        syscall.Handle
 	stdout       syscall.Handle
 	prevIn       uint32
@@ -65,6 +43,7 @@ func newRawTerm() (*rawTerm, error) {
 	newIn := prevIn &^ (enableLineInput |
 		enableEchoInput |
 		enableProcessedInput |
+		0x0008 | // window-size records are polled through terminal dimensions
 		enableMouseInput)
 	newIn |= enableVTInput
 	if err := setConsoleMode(stdin, newIn); err != nil {
@@ -77,6 +56,7 @@ func newRawTerm() (*rawTerm, error) {
 	_ = setConsoleMode(stdout, newOut)
 
 	return &rawTerm{
+		reader:  bufio.NewReader(os.Stdin),
 		stdin:   stdin,
 		stdout:  stdout,
 		prevIn:  prevIn,
@@ -93,6 +73,7 @@ func (r *rawTerm) Close() {
 		r.cursorHidden = false
 	}
 	if r.altScreen {
+		os.Stdout.Write([]byte("\x1b[?2004l"))
 		// Restore main screen buffer + scrollback.
 		os.Stdout.Write([]byte("\x1b[?1049l"))
 		r.altScreen = false
@@ -106,7 +87,7 @@ func (r *rawTerm) EnterAltScreen() {
 	if r == nil || r.altScreen {
 		return
 	}
-	os.Stdout.Write([]byte("\x1b[?1049h"))
+	os.Stdout.Write([]byte("\x1b[?1049h\x1b[?2004h"))
 	r.altScreen = true
 }
 
@@ -128,122 +109,54 @@ func (r *rawTerm) ShowCursor() {
 
 // ReadKey reads one logical keystroke. It blocks until something is read.
 func (r *rawTerm) ReadKey() (keyEvent, error) {
-	buf := make([]byte, 1)
-	n, err := os.Stdin.Read(buf)
+	if r.reader == nil {
+		r.reader = bufio.NewReader(os.Stdin)
+	}
+	return decodeKey(r.reader, func() bool {
+		event, err := syscall.WaitForSingleObject(r.stdin, 25)
+		return err == nil && event == cWaitObject0
+	})
+}
+
+// PollKey allows redraws while idle without a second reader racing an editor.
+// Console handles also signal for key-up events; discard those before using
+// the byte reader, which would otherwise block waiting for a printable key.
+func (r *rawTerm) PollKey(timeoutMS uint32) (keyEvent, error) {
+	if r.reader != nil && r.reader.Buffered() > 0 {
+		return r.ReadKey()
+	}
+	ready, err := syscall.WaitForSingleObject(r.stdin, timeoutMS)
 	if err != nil {
 		return keyEvent{}, err
 	}
-	if n == 0 {
+	if ready != cWaitObject0 {
 		return keyEvent{kind: keyNone}, nil
 	}
-	b := buf[0]
-
-	switch b {
-	case 0x0d, 0x0a:
-		return keyEvent{kind: keyEnter}, nil
-	case 0x09:
-		return keyEvent{kind: keyTab}, nil
-	case 0x08, 0x7f:
-		return keyEvent{kind: keyBackspace}, nil
-	case 0x1b:
-		return r.readEscape()
-	case 0x03: // Ctrl+C -> route through the same quit key as 'q'
-		return keyEvent{kind: keyChar, r: 'q'}, nil
-	case 0x0b: // Ctrl+K
-		return keyEvent{kind: keyChar, r: rune(b)}, nil
-	case 0x10: // Ctrl+P
-		return keyEvent{kind: keyChar, r: rune(b)}, nil
+	var record struct {
+		kind                        uint16
+		pad                         uint16
+		down                        int32
+		repeat, virtual, scan, char uint16
+		control                     uint32
 	}
-	if b >= 0x20 && b < 0x7f {
-		return keyEvent{kind: keyChar, r: rune(b)}, nil
+	var count uint32
+	peek := syscall.NewLazyDLL("kernel32.dll").NewProc("PeekConsoleInputW")
+	read := syscall.NewLazyDLL("kernel32.dll").NewProc("ReadConsoleInputW")
+	ok, _, callErr := peek.Call(uintptr(r.stdin), uintptr(unsafe.Pointer(&record)), 1, uintptr(unsafe.Pointer(&count)))
+	if ok == 0 {
+		return keyEvent{}, callErr
 	}
-	// UTF-8 lead byte
-	if b >= 0xc0 {
-		return r.readUTF8(b)
+	if count == 0 {
+		return keyEvent{kind: keyNone}, nil
+	}
+	// Navigation keys have no Unicode character until VT input encodes them.
+	navigation := record.virtual >= 0x21 && record.virtual <= 0x28 || record.virtual == 0x2e || record.virtual == 0x70
+	if record.kind == 1 && record.down != 0 && (record.char != 0 || navigation) {
+		return r.ReadKey()
+	}
+	ok, _, callErr = read.Call(uintptr(r.stdin), uintptr(unsafe.Pointer(&record)), 1, uintptr(unsafe.Pointer(&count)))
+	if ok == 0 {
+		return keyEvent{}, callErr
 	}
 	return keyEvent{kind: keyNone}, nil
-}
-
-const escFollowupTimeoutMs = 25
-
-// waitReadable reports whether stdin has a byte available within timeoutMs.
-func (r *rawTerm) waitReadable(timeoutMs uint32) bool {
-	event, err := syscall.WaitForSingleObject(r.stdin, timeoutMs)
-	if err != nil {
-		return false
-	}
-	return event == cWaitObject0
-}
-
-func (r *rawTerm) readEscape() (keyEvent, error) {
-	if !r.waitReadable(escFollowupTimeoutMs) {
-		return keyEvent{kind: keyEsc}, nil
-	}
-	buf := make([]byte, 1)
-	n, err := os.Stdin.Read(buf)
-	if err != nil || n == 0 {
-		return keyEvent{kind: keyEsc}, nil
-	}
-	if buf[0] != '[' && buf[0] != 'O' {
-		return keyEvent{kind: keyEsc}, nil
-	}
-	isSS3 := buf[0] == 'O'
-	if !r.waitReadable(escFollowupTimeoutMs) {
-		return keyEvent{kind: keyEsc}, nil
-	}
-	final := make([]byte, 1)
-	n, err = os.Stdin.Read(final)
-	if err != nil || n == 0 {
-		return keyEvent{kind: keyEsc}, nil
-	}
-	switch final[0] {
-	case 'A':
-		return keyEvent{kind: keyUp}, nil
-	case 'B':
-		return keyEvent{kind: keyDown}, nil
-	case 'C':
-		return keyEvent{kind: keyRight}, nil
-	case 'D':
-		return keyEvent{kind: keyLeft}, nil
-	case 'H':
-		return keyEvent{kind: keyHome}, nil
-	case 'F':
-		return keyEvent{kind: keyEnd}, nil
-	case 'P':
-		if isSS3 {
-			return keyEvent{kind: keyF1}, nil
-		}
-	case '5', '6':
-		drain := make([]byte, 1)
-		os.Stdin.Read(drain)
-		if final[0] == '5' {
-			return keyEvent{kind: keyPgUp}, nil
-		}
-		return keyEvent{kind: keyPgDn}, nil
-	}
-	return keyEvent{kind: keyEsc}, nil
-}
-
-func (r *rawTerm) readUTF8(lead byte) (keyEvent, error) {
-	var more int
-	switch {
-	case lead&0xe0 == 0xc0:
-		more = 1
-	case lead&0xf0 == 0xe0:
-		more = 2
-	case lead&0xf8 == 0xf0:
-		more = 3
-	default:
-		return keyEvent{kind: keyNone}, nil
-	}
-	buf := make([]byte, more+1)
-	buf[0] = lead
-	if _, err := os.Stdin.Read(buf[1:]); err != nil {
-		return keyEvent{kind: keyNone}, err
-	}
-	rs := []rune(string(buf))
-	if len(rs) == 0 {
-		return keyEvent{kind: keyNone}, nil
-	}
-	return keyEvent{kind: keyChar, r: rs[0]}, nil
 }

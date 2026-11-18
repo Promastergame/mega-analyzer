@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"mega-analyzer/pkg/internal/configs"
+	"mega-analyzer/pkg/internal/networkrefs"
 	"mega-analyzer/pkg/internal/types"
 )
 
@@ -256,6 +257,9 @@ func (d *EndpointDetector) scanScheme(
 		absIdx := offset + idx
 
 		raw, endPos := extractURLBytes(ctx.Content, absIdx)
+		if networkrefs.IsXMLMetadataURL(ctx.Content, absIdx) {
+			raw = ""
+		}
 		if raw != "" && ctx.FileType == types.FileTypeNative && !isPrintableASCII(raw) {
 			// Strings-pass hygiene: in native binaries "http://" can be
 			// surrounded by arbitrary binary bytes; only printable-ASCII
@@ -461,7 +465,7 @@ func (d *EndpointDetector) categorize(epType EndpointType) (types.Category, bool
 	case EndpointTypeGRPC:
 		return types.CategoryServerCheck, true, "gRPC server connection"
 	case EndpointTypeAuth:
-		return types.CategoryServerCheck, true, "Authentication server endpoint"
+		return types.CategoryServerCheck, false, "Authentication server endpoint"
 	case EndpointTypeCustomPort:
 		return types.CategoryServerCheck, true, "Server on non-standard port"
 	case EndpointTypeAPI:

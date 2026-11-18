@@ -33,8 +33,6 @@ func (m *EnvironmentModule) props() []adapter.PropSet {
 		{Key: "ro.secure", Value: "1"},
 		{Key: "ro.build.type", Value: "user"},
 		{Key: "ro.build.tags", Value: "release-keys"},
-		{Key: "init.svc.goldfish-setup", Value: ""},
-		{Key: "init.svc.goldfish-logcat", Value: ""},
 	}
 }
 
@@ -43,7 +41,7 @@ func (m *EnvironmentModule) Plan(p profile.DeviceProfile) []Operation {
 		Name:       "environment.deqemu",
 		Module:     m.Name(),
 		Critical:   true,
-		Timeout:    30 * time.Second,
+		Timeout:    90 * time.Second,
 		RetryCount: 1,
 		Config:     adapter.TestConfig{Props: m.props()},
 	}}

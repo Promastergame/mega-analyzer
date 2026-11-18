@@ -1,0 +1,300 @@
+{
+  "base_archive": "AI.zip",
+  "base_sha256": "cc5a98a5ccfe4c02b6f58445651637b00915cef0631d32b3a7bbf8d4daf855ef",
+  "changed_files": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "status": "modified",
+      "sha256": "6cd79a3a4c95b2d80c1f5c4bbf3f21f3b9ab4bc380e91ae553325eaca3505efd",
+      "size": 4068
+    },
+    {
+      "path": "BUILD-NIM-WINDOWS.cmd",
+      "status": "modified",
+      "sha256": "c52ce6bfc2fa9a3efaae134d987b2a6dbe7b564a14568c75a1f52271c13a5fc3",
+      "size": 2154
+    },
+    {
+      "path": "BUILD-S1.cmd",
+      "status": "modified",
+      "sha256": "c800afbbdc2d7fdfe11884c5ae40623c55b674ba58a1e33de056f464da8aed14",
+      "size": 503
+    },
+    {
+      "path": "README.md",
+      "status": "modified",
+      "sha256": "cc7c92022f00dd7a8ff744ac18f9b3f6345df61cfbb7812d07c0ecf5ed14e3e2",
+      "size": 6680
+    },
+    {
+      "path": "RUN-DAI.cmd",
+      "status": "added",
+      "sha256": "b159a3e6de364c8c59394cb97704ff6ed9a3314e73da1024df7947ca2fea7ccb",
+      "size": 305
+    },
+    {
+      "path": "START-FIXED.ru.txt",
+      "status": "added",
+      "sha256": "a4908c9ad308bf2dc315f3804be17359dc6249c723cb966db791d2b263103514",
+      "size": 1159
+    },
+    {
+      "path": "build-nim.sh",
+      "status": "modified",
+      "sha256": "29676ec833302f7aa84158aadc167b2315ef690ba511923fc434c737d16ff928",
+      "size": 1160
+    },
+    {
+      "path": "cmd/dai/admission.go",
+      "status": "added",
+      "sha256": "f16fbc01722d256d3871cc1c21b2f1b13620bf68ce26c33678a885c5017604a3",
+      "size": 818
+    },
+    {
+      "path": "cmd/dai/admission_test.go",
+      "status": "added",
+      "sha256": "6c2aef4478fb1b23a3bd19950fd643b524d7a1686b4d545083b8cb651612b14e",
+      "size": 915
+    },
+    {
+      "path": "cmd/dai/collect.go",
+      "status": "modified",
+      "sha256": "1ad273c63a9e90fbe78a805d6c4f7880d327feb3acb4e5f70ed9db80eb2a71f0",
+      "size": 10459
+    },
+    {
+      "path": "cmd/dai/collect_model.go",
+      "status": "modified",
+      "sha256": "ce93e2d652db792c49902eff5710c743e47aff96d36ae2d2ba5d0bdb9c8821ab",
+      "size": 8782
+    },
+    {
+      "path": "cmd/dai/collect_model_regression_test.go",
+      "status": "added",
+      "sha256": "1453da4ab3816433a2117ad35597ddf44b45d9caa925f87cb0e86768fdbf367d",
+      "size": 3314
+    },
+    {
+      "path": "cmd/dai/collect_test.go",
+      "status": "modified",
+      "sha256": "dda47c517946fbd5dc6cbd69259aa2660861b26ae8a85af888ed103df9688633",
+      "size": 4605
+    },
+    {
+      "path": "cmd/dai/identity.go",
+      "status": "added",
+      "sha256": "87fbbc2a559f4200c71d3145d1c0e6225dd78f0ee0cf6f9b705454a8b9569622",
+      "size": 880
+    },
+    {
+      "path": "cmd/dai/identity_test.go",
+      "status": "added",
+      "sha256": "7ffc55a44d32166cac7a3b6681eb305212f2da22ce81676aaf79d434b81ead4d",
+      "size": 843
+    },
+    {
+      "path": "cmd/dai/main.go",
+      "status": "modified",
+      "sha256": "a53cc1a1f71be0599ce34965e47d9a862e2c86de157265c57fba3168f9fe29ac",
+      "size": 30258
+    },
+    {
+      "path": "docs/FIXES-2026-10-16-results.json",
+      "status": "added",
+      "sha256": "17fbd5b229550d78e193875877f8275a86c44f6838bbefcb1f37db4ec35fce6f",
+      "size": 3168
+    },
+    {
+      "path": "docs/FIXES-2026-10-16.ru.md",
+      "status": "added",
+      "sha256": "c2196cb5265482f1a5edb76d954273b966b3de3d0fa0767cdd14eea4c3ce682c",
+      "size": 13208
+    },
+    {
+      "path": "docs/fixes-2026-10-16/go-tests.log",
+      "status": "added",
+      "sha256": "5025a6359dfb17d59b75a674eeeb1af28db9b7b5bf79128da282ff05770f3585",
+      "size": 1514
+    },
+    {
+      "path": "docs/fixes-2026-10-16/go-vet.log",
+      "status": "added",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "path": "docs/fixes-2026-10-16/http-smoke.json",
+      "status": "added",
+      "sha256": "89915370c808aa46d65b6ccf4b056f27e0793c1462939f9c8e4d754c479d0d17",
+      "size": 2555
+    },
+    {
+      "path": "docs/fixes-2026-10-16/index-benchmark.log",
+      "status": "added",
+      "sha256": "5ad44e08eb3c28dc1c0c5d3958eb9b11872cbd2d8850b1e21224f660b7749abd",
+      "size": 1108
+    },
+    {
+      "path": "docs/fixes-2026-10-16/native-release.log",
+      "status": "added",
+      "sha256": "01d7f4a0f5c610ec288364ee8706c69cc106e0daa41835078500d001c08479c5",
+      "size": 1179
+    },
+    {
+      "path": "docs/fixes-2026-10-16/pack.log",
+      "status": "added",
+      "sha256": "233cfb6c774d1a2d45082489cf6986c4830f71b04395c6138ed6a8e585f1d43c",
+      "size": 172
+    },
+    {
+      "path": "docs/fixes-2026-10-16/python-data.log",
+      "status": "added",
+      "sha256": "6e5b93496d573082bee81a299e00d69d4ce86268994dfd16ea642d5aaa28a68b",
+      "size": 112
+    },
+    {
+      "path": "docs/fixes-2026-10-16/python-distill.log",
+      "status": "added",
+      "sha256": "65d3a21d9a25d3449538a550bbf07742cec0a72ecf37d6271c24c8db70978275",
+      "size": 98
+    },
+    {
+      "path": "docs/fixes-2026-10-16/quality-comparison.json",
+      "status": "added",
+      "sha256": "12def3c107261b1447d915204e6ae5fb25ed9329aa4adac3004066aa42d3dfae",
+      "size": 14620
+    },
+    {
+      "path": "docs/fixes-2026-10-16/race.log",
+      "status": "added",
+      "sha256": "4e707403ed00e03d77b38ba529a045a22f2942e72ace2400e29f39bdcdea554f",
+      "size": 165
+    },
+    {
+      "path": "docs/fixes-2026-10-16/skills-comparison.json",
+      "status": "added",
+      "sha256": "f3ac1426409c699d6c7421bce2cc30a883b78a76064350a669cf0808afc02b27",
+      "size": 6374
+    },
+    {
+      "path": "docs/fixes-2026-10-16/status.txt",
+      "status": "added",
+      "sha256": "0a0e588085f8c67a6907ecf4720c5c332e8c5d8addd992532d399d09e57bf69c",
+      "size": 64
+    },
+    {
+      "path": "experts/calculation_test.go",
+      "status": "added",
+      "sha256": "834f0f76dd60752b5c0d3c998ff4a512c60fd195396edc256a5d339e669eafec",
+      "size": 586
+    },
+    {
+      "path": "experts/quantities.go",
+      "status": "modified",
+      "sha256": "1986ef8bbe0cccd2cc12118b0a3683512ac209302bdc5e02fca00d2217d6482b",
+      "size": 16534
+    },
+    {
+      "path": "s1/backend.go",
+      "status": "modified",
+      "sha256": "093fe4b19b92b6c553e7c9e863a90d0746a195170562dd9bc60e40c37b909a02",
+      "size": 3966
+    },
+    {
+      "path": "s1/calculation.go",
+      "status": "added",
+      "sha256": "f1d1c4affc0e3a6b40dbe6ba347a9945cf1ef58ac479b28d85f7c35fdb2e496d",
+      "size": 2375
+    },
+    {
+      "path": "s1/calculation_test.go",
+      "status": "added",
+      "sha256": "27ed1e80289665eead1f32ff45bdbf1a507b71c5e8b5d7a7376a9f6e573e1e1f",
+      "size": 1044
+    },
+    {
+      "path": "s1/calibrate.go",
+      "status": "modified",
+      "sha256": "ac944ebb09cf8960992fe9ae2def1971e5c1a303b36ce03eee3fde65989e0c89",
+      "size": 5307
+    },
+    {
+      "path": "s1/embed.go",
+      "status": "modified",
+      "sha256": "4335c785f5a6e618256c6442f9b815453d48a47d49da98e86d8f3f4635b2a5f3",
+      "size": 20736
+    },
+    {
+      "path": "s1/engine.go",
+      "status": "modified",
+      "sha256": "343fcb9ff254fc811fb9d9ebc15d03cd977d5bab8e0145090c1cbf059a22bc78",
+      "size": 24087
+    },
+    {
+      "path": "s1/ensemble.go",
+      "status": "modified",
+      "sha256": "969455f8c90235e56194689f7f66692c95cb92251e68823f723add911c721e54",
+      "size": 1205
+    },
+    {
+      "path": "s1/eval.go",
+      "status": "modified",
+      "sha256": "030845c6899338b52dda5983449dbd8bb18cae215d32e792376c30240461fa87",
+      "size": 7941
+    },
+    {
+      "path": "s1/expert.go",
+      "status": "modified",
+      "sha256": "9852d15559742a6c5e70b3db6ee8ff8946a5749ff4f28fecc5623e322f94f68f",
+      "size": 3373
+    },
+    {
+      "path": "s1/identity.go",
+      "status": "added",
+      "sha256": "f0c3d9873738171216efc58ecf1f09a0a9c547f8789f334f9fe8edf5e89f074b",
+      "size": 2556
+    },
+    {
+      "path": "s1/identity_regression_test.go",
+      "status": "added",
+      "sha256": "5f5da437a37b1864e0b6507e45dce766e9f95a6c04d997b453fc2a50b91c3693",
+      "size": 1965
+    },
+    {
+      "path": "s1/retrieve.go",
+      "status": "modified",
+      "sha256": "a21c53ecf624ebd376e0bd088988a2ca3401603fedbc344594dca66a71f85540",
+      "size": 8337
+    },
+    {
+      "path": "s1/retrieve_regression_test.go",
+      "status": "added",
+      "sha256": "9957394d8e1e3a2fad3c3fa826c7c76411f96106bdd89e7c5a71507bb63a77e7",
+      "size": 2354
+    },
+    {
+      "path": "s1/types.go",
+      "status": "modified",
+      "sha256": "20217e6df980444bceb7f94636e27482994e94951d69a96d0e8b1398f9689aa9",
+      "size": 11745
+    },
+    {
+      "path": "semai/encoder.go",
+      "status": "modified",
+      "sha256": "4e72434e657756470902c2691146cb36f1a9b1b0eab7889aaafe4acfcab6cf26",
+      "size": 23106
+    },
+    {
+      "path": "semai/identity_test.go",
+      "status": "added",
+      "sha256": "6d6e85c2782e653a3cab5918266a0fa666388306b32fe63be370a5d5455b8f82",
+      "size": 837
+    }
+  ],
+  "windows_binary": {
+    "path": "bin/dai-go.exe",
+    "sha256": "0d93f500961c922b5bf88359d36cb93b4add594211af250b0c338e1cdbc2e649",
+    "validation": "Cross-compiled only; Windows runtime not tested."
+  },
+  "unchanged_weights_and_datasets": true
+}

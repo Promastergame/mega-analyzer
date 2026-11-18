@@ -13,6 +13,8 @@ import (
 	"runtime/pprof"
 	"testing"
 	"time"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -625,7 +627,7 @@ func TestProfile_CPUProfileOutput(t *testing.T) {
 		t.Skip("Skipping profiling test in short mode")
 	}
 
-	tmpDir := t.TempDir()
+	tmpDir := testutil.TempDir(t)
 	cpuProfilePath := filepath.Join(tmpDir, "cpu.prof")
 
 	// Start CPU profiling
@@ -669,7 +671,7 @@ func TestProfile_MemoryProfileOutput(t *testing.T) {
 		t.Skip("Skipping profiling test in short mode")
 	}
 
-	tmpDir := t.TempDir()
+	tmpDir := testutil.TempDir(t)
 	memProfilePath := filepath.Join(tmpDir, "mem.prof")
 
 	// Run workload

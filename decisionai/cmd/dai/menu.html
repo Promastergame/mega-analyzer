@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Веб-меню DecisionAI: системные решения, визуальная арена, зрение, рассуждения и калибровка.">
+<title>DecisionAI · Веб-меню</title>
+<style>
+:root{
+ --bg:#101313;--side:#141717;--surf:#191d1d;--raise:#202525;--card:#181c1c;--card-hover:#222828;
+ --line:#2b3231;--line-hi:#3b4644;--soft:#252b2a;
+ --fg:#edf0e9;--fg2:#aab4ae;--mute:#88948d;--dim:#5c6862;
+ --acc:#e8b86d;--acc-hi:#f2c989;--acc-ink:#251e13;--acc-soft:rgba(232,184,109,.1);
+ --ok:#a0c5a8;--ok-soft:rgba(160,197,168,.12);--warn:#d9b45a;--bad:#edaa9f;--info:#adc6d6;
+ --sans:"Aptos","Segoe UI Variable Text","Segoe UI",system-ui,-apple-system,sans-serif;
+ --disp:"Bahnschrift","Aptos Display","Trebuchet MS",sans-serif;
+ --mono:"Cascadia Code","Cascadia Mono",Consolas,monospace;
+ --r:10px;--r-sm:6px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{color-scheme:dark}
+body{
+ margin:0;background:var(--bg);color:var(--fg);font:14px/1.55 var(--sans);
+ -webkit-font-smoothing:antialiased;min-height:100vh;
+ background-image:
+  radial-gradient(900px 500px at 15% -10%,rgba(232,184,109,.12),transparent 60%),
+  radial-gradient(800px 500px at 85% 0%,rgba(173,198,214,.08),transparent 60%);
+}
+::selection{background:rgba(232,184,109,.28)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px;border-radius:4px}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;cursor:pointer}
+svg{flex:none}
+.ic{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round}
+
+/* Top bar / Web Menu Navigation */
+header.topbar{
+ position:sticky;top:0;z-index:40;
+ display:flex;align-items:center;justify-content:space-between;gap:16px;
+ padding:12px 24px;background:rgba(16,19,19,.85);backdrop-filter:blur(14px);
+ border-bottom:1px solid var(--line);
+}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-mark{
+ width:32px;height:32px;border-radius:8px;background:var(--raise);
+ border:1px solid var(--line);display:grid;place-items:center;color:var(--acc);
+}
+.brand-title{font:600 18px/1 var(--disp);letter-spacing:-.4px}
+.brand-title i{font-style:normal;color:var(--acc)}
+.brand-badge{
+ font:10px var(--mono);letter-spacing:1px;color:var(--mute);
+ background:var(--raise);border:1px solid var(--line);padding:2px 8px;border-radius:99px;
+}
+
+nav.main-nav{
+ display:flex;gap:4px;background:rgba(255,255,255,.03);
+ border:1px solid var(--line);border-radius:99px;padding:3px;
+}
+nav.main-nav a{
+ display:inline-flex;align-items:center;gap:6px;padding:6px 14px;
+ border-radius:99px;font-size:13px;color:var(--mute);transition:all .15s;
+}
+nav.main-nav a:hover{color:var(--fg);background:rgba(255,255,255,.05)}
+nav.main-nav a.active{color:var(--acc-ink);background:var(--acc);font-weight:600}
+nav.main-nav a.active svg{stroke:var(--acc-ink)}
+
+.top-actions{display:flex;align-items:center;gap:10px}
+.conn-pill{
+ display:inline-flex;align-items:center;gap:7px;
+ padding:4px 11px;border-radius:99px;font:11px var(--mono);
+ background:var(--surf);border:1px solid var(--line);color:var(--fg2);
+}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--ok);box-shadow:0 0 8px var(--ok)}
+.dot.offline{background:var(--bad);box-shadow:0 0 8px var(--bad)}
+.token-btn{
+ display:inline-flex;align-items:center;gap:6px;padding:5px 12px;
+ border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surf);
+ font-size:12px;color:var(--fg2);transition:all .15s;
+}
+.token-btn:hover{border-color:var(--acc);color:var(--acc)}
+
+/* Main Layout */
+main.container{
+ max-width:1200px;margin:0 auto;padding:36px 24px 64px;
+ display:flex;flex-direction:column;gap:32px;
+}
+
+/* Hero Section */
+.hero{
+ display:flex;justify-content:space-between;align-items:flex-start;gap:24px;
+ padding:28px 32px;background:var(--surf);border:1px solid var(--line);border-radius:var(--r);
+}
+.hero-content{max-width:760px}
+.eyebrow{
+ font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
+ color:var(--acc);margin-bottom:8px;
+}
+.hero h1{font:600 32px/1.2 var(--disp);letter-spacing:-.6px;margin:0 0 10px}
+.hero p.lead{font-size:15px;color:var(--fg2);margin:0;line-height:1.6}
+.hero-badges{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.hbadge{
+ font:11px var(--mono);padding:4px 10px;border-radius:99px;
+ background:var(--raise);border:1px solid var(--line);color:var(--mute);
+}
+
+/* Live Status Strip */
+.status-grid{
+ display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;
+}
+.status-card{
+ background:var(--surf);border:1px solid var(--line);border-radius:var(--r);
+ padding:16px 18px;display:flex;flex-direction:column;gap:6px;
+}
+.status-card .lbl{
+ font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--mute);
+ display:flex;align-items:center;justify-content:space-between;
+}
+.status-card .val{font:600 17px var(--disp);color:var(--fg)}
+.status-card .sub{font-size:11px;color:var(--dim)}
+
+/* Section Heading */
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.sec-head h2{font:600 20px var(--disp);margin:0;letter-spacing:-.3px}
+.sec-head span{font-size:12px;color:var(--mute)}
+
+/* Tools Grid */
+.tools-grid{
+ display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:18px;
+}
+.tool-card{
+ background:var(--card);border:1px solid var(--line);border-radius:var(--r);
+ padding:22px;display:flex;flex-direction:column;gap:14px;
+ transition:all .2s ease;position:relative;overflow:hidden;
+}
+.tool-card:hover{
+ background:var(--card-hover);border-color:var(--line-hi);
+ transform:translateY(-2px);box-shadow:0 12px 32px rgba(0,0,0,.35);
+}
+.tool-card:hover .tool-arrow{transform:translateX(4px);color:var(--acc)}
+.tool-header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.tool-icon-wrap{
+ width:42px;height:42px;border-radius:10px;background:var(--acc-soft);
+ border:1px solid rgba(232,184,109,.2);display:grid;place-items:center;color:var(--acc);
+}
+.tool-badge{
+ font:10px var(--mono);color:var(--mute);padding:3px 8px;
+ border-radius:99px;background:var(--raise);border:1px solid var(--line);
+}
+.tool-info h3{font:600 18px var(--disp);margin:0 0 6px;letter-spacing:-.2px}
+.tool-info p{font-size:13px;color:var(--fg2);margin:0;line-height:1.55}
+.tool-pills{display:flex;gap:6px;flex-wrap:wrap}
+.tpill{
+ font-size:11px;padding:3px 9px;border-radius:6px;
+ background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--mute);
+}
+.tool-footer{
+ margin-top:auto;padding-top:12px;border-top:1px solid var(--line);
+ display:flex;align-items:center;justify-content:space-between;
+}
+.tool-route{font:12px var(--mono);color:var(--mute)}
+.tool-btn{
+ display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;
+ color:var(--acc);transition:color .15s;
+}
+.tool-arrow{transition:transform .2s ease}
+
+/* Integration & Reference */
+.guide-grid{
+ display:grid;grid-template-columns:1fr 1fr;gap:18px;
+}
+@media(max-width:840px){.guide-grid{grid-template-columns:1fr}}
+.guide-card{
+ background:var(--surf);border:1px solid var(--line);border-radius:var(--r);
+ padding:20px 22px;display:flex;flex-direction:column;gap:12px;
+}
+.guide-card h3{font:600 16px var(--disp);margin:0}
+.guide-card p{font-size:13px;color:var(--fg2);margin:0}
+pre.code-snip{
+ background:#0c0f0f;border:1px solid var(--line);border-radius:var(--r-sm);
+ padding:12px 14px;font:12px/1.6 var(--mono);color:var(--acc-hi);
+ overflow-x:auto;margin:0;white-space:pre-wrap;
+}
+
+/* Interactive API Ping Console */
+.test-console{
+ background:var(--surf);border:1px solid var(--line);border-radius:var(--r);
+ padding:22px;display:flex;flex-direction:column;gap:14px;
+}
+.test-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn-primary{
+ background:var(--acc);color:var(--acc-ink);border:none;border-radius:var(--r-sm);
+ padding:8px 18px;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:6px;
+ transition:background .15s;
+}
+.btn-primary:hover{background:var(--acc-hi)}
+.btn-secondary{
+ background:var(--raise);color:var(--fg);border:1px solid var(--line);
+ border-radius:var(--r-sm);padding:8px 16px;font-size:13px;
+ display:inline-flex;align-items:center;gap:6px;transition:all .15s;
+}
+.btn-secondary:hover{border-color:var(--acc);color:var(--acc)}
+#testOutput{
+ background:#0c0f0f;border:1px solid var(--line);border-radius:var(--r-sm);
+ padding:14px;font:12px/1.5 var(--mono);color:var(--ok);
+ max-height:220px;overflow:auto;margin:0;white-space:pre-wrap;
+}
+
+footer{
+ text-align:center;font-size:12px;color:var(--dim);padding:24px 0 0;
+ border-top:1px solid var(--line);
+}
+
+@media(max-width:960px){
+ nav.main-nav{display:none}
+ .hero{flex-direction:column}
+ .tools-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- Top Navigation Web Menu -->
+<header class="topbar">
+ <div class="brand">
+  <div class="brand-mark" aria-hidden="true">
+   <svg viewBox="0 0 20 20" class="ic"><path d="M3 4h6v6H3zM11 10h6v6h-6z" fill="currentColor"/><path d="M11 4h6v6h-6zM3 10h6v6H3z" stroke="currentColor" stroke-width="1.5"/></svg>
+  </div>
+  <div>
+   <div class="brand-title">Decision<i>AI</i></div>
+  </div>
+  <span class="brand-badge">SYSTEM ONE</span>
+ </div>
+
+ <nav class="main-nav" aria-label="Разделы DecisionAI">
+  <a href="/" class="active" aria-current="page">
+   <svg class="ic" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+   <span>Меню</span>
+  </a>
+  <a href="/playground">
+   <svg class="ic" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>
+   <span>Решения</span>
+  </a>
+  <a href="/games">
+   <svg class="ic" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="3"/><path d="M6 12h4M8 10v4M15 11h.01M17 13h.01"/></svg>
+   <span>Игры</span>
+  </a>
+  <a href="/collect">
+   <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+   <span>Зрение</span>
+  </a>
+  <a href="/text">
+   <svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+   <span>Текст</span>
+  </a>
+  <a href="/eval">
+   <svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+   <span>Оценка</span>
+  </a>
+  <a href="/rules">
+   <svg class="ic" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+   <span>Smali</span>
+  </a>
+ </nav>
+
+ <div class="top-actions">
+  <div class="conn-pill" id="connPill" title="Локальный адрес сервиса">
+   <span class="dot" id="connDot"></span>
+   <span id="connText">127.0.0.1:7480</span>
+  </div>
+  <button class="token-btn" id="copyTokenBtn" title="Скопировать Bearer токен сессии">
+   <svg class="ic" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+   <span>Токен</span>
+  </button>
+ </div>
+</header>
+
+<main class="container">
+
+ <!-- Hero Banner -->
+ <section class="hero">
+  <div class="hero-content">
+   <div class="eyebrow">Автономный комплекс логического вывода и доказательств</div>
+   <h1>Веб-меню DecisionAI</h1>
+   <p class="lead">
+    Локальный движок System One v1.20 для приоритизации находок, логического анализа фактов,
+    визуального поиска ходов и безопасного размытия медиа. Работает 100% офлайн на CPU без облака и телеметрии.
+   </p>
+   <div class="hero-badges">
+    <span class="hbadge">CPU-only</span>
+    <span class="hbadge">Nim + FASM</span>
+    <span class="hbadge">Zero Cloud</span>
+    <span class="hbadge">Evidence Provenance</span>
+    <span class="hbadge">DPAPI Token</span>
+   </div>
+  </div>
+ </section>
+
+ <!-- Engine Status Live Metrics -->
+ <section class="status-grid" aria-label="Состояние движка">
+  <div class="status-card">
+   <div class="lbl"><span>Статус сервиса</span><svg class="ic" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+   <div class="val" id="statStatus">Проверка…</div>
+   <div class="sub" id="statAddr">http://127.0.0.1:7480</div>
+  </div>
+  <div class="status-card">
+   <div class="lbl"><span>Модель &amp; Ядро</span><svg class="ic" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg></div>
+   <div class="val" id="statModel">s1-distilled-b</div>
+   <div class="sub" id="statBackend">Загрузка backend…</div>
+  </div>
+  <div class="status-card">
+   <div class="lbl"><span>Эксперты</span><svg class="ic" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+   <div class="val" id="statExperts">—</div>
+   <div class="sub" id="statExpertsSub">finding-rule, reasoning, math</div>
+  </div>
+  <div class="status-card">
+   <div class="lbl"><span>Игры &amp; Зрение</span><svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg></div>
+   <div class="val" id="statGames">Tetris + Checkers</div>
+   <div class="sub" id="statVision">Зрение настроено</div>
+  </div>
+ </section>
+
+ <!-- Tools Menu -->
+ <div class="sec-head">
+  <h2>Инструменты и веб-интерфейсы</h2>
+  <span>Выберите модуль для перехода</span>
+ </div>
+
+ <section class="tools-grid" aria-label="Инструменты DecisionAI">
+
+  <!-- 1. System One Playground -->
+  <article class="tool-card">
+   <div class="tool-header">
+    <div class="tool-icon-wrap" aria-hidden="true">
+     <svg class="ic" viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>
+    </div>
+    <span class="tool-badge">SYSTEM ONE</span>
+   </div>
+   <div class="tool-info">
+    <h3>Площадка решений</h3>
+    <p>Интерактивная среда рассуждений System One. Анализ сценариев, логический вывод, карточки доказательств (proof cards) и явные исходы unknown.</p>
+   </div>
+   <div class="tool-pills">
+    <span class="tpill">Факты и логика</span>
+    <span class="tpill">Proof cards</span>
+    <span class="tpill">Дерево поиска</span>
+   </div>
+   <div class="tool-footer">
+    <span class="tool-route">/playground</span>
+    <a href="/playground" class="tool-btn">
+     <span>Открыть</span>
+     <svg class="ic tool-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+   </div>
+  </article>
+
+  <!-- 2. Visual Arena Games -->
+  <article class="tool-card">
+   <div class="tool-header">
+    <div class="tool-icon-wrap" aria-hidden="true">
+     <svg class="ic" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="3"/><path d="M6 12h4M8 10v4M15 11h.01M17 13h.01"/></svg>
+    </div>
+    <span class="tool-badge">VISUAL ARENA</span>
+   </div>
+   <div class="tool-info">
+    <h3>Визуальная игровая</h3>
+    <p>Интерактивная игра и ИИ-поиск ходов: Тетрис и Русские шашки. ИИ анализирует реальный PNG-снимок доски и рассчитывает ходы в ограниченном бюджете CPU.</p>
+   </div>
+   <div class="tool-pills">
+    <span class="tpill">Тетрис</span>
+    <span class="tpill">Русские шашки</span>
+    <span class="tpill">Анализ PNG</span>
+   </div>
+   <div class="tool-footer">
+    <span class="tool-route">/games</span>
+    <a href="/games" class="tool-btn">
+     <span>Играть</span>
+     <svg class="ic tool-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+   </div>
+  </article>
+
+  <!-- 3. Vision Studio -->
+  <article class="tool-card">
+   <div class="tool-header">
+    <div class="tool-icon-wrap" aria-hidden="true">
+     <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+    </div>
+    <span class="tool-badge">VISION STUDIO</span>
+   </div>
+   <div class="tool-info">
+    <h3>Зрение и фильтр 18+</h3>
+    <p>Локальный анализ изображений, автоматическое размытие чувствительных превью для отчётов статического анализа, выделение контуров и векторная кластеризация.</p>
+   </div>
+   <div class="tool-pills">
+    <span class="tpill">Размытие 18+</span>
+    <span class="tpill">Контуры</span>
+    <span class="tpill">Векторный поиск</span>
+   </div>
+   <div class="tool-footer">
+    <span class="tool-route">/collect</span>
+    <a href="/collect" class="tool-btn">
+     <span>Перейти</span>
+     <svg class="ic tool-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+   </div>
+  </article>
+
+  <!-- 4. Text Reasoning -->
+  <article class="tool-card">
+   <div class="tool-header">
+    <div class="tool-icon-wrap" aria-hidden="true">
+     <svg class="ic" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </div>
+    <span class="tool-badge">TEXT &amp; GNN</span>
+   </div>
+   <div class="tool-info">
+    <h3>Текстовый вывод и Q&amp;A</h3>
+    <p>Решение логических и арифметических задач, вопросно-ответный конвейер на естественном языке, граф сущностей и пошаговые основания каждого ответа.</p>
+   </div>
+   <div class="tool-pills">
+    <span class="tpill">ruBERT-tiny2</span>
+    <span class="tpill">Event GNN</span>
+    <span class="tpill">Арифметика</span>
+   </div>
+   <div class="tool-footer">
+    <span class="tool-route">/text</span>
+    <a href="/text" class="tool-btn">
+     <span>Спросить</span>
+     <svg class="ic tool-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+   </div>
+  </article>
+
+  <!-- 5. Model Evaluation -->
+  <article class="tool-card">
+   <div class="tool-header">
+    <div class="tool-icon-wrap" aria-hidden="true">
+     <svg class="ic" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+    </div>
+    <span class="tool-badge">CALIBRATION</span>
+   </div>
+   <div class="tool-info">
+    <h3>Оценка моделей и калибровка</h3>
+    <p>Аудит достоверности: метрики ECE, Brier score, диаграммы надёжности (Reliability Diagram) и расчёт доли решений без участия человека (selective coverage).</p>
+   </div>
+   <div class="tool-pills">
+    <span class="tpill">ECE калибровка</span>
+    <span class="tpill">Brier score</span>
+    <span class="tpill">AURC</span>
+   </div>
+   <div class="tool-footer">
+    <span class="tool-route">/eval</span>
+    <a href="/eval" class="tool-btn">
+     <span>Смотреть</span>
+     <svg class="ic tool-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+   </div>
+  </article>
+
+  <!-- 6. Smali Rules & Patches -->
+  <article class="tool-card">
+   <div class="tool-header">
+    <div class="tool-icon-wrap" aria-hidden="true">
+     <svg class="ic" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+    </div>
+    <span class="tool-badge">SMALI &amp; DIFF</span>
+   </div>
+   <div class="tool-info">
+    <h3>Правила Smali и патчи</h3>
+    <p>Инспекция методов Smali, нейросетевое предсказание ролей констант, preflight-проверка изменений и предварительная оценка эффекта патчей до сборки.</p>
+   </div>
+   <div class="tool-pills">
+    <span class="tpill">Smali парсер</span>
+    <span class="tpill">Роли констант</span>
+    <span class="tpill">Preflight diff</span>
+   </div>
+   <div class="tool-footer">
+    <span class="tool-route">/rules</span>
+    <a href="/rules" class="tool-btn">
+     <span>Проверить</span>
+     <svg class="ic tool-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+   </div>
+  </article>
+
+ </section>
+
+ <!-- Quick Reference & Integration -->
+ <div class="sec-head">
+  <h2>Интеграция с Mega-Analyzer</h2>
+  <span>Команды управления и CLI</span>
+ </div>
+
+ <section class="guide-grid">
+  <div class="guide-card">
+   <h3>Управление сервисом (PowerShell 7)</h3>
+   <p>Помощник запускает фоновый процесс на loopback и сохраняет токен под защитой Windows DPAPI:</p>
+   <pre class="code-snip"># Запуск службы DecisionAI
+.\scripts\decision-ai.ps1 -Action Start
+
+# Статус и параметры работы
+.\scripts\decision-ai.ps1 -Action Status
+
+# Остановка службы
+.\scripts\decision-ai.ps1 -Action Stop</pre>
+  </div>
+
+  <div class="guide-card">
+   <h3>Статический анализ с ИИ-ассистентом</h3>
+   <p>Подключение DecisionAI к Mega-Analyzer для разбора находок и размытия картинок:</p>
+   <pre class="code-snip"># Запуск веб-интерфейса Mega-Analyzer с DecisionAI
+.\bin\analyzer-decisionai.exe -web -decision-ai-url http://127.0.0.1:7480
+
+# Прямое сканирование APK с триажем находок
+.\scripts\decision-ai.ps1 -Action Scan -Target 'sample.apk'</pre>
+  </div>
+ </section>
+
+ <!-- Interactive API Diagnostics -->
+ <section class="test-console">
+  <div class="sec-head" style="margin:0">
+   <h2>Интерактивная диагностика API</h2>
+   <span id="testStatusNote">Готов к тесту</span>
+  </div>
+  <p style="color:var(--fg2);margin:0;font-size:13px">
+   Отправьте тестовый запрос к локальному сервису для проверки доступности и активной конфигурации:
+  </p>
+  <div class="test-actions">
+   <button class="btn-primary" id="btnTestHealth" type="button">
+    <svg class="ic" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+    <span>Проверить /v1/health</span>
+   </button>
+   <button class="btn-secondary" id="btnTestDecide" type="button">
+    <svg class="ic" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+    <span>Тест /v1/decide</span>
+   </button>
+  </div>
+  <pre id="testOutput">// Нажмите «Проверить /v1/health» для получения ответа сервиса...</pre>
+ </section>
+
+ <footer>
+  DecisionAI · Локальный компонент Mega-Analyzer · Офлайн, CPU-only inference без внешних серверов
+ </footer>
+
+</main>
+
+<script>
+const sessionToken = '__TOKEN__';
+
+function updateHealth() {
+ fetch('/v1/health', {cache: 'no-store'})
+  .then(res => {
+   if (!res.ok) throw new Error('HTTP ' + res.status);
+   return res.json();
+  })
+  .then(data => {
+   document.getElementById('connDot').className = 'dot';
+   document.getElementById('statStatus').textContent = 'В сети (OK)';
+   document.getElementById('statStatus').style.color = 'var(--ok)';
+   if (data.version) {
+    document.getElementById('statModel').textContent = (data.model || 's1-distilled-b') + ' · v' + data.version;
+   }
+   if (data.backend) {
+    document.getElementById('statBackend').textContent = 'Backend: ' + data.backend + ' (' + (data.accel || 'Go') + ')';
+   }
+   if (data.experts && data.experts.length) {
+    document.getElementById('statExperts').textContent = data.experts.length + ' экспертов';
+    document.getElementById('statExpertsSub').textContent = data.experts.slice(0, 3).join(', ') + '…';
+   }
+   if (data.games && data.games.length) {
+    document.getElementById('statGames').textContent = data.games.join(', ');
+   }
+   if (data.vision_configured) {
+    document.getElementById('statVision').textContent = 'Зрение активно (локально)';
+   }
+  })
+  .catch(err => {
+   document.getElementById('connDot').className = 'dot offline';
+   document.getElementById('statStatus').textContent = 'Недоступен';
+   document.getElementById('statStatus').style.color = 'var(--bad)';
+   document.getElementById('statBackend').textContent = 'Запустите: .\\scripts\\decision-ai.ps1 -Action Start';
+  });
+}
+
+document.getElementById('copyTokenBtn').onclick = () => {
+ if (!sessionToken || sessionToken === '__TOKEN__') {
+  navigator.clipboard.writeText('токен задается переменной DAI_API_TOKEN');
+ } else {
+  navigator.clipboard.writeText(sessionToken);
+ }
+ const btn = document.getElementById('copyTokenBtn');
+ const orig = btn.innerHTML;
+ btn.innerHTML = '<svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg><span>Скопировано!</span>';
+ setTimeout(() => { btn.innerHTML = orig; }, 2000);
+};
+
+document.getElementById('btnTestHealth').onclick = () => {
+ const out = document.getElementById('testOutput');
+ out.textContent = 'Запрос к /v1/health...';
+ fetch('/v1/health', {cache: 'no-store'})
+  .then(r => r.json())
+  .then(data => {
+   out.textContent = JSON.stringify(data, null, 2);
+  })
+  .catch(err => {
+   out.textContent = 'Ошибка: ' + err.message;
+  });
+};
+
+document.getElementById('btnTestDecide').onclick = () => {
+ const out = document.getElementById('testOutput');
+ out.textContent = 'Запрос к /v1/decide...';
+ const sample = {
+  task: 'test_health_ping',
+  state: { app_owned: true, test_run: true },
+  questions: [
+   { id: 'q1', type: 'choice', text: 'Статус доступен?', choices: ['да', 'нет'] }
+  ]
+ };
+ fetch('/v1/decide', {
+  method: 'POST',
+  headers: {
+   'Content-Type': 'application/json',
+   'Authorization': 'Bearer ' + sessionToken
+  },
+  body: JSON.stringify(sample)
+ })
+  .then(r => r.json())
+  .then(data => {
+   out.textContent = JSON.stringify(data, null, 2);
+  })
+  .catch(err => {
+   out.textContent = 'Ошибка: ' + err.message;
+  });
+};
+
+updateHealth();
+setInterval(updateHealth, 10000);
+</script>
+</body>
+</html>

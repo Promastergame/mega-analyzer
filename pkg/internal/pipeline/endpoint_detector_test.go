@@ -155,7 +155,7 @@ func TestDetect_AuthServer(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			matches := detect(tc.content)
 			expectType(t, matches, tc.host, EndpointTypeAuth)
-			expectCritical(t, matches, tc.host, true)
+			expectCritical(t, matches, tc.host, false)
 		})
 	}
 }
@@ -737,7 +737,7 @@ func TestCategorize(t *testing.T) {
 		{EndpointTypeWebSocket, types.CategoryServerCheck, true},
 		{EndpointTypeMQTT, types.CategoryServerCheck, true},
 		{EndpointTypeGRPC, types.CategoryServerCheck, true},
-		{EndpointTypeAuth, types.CategoryServerCheck, true},
+		{EndpointTypeAuth, types.CategoryServerCheck, false},
 		{EndpointTypeUpdate, types.CategoryServerCheck, false},
 		{EndpointTypeCustomPort, types.CategoryServerCheck, true},
 		{EndpointTypeBackend, types.CategoryNetworkEndpoint, false},

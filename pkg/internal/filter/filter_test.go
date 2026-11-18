@@ -22,8 +22,12 @@ func TestFilter_IsStandardLibrary(t *testing.T) {
 		{"smali/com/myapp/License.smali", false},
 		{"smali/com/myapp/PremiumManager.smali", false},
 
-		// High-value в библиотеке -> НЕ библиотека
-		{"smali/com/android/billingclient/api/Purchase.smali", false},
+		// App-код с high-value остаётся app-кодом.
+		{"smali/com/myapp/billing/PurchaseManager.smali", false},
+
+		// High-value внутри имени вендорного SDK не делает его app-кодом:
+		// "billing"/"purchase" — часть namespace Google Play Billing.
+		{"smali/com/android/billingclient/api/Purchase.smali", true},
 	}
 
 	for _, tt := range tests {

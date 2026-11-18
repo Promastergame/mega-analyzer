@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"mega-analyzer/pkg/internal/parser"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestSmaliStringLiteralsRoundTrip(t *testing.T) {
@@ -45,7 +47,7 @@ func cachedSmaliTestParser(value uint16) *DEXParser {
 }
 
 func TestSmaliCacheInvalidatesChangedBytecode(t *testing.T) {
-	root := t.TempDir()
+	root := testutil.TempDir(t)
 	dir := filepath.Join(root, "smali")
 	e := &Extractor{}
 	for _, value := range []uint16{0x0012, 0x1012, 0x1012} {
@@ -65,7 +67,7 @@ func TestSmaliCacheInvalidatesChangedBytecode(t *testing.T) {
 
 func TestSmaliDecodeCancellationAndPartialFailure(t *testing.T) {
 	for _, cache := range []bool{false, true} {
-		dir := filepath.Join(t.TempDir(), "smali")
+		dir := filepath.Join(testutil.TempDir(t), "smali")
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
 		e := &Extractor{}
@@ -110,7 +112,7 @@ func TestSmaliCacheRejectsForgedRecordLengths(t *testing.T) {
 		binary.LittleEndian.PutUint64(header[4:], lengths[1])
 		data.Write(header[:])
 		data.Write(make([]byte, 4))
-		path := filepath.Join(t.TempDir(), nativeSmaliClassCacheDB)
+		path := filepath.Join(testutil.TempDir(t), nativeSmaliClassCacheDB)
 		if err := os.WriteFile(path, data.Bytes(), 0644); err != nil {
 			t.Fatal(err)
 		}
@@ -122,7 +124,7 @@ func TestSmaliCacheRejectsForgedRecordLengths(t *testing.T) {
 }
 
 func TestSmaliCacheWarmSaveAndPrune(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	h := openSmaliCacheDB(dir)
 	h.Put("dex", "LA;", "first")
 	h.Put("dex", "LB;", "second")
@@ -171,7 +173,7 @@ func TestStreamOwnedProgressCountsEmittedClasses(t *testing.T) {
 }
 
 func TestDecodeCacheIncludesSmaliOptions(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	apk := filepath.Join(dir, "app.apk")
 	if err := os.WriteFile(apk, []byte("same APK bytes"), 0644); err != nil {
 		t.Fatal(err)
@@ -187,10 +189,6 @@ func TestDecodeCacheIncludesSmaliOptions(t *testing.T) {
 	for _, change := range []func(*DecodeOptions){
 		func(o *DecodeOptions) { o.DexBackend = DecompileBackendNative },
 		func(o *DecodeOptions) { o.NoSmaliHeaders = true },
-		func(o *DecodeOptions) { o.SmaliCfg.UseLocals = true },
-		func(o *DecodeOptions) { o.SmaliCfg.APILevel = 28 },
-		func(o *DecodeOptions) { o.SmaliCfg.SequentialLabels = true },
-		func(o *DecodeOptions) { o.SmaliCfg.NoParameterRegisters = true },
 	} {
 		changed := opts
 		change(&changed)

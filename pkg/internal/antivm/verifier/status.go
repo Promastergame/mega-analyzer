@@ -8,6 +8,12 @@ import (
 // worse returns the more severe of two statuses, using the ordering
 // passed < skipped < partial < failed. An empty status is treated as passed.
 func worse(a, b Status) Status {
+	if a == "" {
+		a = StatusPassed
+	}
+	if b == "" {
+		b = StatusPassed
+	}
 	if statusRank(b) > statusRank(a) {
 		return b
 	}
@@ -50,8 +56,5 @@ func valuesMatch(expected, actual string) bool {
 }
 
 func itoa(n int) string {
-	if n == 0 {
-		return ""
-	}
 	return strconv.Itoa(n)
 }

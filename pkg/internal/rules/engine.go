@@ -29,11 +29,12 @@ import (
 // Для Type="combo": Values содержит список значений,
 // которые ищутся ACROSS ALL context types (permissions + api_calls + patterns).
 type Condition struct {
-	Type     string   `json:"type"`               // permission, api_call, pattern, combo, class, method, string
-	Value    string   `json:"value,omitempty"`    // значение для проверки (exact или substring)
-	Values   []string `json:"values,omitempty"`   // для combo — список values
-	Operator string   `json:"operator,omitempty"` // "and" (default), "or", "not"
-	Exact    bool     `json:"exact,omitempty"`    // exact match вместо substring
+	Type      string   `json:"type"`                 // permission, api_call, pattern, combo, class, method, string
+	Value     string   `json:"value,omitempty"`      // значение для проверки (exact или substring)
+	Values    []string `json:"values,omitempty"`     // для combo — список values
+	Operator  string   `json:"operator,omitempty"`   // "and" (default), "or", "not"
+	Exact     bool     `json:"exact,omitempty"`      // exact match
+	MatchMode string   `json:"match_mode,omitempty"` // token (default) or substring; exact overrides neither
 }
 
 // ── Rule ───────────────────────────────────────────────────────────────────
@@ -58,6 +59,9 @@ type Rule struct {
 	References  []string    `json:"references,omitempty"` // CVE, MITRE ATT&CK
 	Tags        []string    `json:"tags,omitempty"`       // для фильтрации
 	Enabled     bool        `json:"enabled"`
+	FindingKind string      `json:"finding_kind,omitempty"`
+	Limitations []string    `json:"limitations,omitempty"`
+	NextChecks  []string    `json:"next_checks,omitempty"`
 
 	// ── Композиция и контекст (rules/v2) ─────────────────────────────────
 	//
@@ -174,11 +178,20 @@ func (r *Rule) Validate() error {
 
 	validTypes := map[string]bool{
 		"permission": true, "api_call": true, "pattern": true,
-		"combo": true, "class": true, "method": true, "string": true,
+		"combo": true, "class": true, "method": true, "string": true, "fact": true,
+	}
+	if r.FindingKind != "" && r.FindingKind != "inventory" && r.FindingKind != "malware" && r.FindingKind != "vulnerability" && r.FindingKind != "hardening" {
+		return fmt.Errorf("rule %q has invalid finding_kind %q", r.ID, r.FindingKind)
 	}
 	for i, cond := range r.Conditions {
 		if !validTypes[cond.Type] {
 			return fmt.Errorf("rule %q condition[%d] has invalid type %q", r.ID, i, cond.Type)
+		}
+		if cond.MatchMode != "" && cond.MatchMode != "token" && cond.MatchMode != "substring" {
+			return fmt.Errorf("rule %q condition[%d] has invalid match_mode %q", r.ID, i, cond.MatchMode)
+		}
+		if cond.Exact && cond.MatchMode != "" {
+			return fmt.Errorf("rule %q condition[%d] cannot combine exact and match_mode", r.ID, i)
 		}
 		if cond.Type == "combo" && len(cond.Values) == 0 {
 			return fmt.Errorf("rule %q condition[%d] type=combo but Values is empty", r.ID, i)
@@ -221,6 +234,10 @@ type ConditionContext struct {
 	Classes     []string
 	Methods     []string
 	Custom      map[string]any
+	// Facts can only be supplied by semantic analysis. Literal text, detector
+	// descriptions and cross-type combo searches cannot manufacture a fact.
+	Facts   map[string]bool
+	Sources map[string]map[string]EvidenceSource
 
 	// Индексы для O(1) lookup (строятся Build()-ом)
 	permSet    map[string]struct{}
@@ -512,6 +529,8 @@ func (e *Engine) evalConditionInner(cond Condition, ctx *ConditionContext) bool 
 		return e.matchInSet(cond, ctx.classSet, ctx.Classes)
 	case "method":
 		return e.matchInSet(cond, ctx.methodSet, ctx.Methods)
+	case "fact":
+		return ctx.Facts[cond.Value]
 	case "combo":
 		return e.checkCombo(cond, ctx)
 	default:
@@ -527,7 +546,7 @@ func (e *Engine) matchInSet(cond Condition, set map[string]struct{}, items []str
 	if cond.Exact {
 		return containsExact(set, cond.Value)
 	}
-	return containsSubstring(items, cond.Value)
+	return containsCondition(items, cond.Value, cond.MatchMode)
 }
 
 // checkCombo проверяет, что все values из combo найдены ACROSS ALL context types.
@@ -548,8 +567,8 @@ func (e *Engine) checkCombo(cond Condition, ctx *ConditionContext) bool {
 				containsExact(ctx.classSet, val) ||
 				containsExact(ctx.methodSet, val)
 		} else {
-			// O(n) substring по объединённому списку
-			found = containsSubstring(ctx.allValues, val)
+			// O(n) token-aware search over the union (see containsToken)
+			found = containsCondition(ctx.allValues, val, cond.MatchMode)
 		}
 		if !found {
 			return false
@@ -725,16 +744,21 @@ func (s EngineStats) String() string {
 // RuleEvaluationResult — результат оценки одного правила.
 // Создаётся EvaluateAll() для каждого сработавшего правила.
 type RuleEvaluationResult struct {
-	RuleID      string
-	RuleName    string
-	Category    string
-	Matched     bool
-	Score       int
-	Severity    string
-	Message     string
-	References  []string
-	Tags        []string
-	MatchedFile string // file where a file-scoped rule fired ("" for global rules)
+	RuleID       string
+	RuleName     string
+	Category     string
+	RuleCategory string // semantic rule category; Category identifies the containing rule set
+	Matched      bool
+	Score        int
+	Severity     string
+	Message      string
+	References   []string
+	Tags         []string
+	MatchedFile  string // file where a file-scoped rule fired ("" for global rules)
+	FindingKind  string
+	Evidence     []ConditionEvidence
+	Limitations  []string
+	NextChecks   []string
 
 	// Confidence — уверенность правила (0..1), независимая от Severity.
 	// Правила без явного значения дают 1.0.

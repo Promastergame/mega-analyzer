@@ -17,7 +17,7 @@ func (r *HTMLReporter) buildFPFilterSection(sb htmlWriter, view HTMLReportView) 
 	fp := r.result.FPFilterResults
 	sb.WriteString(`<section class="section" id="fp-filter">`)
 	sb.WriteString(fmt.Sprintf(`<h2 class="section-title">%s <span>False Positive & Noise Reduction Filter</span></h2>`, icon("filter")))
-	sb.WriteString(`<p class="section-desc">Automated triaging of findings into confirmed risks and suppressed boilerplate SDK noise.</p>`)
+	sb.WriteString(`<p class="section-desc">Source risk signals, observations, findings needing context, and suppressed SDK boilerplate. Static risk signals do not establish runtime execution.</p>`)
 
 	// Stats Row
 	sb.WriteString(`<div class="fp-stats-grid">`)
@@ -25,6 +25,8 @@ func (r *HTMLReporter) buildFPFilterSection(sb htmlWriter, view HTMLReportView) 
 		{"Total Checked", fmt.Sprintf("%d", fp.Stats.TotalFindings), ""},
 		{"App Risks", fmt.Sprintf("%d", fp.Stats.ConfirmedAppRisks), "danger"},
 		{"SDK Risks", fmt.Sprintf("%d", fp.Stats.ConfirmedSDKRisks), "warning"},
+		{"Observations", fmt.Sprintf("%d", fp.Stats.Observations), ""},
+		{"Needs Context", fmt.Sprintf("%d", fp.Stats.NeedsContext), "accent"},
 		{"SDK Interesting", fmt.Sprintf("%d", fp.Stats.SDKInteresting), "accent"},
 		{"SDK Noise Suppressed", fmt.Sprintf("%d", fp.Stats.SuppressedSDKNoise), "success"},
 		{"Generic Suppressed", fmt.Sprintf("%d", fp.Stats.GenericNoiseSuppressed), "success"},

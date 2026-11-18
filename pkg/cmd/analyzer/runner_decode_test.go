@@ -71,7 +71,7 @@ func TestHandleDecodeRejectsInvalidBackendBeforeCreatingOutput(t *testing.T) {
 		output: NewOutputWithWriter(NoColorTheme(), false, &output),
 	}
 	if err := app.handleDecode(); err == nil {
-		t.Fatal("standalone decode must reject the external backend")
+		t.Fatal("decode must reject the retired backend")
 	}
 	if _, err := os.Stat(out); !os.IsNotExist(err) {
 		t.Fatalf("invalid options created output: %v", err)

@@ -19,7 +19,7 @@ func TestUnknownPermissionNotPenalized(t *testing.T) {
 	if rep.UnusedCount != 0 {
 		t.Fatalf("unknown must not count as unused, got %d", rep.UnusedCount)
 	}
-	if rep.Score != 0 || rep.Verdict != "ok" {
+	if rep.Score != 0 || rep.Verdict != "unknown" {
 		t.Errorf("unknown must not affect score, got %d/%s", rep.Score, rep.Verdict)
 	}
 	if rep.Permissions[0].Status != StatusUnknown {
@@ -157,6 +157,9 @@ func TestStructuredSitesAndLimit(t *testing.T) {
 
 func TestRenderJSON(t *testing.T) {
 	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "Main.smali"), []byte(".class public Lexample/Main;\n.super Ljava/lang/Object;\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
 	rep, err := Analyze(dir, []string{"android.permission.CAMERA"})
 	if err != nil {
 		t.Fatal(err)

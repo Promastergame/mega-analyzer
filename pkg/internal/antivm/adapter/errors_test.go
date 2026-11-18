@@ -20,7 +20,7 @@ func TestADBArgumentsAndUnavailableTransport(t *testing.T) {
 		t.Fatal("default device args")
 	}
 	ctx := context.Background()
-	if err := a.Start(ctx); err == nil || !strings.Contains(err.Error(), "wait-for-device") {
+	if err := a.Start(ctx); err == nil || !strings.Contains(err.Error(), "get-state") {
 		t.Fatalf("start=%v", err)
 	}
 	if _, err := a.ReadState(ctx); err == nil || !strings.Contains(err.Error(), "read props") {

@@ -41,6 +41,10 @@ func runSessionDiff(args []string) int {
 		}
 		return 2
 	}
+	if math.IsNaN(*threshold) || math.IsInf(*threshold, 0) || *threshold < 0 || *threshold > 100 {
+		fmt.Fprintln(os.Stderr, "error: --residue-threshold must be a finite number between 0 and 100")
+		return 2
+	}
 
 	bPath, aPath, err := resolveDiffPaths(*sessionDir, *beforePath, *afterPath)
 	if err != nil {
@@ -259,7 +263,29 @@ type residueFinding struct {
 func scanResidue(flat map[string]string) []residueFinding {
 	var out []residueFinding
 	for _, p := range sortedStringKeys(flat) {
-		lv := strings.ToLower(flat[p])
+		value := flat[p]
+		lp := strings.ToLower(p)
+		// File presence and boolean properties encode a signal in their key.
+		// A missing QEMU device or disabled flag must not become a finding.
+		if strings.HasPrefix(lp, "extra.unreadable:") {
+			continue
+		}
+		if strings.HasPrefix(lp, "extra.file:") {
+			if value != "yes" {
+				continue
+			}
+			value = strings.TrimPrefix(lp, "extra.file:")
+		}
+		key := strings.TrimPrefix(lp, "props.")
+		if strings.HasPrefix(key, "init.svc.") && (strings.Contains(key, "goldfish") || strings.Contains(key, "qemud")) && (value == "running" || value == "restarting") {
+			out = append(out, residueFinding{Path: p, Value: flat[p], Indicator: "running emulator service", Severity: 0.85})
+			continue
+		}
+		if (key == "ro.kernel.qemu" || key == "ro.boot.qemu" || key == "ro.hardware.virtual_device") && (value == "1" || strings.EqualFold(value, "true")) {
+			out = append(out, residueFinding{Path: p, Value: flat[p], Indicator: "enabled emulator property", Severity: 0.95})
+			continue
+		}
+		lv := strings.ToLower(value)
 		var best vmIndicator
 		found := false
 		for _, ind := range vmIndicators {
@@ -298,13 +324,13 @@ func verdictFor(scanned bool, score float64) string {
 	}
 	switch {
 	case score == 0:
-		return "CLEAN — no known VM tells in captured state"
+		return "CLEAN — no known VM tells in captured state; app-visible behavior not tested"
 	case score < 30:
 		return "LOW — minor residual tells"
 	case score < 70:
 		return "MODERATE — several VM tells remain"
 	default:
-		return "HIGH — masking likely failed"
+		return "HIGH — VM indicators remain in captured state"
 	}
 }
 

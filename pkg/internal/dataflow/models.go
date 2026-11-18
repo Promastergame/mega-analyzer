@@ -54,11 +54,6 @@ var sourceModels = []sourceModel{
 	{"Landroid/os/Bundle;->getParcelable", LabelIntent | LabelUserInput},
 	{"Landroid/os/Parcel;->readString", LabelIntent | LabelUserInput},
 	{"Landroid/app/Activity;->getIntent", LabelIntent},
-	{"Landroid/net/Uri;->getQueryParameter", LabelIntent | LabelUserInput},
-	{"Landroid/net/Uri;->getPath", LabelIntent | LabelUserInput},
-	{"Landroid/net/Uri;->getLastPathSegment", LabelIntent | LabelUserInput},
-	{"Landroid/net/Uri;->getHost", LabelIntent | LabelUserInput},
-	{"Landroid/net/Uri;->getFragment", LabelIntent | LabelUserInput},
 
 	// Content providers
 	{"Landroid/content/ContentResolver;->openInputStream", LabelFile | LabelNetwork},
@@ -120,7 +115,9 @@ var sinkModels = []sinkModel{
 
 	// Reflection
 	{"Ljava/lang/Class;->forName", 0, LabelIntent | LabelUserInput | LabelNetwork, "dynamic_class_loading", "high", SanitizerNone},
-	{"Ljava/lang/reflect/Method;->invoke", 0, LabelIntent | LabelUserInput | LabelNetwork | LabelFile, "reflection_invocation", "high", SanitizerNone},
+	// Method.invoke(Object receiver, Object[] args): the method selector is
+	// the Method object, not the Object receiver passed as argument zero.
+	{"Ljava/lang/reflect/Method;->invoke", -1, LabelIntent | LabelUserInput | LabelNetwork | LabelFile, "reflection_invocation", "high", SanitizerNone},
 
 	// Path traversal
 	{"Ljava/io/File;-><init>", 0, pathTraversalLabels, "path_traversal", "high", SanitizerPath},
@@ -213,6 +210,13 @@ func sourceFor(signature string) (sourceModel, bool) {
 	return sourceModel{}, false
 }
 
+// Containers do not establish an IPC boundary: an app can fill a Bundle or
+// Parcel itself. Trace their receiver before attributing attacker control.
+func containerReadSource(signature string) bool {
+	return strings.HasPrefix(signature, "Landroid/os/Bundle;->") ||
+		strings.HasPrefix(signature, "Landroid/os/Parcel;->read")
+}
+
 func sinksFor(signature string) []sinkModel {
 	var out []sinkModel
 	for _, model := range sinkModels {
@@ -249,12 +253,17 @@ func isValuePropagator(signature string) bool {
 		"Ljava/lang/StringBuffer;->append", "Ljava/lang/StringBuffer;->toString",
 		"Ljava/lang/Object;->toString",
 		"Landroid/net/Uri;->toString", "Landroid/net/Uri;->parse", "Landroid/net/Uri;->encode",
+		// Reading a component does not make an app-owned URI attacker input.
+		// Propagate the receiver's origin (Intent, network, etc.) instead.
+		"Landroid/net/Uri;->getQueryParameter", "Landroid/net/Uri;->getPath",
+		"Landroid/net/Uri;->getLastPathSegment", "Landroid/net/Uri;->getHost", "Landroid/net/Uri;->getFragment",
 		"Ljava/net/URLEncoder;->encode",
 		"Ljava/io/File;->getCanonicalPath", "Ljava/io/File;->getCanonicalFile",
 		"Ljava/nio/file/Path;->normalize", "Ljava/nio/file/Path;->toRealPath",
 		"Ljava/nio/ByteBuffer;->wrap",
 		"Landroid/util/Base64;->encodeToString", "Landroid/util/Base64;->decode",
 		"Ljava/lang/reflect/Method;->invoke",
+		"Ljava/lang/Class;->forName", "Ljava/lang/Class;->getMethod", "Ljava/lang/Class;->getDeclaredMethod",
 	} {
 		if methodMatches(prefix, signature) {
 			return true

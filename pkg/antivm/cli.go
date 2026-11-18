@@ -66,9 +66,15 @@ Common flags for 'session start':
   --replay <file>     verify against a captured DeviceState JSON
   --dry-run           print the plan without applying
   --strict            any module failure aborts the run
+  --continue-on-failure collect remaining module results after a critical failure
   --module <name>     restrict to a module (repeatable via comma list)
+                      supported: identity, environment, battery, display, sensors
   --sessions <dir>    session artifact root (default "sessions")
   --report <fmt>      json|text|html (default text)
+  --timeout <duration> maximum session duration (default 3m)
+  --hold <duration>   keep the session and sensor playback running after verification
+  --resetprop <path>  root property writer already installed in an explicit AVD
+  --restart-framework restart Android after writes to refresh app-visible Build fields
   --verbose           extra logging
 
 Flags for 'session diff':

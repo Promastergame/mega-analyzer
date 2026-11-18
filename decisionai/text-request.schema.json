@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:mega-analyzer:decisionai:text-request:0.3.0",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "state",
+    "question",
+    "true_when",
+    "false_when"
+  ],
+  "properties": {
+    "state": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32768
+    },
+    "question": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32768
+    },
+    "true_when": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32768
+    },
+    "false_when": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 32768
+    },
+    "id": {
+      "type": "string",
+      "maxLength": 256
+    },
+    "task_id": {
+      "const": "patch_effect_confirmation"
+    },
+    "threshold": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "candidate_code": {
+      "type": "string",
+      "maxLength": 1048576
+    },
+    "checks": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "app_owned": {
+          "type": "boolean"
+        },
+        "library": {
+          "type": "boolean"
+        },
+        "scope": {
+          "enum": [
+            "",
+            "audit",
+            "defensive",
+            "test_fixture"
+          ]
+        },
+        "build": {
+          "enum": [
+            "",
+            "not_run",
+            "pass",
+            "fail"
+          ]
+        },
+        "runtime": {
+          "enum": [
+            "",
+            "not_run",
+            "pass",
+            "fail"
+          ]
+        },
+        "effect_verified": {
+          "type": "boolean"
+        },
+        "server_dependency": {
+          "enum": [
+            "",
+            "unknown",
+            "local_only",
+            "online"
+          ]
+        },
+        "tested_sha256": {
+          "type": "string",
+          "pattern": "^([0-9a-fA-F]{64})?$"
+        }
+      }
+    }
+  }
+}

@@ -119,6 +119,13 @@ func ensureAndroidProfile(report *Report, pkg string) *AndroidProfile {
 
 // runAndroidSandbox runs the APK on a connected Android device or emulator using ADB.
 func runAndroidSandbox(parent context.Context, cfg Config, layout *sessionLayout, report *Report) error {
+	configureAndroidReport(cfg, report)
+	// No Android network guard is implemented yet. Do not turn the guest's
+	// radios on while reporting that the caller's offline request was honored.
+	if cfg.BlockNetwork {
+		return executionError("android_network_isolation_unavailable", "preflight",
+			fmt.Errorf("Android network isolation is not implemented; the APK has not been installed or launched. Connected Android runs require explicit -sandbox-allow-net"))
+	}
 	// logf routes progress messages to the caller's LogSink when set (streaming
 	// web UI path), or falls back to fmt.Printf (CLI / non-streaming path).
 	logf := func(format string, args ...any) {
@@ -131,18 +138,30 @@ func runAndroidSandbox(parent context.Context, cfg Config, layout *sessionLayout
 	}
 
 	adbPath := findADB(report)
+	// Preflight commands must stop with the run, including an interrupted
+	// install or an ADB connection that disappears while configuring the guest.
+	runADB := func(adbPath string, args ...string) (string, error) {
+		return runADBContext(parent, adbPath, args...)
+	}
 
 	// Snapshot host workspace before any execution so diffSnapshots can detect
 	// files written there during the run (e.g. pulled PCAP, logcat, reports).
 	beforeSnap := beforeSnapshot(layout.workspaceDir)
 
 	// 1. Detect active Android device/emulator
-	deviceID, err := getActiveDevice(adbPath)
+	var deviceID string
+	var err error
+	if cfg.AndroidDevice == "" {
+		deviceID, err = getActiveDeviceContext(parent, adbPath)
+	}
 	if cfg.AndroidDevice != "" {
 		// Explicit serial from -sandbox-device: use exactly this handset.
 		// Never substitute another device and never launch an emulator
 		// behind the user's back; a bad selection is a hard error.
-		deviceID, err = requireExplicitDevice(adbPath, cfg.AndroidDevice)
+		deviceID, err = requireExplicitDeviceContext(parent, adbPath, cfg.AndroidDevice)
+		if err != nil {
+			return executionError("android_device_unavailable", "preflight", err)
+		}
 	} else if err != nil {
 		if cfg.AndroidAVD != "" || cfg.AndroidAutoAVD {
 			logf("ℹ No active device found. Attempting to launch emulator...\n")
@@ -211,8 +230,8 @@ func runAndroidSandbox(parent context.Context, cfg Config, layout *sessionLayout
 		_, _ = runADB(adbPath, "-s", deviceID, "reverse", "tcp:"+port, "tcp:"+port)
 	}
 
-	// Force network isolation to be OFF so we act like PCAPdroid (always-on network capturing)
-	logf("ℹ Network isolation is OFF (PCAPdroid Mode): enabling Wi-Fi and Mobile Data on device...\n")
+	// This path is reachable only after the caller explicitly allowed networking.
+	logf("ℹ Network access explicitly allowed: enabling Wi-Fi and Mobile Data on device...\n")
 	_, _ = runADB(adbPath, "-s", deviceID, "shell", "svc", "wifi", "enable")
 	_, _ = runADB(adbPath, "-s", deviceID, "shell", "svc", "data", "enable")
 
@@ -384,9 +403,12 @@ func runAndroidSandbox(parent context.Context, cfg Config, layout *sessionLayout
 		logf("⚠️ Could not launch %s automatically — it is installed; you can open it manually in the live view.\n", packageName)
 	}
 
-	report.Executed = true
+	report.Executed = launched
 	report.ExecutionSkipReason = ""
-	if cfg.OnObserving != nil {
+	if !launched {
+		report.ExecutionSkipReason = "App installed but automatic launch failed; no app process observed."
+	}
+	if launched && cfg.OnObserving != nil {
 		cfg.OnObserving()
 	}
 
@@ -435,10 +457,18 @@ func runAndroidSandbox(parent context.Context, cfg Config, layout *sessionLayout
 	observedPIDs := make(map[int]struct{})
 	var allObservedProcesses []ObservedProcess
 	var allObservedConnections []ObservedConnection
+	connectionWarningRecorded := false
 
 	monitorSample := func() {
 		// Get PIDs for package
 		pids := getAppPIDs(adbPath, deviceID, packageName)
+		if len(pids) > 0 && !report.Executed {
+			report.Executed = true
+			report.ExecutionSkipReason = ""
+			if cfg.OnObserving != nil {
+				cfg.OnObserving()
+			}
+		}
 		for _, pid := range pids {
 			if _, ok := observedPIDs[pid]; !ok {
 				observedPIDs[pid] = struct{}{}
@@ -451,7 +481,14 @@ func runAndroidSandbox(parent context.Context, cfg Config, layout *sessionLayout
 		}
 
 		// Get active connections
-		conns := getAppConnections(adbPath, deviceID, pids)
+		conns, connectionErr := getAppConnections(parent, adbPath, deviceID, pids)
+		if connectionErr != nil && !connectionWarningRecorded {
+			report.Warnings = append(report.Warnings, connectionErr.Error())
+			connectionWarningRecorded = true
+			if cfg.OnActivity != nil {
+				cfg.OnActivity(ActivityEvent{Category: "coverage", Action: "degraded", Details: connectionErr.Error(), Source: "android_netstat", Attribution: "not_applicable"})
+			}
+		}
 		for _, conn := range conns {
 			// Prevent duplicates
 			exists := false
@@ -478,8 +515,10 @@ OuterLoop:
 	for {
 		select {
 		case <-runCtx.Done():
+			report.CompletionReason = "stopped"
 			if errors.Is(runCtx.Err(), context.DeadlineExceeded) {
 				report.TimedOut = true
+				report.CompletionReason = "duration_elapsed"
 			}
 			break OuterLoop
 		case <-ticker.C:
@@ -505,6 +544,36 @@ OuterLoop:
 		_ = logcatCmd.Process.Kill()
 		_ = logcatCmd.Wait()
 	}
+	// Short-lived startup crashes can occur between PID polls. Logcat records
+	// the real process identity and exception even when the process is gone.
+	if logFile, openErr := os.Open(layout.stdoutPath); openErr == nil {
+		crashes, scanErr := readAndroidAppCrashes(logFile, packageName)
+		_ = logFile.Close()
+		if scanErr != nil {
+			report.Warnings = append(report.Warnings, "Android crash log scan: "+scanErr.Error())
+		}
+		for _, crash := range crashes {
+			report.Executed = true // Confirmed by the package-scoped process log.
+			report.ExecutionSkipReason = ""
+			observedAt := time.Now().UTC()
+			message := fmt.Sprintf("Android app %s crashed (PID %d): %s", crash.Process, crash.PID, crash.Detail)
+			report.Warnings = append(report.Warnings, message)
+			report.Behavior.Highlights = append(report.Behavior.Highlights, message)
+			logf("⚠ %s\n", message)
+			if _, seen := observedPIDs[crash.PID]; !seen {
+				observedPIDs[crash.PID] = struct{}{}
+				proc := ObservedProcess{PID: crash.PID, Name: crash.Process, FirstSeen: observedAt}
+				report.Processes = append(report.Processes, proc)
+				if cfg.OnProcess != nil {
+					cfg.OnProcess(proc)
+				}
+			}
+			if cfg.OnActivity != nil {
+				cfg.OnActivity(ActivityEvent{ObservedAt: observedAt, Category: "process", Action: "crashed", PID: crash.PID,
+					Process: crash.Process, Details: crash.Detail, Source: "android_logcat", Attribution: "observed_process"})
+			}
+		}
+	}
 
 	// Stop network captures and pull artifacts to session dir.
 	if tcpdumpCmd != nil && tcpdumpCmd.Process != nil {
@@ -528,14 +597,12 @@ OuterLoop:
 	// Capture brief summary behaviors from connections/processes
 	if len(report.Connections) > 0 {
 		report.Behavior.Highlights = append(report.Behavior.Highlights,
-			fmt.Sprintf("Android app initiated %d dynamic network connections during detention", len(report.Connections)))
+			fmt.Sprintf("Observed %d TCP/UDP sockets owned by Android app processes during the session", len(report.Connections)))
 	}
 	if len(report.Processes) > 0 {
 		report.Behavior.Highlights = append(report.Behavior.Highlights,
 			fmt.Sprintf("Android app executed under PID %d", report.Processes[0].PID))
 	}
-
-	_ = writeReports(report)
 
 	// 8. Cleanup — uninstall the app if the user requested it.
 	if cfg.UninstallAfter {
@@ -553,7 +620,8 @@ OuterLoop:
 		logf("ℹ Removed private server reverse port tcp:%s from device.\n", port)
 	}
 
-	return nil
+	sortReport(report)
+	return writeReports(report)
 }
 
 func beforeSnapshot(root string) map[string]fileFingerprint {
@@ -589,12 +657,35 @@ func findADB(report *Report) string {
 }
 
 func runADB(adbPath string, args ...string) (string, error) {
-	cmd := exec.Command(adbPath, args...)
+	return runADBContext(context.Background(), adbPath, args...)
+}
+
+func runADBContext(parent context.Context, adbPath string, args ...string) (string, error) {
+	// Transfers can take longer than device queries, but no ADB subprocess
+	// should wait indefinitely after a device disconnects.
+	timeout := 15 * time.Second
+	commandArgs := args
+	if len(commandArgs) >= 2 && commandArgs[0] == "-s" {
+		commandArgs = commandArgs[2:]
+	}
+	if len(commandArgs) > 0 {
+		switch commandArgs[0] {
+		case "install", "install-multiple", "push", "pull":
+			timeout = 3 * time.Minute
+		}
+	}
+	ctx, cancel := context.WithTimeout(parent, timeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, adbPath, args...)
+	cmd.WaitDelay = time.Second
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	err := cmd.Run()
 	if err != nil {
+		if ctx.Err() != nil {
+			return "", fmt.Errorf("adb command interrupted: %w", ctx.Err())
+		}
 		return "", fmt.Errorf("%w: %s", err, strings.TrimSpace(stderr.String()))
 	}
 	return strings.TrimSpace(stdout.String()), nil
@@ -625,7 +716,11 @@ func installFailureHint(raw string) string {
 }
 
 func getActiveDevice(adbPath string) (string, error) {
-	out, err := runADB(adbPath, "devices")
+	return getActiveDeviceContext(context.Background(), adbPath)
+}
+
+func getActiveDeviceContext(ctx context.Context, adbPath string) (string, error) {
+	out, err := runADBContext(ctx, adbPath, "devices")
 	if err != nil {
 		return "", err
 	}
@@ -662,7 +757,11 @@ func getActiveDevice(adbPath string) (string, error) {
 // It never substitutes another handset and never launches an emulator:
 // a missing or unusable selection is a hard error, not a silent fallback.
 func requireExplicitDevice(adbPath, serial string) (string, error) {
-	out, err := runADB(adbPath, "devices")
+	return requireExplicitDeviceContext(context.Background(), adbPath, serial)
+}
+
+func requireExplicitDeviceContext(ctx context.Context, adbPath, serial string) (string, error) {
+	out, err := runADBContext(ctx, adbPath, "devices")
 	if err != nil {
 		return "", err
 	}
@@ -813,56 +912,104 @@ func getAppPIDs(adbPath, deviceID, packageName string) []int {
 	return pids
 }
 
-func getAppConnections(adbPath, deviceID string, pids []int) []ObservedConnection {
+func getAppConnections(parent context.Context, adbPath, deviceID string, pids []int) ([]ObservedConnection, error) {
 	if len(pids) == 0 {
-		return nil
+		return nil, nil
 	}
 
-	out, err := runADB(adbPath, "-s", deviceID, "shell", "netstat", "-an")
+	out, err := runADBContext(parent, adbPath, "-s", deviceID, "shell", "netstat", "-anp")
 	if err != nil {
-		return nil
+		return nil, fmt.Errorf("Android socket monitoring unavailable: %w", err)
 	}
+	conns, unattributed := parseAndroidAppConnections(out, pids)
+	if unattributed {
+		return conns, fmt.Errorf("Android socket coverage incomplete: netstat did not expose the owning PID for some device sockets; unattributed sockets were omitted")
+	}
+	return conns, nil
+}
 
+// netstat is device-wide. Only explicit PID ownership can connect a socket to
+// the target app; neither another app's traffic nor a missing PID is evidence.
+func parseAndroidAppConnections(out string, pids []int) ([]ObservedConnection, bool) {
 	pidSet := make(map[int]struct{})
 	for _, pid := range pids {
-		pidSet[pid] = struct{}{}
+		if pid > 0 {
+			pidSet[pid] = struct{}{}
+		}
 	}
 
 	var conns []ObservedConnection
+	unattributed := false
 	lines := strings.Split(out, "\n")
 	for _, line := range lines {
 		line = strings.TrimSpace(line)
 		fields := strings.Fields(line)
-		if len(fields) < 4 {
+		if len(fields) < 5 {
 			continue
 		}
 
 		proto := strings.ToLower(fields[0])
-		if !strings.HasPrefix(proto, "tcp") && !strings.HasPrefix(proto, "udp") {
+		if proto != "tcp" && proto != "tcp6" && proto != "udp" && proto != "udp6" {
 			continue
 		}
 
-		local := fields[3]
-		remote := ""
-		state := ""
-		if len(fields) >= 5 {
-			remote = fields[4]
+		pid := 0
+		for _, field := range fields[5:] {
+			owner, program, found := strings.Cut(field, "/")
+			if !found || program == "" {
+				continue
+			}
+			if candidate, err := strconv.Atoi(owner); err == nil && candidate > 0 {
+				pid = candidate
+				break
+			}
 		}
-		if len(fields) >= 6 {
+		if pid == 0 {
+			unattributed = true
+			continue
+		}
+		if _, owned := pidSet[pid]; !owned {
+			continue
+		}
+		local := fields[3]
+		remote := fields[4]
+		state := ""
+		if len(fields) >= 6 && !strings.Contains(fields[5], "/") && fields[5] != "-" {
 			state = fields[5]
 		}
 
-		// Since netstat on Android might not show the PID unless run as root,
-		// we assign the connection to the app's first PID for clarity
 		conns = append(conns, ObservedConnection{
 			Protocol:   proto,
 			LocalAddr:  local,
 			RemoteAddr: remote,
 			State:      state,
-			PID:        pids[0],
+			PID:        pid,
 		})
 	}
-	return conns
+	return conns, unattributed
+}
+
+func configureAndroidReport(cfg Config, report *Report) {
+	report.ExecutionEnvironment = "android"
+	// These host directories store artifacts, not redirected guest app data.
+	report.RedirectedEnv = RedirectedEnv{}
+	report.SandboxPermissions = SandboxPermissions{
+		NetworkAccess:     "live",
+		CanSpawnProcesses: true,
+		Notes: []string{
+			"Execution takes place on the connected Android device. The analyzer does not provide a device isolation boundary.",
+			"Offline Android execution is unavailable; blocked-network requests are rejected before installation or launch.",
+			"Android process counts, memory use, filesystem access and app data are controlled by the guest OS, not a host Windows Job Object or redirected environment.",
+			"Only TCP/UDP sockets with an owning target-app PID exposed by netstat are counted. Sampling can miss short-lived sockets; zero observations do not prove an absence of network traffic.",
+		},
+	}
+	if cfg.BlockNetwork {
+		report.SandboxPermissions.NetworkAccess = "not_applied"
+	}
+	report.NetworkMode = report.SandboxPermissions.NetworkAccess
+	if report.EffectiveConfig != nil {
+		report.EffectiveConfig.MaxMemoryMB = 0
+	}
 }
 
 // emulatorBootTimeout bounds a cold boot. A cold boot of a fresh AVD on a

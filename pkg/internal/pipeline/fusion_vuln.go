@@ -170,16 +170,16 @@ func runVulnDetectorsFusionIntelligence(res *types.AnalysisResult) *fusion.Repor
 	var extra []fusion.Evidence
 	if critMatches > 0 {
 		extra = append(extra, fusion.Evidence{
-			Factor:       "critical_vulnerabilities",
+			Factor:       "critical_priority_matches",
 			Contribution: 0.35,
-			Detail:       fmt.Sprintf("Found %d critical vulnerability matches across APK files", critMatches),
+			Detail:       fmt.Sprintf("Found %d critical-priority pattern matches across APK files; these are not individually verified vulnerabilities", critMatches),
 		})
 	}
 	if res.MatchesByCategory != nil && res.MatchesByCategory[types.CategoryHardcodedSecret] > 0 {
 		extra = append(extra, fusion.Evidence{
-			Factor:       "secrets_leak",
+			Factor:       "hardcoded_secret_matches",
 			Contribution: 0.30,
-			Detail:       fmt.Sprintf("Found %d hardcoded secret findings", res.MatchesByCategory[types.CategoryHardcodedSecret]),
+			Detail:       fmt.Sprintf("Found %d hardcoded-secret pattern matches; credential validity and use require verification", res.MatchesByCategory[types.CategoryHardcodedSecret]),
 		})
 	}
 	if len(res.Hotspots) >= 5 {

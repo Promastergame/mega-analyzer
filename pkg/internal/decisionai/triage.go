@@ -28,33 +28,45 @@ type Entry struct {
 }
 
 type Report struct {
-	SchemaVersion int     `json:"schema_version"`
-	AdvisoryOnly  bool    `json:"advisory_only"`
-	Status        string  `json:"status"`
-	Total         int     `json:"total_findings"`
-	Selected      int     `json:"selected_findings"`
-	Processed     int     `json:"processed_findings"`
-	Skipped       int     `json:"skipped_findings"`
-	Error         string  `json:"error,omitempty"`
-	Entries       []Entry `json:"entries"`
+	SchemaVersion int                 `json:"schema_version"`
+	AdvisoryOnly  bool                `json:"advisory_only"`
+	Status        string              `json:"status"`
+	Total         int                 `json:"total_findings"`
+	Selected      int                 `json:"selected_findings"`
+	Reviewable    int                 `json:"reviewable_findings"`
+	Observations  int                 `json:"observation_findings"`
+	Processed     int                 `json:"processed_findings"`
+	Skipped       int                 `json:"skipped_findings"`
+	Error         string              `json:"error,omitempty"`
+	InputSHA256   string              `json:"input_sha256"`
+	Entries       []Entry             `json:"entries"`
+	SourceReview  *SourceReviewReport `json:"source_review,omitempty"`
+	CodeReview    *CodeReviewReport   `json:"code_review,omitempty"`
 }
 
 // Triage reads existing evidence only. It never changes a finding, severity,
 // suppression decision, CI verdict or patch. Any service failure stops extra
 // requests and remains visible in the report while the main scan can finish.
 func Triage(ctx context.Context, client *Client, findings []finding.Finding, limit int) Report {
-	r := Report{SchemaVersion: 1, AdvisoryOnly: true, Status: "complete", Total: len(findings), Entries: []Entry{}}
-	ordered := append([]finding.Finding(nil), findings...)
-	sort.SliceStable(ordered, func(i, j int) bool {
-		a, b := ordered[i], ordered[j]
-		if severityRank(a.Severity) != severityRank(b.Severity) {
-			return severityRank(a.Severity) > severityRank(b.Severity)
+	return TriageWithPrior(ctx, client, findings, limit, nil)
+}
+
+// TriageWithPrior reuses advisory responses only when both the finding identity
+// and the exact bounded request state still match. A report refresh can include
+// new sidecar findings without querying unchanged evidence a second time.
+func TriageWithPrior(ctx context.Context, client *Client, findings []finding.Finding, limit int, prior *Report) Report {
+	r := Report{SchemaVersion: 1, AdvisoryOnly: true, Status: "complete", Total: len(findings), InputSHA256: FindingSnapshotSHA256(findings), Entries: []Entry{}}
+	ordered := orderedFindings(findings)
+	eligible := ordered[:0]
+	for _, item := range ordered {
+		if item.Kind == finding.KindInventory || item.Kind == finding.KindHardening {
+			r.Observations++
+			continue
 		}
-		if a.Fingerprint != b.Fingerprint {
-			return a.Fingerprint < b.Fingerprint
-		}
-		return a.ID < b.ID
-	})
+		eligible = append(eligible, item)
+	}
+	ordered = eligible
+	r.Reviewable = len(ordered)
 	if limit < 0 {
 		limit = 0
 	}
@@ -62,18 +74,29 @@ func Triage(ctx context.Context, client *Client, findings []finding.Finding, lim
 		ordered = ordered[:limit]
 	}
 	r.Selected = len(ordered)
+	cached := make(map[string]Entry)
+	if prior != nil && prior.AdvisoryOnly && prior.SchemaVersion == r.SchemaVersion {
+		for _, entry := range prior.Entries {
+			cached[entry.FindingID+"\x00"+entry.Fingerprint+"\x00"+entry.StateSHA256] = entry
+		}
+	}
 	for _, f := range ordered {
+		req, truncated := findingRequest(f)
+		hash := sha256.Sum256(req.State)
+		stateHash := hex.EncodeToString(hash[:])
+		if previous, ok := cached[f.ID+"\x00"+f.Fingerprint+"\x00"+stateHash]; ok {
+			r.Entries = append(r.Entries, previous)
+			continue
+		}
 		if err := ctx.Err(); err != nil {
 			r.Error = err.Error()
 			break
 		}
-		req, truncated := findingRequest(f)
 		response, err := client.Decide(ctx, req)
 		if err != nil {
 			r.Error = err.Error()
 			break
 		}
-		hash := sha256.Sum256(req.State)
 		answer := response.Answers["false_positive"]
 		kind := "model_advisory"
 		if answer.Source == "finding-rule" {
@@ -86,7 +109,7 @@ func Triage(ctx context.Context, client *Client, findings []finding.Finding, lim
 		r.Entries = append(r.Entries, Entry{
 			FindingID: f.ID, Fingerprint: f.Fingerprint, RuleID: f.RuleID, Title: f.Title, Severity: f.Severity,
 			Locations:   append([]finding.Location(nil), f.Locations...),
-			StateSHA256: hex.EncodeToString(hash[:]), ContextTruncated: truncated,
+			StateSHA256: stateHash, ContextTruncated: truncated,
 			AssessmentKind: kind, ReviewRoute: route, Response: response,
 		})
 	}
@@ -94,10 +117,41 @@ func Triage(ctx context.Context, client *Client, findings []finding.Finding, lim
 	r.Skipped = r.Total - r.Processed
 	if r.Error != "" && r.Processed == 0 {
 		r.Status = "unavailable"
-	} else if r.Skipped > 0 {
+	} else if r.Processed < r.Reviewable {
 		r.Status = "partial"
 	}
 	return r
+}
+
+func orderedFindings(findings []finding.Finding) []finding.Finding {
+	ordered := append([]finding.Finding(nil), findings...)
+	sort.SliceStable(ordered, func(i, j int) bool {
+		a, b := ordered[i], ordered[j]
+		if severityRank(a.Severity) != severityRank(b.Severity) {
+			return severityRank(a.Severity) > severityRank(b.Severity)
+		}
+		if a.Fingerprint != b.Fingerprint {
+			return a.Fingerprint < b.Fingerprint
+		}
+		return a.ID < b.ID
+	})
+	return ordered
+}
+
+// FindingSnapshotSHA256 ties an advisory report to all final finding identities
+// and their request states, including findings skipped by the review budget.
+func FindingSnapshotSHA256(findings []finding.Finding) string {
+	hash := sha256.New()
+	encoder := json.NewEncoder(hash)
+	for _, f := range orderedFindings(findings) {
+		req, _ := findingRequest(f)
+		_ = encoder.Encode(struct {
+			ID          string          `json:"id"`
+			Fingerprint string          `json:"fingerprint"`
+			State       json.RawMessage `json:"state"`
+		}{f.ID, f.Fingerprint, req.State})
+	}
+	return hex.EncodeToString(hash.Sum(nil))
 }
 
 func severityRank(s string) int {
@@ -162,6 +216,48 @@ func findingRequest(f finding.Finding) (Request, bool) {
 		evidence = append(evidence, ev)
 	}
 	state["evidence"] = evidence
+	// Supply the source context the scanner actually retained. A namespace is
+	// a library hint, never a guarantee that packaged SDK code is unmodified.
+	if hint, allLibrary := findingLibraryHint(f); hint != "" {
+		state["library_hint"] = clip(hint, 1024)
+		state["library_basis"] = "namespace hint; packaged code may be modified"
+		if allLibrary {
+			state["library"] = true
+		}
+	}
+	steps := make([]finding.Step, 0, min(len(f.Steps), 16))
+	for i, step := range f.Steps {
+		if i == 16 {
+			truncated = true
+			break
+		}
+		step.File, step.Method, step.Type = clip(step.File, 1024), clip(step.Method, 1024), clip(step.Type, 128)
+		steps = append(steps, step)
+	}
+	if len(steps) > 0 {
+		state["steps"] = steps
+	}
+	if sink := findingStaticSink(f); sink != "" {
+		state["sink"] = clip(sink, 1024)
+		state["sink_basis"] = "retained static source-to-sink path; execution is not established"
+	}
+	if f.Explanation != nil {
+		ex := *f.Explanation
+		ex.Status, ex.Summary = clip(ex.Status, 64), clip(ex.Summary, 4096)
+		boundList := func(values []string) []string {
+			out := make([]string, 0, min(len(values), 16))
+			for i, value := range values {
+				if i == 16 {
+					truncated = true
+					break
+				}
+				out = append(out, clip(value, 1024))
+			}
+			return out
+		}
+		ex.Conditions, ex.Limitations, ex.NextChecks = boundList(ex.Conditions), boundList(ex.Limitations), boundList(ex.NextChecks)
+		state["explanation"] = ex
+	}
 	state["context_truncated"] = truncated
 	b, _ := json.Marshal(state) // only finite numbers and JSON-safe values above
 	return Request{State: b, Questions: map[string]Question{
@@ -177,10 +273,16 @@ func findingRequest(f finding.Finding) (Request, bool) {
 // web artifact browser. Model text is never treated as HTML or executable code.
 func (r Report) Text() string {
 	var b strings.Builder
-	fmt.Fprintf(&b, "DecisionAI — дополнительный разбор находок\nСтатус: %s. Обработано: %d/%d. Пропущено: %d.\n\n", r.Status, r.Processed, r.Total, r.Skipped)
-	b.WriteString("Все ответы — рекомендации для проверки. Находки, severity и CI-вердикт не изменены.\nscanner_rule_advisory пересчитывает свидетельства сканера и не является независимым подтверждением.\nЧисло noul — оценка DecisionAI; её точность на ваших APK не измерена.\n\n")
+	fmt.Fprintf(&b, "DecisionAI — дополнительный разбор находок\nСтатус: %s. Обработано рисков: %d/%d. Всего находок: %d. Без дополнительного разбора: %d.\nНаблюдения и защиты: %d (сохранены в основном отчёте).\n\n", r.Status, r.Processed, r.Reviewable, r.Total, r.Skipped, r.Observations)
+	b.WriteString("Все ответы — рекомендации для проверки. Находки, severity и CI-вердикт не изменены.\nscanner_rule_advisory пересчитывает свидетельства сканера и не является независимым подтверждением.\nЧисло noul — оценка DecisionAI; её точность на ваших APK не измерена. При abstained число не является оценкой ложного срабатывания.\n\n")
 	if r.Error != "" {
 		fmt.Fprintf(&b, "Ошибка сервиса: %s\n\n", r.Error)
+	}
+	if r.SourceReview != nil {
+		b.WriteString(r.SourceReview.Text())
+	}
+	if r.CodeReview != nil {
+		b.WriteString(r.CodeReview.Text())
 	}
 	for _, entry := range r.Entries {
 		a := entry.Response.Answers["false_positive"]
@@ -189,7 +291,9 @@ func (r Report) Text() string {
 			fmt.Fprintf(&b, "  %s:%d\n", loc.File, loc.Line)
 		}
 		fmt.Fprintf(&b, "Источник: %s (%s); версия %s; модель %s\n", a.Source, entry.AssessmentKind, entry.Response.Version, entry.Response.Model)
-		if a.Noul != nil {
+		if a.Abstained {
+			b.WriteString("Оценка ложного срабатывания недоступна: разбор отказался от оценки.\n")
+		} else if a.Noul != nil {
 			fmt.Fprintf(&b, "Оценка ложного срабатывания: %.4f\n", *a.Noul)
 		}
 		if a.Abstained {

@@ -1,0 +1,42 @@
+{"group": "design", "state": "агент верстает как из 2010, нужен скилл посовременнее", "accept": ["frontend-design"]}
+{"group": "design", "state": "кнопки и карточки выглядят дешево, прокачай стиль", "accept": ["frontend-design"]}
+{"group": "design", "state": "нужна обложка для подкаста png", "accept": ["canvas-design", "artifact-design", "image-generation"]}
+{"group": "design", "state": "приведи отчёт к нашим корпоративным цветам", "accept": ["brand-guidelines"]}
+{"group": "office", "state": "конвертируй таблицу в xlsx и раскрась заголовки", "accept": ["xlsx"]}
+{"group": "office", "state": "сделай 3 слайда с итогами квартала", "accept": ["pptx"]}
+{"group": "office", "state": "добавь комментарии в docx договор", "accept": ["docx"]}
+{"group": "office", "state": "достань текст из отсканированного договора", "accept": ["pdf"]}
+{"group": "writing", "state": "статья слишком канцелярская и пахнет gpt, оживи", "accept": ["humanizer"]}
+{"group": "writing", "state": "переведи README на китайский", "accept": ["translator"]}
+{"group": "writing", "state": "напиши follow-up клиенту после демо", "accept": ["email-writer"]}
+{"group": "writing", "state": "протокол вчерашней планерки с задачами", "accept": ["meeting-notes"]}
+{"group": "writing", "state": "напиши пост для сотрудников об инциденте с сервером", "accept": ["internal-comms"]}
+{"group": "writing", "state": "мой агент плохо слушается системной инструкции", "accept": ["prompt-engineering"]}
+{"group": "code", "state": "segfault после обновления библиотеки, разберись", "accept": ["systematic-debugging"]}
+{"group": "code", "state": "оставь замечания к моему коммиту как ревьюер", "accept": ["code-review"]}
+{"group": "code", "state": "сквошни последние три коммита", "accept": ["git-commit"]}
+{"group": "code", "state": "explain this slow postgres query plan", "accept": ["sql-expert"]}
+{"group": "code", "state": "проверь конфиги на открытые секреты", "accept": ["security-audit"]}
+{"group": "code", "state": "подними сервис в docker compose", "accept": ["docker-deploy"]}
+{"group": "code", "state": "обёртка mcp для нашего crm", "accept": ["mcp-builder"]}
+{"group": "code", "state": "в apk поменяй таймер с 30 на 5 секунд", "accept": ["apk-reverse"]}
+{"group": "web", "state": "залогинься на сайте и скачай счёт", "accept": ["agent-browser"]}
+{"group": "web", "state": "что нового вышло у anthropic на этой неделе", "accept": ["web-search"]}
+{"group": "web", "state": "проверь что форма регистрации работает в моем локальном приложении", "accept": ["webapp-testing"]}
+{"group": "data", "state": "какие клиенты приносят больше всего выручки, разбей по сегментам", "accept": ["data-analysis"]}
+{"group": "data", "state": "линейный график посещаемости по дням", "accept": ["inline-charts"]}
+{"group": "media", "state": "нарисуй аватарку в стиле аниме", "accept": ["image-generation"]}
+{"group": "media", "state": "гифка с танцующим котом для слака", "accept": ["slack-gif-creator"]}
+{"group": "media", "state": "рендер mp4 с анимированными титрами", "accept": ["video-remotion"]}
+{"group": "media", "state": "сделай генеративный узор частицами в p5", "accept": ["algorithmic-art"]}
+{"group": "meta", "state": "скилл не подхватывается агентом, поправь frontmatter", "accept": ["skill-creator"]}
+{"group": "other", "state": "сколько стоит биткоин", "accept": ["other"]}
+{"group": "other", "state": "поставь будильник на 7", "accept": ["other"]}
+{"group": "other", "state": "что такое любовь", "accept": ["other"]}
+{"group": "other", "state": "переведи 500 рублей маме", "accept": ["other"]}
+{"group": "multi", "state": "проанализируй продажи и построй график", "accept": ["data-analysis", "inline-charts"], "plan": ["data-analysis", "inline-charts"]}
+{"group": "multi", "state": "найди свежие новости про ИИ и сделай из них презентацию", "accept": ["web-search", "pptx"], "plan": ["web-search", "pptx"]}
+{"group": "multi", "state": "переведи статью на английский, а потом убери следы нейросети", "accept": ["translator", "humanizer"], "plan": ["translator", "humanizer"]}
+{"group": "multi", "state": "найди баг, потом напиши коммит с фиксом", "accept": ["systematic-debugging", "git-commit"], "plan": ["systematic-debugging", "git-commit"]}
+{"group": "multi", "state": "сделай лендинг и протестируй его в браузере через playwright", "accept": ["frontend-design", "webapp-testing"], "plan": ["frontend-design", "webapp-testing"]}
+{"group": "multi", "state": "выжимка созвона и письмо участникам с итогами", "accept": ["meeting-notes", "email-writer"], "plan": ["meeting-notes", "email-writer"]}

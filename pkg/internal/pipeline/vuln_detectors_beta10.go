@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"strings"
 
+	"mega-analyzer/pkg/internal/finding"
 	"mega-analyzer/pkg/internal/types"
 )
 
-// VulnModMenuInjectionDetector flags injected game "mod-menu" / runtime hooking
-// native libraries. These are not part of the original app: they are added by
-// repackers to hook and patch game logic in memory (cheats/god-mode/free
-// purchases). Their presence is strong evidence of a tampered ("mod"/"cracked")
-// build and is itself a code-injection risk (CWE-506 Embedded Malicious Code).
+// VulnModMenuInjectionDetector records mod-menu and hooking-engine identifiers.
+// A string match does not establish the library's origin or runtime use;
+// packers and legitimate instrumentation can embed the same hooking engines.
 type VulnModMenuInjectionDetector struct{}
 
 func NewVulnModMenuInjectionDetector() *VulnModMenuInjectionDetector {
@@ -28,8 +27,7 @@ func (d *VulnModMenuInjectionDetector) SupportsFile(fileType types.FileType, pat
 	return strings.HasSuffix(strings.ToLower(path), ".so")
 }
 
-// modMenuSignatures — high-signal, low-false-positive markers of injected
-// mod-menu / inline-hook engines. All lowercase (matched against ContentLower).
+// modMenuSignatures are mod-menu / inline-hook identifiers, all lowercase.
 var modMenuSignatures = []struct {
 	needle string
 	label  string
@@ -54,7 +52,6 @@ func (d *VulnModMenuInjectionDetector) Detect(ctx *FileDetectContext, analysis *
 		return
 	}
 	var labels []string
-	hookEngine := false
 	firstIdx := -1
 	for _, sig := range modMenuSignatures {
 		idx := bytes.Index(c, []byte(sig.needle))
@@ -62,9 +59,6 @@ func (d *VulnModMenuInjectionDetector) Detect(ctx *FileDetectContext, analysis *
 			continue
 		}
 		labels = append(labels, sig.label)
-		if strings.Contains(sig.needle, "hook") {
-			hookEngine = true
-		}
 		if firstIdx < 0 || idx < firstIdx {
 			firstIdx = idx
 		}
@@ -75,15 +69,18 @@ func (d *VulnModMenuInjectionDetector) Detect(ctx *FileDetectContext, analysis *
 	if firstIdx < 0 {
 		firstIdx = 0
 	}
-	hookNote := ""
-	if hookEngine {
-		hookNote = " An inline function-hooking engine is embedded, so game/app logic is patched in process memory at runtime."
-	}
 	m := newMatch(
 		types.CategoryModMenuInjection, analysis.Path, lineAt(ctx.LineOffsets, firstIdx),
-		fmt.Sprintf("Injected mod-menu / runtime hooking native library detected: %s. This native code is not part of the original app and indicates a repacked/tampered (\"mod\"/\"cracked\") build.%s Injected code runs with full app privileges and can enable cheats, bypass purchase/license checks, exfiltrate data or load further payloads (CWE-506).", strings.Join(labels, ", "), hookNote),
+		fmt.Sprintf("Native mod-menu or hooking-engine identifiers matched: %s. This static match requires source and call-path review to determine how the library is used.", strings.Join(labels, ", ")),
 		"mod_menu_native", true,
 	)
 	m.Severity = types.SeverityHigh
+	m.EvidenceType = "string_match"
+	m.ResolvedContext = strings.Join(labels, ", ")
+	m.Explanation = &finding.Explanation{
+		Status: "observation", Summary: m.Context,
+		Limitations: []string{"Matching identifiers do not establish injected origin, tampering, malicious behavior or execution. Packers and legitimate instrumentation can include hooking engines."},
+		NextChecks:  []string{"Inspect native call sites and compare library hashes with the original build; use runtime traces only when available from an isolated analysis environment."},
+	}
 	analysis.Matches = append(analysis.Matches, m)
 }

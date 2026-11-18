@@ -48,6 +48,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
+	"mega-analyzer/pkg/internal/finding"
 	"strings"
 
 	"mega-analyzer/pkg/internal/apkloader/axml"
@@ -284,11 +285,15 @@ func (d *VulnManifestDetector) bridgeApplicationFlags(report *manifestaudit.Repo
 		m := newMatch(
 			types.CategoryInsecureBackup, analysis.Path,
 			line,
-			"android:allowBackup=\"true\" — private app data can be extracted or restored via adb backup (CWE-312/530)",
+			"android:allowBackup=\"true\" — application backup is enabled; extraction depends on Android version and backup rules",
 			`allowBackup="true"`,
 			false,
 		)
-		m.Severity = types.SeverityMedium
+		m.Severity = types.SeverityInfo
+		m.Metadata = map[string]string{"finding_kind": "inventory", "rule_id": "manifest.backup_enabled", "title": "Application backup enabled"}
+		m.Explanation = &finding.Explanation{Status: "observation", Summary: "The manifest enables application backup.",
+			Limitations: []string{"This declaration does not prove extraction of private data. Device Android version, target SDK, backup exclusions, dataExtractionRules and user authorization determine actual exposure."},
+			NextChecks:  []string{"Inspect the effective backup rules and sensitive data stored in included locations."}}
 		analysis.Matches = append(analysis.Matches, m)
 	}
 }
@@ -403,7 +408,7 @@ func (d *VulnManifestDetector) bridgeExportedComponents(report *manifestaudit.Re
 				line,
 				fmt.Sprintf("<%s> %s exported=\"true\" without android:permission — reachable and invocable by any app (CWE-926)", tagName, ec.Name),
 				fmt.Sprintf("exported %s without permission", tagName),
-				true,
+				ec.Kind == manifestaudit.KindProvider,
 			))
 
 		case ec.ExportedDeclared == nil && ec.HasIntentFilter:
@@ -424,7 +429,7 @@ func (d *VulnManifestDetector) bridgeExportedComponents(report *manifestaudit.Re
 					line,
 					fmt.Sprintf("<%s> %s has an intent-filter without android:exported — implicitly EXPORTED on targetSdk < 31: any app can invoke it (CWE-926)", tagName, ec.Name),
 					fmt.Sprintf("implicitly exported %s (intent-filter, no exported attribute)", tagName),
-					true,
+					ec.Kind == manifestaudit.KindProvider,
 				))
 			}
 
@@ -508,11 +513,20 @@ func (d *VulnManifestDetector) bridgeStrandHogg(report *manifestaudit.Report, su
 // exempt — without a host they are merely broad, and verified app links gate
 // them on domain ownership (audit B8).
 
+// Standard Android intent schemes are designed for sharing and are not app-specific deep links.
+func isCommonIntentScheme(scheme string) bool {
+	switch strings.ToLower(scheme) {
+	case "", "http", "https", "content", "file", "mailto", "tel", "sms", "smsto", "mms", "mmsto", "geo":
+		return true
+	}
+	return false
+}
+
 func (d *VulnManifestDetector) bridgeHostlessDeepLinks(report *manifestaudit.Report, supp *manifestBridgeSupplements, ctx *FileDetectContext, analysis *types.FileAnalysis) {
 	seen := make(map[string]bool, 4)
 	for _, ec := range report.ExportedComponents {
 		for _, dl := range ec.DeepLinks {
-			if dl.Scheme == "" || dl.Scheme == "http" || dl.Scheme == "https" {
+			if isCommonIntentScheme(dl.Scheme) {
 				continue
 			}
 			if dl.Host != "" {

@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"mega-analyzer/pkg/internal/apkloader/axml"
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 // TestStandaloneEditCycle proves the full no-external-tools loop: decode a
@@ -20,7 +21,7 @@ func TestStandaloneEditCycle(t *testing.T) {
 	SetStandalone(true)
 	defer SetStandalone(oldStandalone)
 
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	dex, _, err := AssembleSmaliText("A.smali", `.class public Lcom/e2/A;
 .super Ljava/lang/Object;
 .field public static final LEVEL:I = 1

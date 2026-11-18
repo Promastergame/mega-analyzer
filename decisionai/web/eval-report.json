@@ -1,0 +1,2474 @@
+{
+ "version": "semai 0.6.0 · smalirole 0.5.0",
+ "generated": "2026-10-04T19:00:52Z",
+ "suites": [
+  {
+   "name": "events · synthetic, known verbs (per step)",
+   "note": "each story step: plus / minus / none / init",
+   "n": 5050,
+   "answered": 5050,
+   "accuracy": 0.976,
+   "accuracy_all": 0.976,
+   "macro_f1": 0.9791,
+   "nll": 0.0974,
+   "brier": 0.0392,
+   "ece": 0.0155,
+   "aurc": 0.0015,
+   "coverage_at_95": 1,
+   "coverage_at_99": 0.9523,
+   "reliability": [
+    {
+     "Lo": 0,
+     "Hi": 0.1,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.1,
+     "Hi": 0.2,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.2,
+     "Hi": 0.3,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.3,
+     "Hi": 0.4,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.4,
+     "Hi": 0.5,
+     "N": 4,
+     "mean_conf": 0.4647,
+     "accuracy": 0.5
+    },
+    {
+     "Lo": 0.5,
+     "Hi": 0.6,
+     "N": 20,
+     "mean_conf": 0.5464,
+     "accuracy": 0.3
+    },
+    {
+     "Lo": 0.6,
+     "Hi": 0.7,
+     "N": 23,
+     "mean_conf": 0.655,
+     "accuracy": 0.6087
+    },
+    {
+     "Lo": 0.7,
+     "Hi": 0.8,
+     "N": 35,
+     "mean_conf": 0.7499,
+     "accuracy": 0.6286
+    },
+    {
+     "Lo": 0.8,
+     "Hi": 0.9,
+     "N": 52,
+     "mean_conf": 0.859,
+     "accuracy": 0.7308
+    },
+    {
+     "Lo": 0.9,
+     "Hi": 1,
+     "N": 4916,
+     "mean_conf": 0.9984,
+     "accuracy": 0.986
+    }
+   ],
+   "selective": [
+    {
+     "threshold": 0,
+     "coverage": 1,
+     "accuracy": 0.976,
+     "n": 5050
+    },
+    {
+     "threshold": 0.5,
+     "coverage": 0.9992,
+     "accuracy": 0.9764,
+     "n": 5046
+    },
+    {
+     "threshold": 0.6,
+     "coverage": 0.9952,
+     "accuracy": 0.9791,
+     "n": 5026
+    },
+    {
+     "threshold": 0.7,
+     "coverage": 0.9907,
+     "accuracy": 0.9808,
+     "n": 5003
+    },
+    {
+     "threshold": 0.8,
+     "coverage": 0.9838,
+     "accuracy": 0.9833,
+     "n": 4968
+    },
+    {
+     "threshold": 0.9,
+     "coverage": 0.9735,
+     "accuracy": 0.986,
+     "n": 4916
+    },
+    {
+     "threshold": 0.95,
+     "coverage": 0.964,
+     "accuracy": 0.9879,
+     "n": 4868
+    },
+    {
+     "threshold": 0.99,
+     "coverage": 0.9376,
+     "accuracy": 0.993,
+     "n": 4735
+    }
+   ],
+   "top_confusions": [
+    "none → minus: 35",
+    "minus → none: 23",
+    "none → plus: 23",
+    "minus → plus: 20",
+    "plus → none: 16"
+   ]
+  },
+  {
+   "name": "events · synthetic, known verbs (answers)",
+   "note": "final yes/no/number after exact arithmetic over the GNN's step distribution",
+   "n": 1500,
+   "answered": 1500,
+   "accuracy": 0.9907,
+   "accuracy_all": 0.9907,
+   "brier": 0.008,
+   "ece": 0.0162,
+   "aurc": 0.0001,
+   "coverage_at_95": 1,
+   "coverage_at_99": 1,
+   "reliability": [
+    {
+     "Lo": 0,
+     "Hi": 0.1,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.1,
+     "Hi": 0.2,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.2,
+     "Hi": 0.3,
+     "N": 1,
+     "mean_conf": 0.288,
+     "accuracy": 1
+    },
+    {
+     "Lo": 0.3,
+     "Hi": 0.4,
+     "N": 1,
+     "mean_conf": 0.311,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.4,
+     "Hi": 0.5,
+     "N": 1,
+     "mean_conf": 0.401,
+     "accuracy": 1
+    },
+    {
+     "Lo": 0.5,
+     "Hi": 0.6,
+     "N": 9,
+     "mean_conf": 0.5456,
+     "accuracy": 0.3333
+    },
+    {
+     "Lo": 0.6,
+     "Hi": 0.7,
+     "N": 20,
+     "mean_conf": 0.6594,
+     "accuracy": 0.8
+    },
+    {
+     "Lo": 0.7,
+     "Hi": 0.8,
+     "N": 33,
+     "mean_conf": 0.752,
+     "accuracy": 0.9394
+    },
+    {
+     "Lo": 0.8,
+     "Hi": 0.9,
+     "N": 34,
+     "mean_conf": 0.8523,
+     "accuracy": 0.9706
+    },
+    {
+     "Lo": 0.9,
+     "Hi": 1,
+     "N": 1401,
+     "mean_conf": 0.9945,
+     "accuracy": 1
+    }
+   ],
+   "selective": [
+    {
+     "threshold": 0,
+     "coverage": 1,
+     "accuracy": 0.9907,
+     "n": 1500
+    },
+    {
+     "threshold": 0.5,
+     "coverage": 0.998,
+     "accuracy": 0.9913,
+     "n": 1497
+    },
+    {
+     "threshold": 0.6,
+     "coverage": 0.992,
+     "accuracy": 0.9953,
+     "n": 1488
+    },
+    {
+     "threshold": 0.7,
+     "coverage": 0.9787,
+     "accuracy": 0.998,
+     "n": 1468
+    },
+    {
+     "threshold": 0.8,
+     "coverage": 0.9567,
+     "accuracy": 0.9993,
+     "n": 1435
+    },
+    {
+     "threshold": 0.9,
+     "coverage": 0.934,
+     "accuracy": 1,
+     "n": 1401
+    },
+    {
+     "threshold": 0.95,
+     "coverage": 0.9067,
+     "accuracy": 1,
+     "n": 1360
+    },
+    {
+     "threshold": 0.99,
+     "coverage": 0.814,
+     "accuracy": 1,
+     "n": 1221
+    }
+   ]
+  },
+  {
+   "name": "events · synthetic, unseen verbs (per step)",
+   "note": "shipped model saw these verbs too (see experiment runs for true unseen-verb numbers)",
+   "n": 5138,
+   "answered": 5138,
+   "accuracy": 0.9778,
+   "accuracy_all": 0.9778,
+   "macro_f1": 0.9807,
+   "nll": 0.0857,
+   "brier": 0.0364,
+   "ece": 0.0138,
+   "aurc": 0.0012,
+   "coverage_at_95": 1,
+   "coverage_at_99": 0.9642,
+   "reliability": [
+    {
+     "Lo": 0,
+     "Hi": 0.1,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.1,
+     "Hi": 0.2,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.2,
+     "Hi": 0.3,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.3,
+     "Hi": 0.4,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.4,
+     "Hi": 0.5,
+     "N": 4,
+     "mean_conf": 0.4555,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.5,
+     "Hi": 0.6,
+     "N": 26,
+     "mean_conf": 0.5582,
+     "accuracy": 0.5385
+    },
+    {
+     "Lo": 0.6,
+     "Hi": 0.7,
+     "N": 18,
+     "mean_conf": 0.6474,
+     "accuracy": 0.6111
+    },
+    {
+     "Lo": 0.7,
+     "Hi": 0.8,
+     "N": 37,
+     "mean_conf": 0.755,
+     "accuracy": 0.6216
+    },
+    {
+     "Lo": 0.8,
+     "Hi": 0.9,
+     "N": 44,
+     "mean_conf": 0.8615,
+     "accuracy": 0.7273
+    },
+    {
+     "Lo": 0.9,
+     "Hi": 1,
+     "N": 5009,
+     "mean_conf": 0.9985,
+     "accuracy": 0.987
+    }
+   ],
+   "selective": [
+    {
+     "threshold": 0,
+     "coverage": 1,
+     "accuracy": 0.9778,
+     "n": 5138
+    },
+    {
+     "threshold": 0.5,
+     "coverage": 0.9992,
+     "accuracy": 0.9786,
+     "n": 5134
+    },
+    {
+     "threshold": 0.6,
+     "coverage": 0.9942,
+     "accuracy": 0.9808,
+     "n": 5108
+    },
+    {
+     "threshold": 0.7,
+     "coverage": 0.9907,
+     "accuracy": 0.9821,
+     "n": 5090
+    },
+    {
+     "threshold": 0.8,
+     "coverage": 0.9835,
+     "accuracy": 0.9848,
+     "n": 5053
+    },
+    {
+     "threshold": 0.9,
+     "coverage": 0.9749,
+     "accuracy": 0.987,
+     "n": 5009
+    },
+    {
+     "threshold": 0.95,
+     "coverage": 0.9659,
+     "accuracy": 0.9893,
+     "n": 4963
+    },
+    {
+     "threshold": 0.99,
+     "coverage": 0.9383,
+     "accuracy": 0.9929,
+     "n": 4821
+    }
+   ],
+   "top_confusions": [
+    "none → minus: 34",
+    "minus → none: 26",
+    "none → plus: 20",
+    "plus → none: 16",
+    "minus → plus: 11"
+   ]
+  },
+  {
+   "name": "events · synthetic, unseen verbs (answers)",
+   "note": "shipped model saw these verbs too",
+   "n": 1500,
+   "answered": 1500,
+   "accuracy": 0.9873,
+   "accuracy_all": 0.9873,
+   "brier": 0.0104,
+   "ece": 0.0135,
+   "aurc": 0.0003,
+   "coverage_at_95": 1,
+   "coverage_at_99": 0.9927,
+   "reliability": [
+    {
+     "Lo": 0,
+     "Hi": 0.1,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.1,
+     "Hi": 0.2,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.2,
+     "Hi": 0.3,
+     "N": 1,
+     "mean_conf": 0.251,
+     "accuracy": 1
+    },
+    {
+     "Lo": 0.3,
+     "Hi": 0.4,
+     "N": 2,
+     "mean_conf": 0.365,
+     "accuracy": 0.5
+    },
+    {
+     "Lo": 0.4,
+     "Hi": 0.5,
+     "N": 5,
+     "mean_conf": 0.458,
+     "accuracy": 0.6
+    },
+    {
+     "Lo": 0.5,
+     "Hi": 0.6,
+     "N": 14,
+     "mean_conf": 0.5573,
+     "accuracy": 0.5714
+    },
+    {
+     "Lo": 0.6,
+     "Hi": 0.7,
+     "N": 25,
+     "mean_conf": 0.655,
+     "accuracy": 0.84
+    },
+    {
+     "Lo": 0.7,
+     "Hi": 0.8,
+     "N": 24,
+     "mean_conf": 0.7396,
+     "accuracy": 0.8333
+    },
+    {
+     "Lo": 0.8,
+     "Hi": 0.9,
+     "N": 33,
+     "mean_conf": 0.8543,
+     "accuracy": 0.9394
+    },
+    {
+     "Lo": 0.9,
+     "Hi": 1,
+     "N": 1396,
+     "mean_conf": 0.9938,
+     "accuracy": 1
+    }
+   ],
+   "selective": [
+    {
+     "threshold": 0,
+     "coverage": 1,
+     "accuracy": 0.9873,
+     "n": 1500
+    },
+    {
+     "threshold": 0.5,
+     "coverage": 0.9947,
+     "accuracy": 0.9893,
+     "n": 1492
+    },
+    {
+     "threshold": 0.6,
+     "coverage": 0.9853,
+     "accuracy": 0.9932,
+     "n": 1478
+    },
+    {
+     "threshold": 0.7,
+     "coverage": 0.9687,
+     "accuracy": 0.9959,
+     "n": 1453
+    },
+    {
+     "threshold": 0.8,
+     "coverage": 0.9527,
+     "accuracy": 0.9986,
+     "n": 1429
+    },
+    {
+     "threshold": 0.9,
+     "coverage": 0.9307,
+     "accuracy": 1,
+     "n": 1396
+    },
+    {
+     "threshold": 0.95,
+     "coverage": 0.8953,
+     "accuracy": 1,
+     "n": 1343
+    },
+    {
+     "threshold": 0.99,
+     "coverage": 0.7973,
+     "accuracy": 1,
+     "n": 1196
+    }
+   ]
+  },
+  {
+   "name": "events · human dev",
+   "note": "hand-written; used while fixing the generator",
+   "n": 40,
+   "answered": 40,
+   "accuracy": 1,
+   "accuracy_all": 1,
+   "brier": 0.018,
+   "ece": 0.0796,
+   "aurc": 0,
+   "coverage_at_95": 1,
+   "coverage_at_99": 1,
+   "reliability": [
+    {
+     "Lo": 0,
+     "Hi": 0.1,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.1,
+     "Hi": 0.2,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.2,
+     "Hi": 0.3,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.3,
+     "Hi": 0.4,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.4,
+     "Hi": 0.5,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.5,
+     "Hi": 0.6,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.6,
+     "Hi": 0.7,
+     "N": 2,
+     "mean_conf": 0.648,
+     "accuracy": 1
+    },
+    {
+     "Lo": 0.7,
+     "Hi": 0.8,
+     "N": 5,
+     "mean_conf": 0.7418,
+     "accuracy": 1
+    },
+    {
+     "Lo": 0.8,
+     "Hi": 0.9,
+     "N": 4,
+     "mean_conf": 0.8438,
+     "accuracy": 1
+    },
+    {
+     "Lo": 0.9,
+     "Hi": 1,
+     "N": 29,
+     "mean_conf": 0.9806,
+     "accuracy": 1
+    }
+   ],
+   "selective": [
+    {
+     "threshold": 0,
+     "coverage": 1,
+     "accuracy": 1,
+     "n": 40
+    },
+    {
+     "threshold": 0.5,
+     "coverage": 1,
+     "accuracy": 1,
+     "n": 40
+    },
+    {
+     "threshold": 0.6,
+     "coverage": 1,
+     "accuracy": 1,
+     "n": 40
+    },
+    {
+     "threshold": 0.7,
+     "coverage": 0.95,
+     "accuracy": 1,
+     "n": 38
+    },
+    {
+     "threshold": 0.8,
+     "coverage": 0.825,
+     "accuracy": 1,
+     "n": 33
+    },
+    {
+     "threshold": 0.9,
+     "coverage": 0.725,
+     "accuracy": 1,
+     "n": 29
+    },
+    {
+     "threshold": 0.95,
+     "coverage": 0.6,
+     "accuracy": 1,
+     "n": 24
+    },
+    {
+     "threshold": 0.99,
+     "coverage": 0.375,
+     "accuracy": 1,
+     "n": 15
+    }
+   ]
+  },
+  {
+   "name": "events · human test (closed)",
+   "note": "hand-written; not used for tuning",
+   "n": 30,
+   "answered": 30,
+   "accuracy": 0.9333,
+   "accuracy_all": 0.9333,
+   "brier": 0.1182,
+   "ece": 0.2668,
+   "aurc": 0.0107,
+   "coverage_at_95": 0.8667,
+   "coverage_at_99": 0.8333,
+   "reliability": [
+    {
+     "Lo": 0,
+     "Hi": 0.1,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.1,
+     "Hi": 0.2,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.2,
+     "Hi": 0.3,
+     "N": 3,
+     "mean_conf": 0.265,
+     "accuracy": 1
+    },
+    {
+     "Lo": 0.3,
+     "Hi": 0.4,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.4,
+     "Hi": 0.5,
+     "N": 2,
+     "mean_conf": 0.4535,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.5,
+     "Hi": 0.6,
+     "N": 4,
+     "mean_conf": 0.555,
+     "accuracy": 1
+    },
+    {
+     "Lo": 0.6,
+     "Hi": 0.7,
+     "N": 3,
+     "mean_conf": 0.6707,
+     "accuracy": 1
+    },
+    {
+     "Lo": 0.7,
+     "Hi": 0.8,
+     "N": 4,
+     "mean_conf": 0.7658,
+     "accuracy": 1
+    },
+    {
+     "Lo": 0.8,
+     "Hi": 0.9,
+     "N": 7,
+     "mean_conf": 0.8547,
+     "accuracy": 1
+    },
+    {
+     "Lo": 0.9,
+     "Hi": 1,
+     "N": 7,
+     "mean_conf": 0.9757,
+     "accuracy": 1
+    }
+   ],
+   "selective": [
+    {
+     "threshold": 0,
+     "coverage": 1,
+     "accuracy": 0.9333,
+     "n": 30
+    },
+    {
+     "threshold": 0.5,
+     "coverage": 0.8333,
+     "accuracy": 1,
+     "n": 25
+    },
+    {
+     "threshold": 0.6,
+     "coverage": 0.7,
+     "accuracy": 1,
+     "n": 21
+    },
+    {
+     "threshold": 0.7,
+     "coverage": 0.6,
+     "accuracy": 1,
+     "n": 18
+    },
+    {
+     "threshold": 0.8,
+     "coverage": 0.4667,
+     "accuracy": 1,
+     "n": 14
+    },
+    {
+     "threshold": 0.9,
+     "coverage": 0.2333,
+     "accuracy": 1,
+     "n": 7
+    },
+    {
+     "threshold": 0.95,
+     "coverage": 0.1667,
+     "accuracy": 1,
+     "n": 5
+    },
+    {
+     "threshold": 0.99,
+     "coverage": 0.1333,
+     "accuracy": 1,
+     "n": 4
+    }
+   ]
+  },
+  {
+   "name": "smali roles · logistic",
+   "note": "held-out apps, sink call hidden (masked)",
+   "n": 20083,
+   "answered": 20083,
+   "accuracy": 0.8605,
+   "accuracy_all": 0.8605,
+   "macro_f1": 0.8254,
+   "nll": 0.4332,
+   "brier": 0.2002,
+   "ece": 0.0105,
+   "aurc": 0.0291,
+   "coverage_at_95": 0.7905,
+   "coverage_at_99": 0.4307,
+   "reliability": [
+    {
+     "Lo": 0,
+     "Hi": 0.1,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.1,
+     "Hi": 0.2,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.2,
+     "Hi": 0.3,
+     "N": 117,
+     "mean_conf": 0.2722,
+     "accuracy": 0.2479
+    },
+    {
+     "Lo": 0.3,
+     "Hi": 0.4,
+     "N": 411,
+     "mean_conf": 0.3579,
+     "accuracy": 0.326
+    },
+    {
+     "Lo": 0.4,
+     "Hi": 0.5,
+     "N": 948,
+     "mean_conf": 0.4524,
+     "accuracy": 0.3977
+    },
+    {
+     "Lo": 0.5,
+     "Hi": 0.6,
+     "N": 1108,
+     "mean_conf": 0.5496,
+     "accuracy": 0.5289
+    },
+    {
+     "Lo": 0.6,
+     "Hi": 0.7,
+     "N": 1110,
+     "mean_conf": 0.651,
+     "accuracy": 0.6261
+    },
+    {
+     "Lo": 0.7,
+     "Hi": 0.8,
+     "N": 1336,
+     "mean_conf": 0.7515,
+     "accuracy": 0.756
+    },
+    {
+     "Lo": 0.8,
+     "Hi": 0.9,
+     "N": 1879,
+     "mean_conf": 0.8544,
+     "accuracy": 0.8483
+    },
+    {
+     "Lo": 0.9,
+     "Hi": 1,
+     "N": 13174,
+     "mean_conf": 0.9816,
+     "accuracy": 0.9759
+    }
+   ],
+   "selective": [
+    {
+     "threshold": 0,
+     "coverage": 1,
+     "accuracy": 0.8605,
+     "n": 20083
+    },
+    {
+     "threshold": 0.5,
+     "coverage": 0.9265,
+     "accuracy": 0.8997,
+     "n": 18607
+    },
+    {
+     "threshold": 0.6,
+     "coverage": 0.8713,
+     "accuracy": 0.9232,
+     "n": 17499
+    },
+    {
+     "threshold": 0.7,
+     "coverage": 0.8161,
+     "accuracy": 0.9433,
+     "n": 16389
+    },
+    {
+     "threshold": 0.8,
+     "coverage": 0.7495,
+     "accuracy": 0.9599,
+     "n": 15053
+    },
+    {
+     "threshold": 0.9,
+     "coverage": 0.656,
+     "accuracy": 0.9759,
+     "n": 13174
+    },
+    {
+     "threshold": 0.95,
+     "coverage": 0.5669,
+     "accuracy": 0.9838,
+     "n": 11386
+    },
+    {
+     "threshold": 0.99,
+     "coverage": 0.3803,
+     "accuracy": 0.9918,
+     "n": 7638
+    }
+   ],
+   "top_confusions": [
+    "limit_threshold → counter_step: 308",
+    "counter_step → limit_threshold: 218",
+    "index_or_size → limit_threshold: 190",
+    "counter_step → bitmask: 168",
+    "limit_threshold → api_constant: 131"
+   ]
+  },
+  {
+   "name": "smali roles · GNN",
+   "note": "held-out apps, sink call hidden (masked)",
+   "n": 20083,
+   "answered": 20083,
+   "accuracy": 0.875,
+   "accuracy_all": 0.875,
+   "macro_f1": 0.851,
+   "nll": 0.4041,
+   "brier": 0.182,
+   "ece": 0.0081,
+   "aurc": 0.0218,
+   "coverage_at_95": 0.8287,
+   "coverage_at_99": 0.5836,
+   "reliability": [
+    {
+     "Lo": 0,
+     "Hi": 0.1,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.1,
+     "Hi": 0.2,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.2,
+     "Hi": 0.3,
+     "N": 53,
+     "mean_conf": 0.2717,
+     "accuracy": 0.3585
+    },
+    {
+     "Lo": 0.3,
+     "Hi": 0.4,
+     "N": 327,
+     "mean_conf": 0.3603,
+     "accuracy": 0.3272
+    },
+    {
+     "Lo": 0.4,
+     "Hi": 0.5,
+     "N": 799,
+     "mean_conf": 0.4535,
+     "accuracy": 0.4218
+    },
+    {
+     "Lo": 0.5,
+     "Hi": 0.6,
+     "N": 1080,
+     "mean_conf": 0.5487,
+     "accuracy": 0.5111
+    },
+    {
+     "Lo": 0.6,
+     "Hi": 0.7,
+     "N": 1052,
+     "mean_conf": 0.6506,
+     "accuracy": 0.6207
+    },
+    {
+     "Lo": 0.7,
+     "Hi": 0.8,
+     "N": 1215,
+     "mean_conf": 0.7534,
+     "accuracy": 0.7152
+    },
+    {
+     "Lo": 0.8,
+     "Hi": 0.9,
+     "N": 1803,
+     "mean_conf": 0.8555,
+     "accuracy": 0.8536
+    },
+    {
+     "Lo": 0.9,
+     "Hi": 1,
+     "N": 13754,
+     "mean_conf": 0.9812,
+     "accuracy": 0.9812
+    }
+   ],
+   "selective": [
+    {
+     "threshold": 0,
+     "coverage": 1,
+     "accuracy": 0.875,
+     "n": 20083
+    },
+    {
+     "threshold": 0.5,
+     "coverage": 0.9413,
+     "accuracy": 0.905,
+     "n": 18904
+    },
+    {
+     "threshold": 0.6,
+     "coverage": 0.8875,
+     "accuracy": 0.9289,
+     "n": 17824
+    },
+    {
+     "threshold": 0.7,
+     "coverage": 0.8351,
+     "accuracy": 0.9482,
+     "n": 16772
+    },
+    {
+     "threshold": 0.8,
+     "coverage": 0.7746,
+     "accuracy": 0.9664,
+     "n": 15557
+    },
+    {
+     "threshold": 0.9,
+     "coverage": 0.6849,
+     "accuracy": 0.9812,
+     "n": 13754
+    },
+    {
+     "threshold": 0.95,
+     "coverage": 0.6031,
+     "accuracy": 0.9886,
+     "n": 12113
+    },
+    {
+     "threshold": 0.99,
+     "coverage": 0.3691,
+     "accuracy": 0.997,
+     "n": 7412
+    }
+   ],
+   "top_confusions": [
+    "counter_step → limit_threshold: 323",
+    "limit_threshold → counter_step: 266",
+    "counter_step → index_or_size: 141",
+    "limit_threshold → index_or_size: 122",
+    "boolean → counter_step: 116"
+   ]
+  },
+  {
+   "name": "smali roles · LR+GNN mix (shipped)",
+   "note": "held-out apps, sink call hidden (masked)",
+   "n": 20083,
+   "answered": 20083,
+   "accuracy": 0.8872,
+   "accuracy_all": 0.8872,
+   "macro_f1": 0.87,
+   "nll": 0.3583,
+   "brier": 0.1657,
+   "ece": 0.0301,
+   "aurc": 0.0173,
+   "coverage_at_95": 0.8631,
+   "coverage_at_99": 0.6514,
+   "reliability": [
+    {
+     "Lo": 0,
+     "Hi": 0.1,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.1,
+     "Hi": 0.2,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.2,
+     "Hi": 0.3,
+     "N": 112,
+     "mean_conf": 0.2731,
+     "accuracy": 0.2857
+    },
+    {
+     "Lo": 0.3,
+     "Hi": 0.4,
+     "N": 502,
+     "mean_conf": 0.3595,
+     "accuracy": 0.3645
+    },
+    {
+     "Lo": 0.4,
+     "Hi": 0.5,
+     "N": 1122,
+     "mean_conf": 0.4551,
+     "accuracy": 0.4786
+    },
+    {
+     "Lo": 0.5,
+     "Hi": 0.6,
+     "N": 1276,
+     "mean_conf": 0.5486,
+     "accuracy": 0.6176
+    },
+    {
+     "Lo": 0.6,
+     "Hi": 0.7,
+     "N": 1202,
+     "mean_conf": 0.65,
+     "accuracy": 0.7013
+    },
+    {
+     "Lo": 0.7,
+     "Hi": 0.8,
+     "N": 1253,
+     "mean_conf": 0.7525,
+     "accuracy": 0.8547
+    },
+    {
+     "Lo": 0.8,
+     "Hi": 0.9,
+     "N": 1922,
+     "mean_conf": 0.8535,
+     "accuracy": 0.9277
+    },
+    {
+     "Lo": 0.9,
+     "Hi": 1,
+     "N": 12694,
+     "mean_conf": 0.979,
+     "accuracy": 0.9911
+    }
+   ],
+   "selective": [
+    {
+     "threshold": 0,
+     "coverage": 1,
+     "accuracy": 0.8872,
+     "n": 20083
+    },
+    {
+     "threshold": 0.5,
+     "coverage": 0.9136,
+     "accuracy": 0.9302,
+     "n": 18347
+    },
+    {
+     "threshold": 0.6,
+     "coverage": 0.85,
+     "accuracy": 0.9535,
+     "n": 17071
+    },
+    {
+     "threshold": 0.7,
+     "coverage": 0.7902,
+     "accuracy": 0.9727,
+     "n": 15869
+    },
+    {
+     "threshold": 0.8,
+     "coverage": 0.7278,
+     "accuracy": 0.9828,
+     "n": 14616
+    },
+    {
+     "threshold": 0.9,
+     "coverage": 0.6321,
+     "accuracy": 0.9911,
+     "n": 12694
+    },
+    {
+     "threshold": 0.95,
+     "coverage": 0.5404,
+     "accuracy": 0.9955,
+     "n": 10852
+    },
+    {
+     "threshold": 0.99,
+     "coverage": 0.3199,
+     "accuracy": 0.9992,
+     "n": 6424
+    }
+   ],
+   "top_confusions": [
+    "limit_threshold → counter_step: 268",
+    "counter_step → limit_threshold: 263",
+    "index_or_size → limit_threshold: 115",
+    "boolean → counter_step: 104",
+    "bitmask → limit_threshold: 95"
+   ]
+  },
+  {
+   "name": "experiment CE · known verbs (per step)",
+   "note": "trained on 75% of verbs; loss: CE",
+   "n": 4874,
+   "answered": 4874,
+   "accuracy": 0.977,
+   "accuracy_all": 0.977,
+   "macro_f1": 0.9796,
+   "nll": 0.0717,
+   "brier": 0.0349,
+   "ece": 0.0073,
+   "aurc": 0.0015,
+   "coverage_at_95": 1,
+   "coverage_at_99": 0.9631,
+   "reliability": [
+    {
+     "Lo": 0,
+     "Hi": 0.1,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.1,
+     "Hi": 0.2,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.2,
+     "Hi": 0.3,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.3,
+     "Hi": 0.4,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.4,
+     "Hi": 0.5,
+     "N": 4,
+     "mean_conf": 0.471,
+     "accuracy": 0.25
+    },
+    {
+     "Lo": 0.5,
+     "Hi": 0.6,
+     "N": 35,
+     "mean_conf": 0.5519,
+     "accuracy": 0.4
+    },
+    {
+     "Lo": 0.6,
+     "Hi": 0.7,
+     "N": 49,
+     "mean_conf": 0.656,
+     "accuracy": 0.6122
+    },
+    {
+     "Lo": 0.7,
+     "Hi": 0.8,
+     "N": 60,
+     "mean_conf": 0.7558,
+     "accuracy": 0.7167
+    },
+    {
+     "Lo": 0.8,
+     "Hi": 0.9,
+     "N": 83,
+     "mean_conf": 0.8559,
+     "accuracy": 0.8675
+    },
+    {
+     "Lo": 0.9,
+     "Hi": 1,
+     "N": 4643,
+     "mean_conf": 0.9963,
+     "accuracy": 0.9912
+    }
+   ],
+   "selective": [
+    {
+     "threshold": 0,
+     "coverage": 1,
+     "accuracy": 0.977,
+     "n": 4874
+    },
+    {
+     "threshold": 0.5,
+     "coverage": 0.9992,
+     "accuracy": 0.9776,
+     "n": 4870
+    },
+    {
+     "threshold": 0.6,
+     "coverage": 0.992,
+     "accuracy": 0.9818,
+     "n": 4835
+    },
+    {
+     "threshold": 0.7,
+     "coverage": 0.9819,
+     "accuracy": 0.9856,
+     "n": 4786
+    },
+    {
+     "threshold": 0.8,
+     "coverage": 0.9696,
+     "accuracy": 0.989,
+     "n": 4726
+    },
+    {
+     "threshold": 0.9,
+     "coverage": 0.9526,
+     "accuracy": 0.9912,
+     "n": 4643
+    },
+    {
+     "threshold": 0.95,
+     "coverage": 0.9339,
+     "accuracy": 0.9936,
+     "n": 4552
+    },
+    {
+     "threshold": 0.99,
+     "coverage": 0.8699,
+     "accuracy": 0.9972,
+     "n": 4240
+    }
+   ],
+   "top_confusions": [
+    "minus → none: 27",
+    "plus → minus: 24",
+    "none → minus: 19",
+    "plus → none: 18",
+    "none → plus: 13"
+   ]
+  },
+  {
+   "name": "experiment CE · unseen verbs (per step)",
+   "note": "trained on 75% of verbs; loss: CE",
+   "n": 4851,
+   "answered": 4851,
+   "accuracy": 0.8837,
+   "accuracy_all": 0.8837,
+   "macro_f1": 0.8958,
+   "nll": 0.5616,
+   "brier": 0.1952,
+   "ece": 0.0829,
+   "aurc": 0.0301,
+   "coverage_at_95": 0.7652,
+   "coverage_at_99": 0.3146,
+   "reliability": [
+    {
+     "Lo": 0,
+     "Hi": 0.1,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.1,
+     "Hi": 0.2,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.2,
+     "Hi": 0.3,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.3,
+     "Hi": 0.4,
+     "N": 2,
+     "mean_conf": 0.383,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.4,
+     "Hi": 0.5,
+     "N": 14,
+     "mean_conf": 0.4737,
+     "accuracy": 0.5
+    },
+    {
+     "Lo": 0.5,
+     "Hi": 0.6,
+     "N": 91,
+     "mean_conf": 0.5485,
+     "accuracy": 0.4176
+    },
+    {
+     "Lo": 0.6,
+     "Hi": 0.7,
+     "N": 94,
+     "mean_conf": 0.6549,
+     "accuracy": 0.4681
+    },
+    {
+     "Lo": 0.7,
+     "Hi": 0.8,
+     "N": 121,
+     "mean_conf": 0.7499,
+     "accuracy": 0.5455
+    },
+    {
+     "Lo": 0.8,
+     "Hi": 0.9,
+     "N": 161,
+     "mean_conf": 0.8551,
+     "accuracy": 0.6273
+    },
+    {
+     "Lo": 0.9,
+     "Hi": 1,
+     "N": 4368,
+     "mean_conf": 0.9938,
+     "accuracy": 0.9228
+    }
+   ],
+   "selective": [
+    {
+     "threshold": 0,
+     "coverage": 1,
+     "accuracy": 0.8837,
+     "n": 4851
+    },
+    {
+     "threshold": 0.5,
+     "coverage": 0.9967,
+     "accuracy": 0.8852,
+     "n": 4835
+    },
+    {
+     "threshold": 0.6,
+     "coverage": 0.9779,
+     "accuracy": 0.8942,
+     "n": 4744
+    },
+    {
+     "threshold": 0.7,
+     "coverage": 0.9586,
+     "accuracy": 0.9028,
+     "n": 4650
+    },
+    {
+     "threshold": 0.8,
+     "coverage": 0.9336,
+     "accuracy": 0.9123,
+     "n": 4529
+    },
+    {
+     "threshold": 0.9,
+     "coverage": 0.9004,
+     "accuracy": 0.9228,
+     "n": 4368
+    },
+    {
+     "threshold": 0.95,
+     "coverage": 0.8613,
+     "accuracy": 0.9325,
+     "n": 4178
+    },
+    {
+     "threshold": 0.99,
+     "coverage": 0.7741,
+     "accuracy": 0.9489,
+     "n": 3755
+    }
+   ],
+   "top_confusions": [
+    "plus → none: 111",
+    "none → plus: 111",
+    "none → minus: 111",
+    "minus → plus: 84",
+    "minus → none: 73"
+   ]
+  },
+  {
+   "name": "experiment CE+Brier · known verbs (per step)",
+   "note": "trained on 75% of verbs; loss: CE+Brier",
+   "n": 4874,
+   "answered": 4874,
+   "accuracy": 0.977,
+   "accuracy_all": 0.977,
+   "macro_f1": 0.9796,
+   "nll": 0.0709,
+   "brier": 0.0348,
+   "ece": 0.0071,
+   "aurc": 0.0018,
+   "coverage_at_95": 1,
+   "coverage_at_99": 0.967,
+   "reliability": [
+    {
+     "Lo": 0,
+     "Hi": 0.1,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.1,
+     "Hi": 0.2,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.2,
+     "Hi": 0.3,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.3,
+     "Hi": 0.4,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.4,
+     "Hi": 0.5,
+     "N": 8,
+     "mean_conf": 0.4747,
+     "accuracy": 0.125
+    },
+    {
+     "Lo": 0.5,
+     "Hi": 0.6,
+     "N": 37,
+     "mean_conf": 0.5539,
+     "accuracy": 0.5135
+    },
+    {
+     "Lo": 0.6,
+     "Hi": 0.7,
+     "N": 32,
+     "mean_conf": 0.6583,
+     "accuracy": 0.625
+    },
+    {
+     "Lo": 0.7,
+     "Hi": 0.8,
+     "N": 53,
+     "mean_conf": 0.7559,
+     "accuracy": 0.6604
+    },
+    {
+     "Lo": 0.8,
+     "Hi": 0.9,
+     "N": 101,
+     "mean_conf": 0.8596,
+     "accuracy": 0.8317
+    },
+    {
+     "Lo": 0.9,
+     "Hi": 1,
+     "N": 4643,
+     "mean_conf": 0.996,
+     "accuracy": 0.9914
+    }
+   ],
+   "selective": [
+    {
+     "threshold": 0,
+     "coverage": 1,
+     "accuracy": 0.977,
+     "n": 4874
+    },
+    {
+     "threshold": 0.5,
+     "coverage": 0.9984,
+     "accuracy": 0.9784,
+     "n": 4866
+    },
+    {
+     "threshold": 0.6,
+     "coverage": 0.9908,
+     "accuracy": 0.982,
+     "n": 4829
+    },
+    {
+     "threshold": 0.7,
+     "coverage": 0.9842,
+     "accuracy": 0.9844,
+     "n": 4797
+    },
+    {
+     "threshold": 0.8,
+     "coverage": 0.9733,
+     "accuracy": 0.988,
+     "n": 4744
+    },
+    {
+     "threshold": 0.9,
+     "coverage": 0.9526,
+     "accuracy": 0.9914,
+     "n": 4643
+    },
+    {
+     "threshold": 0.95,
+     "coverage": 0.9313,
+     "accuracy": 0.9945,
+     "n": 4539
+    },
+    {
+     "threshold": 0.99,
+     "coverage": 0.8675,
+     "accuracy": 0.9962,
+     "n": 4228
+    }
+   ],
+   "top_confusions": [
+    "plus → minus: 25",
+    "none → minus: 24",
+    "none → plus: 24",
+    "minus → none: 20",
+    "plus → none: 10"
+   ]
+  },
+  {
+   "name": "experiment CE+Brier · unseen verbs (per step)",
+   "note": "trained on 75% of verbs; loss: CE+Brier",
+   "n": 4851,
+   "answered": 4851,
+   "accuracy": 0.8811,
+   "accuracy_all": 0.8811,
+   "macro_f1": 0.893,
+   "nll": 0.5188,
+   "brier": 0.1949,
+   "ece": 0.0801,
+   "aurc": 0.029,
+   "coverage_at_95": 0.7906,
+   "coverage_at_99": 0.3389,
+   "reliability": [
+    {
+     "Lo": 0,
+     "Hi": 0.1,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.1,
+     "Hi": 0.2,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.2,
+     "Hi": 0.3,
+     "N": 0,
+     "mean_conf": 0,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.3,
+     "Hi": 0.4,
+     "N": 3,
+     "mean_conf": 0.3926,
+     "accuracy": 0
+    },
+    {
+     "Lo": 0.4,
+     "Hi": 0.5,
+     "N": 18,
+     "mean_conf": 0.4594,
+     "accuracy": 0.2778
+    },
+    {
+     "Lo": 0.5,
+     "Hi": 0.6,
+     "N": 107,
+     "mean_conf": 0.5504,
+     "accuracy": 0.4019
+    },
+    {
+     "Lo": 0.6,
+     "Hi": 0.7,
+     "N": 111,
+     "mean_conf": 0.6506,
+     "accuracy": 0.5045
+    },
+    {
+     "Lo": 0.7,
+     "Hi": 0.8,
+     "N": 119,
+     "mean_conf": 0.7501,
+     "accuracy": 0.5798
+    },
+    {
+     "Lo": 0.8,
+     "Hi": 0.9,
+     "N": 209,
+     "mean_conf": 0.855,
+     "accuracy": 0.6029
+    },
+    {
+     "Lo": 0.9,
+     "Hi": 1,
+     "N": 4284,
+     "mean_conf": 0.993,
+     "accuracy": 0.9279
+    }
+   ],
+   "selective": [
+    {
+     "threshold": 0,
+     "coverage": 1,
+     "accuracy": 0.8811,
+     "n": 4851
+    },
+    {
+     "threshold": 0.5,
+     "coverage": 0.9957,
+     "accuracy": 0.8839,
+     "n": 4830
+    },
+    {
+     "threshold": 0.6,
+     "coverage": 0.9736,
+     "accuracy": 0.8948,
+     "n": 4723
+    },
+    {
+     "threshold": 0.7,
+     "coverage": 0.9507,
+     "accuracy": 0.9042,
+     "n": 4612
+    },
+    {
+     "threshold": 0.8,
+     "coverage": 0.9262,
+     "accuracy": 0.9128,
+     "n": 4493
+    },
+    {
+     "threshold": 0.9,
+     "coverage": 0.8831,
+     "accuracy": 0.9279,
+     "n": 4284
+    },
+    {
+     "threshold": 0.95,
+     "coverage": 0.8404,
+     "accuracy": 0.9409,
+     "n": 4077
+    },
+    {
+     "threshold": 0.99,
+     "coverage": 0.7384,
+     "accuracy": 0.9615,
+     "n": 3582
+    }
+   ],
+   "top_confusions": [
+    "none → plus: 139",
+    "none → minus: 121",
+    "plus → minus: 104",
+    "plus → none: 92",
+    "minus → plus: 70"
+   ]
+  }
+ ],
+ "cases": [
+  {
+   "Set": "events · human dev",
+   "State": "Мальчик взял из коробки 3 конфеты, потом вернул 2 обратно, потом взял ещё 5",
+   "Question": "Стало ли конфет в коробке меньше, чем было вначале?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.977,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "Мальчик взял из коробки 3 конфеты, потом вернул 2 обратно, потом взял ещё 5",
+   "Question": "Стало ли конфет в коробке больше, чем было вначале?",
+   "Want": "no",
+   "Got": "no",
+   "Conf": 0.977,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "Мальчик взял из коробки 3 конфеты, потом вернул 2 обратно, потом взял ещё 5",
+   "Question": "Стало ли у мальчика больше конфет?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.988,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В копилке было 40 монет. Петя достал из копилки 15 монет, потом положил обратно 7, затем мама добавила в копилку 10 монет",
+   "Question": "Сколько монет стало в копилке?",
+   "Want": "42",
+   "Got": "42",
+   "Conf": 0.994,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "Маша положила в вазу 4 яблока, потом достала из вазы 4 яблока",
+   "Question": "Изменилось ли количество яблок в вазе?",
+   "Want": "no",
+   "Got": "no",
+   "Conf": 0.996,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "Кот утащил из миски 2 сосиски, потом ещё 1",
+   "Question": "Стало ли сосисок в миске меньше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.927,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В вазе лежало 7 яблок. Маша съела из вазы 2 яблока, а папа положил ещё 4",
+   "Question": "Сколько яблок в вазе?",
+   "Want": "9",
+   "Got": "9",
+   "Conf": 0.999,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "На полке стояло 12 книг. Лена сняла с полки 5 книг, а потом поставила на полку 3 книги",
+   "Question": "Сколько книг стало на полке?",
+   "Want": "10",
+   "Got": "10",
+   "Conf": 0.935,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В корзине было 20 грибов. Дедушка добавил в корзину 6 грибов, потом бабушка вынула из корзины 6 грибов",
+   "Question": "Осталось ли грибов в корзине столько же?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.705,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "Вася положил в рюкзак 3 тетради, потом ещё 2",
+   "Question": "Стало ли тетрадей в рюкзаке больше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 1,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В холодильнике было 10 яиц. Мама взяла из холодильника 4 яйца, потом папа купил 6 яиц и положил их в холодильник",
+   "Question": "Сколько яиц в холодильнике?",
+   "Want": "12",
+   "Got": "12",
+   "Conf": 0.997,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "У Пети было 8 марок. Он подарил другу 3 марки, а потом нашёл ещё 2",
+   "Question": "Сколько марок у Пети?",
+   "Want": "7",
+   "Got": "7",
+   "Conf": 0.961,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "У Оли было 15 рублей. Она потратила 6 рублей",
+   "Question": "Стало ли у Оли меньше денег?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 1,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "На тарелке лежало 6 пирожков. Брат съел 2 пирожка, сестра съела 1 пирожок",
+   "Question": "Сколько пирожков осталось на тарелке?",
+   "Want": "3",
+   "Got": "3",
+   "Conf": 0.764,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В аквариуме плавало 9 рыбок. Папа выловил из аквариума 2 рыбки",
+   "Question": "Сколько рыбок в аквариуме?",
+   "Want": "7",
+   "Got": "7",
+   "Conf": 0.78,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В мешке было 30 картофелин. Бабушка достала из мешка 10 картофелин, потом вернула в мешок 4",
+   "Question": "Стало ли картофелин в мешке меньше, чем было?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.801,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "Саша вынул из ящика 5 гвоздей, потом положил в ящик 5 гвоздей обратно",
+   "Question": "Изменилось ли количество гвоздей в ящике?",
+   "Want": "no",
+   "Got": "no",
+   "Conf": 0.999,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "Девочка переложила 4 конфеты из коробки в вазу",
+   "Question": "Стало ли конфет в коробке меньше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.999,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "Девочка переложила 4 конфеты из коробки в вазу",
+   "Question": "Стало ли конфет в вазе больше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 1,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В шкафу было 7 кружек. Мама убрала в шкаф ещё 3 кружки",
+   "Question": "Сколько кружек в шкафу?",
+   "Want": "10",
+   "Got": "10",
+   "Conf": 0.998,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "Мальчик достал из кармана 2 монеты, потом ещё 3 монеты",
+   "Question": "Стало ли монет в кармане меньше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.979,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В банке было 50 пуговиц. Катя высыпала из банки 20 пуговиц, а затем собрала и вернула в банку 15",
+   "Question": "Сколько пуговиц в банке?",
+   "Want": "45",
+   "Got": "45",
+   "Conf": 0.922,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "Петя положил в копилку 10 рублей, потом ещё 5, потом достал 3",
+   "Question": "Стало ли денег в копилке больше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.875,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В гараже стояло 3 велосипеда. Папа продал 1 велосипед",
+   "Question": "Сколько велосипедов в гараже?",
+   "Want": "2",
+   "Got": "2",
+   "Conf": 0.644,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "Мальчик посчитал 5 конфет в коробке, потом взял из коробки 2",
+   "Question": "Стало ли конфет в коробке меньше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 1,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В корзине было 2 яблока. Через 10 минут Маша положила в корзину 4 яблока",
+   "Question": "Сколько яблок в корзине?",
+   "Want": "6",
+   "Got": "6",
+   "Conf": 0.982,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "На складе было 100 ящиков. Утром привезли 40 ящиков, вечером увезли 70 ящиков",
+   "Question": "Сколько ящиков на складе?",
+   "Want": "70",
+   "Got": "70",
+   "Conf": 0.652,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В классе было 25 учеников. 3 ученика ушли домой",
+   "Question": "Стало ли учеников в классе меньше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 1,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В автобусе ехало 12 пассажиров. На остановке вышли 5 пассажиров и зашли 8",
+   "Question": "Сколько пассажиров в автобусе?",
+   "Want": "15",
+   "Got": "15",
+   "Conf": 0.927,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В кошельке было 500 рублей. Папа положил в кошелёк 200 рублей, а потом заплатил 300 рублей",
+   "Question": "Стало ли денег в кошельке больше?",
+   "Want": "no",
+   "Got": "no",
+   "Conf": 0.98,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "Лена достала из шкатулки 2 кольца",
+   "Question": "Изменилось ли количество колец в шкатулке?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.873,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "Дима посмотрел на 6 машинок в коробке",
+   "Question": "Изменилось ли количество машинок в коробке?",
+   "Want": "no",
+   "Got": "no",
+   "Conf": 0.924,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В вазе было 5 роз. Мама поставила в вазу ещё 4 розы, а 2 розы завяли и их выбросили",
+   "Question": "Сколько роз в вазе?",
+   "Want": "7",
+   "Got": "7",
+   "Conf": 0.705,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "Бабушка насыпала в банку 3 ложки сахара, потом ещё 2 ложки",
+   "Question": "Стало ли сахара в банке больше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.826,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "У Кати было 10 наклеек. Она отдала Оле 4 наклейки, а Оля вернула ей 1",
+   "Question": "Сколько наклеек у Кати?",
+   "Want": "7",
+   "Got": "7",
+   "Conf": 0.989,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "Мальчик взял из коробки 3 конфеты",
+   "Question": "Сколько конфет в коробке?",
+   "Want": "unknown",
+   "Got": "unknown",
+   "Conf": 1,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В холодильнике было 8 бутылок. Папа вытащил из холодильника 3 бутылки, затем вернул 1 бутылку назад",
+   "Question": "Стало ли бутылок в холодильнике меньше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 1,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "Оля сложила в пакет 7 мандаринов, потом вынула 7 мандаринов",
+   "Question": "Осталось ли мандаринов в пакете столько же?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.989,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В ящике было 9 яблок. Мальчик взял 2 яблока",
+   "Question": "Сколько яблок в ящике?",
+   "Want": "7",
+   "Got": "7",
+   "Conf": 0.997,
+   "OK": true
+  },
+  {
+   "Set": "events · human dev",
+   "State": "В коробке было 10 конфет, а в вазе 5 конфет. Мальчик переложил 3 конфеты из коробки в вазу",
+   "Question": "Сколько конфет в вазе?",
+   "Want": "8",
+   "Got": "8",
+   "Conf": 0.755,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "В миске было 12 орешков. Белка утащила из миски 4 орешка, а потом принесла обратно 1",
+   "Question": "Сколько орешков в миске?",
+   "Want": "9",
+   "Got": "9",
+   "Conf": 0.598,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "На ветке сидело 8 воробьёв. 3 воробья улетели, потом прилетели ещё 5",
+   "Question": "Сколько воробьёв на ветке?",
+   "Want": "10",
+   "Got": "10",
+   "Conf": 0.516,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "В бочке было 40 литров воды. Папа вылил из бочки 15 литров",
+   "Question": "Стало ли воды в бочке меньше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.779,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "У Миши было 20 рублей. Мама дала ему ещё 30 рублей",
+   "Question": "Сколько рублей у Миши?",
+   "Want": "50",
+   "Got": "50",
+   "Conf": 0.892,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "В пенале лежало 10 ручек. Ученик достал из пенала 3 ручки и положил их обратно",
+   "Question": "Изменилось ли количество ручек в пенале?",
+   "Want": "no",
+   "Got": "no",
+   "Conf": 0.64,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "В комнате было 6 стульев. Принесли ещё 4 стула, а 2 стула унесли на кухню",
+   "Question": "Сколько стульев в комнате?",
+   "Want": "8",
+   "Got": "8",
+   "Conf": 0.244,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "Таня положила в шкатулку 5 бусин, потом её брат забрал из шкатулки 2 бусины",
+   "Question": "Стало ли бусин в шкатулке больше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.826,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "В бассейне плавали 15 детей. 6 детей вышли из бассейна",
+   "Question": "Сколько детей в бассейне?",
+   "Want": "9",
+   "Got": "9",
+   "Conf": 0.711,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "Петя выложил из портфеля 4 учебника",
+   "Question": "Стало ли учебников в портфеле меньше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.813,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "В коробке лежали 9 карандашей. Коля взял 3 карандаша, потом Оля взяла 2 карандаша",
+   "Question": "Сколько карандашей в коробке?",
+   "Want": "4",
+   "Got": "4",
+   "Conf": 0.683,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "На парковке стояло 20 машин. Уехали 7 машин, приехали 3 машины",
+   "Question": "Стало ли машин на парковке меньше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.87,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "У Ани было 5 открыток. Она нарисовала ещё 2 открытки",
+   "Question": "Сколько открыток у Ани?",
+   "Want": "7",
+   "Got": "5",
+   "Conf": 0.423,
+   "OK": false
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "В вазе было 10 конфет. Дети съели 4 конфеты",
+   "Question": "Сколько конфет в вазе?",
+   "Want": "6",
+   "Got": "6",
+   "Conf": 0.792,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "В корзине лежало 8 груш. Через час мама положила в корзину ещё 2 груши",
+   "Question": "Сколько груш в корзине?",
+   "Want": "10",
+   "Got": "10",
+   "Conf": 0.998,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "Вова потерял 2 монеты из кошелька, а потом нашёл 2 монеты и положил их в кошелёк",
+   "Question": "Изменилось ли количество монет в кошельке?",
+   "Want": "no",
+   "Got": "no",
+   "Conf": 0.689,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "В библиотеке было 300 книг. Читатели взяли 45 книг и вернули 20",
+   "Question": "Сколько книг в библиотеке?",
+   "Want": "275",
+   "Got": "275",
+   "Conf": 0.533,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "Дедушка положил на стол 6 яблок, внук взял со стола 2 яблока",
+   "Question": "Стало ли яблок на столе больше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.998,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "В ящике было 15 болтов. Мастер использовал 5 болтов",
+   "Question": "Сколько болтов в ящике?",
+   "Want": "10",
+   "Got": "15",
+   "Conf": 0.484,
+   "OK": false
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "Лена посмотрела на 3 куклы на полке",
+   "Question": "Изменилось ли количество кукол на полке?",
+   "Want": "no",
+   "Got": "no",
+   "Conf": 0.921,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "В сумке было 4 мандарина. Мама положила в сумку 4 мандарина",
+   "Question": "Сколько мандаринов в сумке?",
+   "Want": "8",
+   "Got": "8",
+   "Conf": 0.996,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "В автобусе было 30 пассажиров. На первой остановке вышли 10, на второй вошли 4",
+   "Question": "Сколько пассажиров в автобусе?",
+   "Want": "24",
+   "Got": "24",
+   "Conf": 0.262,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "У Кости было 12 фишек. Он проиграл 5 фишек, потом выиграл 3",
+   "Question": "Стало ли у Кости больше фишек?",
+   "Want": "no",
+   "Got": "no",
+   "Conf": 0.781,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "На складе было 50 мешков. Привезли 20 мешков",
+   "Question": "Сколько мешков на складе?",
+   "Want": "70",
+   "Got": "70",
+   "Conf": 0.823,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "На тарелке было 7 печений. Кот уронил с тарелки 1 печенье",
+   "Question": "Стало ли печений на тарелке меньше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.885,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "Петя достал из холодильника 2 бутылки сока",
+   "Question": "Сколько бутылок в холодильнике?",
+   "Want": "unknown",
+   "Got": "unknown",
+   "Conf": 0.931,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "В аквариуме жили 5 рыбок. Купили и запустили в аквариум ещё 3 рыбки",
+   "Question": "Сколько рыбок в аквариуме?",
+   "Want": "8",
+   "Got": "8",
+   "Conf": 0.289,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "Маша дала Пете 4 конфеты",
+   "Question": "Стало ли конфет у Маши меньше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.874,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "Маша дала Пете 4 конфеты",
+   "Question": "Стало ли конфет у Пети больше?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.988,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "В кармане было 3 ключа. Папа переложил 1 ключ из кармана в сумку",
+   "Question": "Сколько ключей в кармане?",
+   "Want": "2",
+   "Got": "2",
+   "Conf": 0.573,
+   "OK": true
+  },
+  {
+   "Set": "events · human test (closed)",
+   "State": "В банке было 10 огурцов. Бабушка добавила в банку 5 огурцов, потом достала 5 огурцов",
+   "Question": "Осталось ли огурцов в банке столько же?",
+   "Want": "yes",
+   "Got": "yes",
+   "Conf": 0.998,
+   "OK": true
+  }
+ ]
+}

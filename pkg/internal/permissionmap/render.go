@@ -19,7 +19,8 @@ func (r *Report) RenderMarkdown() string {
 	b.WriteString(fmt.Sprintf("- **Declared**: %d\n", r.DeclaredCount))
 	b.WriteString(fmt.Sprintf("- **Used**: %d\n", r.UsedCount))
 	b.WriteString(fmt.Sprintf("- **Unused**: %d\n", r.UnusedCount))
-	b.WriteString(fmt.Sprintf("- **Unknown (no detection patterns)**: %d\n", r.UnknownCount))
+	b.WriteString(fmt.Sprintf("- **Unknown (usage not established)**: %d\n", r.UnknownCount))
+	b.WriteString(fmt.Sprintf("- **Code files scanned**: %d\n", r.CodeFilesScanned))
 	if r.DeprecatedCount > 0 {
 		b.WriteString(fmt.Sprintf("- **Deprecated**: %d\n", r.DeprecatedCount))
 	}
@@ -28,6 +29,9 @@ func (r *Report) RenderMarkdown() string {
 	}
 	b.WriteString(fmt.Sprintf("- **Score**: %d\n", r.Score))
 	b.WriteString(fmt.Sprintf("- **Verdict**: %s\n\n", r.Verdict))
+	for _, limitation := range r.Limitations {
+		b.WriteString(limitation + "\n\n")
+	}
 
 	if len(r.Permissions) > 0 {
 		b.WriteString("| Permission | Status | Protection | API note | Usage Sites |\n")

@@ -78,7 +78,7 @@ func TestOverlayDetector_BareLayoutParamsNotOverlay(t *testing.T) {
 	a := makeAnalysis(ctx.Path)
 	d.Detect(ctx, a)
 	for _, m := range a.Matches {
-		if m.Category == types.CategorySecurity && strings.Contains(m.Context, "Overlay pattern") {
+		if (m.Category == types.CategorySecurity || m.Category == types.CategoryAccessibilityCapability) && strings.Contains(m.Context, "Overlay pattern") {
 			t.Errorf("bare LayoutParams must not be an overlay pattern, got: %s", m.Text)
 		}
 	}
@@ -95,7 +95,7 @@ func TestOverlayDetector_BareLayoutParamsNotOverlay(t *testing.T) {
 	d2.Detect(ctx2, a2)
 	found := false
 	for _, m := range a2.Matches {
-		if m.Category == types.CategorySecurity && strings.Contains(m.Context, "Overlay pattern") {
+		if m.Category == types.CategoryAccessibilityCapability && strings.Contains(m.Context, "Overlay pattern") {
 			found = true
 		}
 	}

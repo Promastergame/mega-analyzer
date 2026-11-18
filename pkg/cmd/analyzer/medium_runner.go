@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"net"
 	"net/url"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -12,13 +14,13 @@ import (
 	"mega-analyzer/pkg/internal/cloudaudit"
 	"mega-analyzer/pkg/internal/insights"
 	"mega-analyzer/pkg/internal/malwarecheck"
+	"mega-analyzer/pkg/internal/networkrefs"
 	"mega-analyzer/pkg/internal/niap"
 	"mega-analyzer/pkg/internal/permissionmap"
 	"mega-analyzer/pkg/internal/playstore"
 	"mega-analyzer/pkg/internal/sbom"
 	"mega-analyzer/pkg/internal/supplychain"
 	"mega-analyzer/pkg/internal/types"
-	"os"
 )
 
 // runMediumModules runs the MobSF-inspired medium-priority sidecar
@@ -138,10 +140,11 @@ func (a *App) runMediumModules(result *types.AnalysisResult, target, outputDir, 
 			_ = insights.WriteJSON(filepath.Join(mediumDir, "permission_map.json"), rep)
 			_ = insights.WriteText(filepath.Join(mediumDir, "PERMISSION_MAP.md"), rep.RenderMarkdown())
 			for _, p := range rep.Permissions {
-				if !p.Used {
+				if p.Status == permissionmap.StatusUnused {
 					result.ArtifactFindings = append(result.ArtifactFindings, types.ArtifactFinding{
 						Path:     "medium/PERMISSION_MAP.md",
 						Severity: types.SeverityLow,
+						Stages:   []string{"inventory"},
 						Reason:   fmt.Sprintf("Dead permission: %s", p.Permission),
 					})
 				}
@@ -225,6 +228,9 @@ func (a *App) runMediumModules(result *types.AnalysisResult, target, outputDir, 
 func niapFinding(m niap.Match) (types.Severity, string, bool) {
 	switch m.Status {
 	case niap.StatusFailed:
+		if !m.Matched {
+			return types.SeverityInfo, fmt.Sprintf("NIAP %s: expected evidence not found: %s", m.RuleID, m.Message), true
+		}
 		return types.SeverityMedium, fmt.Sprintf("NIAP %s: %s", m.RuleID, m.Message), true
 	case niap.StatusManual:
 		return types.SeverityInfo, fmt.Sprintf("NIAP %s needs manual review: %s", m.RuleID, m.Message), true
@@ -304,20 +310,38 @@ func extractURLs(result *types.AnalysisResult) []string {
 		return nil
 	}
 	seen := make(map[string]struct{})
+	addCandidate := func(candidate string) {
+		candidate = strings.TrimSpace(candidate)
+		if candidate == "" || strings.Contains(candidate, "...") {
+			return
+		}
+		parsed, err := url.Parse(candidate)
+		isURL := err == nil && parsed.Scheme != "" && parsed.Hostname() != ""
+		host := candidate
+		if bareHost, _, splitErr := net.SplitHostPort(candidate); splitErr == nil {
+			host = bareHost
+		}
+		if !isURL && net.ParseIP(host) == nil && !networkrefs.IsRecoveredHostname(host) {
+			return
+		}
+		seen[candidate] = struct{}{}
+	}
 	for _, file := range result.Files {
 		if file == nil {
 			continue
 		}
 		for _, match := range file.Matches {
-			if match.Category != types.CategoryNetworkEndpoint && match.Category != types.CategorySuspiciousURL {
+			if match.Category != types.CategoryNetworkEndpoint && match.Category != types.CategorySuspiciousURL && match.Category != types.CategoryHardcodedIP && match.Category != types.CategoryCleartextTraffic {
 				continue
 			}
-			candidate := strings.TrimSpace(match.Pattern)
-			parsed, err := url.Parse(candidate)
-			if err != nil || parsed.Scheme == "" || parsed.Hostname() == "" {
-				continue
+			addCandidate(match.Pattern)
+			addCandidate(match.Text)
+		}
+		for _, artifact := range file.RecoveredArtifacts {
+			switch artifact.Kind {
+			case "url", "domain", "ip_address":
+				addCandidate(artifact.Preview)
 			}
-			seen[candidate] = struct{}{}
 		}
 	}
 	urls := make([]string, 0, len(seen))

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html"
+	"mega-analyzer/pkg/internal/svgscan"
 	"strings"
 )
 
@@ -190,7 +191,7 @@ func writeArtifactCard(sb htmlWriter, item ArtifactItem, allowExport, noBlur boo
 		if imgSrc == "" {
 			imgSrc = item.ExternalPath
 		}
-		sensitive := item.Image != nil && item.Image.SensitiveLabel != ""
+		sensitive := item.Image.HidePreview()
 		blur := sensitive && !noBlur
 		class := "art-img"
 		if blur {
@@ -199,7 +200,7 @@ func writeArtifactCard(sb htmlWriter, item ArtifactItem, allowExport, noBlur boo
 		sb.WriteString(fmt.Sprintf(`<img loading="lazy" decoding="async" class="%s" src="%s" alt="%s">`,
 			class, html.EscapeString(imgSrc), html.EscapeString(item.Path)))
 		if blur {
-			sb.WriteString(`<button type="button" class="art-reveal">Reveal</button>`)
+			sb.WriteString(`<button type="button" class="art-reveal" aria-expanded="false" aria-label="Показать или скрыть превью">Показать</button>`)
 		}
 	} else if item.Type == "audio" {
 		sb.WriteString(fmt.Sprintf(`<span class="art-icon art-icon-audio">%s</span>`, icon("audio")))
@@ -265,12 +266,15 @@ func writeArtifactCard(sb htmlWriter, item ArtifactItem, allowExport, noBlur boo
 
 	// SVG security badge notice
 	if ext == "svg" || item.Mime == "image/svg+xml" {
-		hasScript := false
-		if item.EmbeddedDataURI != "" {
+		hasScript, checked := false, false
+		if item.SVG != nil {
+			hasScript, checked = item.SVG.Active, item.SVG.Complete
+		}
+		if item.SVG == nil && item.EmbeddedDataURI != "" {
 			if commaIdx := strings.Index(item.EmbeddedDataURI, ","); commaIdx >= 0 {
 				if decoded, err := base64.StdEncoding.DecodeString(item.EmbeddedDataURI[commaIdx+1:]); err == nil {
-					// D1: единый канонический список паттернов; см. SVGActivePatterns.
-					hasScript = SVGHasActiveContent(decoded)
+					scan := svgscan.Scan(decoded)
+					hasScript, checked = scan.Active(), scan.Complete
 				}
 			}
 		}
@@ -279,10 +283,13 @@ func writeArtifactCard(sb htmlWriter, item ArtifactItem, allowExport, noBlur boo
 			sb.WriteString(`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`)
 			sb.WriteString(`<span>SVG Script Alert</span>`)
 			sb.WriteString(`</div>`)
-		} else {
-			sb.WriteString(`<div class="art-svg-badge svg-badge-secure" title="SVG analyzed. No active scripting elements.">`)
+		} else if checked {
+			sb.WriteString(`<div class="art-svg-badge svg-badge-secure" title="Static inspection found no active content indicators; this is not a safety guarantee.">`)
 			sb.WriteString(`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`)
-			sb.WriteString(`<span>SVG Secure</span>`)
+			sb.WriteString(`<span>No active SVG indicators</span>`)
+			sb.WriteString(`</div>`)
+		} else {
+			sb.WriteString(`<div class="art-svg-badge"><span>SVG inspection incomplete</span>`)
 			sb.WriteString(`</div>`)
 		}
 	}

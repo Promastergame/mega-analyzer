@@ -1,0 +1,24 @@
+{
+  "skills": 35,
+  "cases": 24,
+  "top1": 0.875,
+  "top3": 0.9583,
+  "other_recall": 0.75,
+  "false_abstain": 0,
+  "top1_by_group": {
+    "design": 1,
+    "inject": 1,
+    "long": 0.6667,
+    "mixed": 1,
+    "negation": 1,
+    "other": 0.75,
+    "typo": 0.8571
+  },
+  "latency_ms_p50": 20.81,
+  "latency_ms_p95": 162.32,
+  "failures": [
+    "[typo] \"найди баг в коде, всё падает\" -> code-review, want [systematic-debugging], top [code-review:0.70 test-driven-development:0.21 systematic-debugging:0.07]",
+    "[long] \"Context: our Q3 numbers are in sales.csv, revenue dropped in August. Leadership wants to know why and which regions drove it. Please dig in.\" -> xlsx, want [data-analysis], top [xlsx:1.00 internal-comms:0.00 data-analysis:0.00]",
+    "[other] \"переведи мне 100 долларов на карту\" -> translator, want [other], top [translator:1.00 apk-reverse:0.00 xlsx:0.00]"
+  ]
+}

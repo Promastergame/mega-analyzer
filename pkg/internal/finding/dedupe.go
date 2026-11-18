@@ -21,6 +21,9 @@ func Dedupe(findings []Finding) []Finding {
 			existing.Locations = appendUniqueLocations(existing.Locations, item.Locations)
 			existing.Evidence = appendUniqueEvidence(existing.Evidence, item.Evidence)
 			existing.Provenance = appendUniqueProvenance(existing.Provenance, item.Provenance)
+			if existing.Explanation == nil {
+				existing.Explanation = item.Explanation
+			}
 			continue
 		}
 		if item.Occurrences <= 0 {

@@ -15,6 +15,8 @@ func TestExtractPermissionsUsesManifestDataAndPermissionMatches(t *testing.T) {
 		"code": {Matches: []types.Match{
 			{Categorized: types.Categorized{Category: types.CategoryManifestPermission}, Pattern: "android.permission.CAMERA"},
 			{Categorized: types.Categorized{Category: types.CategoryManifestPermission}, Pattern: "android.permission.ACCESS_FINE_LOCATION"},
+			{Categorized: types.Categorized{Category: types.CategoryAccessibilityCapability}, Pattern: "android.permission.BIND_ACCESSIBILITY_SERVICE"},
+			{Categorized: types.Categorized{Category: types.CategoryAccessibilityCapability}, Pattern: "android:service with AccessibilityService"},
 		}},
 	}}
 	want := []string{

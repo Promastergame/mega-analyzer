@@ -33,33 +33,35 @@ func NewLibraryCallDetector() *LibraryCallDetector {
 
 	d.libraryPrefixes = []libraryPrefix{
 		{
+			// Calling into a billing SDK is the normal monetization path, not a
+			// critical event. The call is still inventoried under BILLING_CLIENT.
 			prefix:   "Lcom/android/billingclient/api/",
 			name:     "Google Play Billing",
 			category: types.CategoryBillingClient,
-			critical: true,
+			critical: false,
 			methods: []targetMethod{
-				{"queryPurchases", "Queries user purchases", true},
+				{"queryPurchases", "Queries user purchases", false},
 				{"queryProductDetails", "Queries product details", false},
-				{"launchBillingFlow", "Launches purchase flow", true},
-				{"acknowledgePurchase", "Acknowledges purchase", true},
-				{"consumeAsync", "Consumes purchase", true},
+				{"launchBillingFlow", "Launches purchase flow", false},
+				{"acknowledgePurchase", "Acknowledges purchase", false},
+				{"consumeAsync", "Consumes purchase", false},
 			},
 		},
 		{
 			prefix:   "Lcom/android/vending/billing/",
 			name:     "Legacy Billing",
 			category: types.CategoryBillingClient,
-			critical: true,
+			critical: false,
 		},
 		{
 			prefix:   "Lcom/revenuecat/purchases/",
 			name:     "RevenueCat",
 			category: types.CategoryBillingClient,
-			critical: true,
+			critical: false,
 			methods: []targetMethod{
-				{"getCustomerInfo", "Gets subscription status", true},
-				{"purchase", "Makes purchase", true},
-				{"restorePurchases", "Restores purchases", true},
+				{"getCustomerInfo", "Gets subscription status", false},
+				{"purchase", "Makes purchase", false},
+				{"restorePurchases", "Restores purchases", false},
 			},
 		},
 		{

@@ -7,7 +7,7 @@
 #   scripts/make-jre.sh windows-amd64 /path/to/host-jdk /path/to/windows-jdk
 #
 # Result: pkg/internal/apkloader/embedtools/jre-<os>-<arch>.tgz (~23-26 MB).
-# Modules: java.base (smali/baksmali core), java.xml (baksmali), java.logging.
+# Modules: java.base, java.xml, java.logging (optional APK signing tools).
 set -euo pipefail
 target="${1:?usage: make-jre.sh <os-arch> <host-jdk> [target-jdk]}"
 host_jdk="${2:?host JDK path}"

@@ -1,5 +1,7 @@
 package report
 
+import "mega-analyzer/pkg/internal/decisionai"
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // ARTIFACTS VIEW — opt-in section data for HTML / JSON renderers.
 // All fields are populated only when EnableArtifacts is true.
@@ -43,6 +45,7 @@ type ArtifactItem struct {
 	ExternalPath    string `json:"external_path,omitempty"`
 
 	Image    *ImageArtifact    `json:"image,omitempty"`
+	SVG      *SVGInspection    `json:"svg,omitempty"`
 	Native   *NativeArtifact   `json:"native,omitempty"`
 	ThreeDee *ThreeDeeArtifact `json:"three_d,omitempty"`
 	Code     *CodeArtifact     `json:"code,omitempty"`
@@ -50,6 +53,13 @@ type ArtifactItem struct {
 	Forensic ForensicReport    `json:"forensic"`
 
 	Warnings []string `json:"warnings,omitempty"`
+}
+
+// SVGInspection travels with embedded and external assets alike. Browser
+// viewers use this result instead of maintaining a second pattern list.
+type SVGInspection struct {
+	Active   bool `json:"active"`
+	Complete bool `json:"complete"`
 }
 
 // ArchiveArtifact holds the zip/archive-specific list of files.
@@ -72,6 +82,17 @@ type ImageArtifact struct {
 	EXIF           map[string]string `json:"exif,omitempty"`
 	SensitiveScore float64           `json:"sensitive_score"`
 	SensitiveLabel string            `json:"sensitive_label,omitempty"`
+	Preview        *decisionai.ImagePreview `json:"preview,omitempty"`
+}
+
+func (image *ImageArtifact) HidePreview() bool {
+	if image == nil {
+		return false
+	}
+	if image.Preview != nil {
+		return image.Preview.Blur || image.Preview.Status != "checked"
+	}
+	return image.SensitiveLabel != ""
 }
 
 // NativeArtifact mirrors the .so deep-view structure.

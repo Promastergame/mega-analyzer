@@ -1,0 +1,4 @@
+{"state":{"candidate":"getMaxCoins() const/16 v0, 0x64 → 0x3e8","build":{"status":"pass","sha256_matches":true},"runtime":{"status":"pass","device":"emulator"},"notes":"После патча на экране магазина лимит монет стал 1000. Сетевых запросов при проверке не было."},
+"questions":{"effect_confirmed":{"type":"noul","instructions":"Подтверждён ли нужный эффект патча?","criteria":{"true":"Эффект наблюдался на текущей сборке","false":"Эффект не наблюдался, тест не запускался или был на другой версии"}},
+"server_dependency":{"type":"score","instructions":"Насколько поведение зависит от сервера?","criteria":{"0":"Полностью локально","1":"Есть кэш с сервера","2":"Сервер проверяет значение","3":"Значение решает сервер"}},
+"literal_role":{"type":"choice","instructions":"Какую роль играет изменённый литерал?","criteria":{"limit":"Лимит или максимум значения","delay":"Задержка или таймер","color":"Цвет или элемент интерфейса","resource_id":"Идентификатор ресурса","other":null}}}}

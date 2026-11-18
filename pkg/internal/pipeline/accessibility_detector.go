@@ -7,6 +7,7 @@ import (
 	"strings"
 	"sync"
 
+	"mega-analyzer/pkg/internal/finding"
 	"mega-analyzer/pkg/internal/types"
 )
 
@@ -186,18 +187,19 @@ type accessibilityState struct {
 	mu sync.Mutex
 
 	// ── Permission flags ─────────────────────────────────────────
-	hasAccessibilityService bool
-	hasInternetPermission   bool
-	hasSMSPermissions       bool
-	hasSystemAlertWindow    bool
-	hasDeviceAdmin          bool
-	hasNotificationAccess   bool
-	hasBootReceiver         bool
-	hasInstallPackages      bool
-	hasUsageStats           bool
-	hasCamera               bool
-	hasMicrophone           bool
-	hasKeyguardDisable      bool
+	hasAccessibilityService  bool
+	hasAccessibilitySubclass bool
+	hasInternetPermission    bool
+	hasSMSPermissions        bool
+	hasSystemAlertWindow     bool
+	hasDeviceAdmin           bool
+	hasNotificationAccess    bool
+	hasBootReceiver          bool
+	hasInstallPackages       bool
+	hasUsageStats            bool
+	hasCamera                bool
+	hasMicrophone            bool
+	hasKeyguardDisable       bool
 
 	// ── Context flags ────────────────────────────────────────────
 	hasFinancialKeywords bool
@@ -225,6 +227,15 @@ func newAccessibilityState() *accessibilityState {
 	return &accessibilityState{
 		threats: make(map[string]*AccessibilityThreat),
 	}
+}
+
+// capabilityConfirmed is the gate for treating code-level accessibility API
+// references as a capability of the app: a declared BIND_ACCESSIBILITY_SERVICE
+// binding must combine with a class that actually extends
+// AccessibilityService. Compat-library constants and framework wrappers
+// without a declared service never satisfy it.
+func (s *accessibilityState) capabilityConfirmed() bool {
+	return s.hasAccessibilityService && s.hasAccessibilitySubclass
 }
 
 // addThreat добавляет или обновляет threat (dedup по типу, сохраняет max score)
@@ -279,7 +290,7 @@ func sigmoid(x float64) float64 {
 }
 
 func (s *accessibilityState) calculateThreatScore() float64 {
-	if !s.hasAccessibilityService {
+	if !s.capabilityConfirmed() {
 		return 0.0
 	}
 
@@ -415,9 +426,15 @@ func (d *AccessibilityAbuseDetector) buildPatterns() {
 		"getrootinaactivewindow", // оставляем оба варианта для опечаток в APK
 		"findaccessibilitynodeinfosbytext",
 		"findaccessibilitynodeinfosbyviewid",
-		"getsource", "getchildcount", "getchild",
-		"gettext", "getcontentdescription", "getclassname",
-		"getpackagename", "onserviceconnected",
+		// NOTE: generic View/Context accessors ("gettext", "getchildcount",
+		// "getchild", "getcontentdescription", "getclassname",
+		// "getpackagename", "getsource") removed. As bare substrings they
+		// match every ViewGroup/AccessibilityNodeInfoCompat call in androidx
+		// compat code, which manufactured dozens of "Accessibility
+		// Capability" hits per APK. Accessibility capability is decided by
+		// the manifest binding plus a real AccessibilityService subclass;
+		// see accessibilitySanitySweep.
+		"onserviceconnected",
 		"onaccessibilityevent", "getserviceinfo", "setserviceinfo",
 		"getwindows",
 	)...)
@@ -517,14 +534,21 @@ func (d *AccessibilityAbuseDetector) buildPatterns() {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 func (d *AccessibilityAbuseDetector) Detect(ctx *FileDetectContext, analysis *types.FileAnalysis) {
+	if ctx == nil || analysis == nil {
+		return
+	}
 	d.state.mu.Lock()
 	defer d.state.mu.Unlock()
+	firstMatch := len(analysis.Matches)
+	defer calibrateAccessibilityMatches(analysis, firstMatch, d.Name())
 
 	d.state.filesAnalyzed++
 
 	switch ctx.FileType {
 	case types.FileTypeXML:
-		d.detectManifest(ctx, analysis)
+		if isAndroidManifestContext(ctx, analysis) {
+			d.detectManifest(ctx, analysis)
+		}
 	case types.FileTypeSmali:
 		scan := d.preScan(ctx.ContentLower)
 		d.detectSmali(ctx, analysis, scan)
@@ -532,6 +556,39 @@ func (d *AccessibilityAbuseDetector) Detect(ctx *FileDetectContext, analysis *ty
 		scan := d.preScan(ctx.ContentLower)
 		d.detectConfig(ctx, analysis, scan)
 	}
+}
+
+func calibrateAccessibilityMatches(analysis *types.FileAnalysis, first int, detector string) {
+	for i := first; i < len(analysis.Matches); i++ {
+		m := &analysis.Matches[i]
+		// API, permission and package references describe capabilities.
+		// Explicit malware categories retain their severity and evidence.
+		if m.Category == types.CategorySecurity {
+			m.Category = types.CategoryAccessibilityCapability
+			m.Severity = types.SeverityInfo
+			m.IsCritical = false
+			m.Score = 2
+		}
+		if m.Metadata == nil {
+			m.Metadata = make(map[string]string)
+		}
+		m.Metadata["detector"] = detector
+	}
+}
+
+func isAndroidManifestContext(ctx *FileDetectContext, analysis *types.FileAnalysis) bool {
+	p := strings.ReplaceAll(firstNonEmpty(ctx.Path, analysis.Path), "\\", "/")
+	if slash := strings.LastIndexByte(p, '/'); slash >= 0 {
+		p = p[slash+1:]
+	}
+	if strings.EqualFold(p, "AndroidManifest.xml") {
+		return true
+	}
+	// Accept manifest fragments used by callers, but never translation or
+	// layout resources merely because APK-wide state is already populated.
+	return !bytes.Contains(ctx.ContentLower, []byte("<resources")) &&
+		(bytes.Contains(ctx.ContentLower, []byte("<manifest")) ||
+			bytes.Contains(ctx.ContentLower, []byte("<uses-permission")))
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -570,7 +627,7 @@ func (d *AccessibilityAbuseDetector) detectManifest(ctx *FileDetectContext, anal
 		}
 	}
 
-	// Requesting the AccessibilityService permission is NOT, on its own, a
+	// Declaring an AccessibilityService binding is NOT, on its own, a
 	// threat — countless legitimate apps (screen readers, automation, password
 	// managers, screenshot tools) use it. We record it as an informational
 	// finding only; it is escalated to a real threat exclusively when it
@@ -579,9 +636,9 @@ func (d *AccessibilityAbuseDetector) detectManifest(ctx *FileDetectContext, anal
 	if d.state.hasAccessibilityService {
 		if idx := bytes.Index(c, []byte("bind_accessibility_service")); idx >= 0 {
 			analysis.Matches = append(analysis.Matches, newMatch(
-				types.CategoryManifestPermission, analysis.Path,
+				types.CategoryAccessibilityCapability, analysis.Path,
 				lineAt(ctx.LineOffsets, idx),
-				"Accessibility Service permission declared (informational; risk only in combination)",
+				"Accessibility Service binding declared (informational; risk only in combination)",
 				"android.permission.BIND_ACCESSIBILITY_SERVICE",
 				false,
 			))
@@ -622,7 +679,7 @@ func (d *AccessibilityAbuseDetector) detectManifest(ctx *FileDetectContext, anal
 	if bytes.Contains(c, []byte("accessibilityservice")) {
 		idx := bytes.Index(c, []byte("accessibilityservice"))
 		analysis.Matches = append(analysis.Matches, newMatch(
-			types.CategoryManifestPermission, analysis.Path,
+			types.CategoryAccessibilityCapability, analysis.Path,
 			lineAt(ctx.LineOffsets, idx),
 			"AccessibilityService declared in manifest (informational)",
 			"android:service with AccessibilityService",
@@ -647,59 +704,75 @@ func (d *AccessibilityAbuseDetector) evaluateManifestCombos(_ *FileDetectContext
 		score      float64
 		desc       string
 		evidence   string
+		summary    string
 	}
 
+	// Declaration co-presence is an access profile, not observed behavior:
+	// these matches stay informational while the threat bookkeeping above
+	// keeps feeding the ML/fusion features.
 	combos := []combo{
 		{s.hasSystemAlertWindow, ThreatTypeOverlayAttack, ThreatCritical, 9.0,
-			"🚨 Accessibility + Overlay — classic banking trojan pattern",
-			"SYSTEM_ALERT_WINDOW + AccessibilityService"},
+			"Accessibility service and overlay permission are both declared",
+			"SYSTEM_ALERT_WINDOW + AccessibilityService",
+			"Overlay-based UI deception additionally requires invoked overlay code and a matching target app."},
 		{s.hasDeviceAdmin, ThreatTypeRansomware, ThreatCritical, 9.5,
-			"🚨 Accessibility + Device Admin — ransomware/APT pattern",
-			"DeviceAdmin + AccessibilityService"},
+			"Accessibility service and device-admin capability are both declared",
+			"DeviceAdmin + AccessibilityService",
+			"Device-admin declarations alone do not lock files or display ransom demands; no lockscreen or wipe behavior is established."},
 		{s.hasNotificationAccess, ThreatType2FABypass, ThreatHigh, 8.0,
-			"🔴 Accessibility + Notifications — 2FA bypass risk",
-			"NotificationListener + AccessibilityService"},
+			"Accessibility service and notification-listener access are both declared",
+			"NotificationListener + AccessibilityService",
+			"Notification reading requires the granted listener and invoked handling; OTP theft is not established."},
 		{s.hasSMSPermissions, ThreatType2FABypass, ThreatCritical, 9.0,
-			"🚨 Accessibility + SMS — complete 2FA interception",
-			"SMS permissions + AccessibilityService"},
+			"Accessibility service and SMS permissions are both declared",
+			"SMS permissions + AccessibilityService",
+			"SMS interception requires a registered receiver or invoked telephony APIs; neither is established by declarations."},
 		{s.hasInstallPackages, ThreatTypeSpyware, ThreatHigh, 8.5,
-			"🔴 Accessibility + Install — silent malware installation",
-			"INSTALL_PACKAGES + AccessibilityService"},
+			"Accessibility service and package-install permission are both declared",
+			"INSTALL_PACKAGES + AccessibilityService",
+			"Silent installation requires invoked install flows; the permission alone grants nothing."},
 		{s.hasKeyguardDisable, ThreatTypeRansomware, ThreatHigh, 7.5,
-			"🔴 Accessibility + Keyguard disable — screen unlock exploit",
-			"DISABLE_KEYGUARD + AccessibilityService"},
+			"Keyguard-disable and accessibility declarations are co-present",
+			"DISABLE_KEYGUARD + AccessibilityService",
+			"Screen-unlock or lockscreen-display behavior is not established by declarations."},
 		{s.hasCamera && s.hasMicrophone, ThreatTypeSpyware, ThreatHigh, 8.0,
-			"🔴 Accessibility + Camera + Mic — surveillance capabilities",
-			"CAMERA + RECORD_AUDIO + AccessibilityService"},
+			"Camera and microphone access are declared together with an accessibility service",
+			"CAMERA + RECORD_AUDIO + AccessibilityService",
+			"Recording behavior and data destinations are not established."},
 	}
 
 	for _, cb := range combos {
 		if cb.condition {
 			s.addThreat(cb.threatType, cb.level, cb.score, cb.desc, cb.evidence, analysis.Path)
-			analysis.Matches = append(analysis.Matches, newMatch(
-				types.CategorySecurity, analysis.Path, 0,
-				cb.desc, cb.evidence, true,
-			))
+			match := newMatch(types.CategorySecurity, analysis.Path, 0,
+				cb.desc, cb.evidence, false)
+			match.Severity, match.EvidenceType = types.SeverityInfo, "permission_declaration"
+			match.Metadata = map[string]string{"finding_kind": "inventory", "detector": d.Name()}
+			match.Explanation = &finding.Explanation{Status: "observation", Summary: cb.desc,
+				Limitations: []string{cb.summary}}
+			analysis.Matches = append(analysis.Matches, match)
 		}
 	}
 
-	// Triple combos
+	// Triple combos stay in the threat bookkeeping for the ML/fusion features,
+	// but no longer emit user-facing verdicts: the pairwise declarations above
+	// already describe the access profile informationally.
 	if s.hasSystemAlertWindow && s.hasFinancialKeywords {
 		s.addThreat(ThreatTypeBankingTrojan, ThreatCritical, 10.0,
-			"🚨 BANKING TROJAN TRIFECTA: Accessibility + Overlay + Financial context",
+			"Accessibility + Overlay + Financial context",
 			"Accessibility + SYSTEM_ALERT_WINDOW + financial keywords",
 			analysis.Path)
 	}
 	if s.hasSMSPermissions && s.hasNotificationAccess {
 		s.addThreat(ThreatType2FABypass, ThreatCritical, 9.5,
-			"🚨 COMPLETE 2FA BYPASS: Accessibility + SMS + Notifications",
-			"Intercepts both SMS and push OTP codes",
+			"Accessibility + SMS + Notifications",
+			"SMS and push notification OTP access profile",
 			analysis.Path)
 	}
 	if s.hasDeviceAdmin && s.hasBootReceiver {
 		s.addThreat(ThreatTypeRansomware, ThreatCritical, 9.5,
-			"🚨 PERSISTENT APT: Accessibility + Device Admin + Boot persistence",
-			"Survives reboot, prevents uninstall",
+			"Accessibility + Device Admin + Boot persistence",
+			"DeviceAdmin + boot receiver + AccessibilityService",
 			analysis.Path)
 	}
 }
@@ -707,6 +780,62 @@ func (d *AccessibilityAbuseDetector) evaluateManifestCombos(_ *FileDetectContext
 // ═══════════════════════════════════════════════════════════════════════════════
 // SMALI ANALYSIS (uses pre-scan results)
 // ═══════════════════════════════════════════════════════════════════════════════
+
+// A false substring earlier in the file must not hide a later genuine call.
+func findAccessibilityCall(content []byte, method string) int {
+	for from := 0; from < len(content); {
+		i := bytes.Index(content[from:], []byte(method))
+		if i < 0 {
+			return -1
+		}
+		i += from
+		if isAccessibilityCall(content, i, method) {
+			return i
+		}
+		from = i + 1
+	}
+	return -1
+}
+
+// Require an actual method call and a local AccessibilityService receiver.
+// A substring such as getWindowSystemUiVisibility is not getWindows().
+func isAccessibilityCall(content []byte, offset int, method string) bool {
+	if offset < 0 || offset >= len(content) {
+		return false
+	}
+	start := bytes.LastIndexByte(content[:offset], '\n') + 1
+	end := bytes.IndexByte(content[offset:], '\n')
+	if end < 0 {
+		end = len(content)
+	} else {
+		end += offset
+	}
+	line := content[start:end]
+	return bytes.Contains(line, []byte("accessibilityservice;->"+method+"("))
+}
+
+// gestureHitLine returns the lowercased source line containing a pre-scan hit.
+func gestureHitLine(contentLower []byte, offset int) []byte {
+	if offset < 0 || offset >= len(contentLower) {
+		return nil
+	}
+	start := bytes.LastIndexByte(contentLower[:offset], '\n') + 1
+	end := bytes.IndexByte(contentLower[offset:], '\n')
+	if end < 0 {
+		end = len(contentLower)
+	} else {
+		end += offset
+	}
+	return contentLower[start:end]
+}
+
+// isConstantFieldLine reports whether a smali line is a field declaration,
+// e.g. ".field public static final ACTION_CLICK:I". Constant definitions
+// reference capabilities without using them.
+func isConstantFieldLine(line []byte) bool {
+	trimmed := bytes.TrimLeft(line, " \t")
+	return bytes.HasPrefix(trimmed, []byte(".field"))
+}
 
 func (d *AccessibilityAbuseDetector) detectSmali(ctx *FileDetectContext, analysis *types.FileAnalysis, scan *preScanResult) {
 	s := d.state
@@ -716,19 +845,26 @@ func (d *AccessibilityAbuseDetector) detectSmali(ctx *FileDetectContext, analysi
 	// uses the framework. Report informationally (non-critical); the abuse
 	// combos below (keylogger, scraping+internet, set_text, …) carry the
 	// criticality. See plan §1.6.
+	//
+	// Per the capability rule, API references count as a signal only when a
+	// BIND_ACCESSIBILITY_SERVICE service and an AccessibilityService subclass
+	// exist (the sweep later drops matches if the manifest pass ran after the
+	// code pass). Compat-library files are never a capability of the app.
+	capable := s.capabilityConfirmed()
 	if hits, ok := scan.byCat[pcAccessibilityAPI]; ok {
 		hasContext := bytes.Contains(ctx.ContentLower, []byte("accessibility"))
 		for _, hit := range hits {
 			s.apiCalls++
-			if hasContext {
-				analysis.Matches = append(analysis.Matches, newMatch(
-					types.CategorySecurity, analysis.Path,
-					lineAt(ctx.LineOffsets, hit.offset),
-					"AccessibilityService API: "+hit.tp.tag,
-					safeSnippet(ctx.Content, hit.offset, len(hit.tp.pattern)+30),
-					false,
-				))
+			if !capable || analysis.IsLibrary || !hasContext {
+				continue
 			}
+			analysis.Matches = append(analysis.Matches, newMatch(
+				types.CategorySecurity, analysis.Path,
+				lineAt(ctx.LineOffsets, hit.offset),
+				"AccessibilityService API: "+hit.tp.tag,
+				safeSnippet(ctx.Content, hit.offset, len(hit.tp.pattern)+30),
+				false,
+			))
 		}
 	}
 
@@ -736,6 +872,9 @@ func (d *AccessibilityAbuseDetector) detectSmali(ctx *FileDetectContext, analysi
 	// Implementing AccessibilityService is what every legitimate accessibility
 	// app does. Informational on its own. See plan §1.6.
 	if hits, ok := scan.byCat[pcSubclass]; ok {
+		// A real AccessibilityService subclass is half of the capability
+		// gate; without it API/gesture references stay references.
+		s.hasAccessibilitySubclass = true
 		for _, hit := range hits {
 			s.suspiciousMethods++
 			analysis.Matches = append(analysis.Matches, newMatch(
@@ -751,8 +890,23 @@ func (d *AccessibilityAbuseDetector) detectSmali(ctx *FileDetectContext, analysi
 	// ── 3. Gesture / click simulation ───────────────────────────
 	if hits, ok := scan.byCat[pcGesture]; ok {
 		for _, hit := range hits {
+			line := gestureHitLine(ctx.ContentLower, hit.offset)
+			// ACTION_CLICK / ACTION_SET_TEXT defined as `.field public static
+			// final` constants are declarations, not simulations — androidx
+			// compat classes define every one of them once and triggered a
+			// flood of "Multiple click simulations" on benign apps.
+			if isConstantFieldLine(line) {
+				continue
+			}
 			s.clickSimulations++
 			s.gestureInjections++
+			// Capability rule: gesture-action references only describe the
+			// app once a bound service plus a real subclass exist. Compat
+			// constant plumbing (getters, field defs) in unconfirmed runs
+			// never emits.
+			if !capable {
+				continue
+			}
 			isCritical := s.clickSimulations > 2
 			label := "Gesture/click simulation: " + hit.tp.tag
 			if s.clickSimulations > 3 {
@@ -766,7 +920,7 @@ func (d *AccessibilityAbuseDetector) detectSmali(ctx *FileDetectContext, analysi
 				isCritical,
 			))
 		}
-		if scan.hasTag["action_set_text"] {
+		if capable && scan.hasTag["action_set_text"] {
 			s.addThreat(ThreatTypeCredentialTheft, ThreatHigh, 7.5,
 				"ACTION_SET_TEXT — can auto-fill password fields",
 				"performAction(ACTION_SET_TEXT)", analysis.Path)
@@ -777,14 +931,14 @@ func (d *AccessibilityAbuseDetector) detectSmali(ctx *FileDetectContext, analysi
 	apiScrapePatterns := []string{"getrootinactivewindow", "getrootinaactivewindow", "getwindows"}
 	for _, p := range apiScrapePatterns {
 		if scan.hasTag[p] {
-			s.screenScrapings++
-			hit := findHitByTag(scan, p)
-			if hit != nil {
+			offset := findAccessibilityCall(ctx.ContentLower, p)
+			if offset >= 0 {
+				s.screenScrapings++
 				analysis.Matches = append(analysis.Matches, newMatch(
 					types.CategorySecurity, analysis.Path,
-					lineAt(ctx.LineOffsets, hit.offset),
+					lineAt(ctx.LineOffsets, offset),
 					"🔴 Screen content access: "+p,
-					safeSnippet(ctx.Content, hit.offset, len(hit.tp.pattern)+20),
+					safeSnippet(ctx.Content, offset, len(p)+20),
 					true,
 				))
 			}
@@ -792,6 +946,11 @@ func (d *AccessibilityAbuseDetector) detectSmali(ctx *FileDetectContext, analysi
 	}
 	if hits, ok := scan.byCat[pcScreenCapture]; ok {
 		for _, hit := range hits {
+			// VirtualDisplay is also used for benign rendering. Require a
+			// MediaProjection reference before treating it as capture.
+			if hit.tp.tag == "virtualdisplay" && !scan.hasTag["mediaprojection"] {
+				continue
+			}
 			s.screenScrapings++
 			analysis.Matches = append(analysis.Matches, newMatch(
 				types.CategorySecurity, analysis.Path,
@@ -827,12 +986,15 @@ func (d *AccessibilityAbuseDetector) detectSmali(ctx *FileDetectContext, analysi
 				fmt.Sprintf("Financial keywords (%d) + AccessibilityService", financialHits),
 				"Banking/payment keywords in accessibility context",
 				analysis.Path)
-			analysis.Matches = append(analysis.Matches, newMatch(
-				types.CategorySecurity, analysis.Path, 0,
-				fmt.Sprintf("🚨 BANKING TROJAN RISK: %d financial keywords + Accessibility", financialHits),
-				"Financial keywords combined with accessibility abuse capabilities",
-				true,
-			))
+			match := newMatch(types.CategorySecurity, analysis.Path, 0,
+				fmt.Sprintf("Financial/banking vocabulary (%d occurrences) in an app with an accessibility service", financialHits),
+				"Financial keywords combined with accessibility capabilities", false)
+			match.Severity, match.EvidenceType = types.SeverityInfo, "vocabulary_profile"
+			match.Metadata = map[string]string{"finding_kind": "inventory", "detector": d.Name()}
+			match.Explanation = &finding.Explanation{Status: "observation",
+				Summary:     "Banking/payment strings are present; vocabulary alone does not attribute a malware family.",
+				Limitations: []string{"Keywords may describe reported accounts, categories or UI labels; no target selection or transfer flow is established."}}
+			analysis.Matches = append(analysis.Matches, match)
 		}
 	}
 
@@ -856,12 +1018,15 @@ func (d *AccessibilityAbuseDetector) detectSmali(ctx *FileDetectContext, analysi
 			fmt.Sprintf("Credential harvesting: %d credential keywords + Accessibility", credentialHits),
 			"Can read password fields via AccessibilityService",
 			analysis.Path)
-		analysis.Matches = append(analysis.Matches, newMatch(
-			types.CategorySecurity, analysis.Path, 0,
-			fmt.Sprintf("🔴 Credential theft: %d credential keywords + Accessibility", credentialHits),
-			"password/login/token keywords with accessibility context",
-			true,
-		))
+		match := newMatch(types.CategorySecurity, analysis.Path, 0,
+			fmt.Sprintf("Credential-related vocabulary (%d occurrences) in an app with an accessibility service", credentialHits),
+			"password/login/token keywords with accessibility context", false)
+		match.Severity, match.EvidenceType = types.SeverityInfo, "vocabulary_profile"
+		match.Metadata = map[string]string{"finding_kind": "inventory", "detector": d.Name()}
+		match.Explanation = &finding.Explanation{Status: "observation",
+			Summary:     "Credential-related strings are present; reading password fields additionally requires node access invoked against login UIs.",
+			Limitations: []string{"Keywords may belong to forms, settings or help text; no captured field or destination is established."}}
+		analysis.Matches = append(analysis.Matches, match)
 	}
 
 	// ── 9. Security app killing ─────────────────────────────────
@@ -871,12 +1036,15 @@ func (d *AccessibilityAbuseDetector) detectSmali(ctx *FileDetectContext, analysi
 			fmt.Sprintf("Security app targeting: %d antivirus packages + Accessibility", securityHits),
 			"Can auto-uninstall security apps",
 			analysis.Path)
-		analysis.Matches = append(analysis.Matches, newMatch(
-			types.CategorySecurity, analysis.Path, 0,
-			fmt.Sprintf("🚨 SECURITY KILLER: %d antivirus packages targeted", securityHits),
-			"AccessibilityService can auto-click uninstall on security apps",
-			true,
-		))
+		match := newMatch(types.CategorySecurity, analysis.Path, 0,
+			fmt.Sprintf("Antivirus package names (%d) referenced in an app with an accessibility service", securityHits),
+			"References to security applications", false)
+		match.Severity, match.EvidenceType = types.SeverityInfo, "vocabulary_profile"
+		match.Metadata = map[string]string{"finding_kind": "inventory", "detector": d.Name()}
+		match.Explanation = &finding.Explanation{Status: "observation",
+			Summary:     "The app references antivirus package names; uninstallation or disabling of security apps requires invoked accessibility clicks and is not established.",
+			Limitations: []string{"Package names may appear in detection lists, documentation or analytics without any interaction code."}}
+		analysis.Matches = append(analysis.Matches, match)
 	}
 
 	// ── 10. Package monitoring ──────────────────────────────────
@@ -884,12 +1052,15 @@ func (d *AccessibilityAbuseDetector) detectSmali(ctx *FileDetectContext, analysi
 	if pkgHits > 0 {
 		s.packageMonitors += pkgHits
 		if pkgHits >= 3 && s.hasAccessibilityService {
-			analysis.Matches = append(analysis.Matches, newMatch(
-				types.CategorySecurity, analysis.Path, 0,
-				fmt.Sprintf("Package monitoring with Accessibility (%d patterns)", pkgHits),
-				"Can track/kill apps",
-				true,
-			))
+			match := newMatch(types.CategorySecurity, analysis.Path, 0,
+				fmt.Sprintf("Package-install/removal events monitored (%d patterns) with an accessibility service", pkgHits),
+				"Can track app install/remove events", false)
+			match.Severity, match.EvidenceType = types.SeverityInfo, "vocabulary_profile"
+			match.Metadata = map[string]string{"finding_kind": "inventory", "detector": d.Name()}
+			match.Explanation = &finding.Explanation{Status: "observation",
+				Summary:     "Install/removal event handling is present; tracking or killing other apps requires invoked actions and is not established.",
+				Limitations: []string{"Event receivers are common in installers, device managers and analytics."}}
+			analysis.Matches = append(analysis.Matches, match)
 		}
 	}
 
@@ -950,12 +1121,16 @@ func (d *AccessibilityAbuseDetector) detectSmali(ctx *FileDetectContext, analysi
 			fmt.Sprintf("Direct banking app targeting: %s", strings.Join(banks, ", ")),
 			"References banking app package names",
 			analysis.Path)
-		analysis.Matches = append(analysis.Matches, newMatch(
-			types.CategorySecurity, analysis.Path, 0,
-			fmt.Sprintf("🚨 BANKING TROJAN: targets %d banking apps", len(banks)),
-			strings.Join(banks, ", "),
-			true,
-		))
+		match := newMatch(types.CategorySecurity, analysis.Path, 0,
+			fmt.Sprintf("Package names of %d banking apps are referenced or monitored", len(banks)),
+			strings.Join(banks, ", "), false)
+		match.Severity, match.EvidenceType = types.SeverityMedium, "package_reference"
+		match.Metadata = map[string]string{"finding_kind": "inventory", "detector": d.Name()}
+		match.Explanation = &finding.Explanation{Status: "needs_review",
+			Summary:     "The app enumerates or watches specific banking package names while holding an accessibility service. Target selection is established; the action performed on those targets is not.",
+			Limitations: []string{"Package lists alone do not identify a malware family or prove overlay, scraping or transfer behavior."},
+			NextChecks:  []string{"Trace how matched package names feed the accessibility handlers and whether overlays, node reads or gestures follow."}}
+		analysis.Matches = append(analysis.Matches, match)
 	}
 
 	// ── 14. Data exfiltration signal (для threat_aggregator) ────

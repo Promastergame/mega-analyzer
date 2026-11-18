@@ -89,8 +89,7 @@ _analyzer_completion() {
     flags="$flags -json -no-html -no-json -clean-output -report -keep-temp"
     flags="$flags -dex-only -r --rebuild -b --build --decode --no-sign --no-align --preserve-signature --ks --ks-alias"
     flags="$flags --no-resources --no-smali --copy-original --framework-dir"
-    flags="$flags --dex-backend --class-cache --smali-api --smali-jobs --smali-verbose --smali-incremental"
-    flags="$flags --baksmali-use-locals --baksmali-seq-labels --baksmali-no-param-regs"
+    flags="$flags --dex-backend --class-cache --smali-api --smali-jobs --smali-incremental"
     flags="$flags --compression-mode --spool-threshold-mb"
     flags="$flags -sandbox --sandbox-args --sandbox-duration --sandbox-memory"
     flags="$flags --sandbox-allow-net --win-sandbox --sandbox-vss-revert --sandbox-device"
@@ -181,15 +180,11 @@ _analyzer() {
         {--no-smali,}'[Skip smali generation]' \
         {--copy-original,}'[Copy original META-INF]' \
         {--framework-dir,}'[Framework directory]:directory:_directories' \
-        {--dex-backend,}'[Decode backend]:backend:(auto native baksmali)' \
+        {--dex-backend,}'[Decode backend]:backend:(auto native)' \
         {--class-cache,}'[Cache native DEX->Smali per class]' \
-        {--smali-api,}'[smali/baksmali API level]:number' \
-        {--smali-jobs,}'[smali/baksmali workers]:number' \
-        {--smali-verbose,}'[Pass --verbose to smali]' \
+        {--smali-api,}'[Native assembler Android API level]:number' \
+        {--smali-jobs,}'[Native DEX assembly workers]:number' \
         {--smali-incremental,}'[Incremental smali->dex rebuild]' \
-        {--baksmali-use-locals,}'[Pass --use-locals to baksmali]' \
-        {--baksmali-seq-labels,}'[Pass --sequential-labels to baksmali]' \
-        {--baksmali-no-param-regs,}'[Pass --parameter-registers=false to baksmali]' \
         {--compression-mode,}'[Rebuild ZIP mode]:mode:(fast balanced best)' \
         {--spool-threshold-mb,}'[Spool large ZIP entries to temp files]:number' \
         {-sandbox,}'[Run target in sandbox mode]' \
@@ -337,15 +332,11 @@ complete -c analyzer -l no-resources -d "Skip resource decoding"
 complete -c analyzer -l no-smali -d "Skip smali generation"
 complete -c analyzer -l copy-original -d "Copy original META-INF"
 complete -c analyzer -l framework-dir -d "Framework directory for resource decoding"
-complete -c analyzer -l dex-backend -d "Decode backend" -x -a "{auto,native,baksmali}"
+complete -c analyzer -l dex-backend -d "Decode backend" -x -a "{auto,native}"
 complete -c analyzer -l class-cache -d "Cache native DEX->Smali per class"
-complete -c analyzer -l smali-api -d "smali/baksmali API level"
-complete -c analyzer -l smali-jobs -d "smali/baksmali workers"
-complete -c analyzer -l smali-verbose -d "Pass --verbose to smali"
+complete -c analyzer -l smali-api -d "Native assembler Android API level"
+complete -c analyzer -l smali-jobs -d "Native DEX assembly workers"
 complete -c analyzer -l smali-incremental -d "Incremental smali->dex rebuild"
-complete -c analyzer -l baksmali-use-locals -d "Pass --use-locals to baksmali"
-complete -c analyzer -l baksmali-seq-labels -d "Pass --sequential-labels to baksmali"
-complete -c analyzer -l baksmali-no-param-regs -d "Pass --parameter-registers=false to baksmali"
 complete -c analyzer -l compression-mode -d "Rebuild ZIP mode" -x -a "{fast,balanced,best}"
 complete -c analyzer -l spool-threshold-mb -d "Spool large ZIP entries to temp files"
 

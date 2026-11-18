@@ -53,8 +53,9 @@ func TestRequiredLiteralsAnchors(t *testing.T) {
 	}{
 		{`(?i)luckypatcher`, []string{"luckypatcher"}},
 		{`(?i)lp_\w+`, []string{"lp_"}},
-		{`(?i)mod\s+by\s+chelpus`, []string{"chelpus"}},
-		{`(?i)(4pda|trashbox)\.ru`, []string{"4pda", "trashbox"}},
+		{`(?i)mod\s+by\s+chelpus`, []string{"chelpu"}},
+		{`(?i)(4pda|trashbox)\.ru`, []string{"4pda", "hbox"}},
+		{`(?i)четыре[._-]?пда`, []string{"ыре"}},
 		{`(?i)\d+`, nil},
 		{`(?i)(a|cracked)`, nil}, // one branch is un-anchorable => no gating
 	}

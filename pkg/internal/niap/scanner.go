@@ -198,18 +198,27 @@ func AnalyzeWithRules(target string, rules []Rule) (*Report, error) {
 
 	if info.IsDir() {
 		walkErr := filepath.WalkDir(target, func(path string, d fs.DirEntry, err error) error {
-			if err != nil || d.IsDir() {
+			if err != nil || d == nil {
+				rep.CodeFilesSkipped++
 				return nil
+			}
+			if d.IsDir() {
+				return nil
+			}
+			if isUnsupportedCodeFile(path) {
+				rep.UnsupportedCode++
 			}
 			isManifest := filepath.Base(path) == "AndroidManifest.xml"
 			if !isManifest && !isCodeFile(path) {
 				return nil
 			}
 			if fi, ierr := d.Info(); ierr != nil || fi.Size() > maxScanFileSize {
+				rep.CodeFilesSkipped++
 				return nil
 			}
 			data, rerr := os.ReadFile(path)
 			if rerr != nil || len(data) == 0 {
+				rep.CodeFilesSkipped++
 				return nil
 			}
 			rel, rerr2 := filepath.Rel(target, path)
@@ -225,6 +234,7 @@ func AnalyzeWithRules(target string, rules []Rule) (*Report, error) {
 				}
 				return nil
 			}
+			rep.CodeFilesScanned++
 			matchText(string(data), rel, codeRefs)
 			if allMatched(codeRefs) && allMatched(manifestRefs) {
 				return fs.SkipAll // everything found; stop early
@@ -241,6 +251,9 @@ func AnalyzeWithRules(target string, rules []Rule) (*Report, error) {
 		}
 		defer z.Close()
 		for _, f := range z.File {
+			if isUnsupportedCodeFile(f.Name) {
+				rep.UnsupportedCode++
+			}
 			// Base-name match like the directory walk: apktool zips do not
 			// always keep the manifest at the root.
 			isManifest := filepath.Base(f.Name) == "AndroidManifest.xml"
@@ -248,15 +261,18 @@ func AnalyzeWithRules(target string, rules []Rule) (*Report, error) {
 				continue
 			}
 			if f.UncompressedSize64 > maxScanFileSize {
+				rep.CodeFilesSkipped++
 				continue
 			}
 			rc, oerr := f.Open()
 			if oerr != nil {
+				rep.CodeFilesSkipped++
 				continue
 			}
 			data, rerr := io.ReadAll(io.LimitReader(rc, maxScanFileSize+1))
 			rc.Close()
 			if rerr != nil || len(data) == 0 || len(data) > maxScanFileSize {
+				rep.CodeFilesSkipped++
 				continue
 			}
 			if isManifest {
@@ -268,6 +284,7 @@ func AnalyzeWithRules(target string, rules []Rule) (*Report, error) {
 				}
 				continue
 			}
+			rep.CodeFilesScanned++
 			matchText(string(data), f.Name, codeRefs)
 		}
 	}
@@ -297,6 +314,14 @@ func AnalyzeWithRules(target string, rules []Rule) (*Report, error) {
 			matched, evidence := evalRule(cr)
 			m.Matched = matched
 			m.Evidence = evidence
+			if cr.rule.Type != "manifest" && !matched &&
+				(rep.CodeFilesScanned == 0 || rep.CodeFilesSkipped > 0 || rep.UnsupportedCode > 0) {
+				m.Status = StatusManual
+				m.Evidence = "code coverage incomplete; decode DEX/native code before interpreting absent patterns"
+				rep.ManualReview++
+				rep.Matches = append(rep.Matches, m)
+				continue
+			}
 			passed := matched
 			if cr.rule.Polarity == PolarityNegative {
 				passed = !matched
@@ -330,6 +355,9 @@ func AnalyzeWithRules(target string, rules []Rule) (*Report, error) {
 	// Counting fails instead meant a single TLS bypass scored "mostly
 	// compliant" and four weight-1 misses scored "non-compliant".
 	switch {
+	case score == 0 && rep.ManualReview > 0 &&
+		(rep.CodeFilesScanned == 0 || rep.CodeFilesSkipped > 0 || rep.UnsupportedCode > 0):
+		rep.Verdict = "unknown"
 	case score == 0:
 		rep.Verdict = "compliant"
 	case score <= 6:
@@ -338,6 +366,15 @@ func AnalyzeWithRules(target string, rules []Rule) (*Report, error) {
 		rep.Verdict = "non-compliant"
 	}
 	return rep, nil
+}
+
+func isUnsupportedCodeFile(name string) bool {
+	switch strings.ToLower(filepath.Ext(name)) {
+	case ".dex", ".class", ".jar", ".so":
+		return true
+	default:
+		return false
+	}
 }
 
 // evalRule computes group semantics: AND within a group, and across

@@ -11,6 +11,8 @@ import (
 	"time"
 
 	"mega-analyzer/pkg/internal/jarloader"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 // ═══════════════════════════════════════════
@@ -457,7 +459,7 @@ func BenchmarkAccessFlagsToSmali(b *testing.B) {
 }
 
 func TestExtractAPK_SingleXAPK(t *testing.T) {
-	tmpDir := t.TempDir()
+	tmpDir := testutil.TempDir(t)
 
 	// 1. Create a dummy inner APK with classes.dex
 	innerAPKPath := filepath.Join(tmpDir, "inner.apk")

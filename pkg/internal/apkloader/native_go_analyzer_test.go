@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestAnalyzeNativeGo_FormatDetection(t *testing.T) {
@@ -60,7 +62,7 @@ func TestScanNativeStrings_FlagsRootAndFrida(t *testing.T) {
 // TestAnalyzeNativeGo_RealBinary builds a tiny binary with the current toolchain
 // and verifies the analyzer parses it and reports a sane arch + verdict.
 func TestAnalyzeNativeGo_RealBinary(t *testing.T) {
-	tmp := t.TempDir()
+	tmp := testutil.TempDir(t)
 	src := filepath.Join(tmp, "tiny.go")
 	if err := os.WriteFile(src, []byte("package main\nfunc main(){}\n"), 0644); err != nil {
 		t.Fatal(err)

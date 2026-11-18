@@ -4,9 +4,7 @@ package apkloader
 //
 // assembleSmaliDirNative parses every .smali file in dir, interns all
 // references, freezes pools into DEX order and writes one DEX file. Files
-// that fail to parse produce user errors; genuinely unrepresentable
-// constructs produce *nativeUnsupportedError so the caller can fall back to
-// smali.jar (or report cleanly in standalone mode).
+// that fail to parse or contain unsupported constructs return build errors.
 
 import (
 	"fmt"
@@ -34,8 +32,6 @@ func AssembleSmaliDirNative(dir string, apiLevel int) (dex []byte, warnings []st
 		return nil, nil, err
 	}
 	if len(paths) == 0 {
-		// Mirror smali.jar behavior: an empty smali directory is the Java
-		// assembler's problem, not a native user error.
 		return nil, nil, unsupported("no .smali files in %s", dir)
 	}
 	sort.Strings(paths)
@@ -115,29 +111,4 @@ func assembleParsed(parsed []*SmaliFile, warnings []string, apiLevel int) ([]byt
 		return nil, warnings, aerr
 	}
 	return dexBytes, warnings, nil
-}
-
-// tryNativeAssembleJobs attempts native assembly for every job, writing each
-// output DEX next to its smali directory. It returns per-job results: built
-// jobs were written natively; unsupported jobs may be tried with smali.jar.
-func tryNativeAssembleJobs(jobs []smaliDirJob, apiLevel int) (built []smaliDirJob, unsupported []smaliDirJob, errs []string, warnings []string) {
-	for _, job := range jobs {
-		dex, warns, err := AssembleSmaliDirNative(job.dir, apiLevel)
-		warnings = append(warnings, warns...)
-		if err == nil {
-			if werr := os.WriteFile(job.dexPath, dex, 0644); werr != nil {
-				errs = append(errs, fmt.Sprintf("%s: %v", job.name, werr))
-				continue
-			}
-			built = append(built, job)
-			continue
-		}
-		if isUnsupported(err) {
-			unsupported = append(unsupported, job)
-			warnings = append(warnings, fmt.Sprintf("%s: native assembler cannot represent tree (%v); trying smali.jar", job.name, err))
-			continue
-		}
-		errs = append(errs, fmt.Sprintf("%s: %v", job.name, err))
-	}
-	return built, unsupported, errs, warnings
 }

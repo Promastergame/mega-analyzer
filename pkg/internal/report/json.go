@@ -22,6 +22,7 @@ import (
 type JSONReporter struct {
 	result    *types.AnalysisResult
 	artifacts *ArtifactsView
+	compact   bool
 }
 
 func NewJSONReporter(result *types.AnalysisResult) *JSONReporter {
@@ -32,6 +33,18 @@ func NewJSONReporter(result *types.AnalysisResult) *JSONReporter {
 // into the JSON output. nil disables the additional section.
 func (r *JSONReporter) WithArtifacts(view *ArtifactsView) *JSONReporter {
 	r.artifacts = view
+	return r
+}
+
+// WithCompact drops smali method bodies from the files section. A paranoid
+// APK scan embeds the decompiled sources verbatim (measured 128 of 153 MB on
+// the 2026-11-03 corpus run), which makes analysis.json unusable for daily
+// review. Findings, matches, evidence and coverage stay complete: they are
+// the triage payload. Sources remain in the HTML report and the original
+// binary. Bodies are dropped at write time via a shallow copy, so the shared
+// result stays intact for every other consumer.
+func (r *JSONReporter) WithCompact(compact bool) *JSONReporter {
+	r.compact = compact
 	return r
 }
 
@@ -112,7 +125,7 @@ func (r *JSONReporter) GenerateStream(dst io.Writer) error {
 	if err := writeField(&firstField, "duration", func() error { return enc.Encode(r.result.Duration) }); err != nil {
 		return err
 	}
-	if err := writeField(&firstField, "target_dir", func() error { return enc.Encode(r.result.TargetDir) }); err != nil {
+	if err := writeField(&firstField, "target_dir", func() error { return enc.Encode(r.result.ShareableTargetName()) }); err != nil {
 		return err
 	}
 	if err := writeField(&firstField, "app_package", func() error { return enc.Encode(r.result.AppPackage) }); err != nil {
@@ -160,6 +173,14 @@ func (r *JSONReporter) GenerateStream(dst io.Writer) error {
 				}
 				if _, err := w.WriteString(":"); err != nil {
 					return err
+				}
+				if r.compact {
+					entry := *r.result.Files[k]
+					entry.SmaliClass = nil
+					if err := enc.Encode(&entry); err != nil {
+						return err
+					}
+					continue
 				}
 				if err := enc.Encode(r.result.Files[k]); err != nil {
 					return err

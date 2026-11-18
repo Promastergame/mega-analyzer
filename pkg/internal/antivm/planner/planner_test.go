@@ -154,3 +154,49 @@ func TestPlanner_OnlyFilter(t *testing.T) {
 		t.Errorf("Only filter failed: %+v", rep.Modules)
 	}
 }
+
+func TestPlanner_VerifyOnlyDoesNotRepairState(t *testing.T) {
+	p := goodProfile(t)
+	dev := adapter.NewMockAdapter()
+	dev.State.Props["ro.product.model"] = "sdk_gphone64"
+	rep, err := New(p, mods(p)).Run(context.Background(), dev, Options{VerifyOnly: true}, fixedNow())
+	if err == nil || rep.Status != verifier.StatusFailed || !rep.VerifyOnly {
+		t.Fatalf("verify-only must report the original mismatch: %+v, %v", rep, err)
+	}
+	if dev.ApplyCount != 0 || dev.State.Props["ro.product.model"] != "sdk_gphone64" {
+		t.Fatal("verify-only mutated the device")
+	}
+}
+
+func TestPlanner_CommandFailureCannotPassMatchingState(t *testing.T) {
+	p := goodProfile(t)
+	dev := adapter.NewMockAdapter()
+	// Every checked field matches, but a planned command that used to be
+	// unverified fails. The module must still report a critical failure.
+	dev.State.Props["ro.secure"] = "1"
+	dev.FailProps = map[string]bool{"ro.secure": true}
+	rep, err := New(p, []modules.Module{modules.NewEnvironmentModule(p)}).Run(context.Background(), dev, Options{}, fixedNow())
+	if err == nil || rep.Status != verifier.StatusFailed || rep.Modules[0].Verify.Status != verifier.StatusPassed {
+		t.Fatalf("command failure was lost: %+v, %v", rep, err)
+	}
+}
+
+func TestPlanner_ContinueKeepsFailureAndRunsRemainingModules(t *testing.T) {
+	p := goodProfile(t)
+	for _, strict := range []bool{false, true} {
+		dev := adapter.NewMockAdapter()
+		dev.FailProps = map[string]bool{"ro.product.model": true}
+		dev.State.Props["ro.product.model"] = "sdk_gphone64"
+		rep, err := New(p, mods(p)).Run(context.Background(), dev, Options{ContinueOnFailure: true, Strict: strict}, fixedNow())
+		if err == nil || rep.Status != verifier.StatusFailed {
+			t.Fatalf("continued run lost its failure: %+v, %v", rep, err)
+		}
+		want := 3
+		if strict {
+			want = 1
+		}
+		if len(rep.Modules) != want || rep.Aborted != strict {
+			t.Fatalf("strict=%v report=%+v", strict, rep)
+		}
+	}
+}

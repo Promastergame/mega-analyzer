@@ -1,0 +1,49 @@
+{
+  "passed": true,
+  "checks": [
+    "empty desktop",
+    "blood mode",
+    "skin text alias",
+    "custom manual mode",
+    "failed save retains selection",
+    "custom save and shared budget",
+    "all classes",
+    "pointer drawing",
+    "out-of-bounds guard",
+    "HTML injection safety",
+    "saved modes",
+    "dark theme",
+    "390px mobile empty and loaded",
+    "no JS errors"
+  ],
+  "votes": [
+    {
+      "img_sha256": "abababababababababababababababababababababababababababababababab",
+      "width": 800,
+      "height": 500,
+      "box": {
+        "class": "blood_dark",
+        "x": 450,
+        "y": 140,
+        "w": 150,
+        "h": 120
+      },
+      "vote": 1,
+      "src": "auto"
+    },
+    {
+      "img_sha256": "abababababababababababababababababababababababababababababababab",
+      "width": 800,
+      "height": 500,
+      "box": {
+        "class": "custom:Волосы",
+        "x": 20,
+        "y": 30,
+        "w": 100,
+        "h": 120
+      },
+      "vote": 1,
+      "src": "hint"
+    }
+  ]
+}

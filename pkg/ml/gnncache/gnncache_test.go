@@ -455,6 +455,12 @@ func TestDiscoverWeights(t *testing.T) {
 		t.Fatal(err)
 	}
 	want := filepath.Join(dir, "gnn_weights.json")
+	if err := os.WriteFile(filepath.Join(dir, "gnn_weights.gnnbuf"), []byte("compact"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if path := DiscoverWeights(); path != "" {
+		t.Fatalf("native-only compact format auto-selected: %s", path)
+	}
 	if err := os.WriteFile(want, []byte("{}"), 0o644); err != nil {
 		t.Fatal(err)
 	}

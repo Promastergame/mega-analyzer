@@ -7,11 +7,13 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func writeProjectZIP(t *testing.T, members map[string]string) string {
 	t.Helper()
-	path := filepath.Join(t.TempDir(), "project.zip")
+	path := filepath.Join(testutil.TempDir(t), "project.zip")
 	f, err := os.Create(path)
 	if err != nil {
 		t.Fatal(err)

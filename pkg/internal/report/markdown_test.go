@@ -22,7 +22,7 @@ func TestBuildMarkdown_EmptyResult(t *testing.T) {
 	md := BuildMarkdown(result, DefaultOptions())
 
 	// Должны быть секции
-	if !strings.Contains(md, "# 🔥 APK LICENSE ANALYSIS REPORT") {
+	if !strings.Contains(md, "# 🔥 APK ANALYSIS REPORT") {
 		t.Error("Missing header")
 	}
 	if !strings.Contains(md, "## 📌 Quick Summary") {

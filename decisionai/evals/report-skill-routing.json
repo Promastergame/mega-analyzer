@@ -1,0 +1,24 @@
+{
+  "skills": 35,
+  "cases": 80,
+  "top1": 0.9875,
+  "top3": 1,
+  "other_recall": 1,
+  "false_abstain": 0,
+  "top1_by_group": {
+    "code": 0.9333,
+    "data": 1,
+    "design": 1,
+    "media": 1,
+    "meta": 1,
+    "office": 1,
+    "other": 1,
+    "web": 1,
+    "writing": 1
+  },
+  "latency_ms_p50": 16.97,
+  "latency_ms_p95": 40.9,
+  "failures": [
+    "[code] \"тест падает, не понимаю почему\" -> test-driven-development, want [systematic-debugging], top [test-driven-development:0.47 systematic-debugging:0.34 webapp-testing:0.18]"
+  ]
+}

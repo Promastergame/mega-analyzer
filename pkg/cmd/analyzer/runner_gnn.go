@@ -1,4 +1,4 @@
-//go:build cgo && omnisec_ml_gnn
+//go:build (cgo && omnisec_ml_gnn) || (js && wasm)
 
 package main
 
@@ -42,10 +42,11 @@ const gnnMinGraphNodes = 3
 // built per method from the parsed class body instead, the same way the
 // benchmark harness and the crack-point finder already do it.
 type gnnMethodEntry struct {
-	path        string
-	file        *types.FileAnalysis
-	method      *types.SmaliMethod
-	methodIndex int
+	path            string
+	file            *types.FileAnalysis
+	method          *types.SmaliMethod
+	methodIndex     int
+	diagnosticIndex int
 }
 
 // gnnLoadError marks a model load failure so it can be told apart from a
@@ -74,13 +75,36 @@ func (a *App) runGNNClassification(ctx context.Context, result *types.AnalysisRe
 	// Dummy weights are random: every downstream consumer (findings, verdict
 	// reasoning, patch planning) must treat their output as absent evidence.
 	dummyModel := modelPath == gnncache.DummyModelPath
+	diagnostics, diagnosticIndices := newGNNDiagnostics(result, modelPath)
+	result.GNNDiagnostics = diagnostics
+	result.GNNFindings = nil
+	defer finishGNNDiagnostics(diagnostics)
+	var validatedMeta *gnn.ModelMetadata
+	var modelFingerprint string
+	if !dummyModel {
+		var err error
+		validatedMeta, err = gnn.ValidateModelFile(modelPath)
+		if err != nil {
+			diagnostics.Error, diagnostics.Reason = err.Error(), "model_validation_failed"
+			return err
+		}
+		modelFingerprint = validatedMeta.SHA256
+		diagnostics.Model.SHA256 = modelFingerprint
+		diagnostics.Model.TrainerVersion = validatedMeta.TrainerVersion
+		diagnostics.Model.TrainSamples = validatedMeta.TrainSamples
+		diagnostics.Model.ValidationAccuracy = validatedMeta.ValAccuracy
+		diagnostics.Model.HasCalibrationMetadata = validatedMeta.HasCalibration
+		diagnostics.Model.FeatureSchema = gnngraph.FeatureSchemaID
+		a.output.Info("GNN model: %s, trained on %d sample(s), val_acc=%.3f, schema v%d; calibration metadata present: %v",
+			validatedMeta.TrainerVersion, validatedMeta.TrainSamples, validatedMeta.ValAccuracy, validatedMeta.FeatureSchemaVersion, validatedMeta.HasCalibration)
+	}
 
 	// Open the dataset writer so newly inferred unique graphs are persisted
 	// for future re-training (memo duplicates and persistent-cache hits are
 	// skipped — they were already recorded). Errors here are non-fatal: a
 	// broken writer must not abort an otherwise healthy scan.
 	var dsWriter *gnndataset.Writer
-	if dsDir := gnndataset.DefaultWriterDir(); dsDir != "" {
+	if dsDir := gnndataset.DefaultWriterDir(); dsDir != "" && runtime.GOOS != "js" {
 		if dw, derr := gnndataset.Open(dsDir); derr == nil {
 			dsWriter = dw
 			defer dw.Close()
@@ -93,12 +117,9 @@ func (a *App) runGNNClassification(ctx context.Context, result *types.AnalysisRe
 	// Xavier-initialized with random weights on every load, so their outputs
 	// are not reproducible and caching them would be wrong.
 	var cache *gnncache.Cache
-	var modelFingerprint string
 	if a.opts.EnableContentCache {
-		fingerprint, err := gnncache.ModelFingerprint(modelPath)
+		fingerprint := modelFingerprint
 		switch {
-		case err != nil:
-			a.output.Warning("GNN cache disabled: cannot fingerprint model weights: %v", err)
 		case fingerprint == "":
 			a.output.Warning("GNN cache disabled: dummy model weights are re-randomized on every run")
 		default:
@@ -130,11 +151,15 @@ func (a *App) runGNNClassification(ctx context.Context, result *types.AnalysisRe
 		}
 		for i := range file.SmaliClass.Methods {
 			m := &file.SmaliClass.Methods[i]
-			if len(m.Body) < gnnMinGraphNodes {
+			if len(m.Body) < gnnMinGraphNodes || m.Access.IsNative() || m.Access.IsAbstract() {
 				continue
 			}
+			diagnosticIndex := -1
+			if index, exists := diagnosticIndices[gnnDiagnosticKey(path, i)]; exists {
+				diagnosticIndex = index
+			}
 			entries = append(entries, gnnMethodEntry{
-				path: path, file: file, method: m, methodIndex: i,
+				path: path, file: file, method: m, methodIndex: i, diagnosticIndex: diagnosticIndex,
 			})
 		}
 	}
@@ -142,7 +167,7 @@ func (a *App) runGNNClassification(ctx context.Context, result *types.AnalysisRe
 		if entries[i].path != entries[j].path {
 			return entries[i].path < entries[j].path
 		}
-		return entries[i].method.Name < entries[j].method.Name
+		return entries[i].method.FullSignature(entries[i].file.SmaliClass.Name) < entries[j].method.FullSignature(entries[j].file.SmaliClass.Name)
 	})
 	if len(entries) == 0 {
 		return nil
@@ -186,26 +211,36 @@ func (a *App) runGNNClassification(ctx context.Context, result *types.AnalysisRe
 	workCtx, stopWork := context.WithCancel(ctx)
 	defer stopWork()
 
+	// Sibling-class counts for the framework-library suppression: built once
+	// from the file set, read-only in workers (see gnnLibraryClassIndex).
+	libIndex := newGNNLibraryClassIndex(result.Files)
+	licenseEvidence := gnnLicenseEvidence(result.Files)
+	var uncorroborated atomic.Int64
+
 	memo := gnncache.NewMemo()
 	var (
-		mu               sync.Mutex
-		findings         []types.GNNFinding
-		firstLoadErr     error
-		inferFails       atomic.Int64
-		cacheHits        atomic.Int64
-		cacheStores      atomic.Int64
-		cacheFailures    atomic.Int64
-		datasetFailures  atomic.Int64
-		datasetFull      atomic.Bool
-		accepted         atomic.Int64
-		uncertain        atomic.Int64
-		libSuppressed    atomic.Int64
-		otherClass       atomic.Int64
-		bodylessSkipped  atomic.Int64
-		oversizedSkipped atomic.Int64
-		cfglessSkipped   atomic.Int64
-		chainFallback    atomic.Int64
-		chainAccepted    atomic.Int64
+		mu                 sync.Mutex
+		findings           []types.GNNFinding
+		firstLoadErr       error
+		inferFails         atomic.Int64
+		cacheHits          atomic.Int64
+		cacheStores        atomic.Int64
+		cacheFailures      atomic.Int64
+		datasetFailures    atomic.Int64
+		datasetFull        atomic.Bool
+		accepted           atomic.Int64
+		uncertain          atomic.Int64
+		libSuppressed      atomic.Int64
+		fwSuppressed       atomic.Int64
+		otherClass         atomic.Int64
+		bodylessSkipped    atomic.Int64
+		oversizedSkipped   atomic.Int64
+		cfglessSkipped     atomic.Int64
+		chainFallback      atomic.Int64
+		chainAccepted      atomic.Int64
+		predicted          atomic.Int64
+		benignUncertain    atomic.Int64
+		predictionsByClass [gnn.NumVulnClasses]atomic.Int64
 	)
 	var (
 		modelOnce sync.Once
@@ -214,27 +249,8 @@ func (a *App) runGNNClassification(ctx context.Context, result *types.AnalysisRe
 	)
 	loadModel := func() (*gnn.Model, error) {
 		modelOnce.Do(func() {
-			if !dummyModel {
-				// Reject incompatible weight files before the native runtime
-				// sees them: feature schema, taxonomy, architecture shapes.
-				// A file that fails here would otherwise load fine and emit
-				// confident nonsense from mismatched features.
-				meta, verr := gnn.ValidateModelFile(modelPath)
-				if verr != nil {
-					modelErr = verr
-					return
-				}
-				if meta.TrainSamples > 0 {
-					cal := "no calibration metadata"
-					if meta.HasCalibration {
-						cal = fmt.Sprintf("calibrated (q90=%.3f)", meta.ConformalQ90)
-					}
-					a.output.Info("GNN model: %s, trained on %d sample(s), val_acc=%.3f, schema v%d, %s",
-						meta.TrainerVersion, meta.TrainSamples, meta.ValAccuracy, meta.FeatureSchemaVersion, cal)
-				}
-			}
 			model, modelErr = gnn.LoadModel(modelPath)
-			if modelErr == nil && cache != nil {
+			if modelErr == nil && !dummyModel {
 				// The cache key was derived before workers started. Verify that the
 				// file loaded by the native runtime still has that fingerprint;
 				// otherwise a concurrent model replacement could store predictions
@@ -271,8 +287,14 @@ func (a *App) runGNNClassification(ctx context.Context, result *types.AnalysisRe
 				if workCtx.Err() != nil {
 					return
 				}
+				var scratch types.GNNMethodDiagnostic
+				diagnostic := &scratch
+				if e.diagnosticIndex >= 0 {
+					diagnostic = &diagnostics.Methods[e.diagnosticIndex]
+				}
 				if len(e.method.Body) > gnnMaxMethodInstructions {
 					oversizedSkipped.Add(1)
+					diagnostic.Status, diagnostic.Reason = "skipped", "method_instruction_budget"
 					continue
 				}
 				var methodCFG *cfg.ControlFlowGraph
@@ -304,12 +326,19 @@ func (a *App) runGNNClassification(ctx context.Context, result *types.AnalysisRe
 						// Previously an unobservable `continue`: a run could classify
 						// nothing at all and give no reason for it.
 						cfglessSkipped.Add(1)
+						diagnostic.Status, diagnostic.Reason = "skipped", "no_usable_graph"
 						continue
 					}
 				}
 				graph := builder.Build(methodCFG)
+				diagnostic.GraphKind = "control_flow"
+				if isChainFallback {
+					diagnostic.GraphKind = "instruction_chain"
+				}
+				diagnostic.Nodes = graph.NumNodes
 				if !gnnGraphWithinBudget(graph) {
 					oversizedSkipped.Add(1)
+					diagnostic.Status, diagnostic.Reason = "skipped", "graph_budget"
 					continue
 				}
 				tensor := &gnncache.GraphTensor{
@@ -413,10 +442,12 @@ func (a *App) runGNNClassification(ctx context.Context, result *types.AnalysisRe
 				})
 				if err != nil {
 					if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+						diagnostic.Reason = "stage_cancelled"
 						return
 					}
 					var le gnnLoadError
 					if errors.As(err, &le) {
+						diagnostic.Status, diagnostic.Reason = "not_processed", "model_load_failed"
 						mu.Lock()
 						if firstLoadErr == nil {
 							firstLoadErr = le.err
@@ -428,30 +459,62 @@ func (a *App) runGNNClassification(ctx context.Context, result *types.AnalysisRe
 						return
 					}
 					inferFails.Add(1)
+					diagnostic.Status, diagnostic.Reason = "failed", "inference_error"
 					continue
 				}
 
 				margin, valid := gnnPredictionMargin(pred)
 				if !valid {
 					inferFails.Add(1)
+					diagnostic.Status, diagnostic.Reason = "failed", "invalid_prediction"
 					continue
 				}
 				vulnName := gnn.VulnClassName(gnn.VulnClass(pred.PredictedClass))
+				predicted.Add(1)
+				predictionsByClass[pred.PredictedClass].Add(1)
+				diagnostic.Status, diagnostic.Reason = "predicted", ""
+				diagnostic.PredictedClass, diagnostic.Confidence = vulnName, pred.Confidence
+				diagnostic.Margin, diagnostic.NormalizedEntropy = margin, gnnNormalizedEntropy(pred.ClassProbs)
+				diagnostic.PassesQualityGate = pred.Confidence >= gnnMinConfidenceForClass(vulnName) &&
+					margin >= gnnMinMargin && diagnostic.NormalizedEntropy <= gnnMaxNormalizedEntropy
+				diagnostic.ClassProbabilities = make(map[string]float32, len(pred.ClassProbs))
+				for i, prob := range pred.ClassProbs {
+					diagnostic.ClassProbabilities[gnn.VulnClassName(gnn.VulnClass(i))] = prob
+				}
 				if vulnName == "benign" {
 					otherClass.Add(1)
+					diagnostic.Outcome = "negative_taxonomy_class"
+					if !diagnostic.PassesQualityGate {
+						benignUncertain.Add(1)
+						diagnostic.Outcome = "uncertain"
+					}
 					continue
 				}
 				if vulnName == "unknown" || pred.Confidence < gnnMinConfidenceForClass(vulnName) || margin < gnnMinMargin ||
 					gnnNormalizedEntropy(pred.ClassProbs) > gnnMaxNormalizedEntropy {
 					uncertain.Add(1)
+					diagnostic.Outcome = "uncertain"
 					continue
 				}
 				// Billing-library internals structurally are license
-				// verification but never actionable: drop them as library
+				// verification and verified framework bundles spuriously
+				// look like repack/signature findings: drop them as library
 				// noise rather than findings (counted separately so the
 				// quality-gate line stays about model uncertainty).
-				if gnnLibrarySuppressed(methodCFG.FullName, vulnName) {
-					libSuppressed.Add(1)
+				if reason, suppressed := gnnLibrarySuppressed(methodCFG.FullName, vulnName, libIndex); suppressed {
+					if reason == "billing_library" {
+						libSuppressed.Add(1)
+					} else {
+						fwSuppressed.Add(1)
+					}
+					diagnostic.Reason = reason
+					diagnostic.Outcome = "library_suppressed"
+					continue
+				}
+				if vulnName == "license-check" && licenseEvidence[gnnSemanticKey(e.method.FullSignature(e.file.SmaliClass.Name))] == "" {
+					uncorroborated.Add(1)
+					diagnostic.Outcome = "observation"
+					diagnostic.Reason = "license_semantics_not_corroborated"
 					continue
 				}
 				classProbs := make(map[string]float32, len(pred.ClassProbs))
@@ -470,6 +533,7 @@ func (a *App) runGNNClassification(ctx context.Context, result *types.AnalysisRe
 				findings = append(findings, finding)
 				mu.Unlock()
 				accepted.Add(1)
+				diagnostic.Outcome = "finding"
 				if isChainFallback {
 					chainAccepted.Add(1)
 				}
@@ -482,6 +546,19 @@ func (a *App) runGNNClassification(ctx context.Context, result *types.AnalysisRe
 	cancelled := feedStopped && ctx.Err() != nil
 	close(jobs)
 	wg.Wait()
+	diagnostics.MethodsInferred = int(predicted.Load())
+	diagnostics.MethodsSkipped += int(cfglessSkipped.Load() + oversizedSkipped.Load())
+	diagnostics.MethodsFailed = int(inferFails.Load())
+	diagnostics.AcceptedFindings = int(accepted.Load())
+	diagnostics.UncertainPredictions = int(uncertain.Load() + benignUncertain.Load())
+	diagnostics.LibrarySuppressed = int(libSuppressed.Load() + fwSuppressed.Load())
+	diagnostics.UncorroboratedPredictions = int(uncorroborated.Load())
+	diagnostics.Cancelled = ctx.Err() != nil
+	for i := 0; i < gnn.NumVulnClasses; i++ {
+		if count := predictionsByClass[i].Load(); count > 0 {
+			diagnostics.PredictionsByClass[gnn.VulnClassName(gnn.VulnClass(i))] = int(count)
+		}
+	}
 	if model != nil {
 		model.Close()
 	}
@@ -495,6 +572,9 @@ func (a *App) runGNNClassification(ctx context.Context, result *types.AnalysisRe
 	})
 	for _, f := range findings {
 		a.output.Info("GNN found %s in %s (confidence: %.2f)", f.VulnClass, f.Method, f.Confidence)
+	}
+	if count := uncorroborated.Load(); count > 0 {
+		a.output.Info("GNN retained %d license-check prediction(s) as diagnostic observations: no corroborating licensing API or protocol evidence", count)
 	}
 	if dups := memo.Hits(); dups > 0 {
 		a.output.Info("GNN memo: %d duplicate graph(s) reused results, %d unique graph(s) computed", dups, memo.Unique())
@@ -565,8 +645,14 @@ func (a *App) runGNNClassification(ctx context.Context, result *types.AnalysisRe
 			suppressed,
 		)
 	}
+	if suppressed := fwSuppressed.Load(); suppressed > 0 {
+		a.output.Info(
+			"GNN suppressed %d prediction(s) inside verified framework bundles (repack/signature/library plumbing; sibling floor %d classes)",
+			suppressed, gnnFrameworkMinClasses,
+		)
+	}
 	if others := otherClass.Load(); others > 0 {
-		a.output.Info("GNN classified %d graph(s) as benign/non-vulnerable", others)
+		a.output.Info("GNN assigned the benign class to %d visible method graph(s); this does not establish APK safety or runtime behavior", others)
 	}
 	if cancelled {
 		a.output.Warning("GNN classification cancelled: only a subset of %d method(s) was processed", len(entries))
@@ -577,6 +663,7 @@ func (a *App) runGNNClassification(ctx context.Context, result *types.AnalysisRe
 		a.output.Warning("GNN: %d finding(s) came from DUMMY weights — they are flagged dummy, contribute no evidence to verdicts, and must be ignored in patch planning", len(findings))
 	}
 	if firstLoadErr != nil {
+		diagnostics.Error, diagnostics.Reason = firstLoadErr.Error(), "model_load_failed"
 		return fmt.Errorf("failed to load GNN model: %w", firstLoadErr)
 	}
 	return nil

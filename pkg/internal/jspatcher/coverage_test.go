@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestURLRulesDetectHTTPAndWebSocket(t *testing.T) {
@@ -27,7 +29,7 @@ func TestURLRulesDetectHTTPAndWebSocket(t *testing.T) {
 
 func writeCoverageMap(t *testing.T, doc any) (string, string) {
 	t.Helper()
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	path := filepath.Join(dir, "index.android.bundle")
 	src := "var generated=0;\n//# sourceMappingURL=index.android.bundle.map\n"
 	data, err := json.Marshal(doc)

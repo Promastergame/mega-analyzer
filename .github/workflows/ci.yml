@@ -13,17 +13,17 @@ name: CI
 on:
   # Manual trigger from GitHub Actions tab (saves your monthly CI minutes)
   workflow_dispatch:
-  # Automated runs disabled on push/cron to prevent accidental minute drain.
-  # Uncomment below if you want automated checks on Pull Requests only:
-  # pull_request:
-  #   paths-ignore:
-  #     - '**.md'
-  #     - '**.txt'
-  #     - '**.png'
-  #     - '**.svg'
-  #     - '.env.example*'
-  #     - 'LICENSE'
-  #     - 'COPYING'
+  # Automated checks on Pull Requests only — docs/images/env-samples never
+  # burn CI minutes; push/cron stay disabled to prevent accidental minute drain.
+  pull_request:
+    paths-ignore:
+      - '**.md'
+      - '**.txt'
+      - '**.png'
+      - '**.svg'
+      - '.env.example*'
+      - 'LICENSE'
+      - 'COPYING'
 
 concurrency:
   group: ci-${{ github.ref }}

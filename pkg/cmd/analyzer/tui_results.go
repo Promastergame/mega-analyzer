@@ -57,7 +57,7 @@ func (t *tuiState) showResults(gd *gamemode.GameData) {
 
 	for {
 		t.render()
-		ev, err := term.ReadKey()
+		ev, err := t.readKey()
 		if err != nil {
 			return
 		}

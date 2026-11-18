@@ -3,7 +3,7 @@
 package web
 
 import (
-	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -21,12 +21,14 @@ func (s *Server) handleLiveStatus(w http.ResponseWriter, r *http.Request) {
 	booted := false
 	screenOn := true
 	if serial != "" {
-		out, _ := exec.Command(liveADB(), "-s", serial, "shell", "getprop", "sys.boot_completed").Output()
+		ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
+		defer cancel()
+		out, _ := exec.CommandContext(ctx, liveADB(), "-s", serial, "shell", "getprop", "sys.boot_completed").Output()
 		booted = strings.TrimSpace(string(out)) == "1"
 		// Screen state: a locked/sleeping device produces a black or stale
 		// frame, so the dashboard shows a "locked" overlay instead.
 		if booted {
-			po, _ := exec.Command(liveADB(), "-s", serial, "shell", "dumpsys", "power").Output()
+			po, _ := exec.CommandContext(ctx, liveADB(), "-s", serial, "shell", "dumpsys", "power").Output()
 			ps := string(po)
 			if strings.Contains(ps, "Display Power: state=OFF") ||
 				strings.Contains(ps, "mWakefulness=Asleep") ||
@@ -53,7 +55,7 @@ func (s *Server) handleLiveScreen(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "no device", http.StatusNotFound)
 		return
 	}
-	out, err := exec.Command(liveADB(), "-s", serial, "exec-out", "screencap", "-p").Output()
+	out, err := captureLivePNG(r.Context(), liveADB(), serial)
 	if err != nil || len(out) == 0 {
 		http.Error(w, "screencap failed", http.StatusServiceUnavailable)
 		return
@@ -65,8 +67,7 @@ func (s *Server) handleLiveScreen(w http.ResponseWriter, r *http.Request) {
 
 // handleLiveStream serves /api/live/stream.
 // /api/live/stream → continuous MJPEG-style push of frames using a single
-// persistent adb shell loop. One ADB connection for the whole session gives
-// ~3× lower latency than spawning a new exec-out process per frame.
+// persistent adb shell loop, with individual captures if that loop fails.
 func (s *Server) handleLiveStream(w http.ResponseWriter, r *http.Request) {
 	serial := RequestDeviceSerial(r)
 	if serial == "" {
@@ -85,62 +86,39 @@ func (s *Server) handleLiveStream(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Connection", "close")
 	ctx := r.Context()
 
-	// One persistent shell: device outputs a continuous stream of PNG files.
-	// We split on the PNG magic header (\x89PNG\r\n\x1a\n = 8 bytes).
-	cmd := exec.CommandContext(ctx, adb, "-s", serial, "exec-out",
-		"sh", "-c", "while true; do screencap -p; done")
-	stdout, pipeErr := cmd.StdoutPipe()
-	if pipeErr != nil || cmd.Start() != nil {
-		// Fallback: one-shot screencap per frame (slower but always works).
-		for ctx.Err() == nil {
-			frame, err := exec.CommandContext(ctx, adb, "-s", serial, "exec-out", "screencap", "-p").Output()
-			if err != nil || len(frame) == 0 {
-				time.Sleep(150 * time.Millisecond)
-				continue
-			}
-			fmt.Fprintf(w, "--%s\r\nContent-Type: image/png\r\nContent-Length: %d\r\n\r\n", boundary, len(frame))
-			w.Write(frame)
-			io.WriteString(w, "\r\n")
-			flusher.Flush()
+	sent := false
+	emitFrame := func(frame []byte) error {
+		if _, err := fmt.Fprintf(w, "--%s\r\nContent-Type: image/png\r\nContent-Length: %d\r\n\r\n", boundary, len(frame)); err != nil {
+			return err
 		}
+		if _, err := w.Write(frame); err != nil {
+			return err
+		}
+		if _, err := io.WriteString(w, "\r\n"); err != nil {
+			return err
+		}
+		sent = true
+		flusher.Flush()
+		return nil
+	}
+	if err := streamLivePNGs(ctx, adb, serial, emitFrame); err == nil || ctx.Err() != nil {
 		return
 	}
-	defer func() { _ = cmd.Process.Kill(); _ = cmd.Wait() }()
-
-	// Split the continuous byte stream on the 8-byte PNG magic marker.
-	const pngHdr = "\x89PNG\r\n\x1a\n"
-	var frame bytes.Buffer
-	buf := make([]byte, 64*1024)
-	gotFirst := false
-	emitFrame := func() {
-		if frame.Len() > 16 { // discard incomplete first/trailing fragments
-			data := frame.Bytes()
-			fmt.Fprintf(w, "--%s\r\nContent-Type: image/png\r\nContent-Length: %d\r\n\r\n", boundary, len(data))
-			w.Write(data)
-			io.WriteString(w, "\r\n")
-			flusher.Flush()
-		}
-	}
 	for ctx.Err() == nil {
-		n, err := stdout.Read(buf)
+		frame, err := captureLivePNG(ctx, adb, serial)
 		if err != nil {
+			if !sent && ctx.Err() == nil {
+				http.Error(w, "screencap failed", http.StatusServiceUnavailable)
+			}
 			return
 		}
-		chunk := buf[:n]
-		for len(chunk) > 0 {
-			idx := bytes.Index(chunk, []byte(pngHdr))
-			if idx == -1 {
-				frame.Write(chunk)
-				break
-			}
-			frame.Write(chunk[:idx])
-			if gotFirst {
-				emitFrame()
-			}
-			frame.Reset()
-			frame.WriteString(pngHdr)
-			gotFirst = true
-			chunk = chunk[idx+len(pngHdr):]
+		if err := emitFrame(frame); err != nil {
+			return
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(150 * time.Millisecond):
 		}
 	}
 }

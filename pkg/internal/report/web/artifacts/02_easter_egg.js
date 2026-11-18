@@ -98,7 +98,11 @@
   document.querySelectorAll('.art-reveal').forEach(function(btn){
     btn.addEventListener('click', function(){
       var img = btn.parentElement.querySelector('.art-img');
-      if(img){ img.classList.remove('is-blurred'); btn.remove(); }
+      if(img){
+        var hidden = img.classList.toggle('is-blurred');
+        btn.textContent = hidden ? 'Показать' : 'Скрыть';
+        btn.setAttribute('aria-expanded', String(!hidden));
+      }
     });
   });
 

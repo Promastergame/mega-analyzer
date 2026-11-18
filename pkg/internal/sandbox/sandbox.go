@@ -323,7 +323,11 @@ func Run(parent context.Context, cfg Config) (outReport *Report, runErr error) {
 	report.Warnings = append(report.Warnings, androidWarnings...)
 
 	if cfg.AndroidSandbox || isAndroidSandboxInputType(report.InputType) {
-		err := runAndroidSandbox(parent, cfg, layout, report)
+		androidCfg := cfg
+		if journal != nil {
+			androidCfg.OnActivity = journal.record
+		}
+		err := runAndroidSandbox(parent, androidCfg, layout, report)
 		if err != nil {
 			return report, err
 		}
@@ -1216,6 +1220,9 @@ func renderMarkdownReport(report *Report) string {
 	b.WriteString(fmt.Sprintf("- Target: `%s`\n", maskUsernameInPath(report.TargetOriginal)))
 	b.WriteString(fmt.Sprintf("- Copied sample: `%s`\n", maskUsernameInPath(report.TargetCopied)))
 	b.WriteString(fmt.Sprintf("- Input type: `%s`\n", report.InputType))
+	if report.ExecutionEnvironment != "" {
+		b.WriteString(fmt.Sprintf("- Execution environment: `%s`\n", report.ExecutionEnvironment))
+	}
 	b.WriteString(fmt.Sprintf("- Workspace: `%s`\n", maskUsernameInPath(report.WorkspaceDir)))
 	b.WriteString(fmt.Sprintf("- Started: `%s`\n", report.StartedAt.Format(time.RFC3339)))
 	b.WriteString(fmt.Sprintf("- Finished: `%s`\n", report.FinishedAt.Format(time.RFC3339)))
@@ -1238,8 +1245,16 @@ func renderMarkdownReport(report *Report) string {
 	b.WriteString("\n## Sandbox Permissions\n\n")
 	b.WriteString(fmt.Sprintf("- Network access: `%s`\n", report.SandboxPermissions.NetworkAccess))
 	b.WriteString(fmt.Sprintf("- Child processes allowed: `%t`\n", report.SandboxPermissions.CanSpawnProcesses))
-	b.WriteString(fmt.Sprintf("- Process limit: `%d`\n", report.SandboxPermissions.MaxProcessCount))
-	b.WriteString(fmt.Sprintf("- Memory limit: `%d MB`\n", report.SandboxPermissions.MaxMemoryMB))
+	if report.SandboxPermissions.MaxProcessCount > 0 {
+		b.WriteString(fmt.Sprintf("- Process limit: `%d`\n", report.SandboxPermissions.MaxProcessCount))
+	} else {
+		b.WriteString("- Process limit: not enforced by the analyzer\n")
+	}
+	if report.SandboxPermissions.MaxMemoryMB > 0 {
+		b.WriteString(fmt.Sprintf("- Memory limit: `%d MB`\n", report.SandboxPermissions.MaxMemoryMB))
+	} else {
+		b.WriteString("- Memory limit: not enforced by the analyzer\n")
+	}
 	if len(report.SandboxPermissions.ExposedWritePaths) > 0 {
 		b.WriteString("\n### Exposed Write Paths\n\n")
 		for _, path := range report.SandboxPermissions.ExposedWritePaths {
@@ -1272,7 +1287,11 @@ func renderMarkdownReport(report *Report) string {
 		} else {
 			b.WriteString(fmt.Sprintf("- Duration: `%ds`\n", cfg.DurationSeconds))
 		}
-		b.WriteString(fmt.Sprintf("- Memory limit: `%d MB`\n", cfg.MaxMemoryMB))
+		if cfg.MaxMemoryMB > 0 {
+			b.WriteString(fmt.Sprintf("- Memory limit: `%d MB`\n", cfg.MaxMemoryMB))
+		} else {
+			b.WriteString("- Memory limit: not enforced by the analyzer\n")
+		}
 		b.WriteString(fmt.Sprintf("- Time scale: `%.2f`\n", cfg.TimeScaleFactor))
 		if len(report.RequestedComponents) > 0 {
 			b.WriteString(fmt.Sprintf("- Requested components: `%s`\n", strings.Join(report.RequestedComponents, ", ")))

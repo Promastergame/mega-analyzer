@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestBundleBudgetPresets(t *testing.T) {
@@ -22,7 +24,7 @@ func TestBundleBudgetPresets(t *testing.T) {
 
 func TestBundleExportMeasuredCoverageAndLimits(t *testing.T) {
 	data := buildTestHBC(t, 96, []string{"main", "moduleA", strings.Repeat("x", 254)})
-	input := filepath.Join(t.TempDir(), "test.hbc")
+	input := filepath.Join(testutil.TempDir(t), "test.hbc")
 	if err := os.WriteFile(input, data, 0600); err != nil {
 		t.Fatal(err)
 	}
@@ -40,7 +42,7 @@ func TestBundleExportMeasuredCoverageAndLimits(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			limits := opts
 			tc.modify(&limits)
-			out := t.TempDir()
+			out := testutil.TempDir(t)
 			c, err := ExportBundleWithOptions(context.Background(), input, out, limits)
 			if err != nil || c.Export == nil {
 				t.Fatalf("%+v %v", c, err)

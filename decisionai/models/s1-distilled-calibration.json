@@ -1,0 +1,16 @@
+{
+  "version": "1.13.0",
+  "temperatures": {
+    "choice": 0.905,
+    "noul": 0.472,
+    "score": 0.67,
+    "skill_routing": 0.5201
+  },
+  "fitted_on": {
+    "choice": 292,
+    "noul": 267,
+    "score": 110,
+    "skill_routing": 148
+  },
+  "note": "temperature scaling fitted by minimum cross-entropy"
+}

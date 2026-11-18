@@ -5,14 +5,45 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
+	"syscall"
 	"testing"
+	"time"
 )
 
+func decompilerTempDir(t *testing.T) string {
+	t.Helper()
+	if runtime.GOOS != "windows" {
+		return t.TempDir()
+	}
+	dir, err := os.MkdirTemp("", "decompiler-unit-*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		deadline := time.Now().Add(2 * time.Second)
+		for {
+			err := os.RemoveAll(dir)
+			if err == nil {
+				return
+			}
+			retry := errors.Is(err, syscall.Errno(5)) || errors.Is(err, syscall.Errno(32)) || errors.Is(err, syscall.Errno(145))
+			if !retry || !time.Now().Before(deadline) {
+				t.Errorf("TempDir cleanup: %v", err)
+				return
+			}
+			time.Sleep(20 * time.Millisecond)
+		}
+	})
+	return dir
+}
+
 func TestRunJSONWithOptionsAfterInput(t *testing.T) {
-	dir := t.TempDir()
+	dir := decompilerTempDir(t)
 	input := filepath.Join(dir, "resources.apk")
 	var archive bytes.Buffer
 	zw := zip.NewWriter(&archive)
@@ -49,7 +80,7 @@ func TestRunJSONWithOptionsAfterInput(t *testing.T) {
 }
 
 func TestRunDecodeErrorIsMachineReadable(t *testing.T) {
-	dir := t.TempDir()
+	dir := decompilerTempDir(t)
 	input := filepath.Join(dir, "broken.dex")
 	if err := os.WriteFile(input, []byte("dex\n035\x00broken"), 0o600); err != nil {
 		t.Fatal(err)
@@ -66,7 +97,7 @@ func TestRunDecodeErrorIsMachineReadable(t *testing.T) {
 }
 
 func TestRunUsageAndCancellation(t *testing.T) {
-	for _, args := range [][]string{nil, {"a.apk", "b.apk"}, {"--unknown"}, {"a.apk", "--timeout=-1s"}, {"a.apk", "-o"}} {
+	for _, args := range [][]string{nil, {"a.apk", "b.apk"}, {"--unknown"}, {"--baksmali-jar", "old.jar"}, {"--java", "java"}, {"--api", "28"}, {"--jobs", "2"}, {"a.apk", "--timeout=-1s"}, {"a.apk", "-o"}} {
 		var stdout, stderr bytes.Buffer
 		if code := run(t.Context(), args, &stdout, &stderr); code != 2 || stderr.Len() == 0 {
 			t.Errorf("args %v: code=%d stderr=%s", args, code, stderr.String())

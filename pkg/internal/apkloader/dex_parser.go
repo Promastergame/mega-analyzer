@@ -201,8 +201,9 @@ type EncodedMethod struct {
 	ParameterAnnotations [][]DEXAnnotation
 
 	// Lazy loading support (v11.0)
-	parser   *DEXParser // back-reference for on-demand code loading
-	codeOnce sync.Once  // ensures code is parsed exactly once
+	parser     *DEXParser // back-reference for on-demand code loading
+	codeMu     sync.Mutex
+	codeParsed bool // one parse attempt per residency; release permits reloading
 }
 
 // CodeItem — байткод метода.
@@ -1358,27 +1359,33 @@ func (p *DEXParser) readEncodedMethod(cursor, prevIdx uint32) (*EncodedMethod, u
 // LAZY CODE LOADING (v11.0)
 // ═══════════════════════════════════════════════════════════════
 
-// EnsureCode lazily parses the bytecode for this method on first access.
-// Thread-safe: uses sync.Once internally.
+// EnsureCode lazily parses bytecode on first access and after a streaming
+// release. Concurrent readers share one parse attempt per residency.
 // Returns the CodeItem (may be nil if method has no code or parsing fails).
 func (em *EncodedMethod) EnsureCode() *CodeItem {
-	if em.CodeOff == 0 || em.parser == nil {
+	em.codeMu.Lock()
+	defer em.codeMu.Unlock()
+	if em.Code != nil || em.CodeOff == 0 || em.parser == nil || em.codeParsed {
 		return em.Code
 	}
-	// Lazy readers must all pass through Once before inspecting Code; the
-	// first caller may still be assigning it while another caller arrives.
-	em.codeOnce.Do(func() {
-		if em.Code != nil {
-			return
-		}
-		code, err := em.parser.parseCodeItem(em.CodeOff)
-		if err != nil {
-			em.parser.warnf("lazy method[%d] code: %v", em.MethodIdx, err)
-			return
-		}
-		em.Code = code
-	})
+	em.codeParsed = true
+	code, err := em.parser.parseCodeItem(em.CodeOff)
+	if err != nil {
+		em.parser.warnf("lazy method[%d] code: %v", em.MethodIdx, err)
+		return nil
+	}
+	em.Code = code
 	return em.Code
+}
+
+func (em *EncodedMethod) releaseCode() {
+	if em == nil {
+		return
+	}
+	em.codeMu.Lock()
+	em.Code = nil
+	em.codeParsed = false
+	em.codeMu.Unlock()
 }
 
 // GetMethodCode returns the code for a method, triggering lazy loading if needed.

@@ -19,6 +19,7 @@ class RFB {
 const ctx={document, uiLang:'en', curMode:'sandbox', curEnv:'windows', curTarget:{key:'vmware:A'}, jid:'job-A', sbxRunSerial:1, sbxViewMode:'output', sbxViewPhase:'running', AbortController,
   location:{protocol:'http:',host:'127.0.0.1:7474'},
   isVMwareTarget:()=>ctx.curTarget?.key.startsWith('vmware:'),
+  liveStart(){},liveStop(){},
   uiText:(id,text)=>ids[id].textContent=text,
   fetch:(url,options)=>new Promise((resolve,reject)=>requests.push({url,options,resolve,reject})),
   setTimeout:(fn,ms)=>{const id=++sequence;timers.set(id,{fn,ms});return id;},clearTimeout:id=>timers.delete(id)

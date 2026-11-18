@@ -4,10 +4,12 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+
+	"mega-analyzer/pkg/internal/testutil"
 )
 
 func TestRegressionJSCommentDoesNotDisableLiteralDecoding(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	code := `var endpoint = "\x68\x74\x74\x70\x73\x3a\x2f\x2fapi.example.com/v1";`
 	for _, prefix := range []string{"", "// Hermes engine\n"} {
 		path := filepath.Join(dir, "index.android.bundle")
@@ -33,7 +35,7 @@ func TestRegressionJSCommentDoesNotDisableLiteralDecoding(t *testing.T) {
 func TestRegressionHBCDiscoveryUsesMagicRegardlessOfExtension(t *testing.T) {
 	data := buildTestHBC(t, 96, []string{"main", "moduleA", "https://api.example.com/graphql"})
 	for _, name := range []string{"index.android.bundle", "main.hbc"} {
-		dir := t.TempDir()
+		dir := testutil.TempDir(t)
 		if err := os.WriteFile(filepath.Join(dir, name), data, 0600); err != nil {
 			t.Fatal(err)
 		}
@@ -54,7 +56,7 @@ func TestRegressionHBCDiscoveryUsesMagicRegardlessOfExtension(t *testing.T) {
 }
 
 func TestRegressionHermesMalformedBundleHasCoverageWarning(t *testing.T) {
-	dir := t.TempDir()
+	dir := testutil.TempDir(t)
 	if err := os.WriteFile(filepath.Join(dir, "index.android.bundle"), HermesMagicLE, 0600); err != nil {
 		t.Fatal(err)
 	}

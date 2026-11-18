@@ -199,6 +199,7 @@ my-recovery.patch
 # Local toolchains and training outputs; source helpers remain publishable.
 /tools/*
 !/tools/webui-split/
+!/tools/android-propwriter/
 /tools/webui-split/split_report.txt
 
 # APK Editor is maintained in its own repository.
@@ -216,14 +217,22 @@ cargo-metadata.json
 
 # Distribution archives
 *.bundle
+# React Native JS bundles shipped as demo fixtures, not git bundles
+!demo/demo_test_apk/decompiled/index.android.bundle
+!demo/demo_test_apk/react_native/index.android.bundle
 Mega-Analyzer.zip
 Mega_Analyzer.zip
 Mega-Analyzer.md
 time_control.zip
 
 # Large data files — use Git LFS or release assets
+# (canonical copies stay tracked: the Go build embeds the anchors and the
+#  GNN weights ship with the repo, see rust/gnn_weights.gnnbuf)
 *.gnnbuf
+!rust/gnn_weights.gnnbuf
 aetrium_anchors.json
+!pkg/internal/configs/aetrium_anchors.json
+!rust/aetrium_anchors.json
 mitm_capture.jsonl
 
 # Zcode AI workspace — local only, never commit
@@ -239,6 +248,7 @@ outputs*/
 *.backup
 *.original
 *.bak
+*.bak[0-9]*
 *.rej
 
 # Weight snapshots: dated production backups stay local, only the
@@ -263,6 +273,7 @@ demo/demo_test_apk/*.idsig
 
 # Agent work logs (codex sessions and similar scratch notes).
 codex_*
+codex-session-*.md
 
 # Local VM agent credentials and recovered sandbox reports (documented defaults).
 /vm-capture/
